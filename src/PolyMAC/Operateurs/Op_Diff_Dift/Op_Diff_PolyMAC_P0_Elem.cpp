@@ -26,13 +26,18 @@
 #include <Option_PolyMAC.h>
 #include <Neumann_paroi.h>
 #include <Pb_Multiphase.h>
+#include <Synonyme_info.h>
 #include <Matrix_tools.h>
 #include <Array_tools.h>
 #include <functional>
 #include <cmath>
 
 Implemente_instanciable_sans_constructeur(Op_Diff_PolyMAC_P0_Elem, "Op_Diff_PolyMAC_P0_Elem|Op_Diff_PolyMAC_P0_var_Elem", Op_Diff_PolyMAC_P0_base);
+Add_synonym(Op_Diff_PolyMAC_P0_Elem,"Op_Diff_PolyVEF_P0_Elem");
+Add_synonym(Op_Diff_PolyMAC_P0_Elem,"Op_Diff_PolyVEF_P0_var_Elem");
 Implemente_instanciable(Op_Dift_PolyMAC_P0_Elem, "Op_Dift_PolyMAC_P0_Elem_PolyMAC_P0|Op_Dift_PolyMAC_P0_var_Elem_PolyMAC_P0", Op_Diff_PolyMAC_P0_Elem);
+Add_synonym(Op_Dift_PolyMAC_P0_Elem,"Op_Dift_PolyVEF_P0_Elem");
+Add_synonym(Op_Dift_PolyMAC_P0_Elem,"Op_Dift_PolyVEF_P0_var_Elem");
 
 Op_Diff_PolyMAC_P0_Elem::Op_Diff_PolyMAC_P0_Elem()
 {
