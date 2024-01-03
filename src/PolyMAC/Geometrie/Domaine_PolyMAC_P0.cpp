@@ -334,7 +334,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
                           X(j, d) = surf_fs[k] / vol_es[i] * sgn * nf(f, d) * inv_fs;
                         }
 
-                  /* flux et equation. Remarque : les CLs complexes des equations scalaires sont gerees directement dans Op_Diff_PolyVEF_P0_Elem */
+                  /* flux et equation. Remarque : les CLs complexes des equations scalaires sont gerees directement dans Op_Diff_PolyVEF_Elem */
                   for (j = 0; j < n_ef; j++)
                     {
                       k = se_f[i][j], f = s_f[k], sgn = e == f_e(f, 0) ? 1 : -1; //face et son indice
