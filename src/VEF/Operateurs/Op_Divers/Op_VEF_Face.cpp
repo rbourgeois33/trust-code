@@ -33,6 +33,8 @@
 #include <Dirichlet_homogene.h>
 #include <Periodique.h>
 #include <Symetrie.h>
+#include <Matrix_tools.h>
+#include <Array_tools.h>
 
 /*! @brief Dimensionnement de la matrice qui devra recevoir les coefficients provenant de la convection, de la diffusion pour le cas des faces.
  *
@@ -48,6 +50,12 @@ void Op_VEF_Face::dimensionner(const Domaine_VEF& le_dom, const Domaine_Cl_VEF& 
   // Cette matrice a une structure de matrice morse.
   // Nous commencons par calculer les tailles des tableaux tab1 et tab2.
   // Pour ce faire il faut chercher les faces voisines de la face consideree.
+
+  if (le_dom_cl.equation().que_suis_je().debute_par("Convection_Diffusion"))
+    {
+      dimensionner_cd(le_dom, le_dom_cl, la_matrice);
+      return;
+    }
 
   int nfin = le_dom.nb_faces_tot();
   int nb_faces_elem = le_dom.domaine().nb_faces_elem();
@@ -159,6 +167,31 @@ void Op_VEF_Face::dimensionner(const Domaine_VEF& le_dom, const Domaine_Cl_VEF& 
             }
         }
     }
+}
+
+void Op_VEF_Face::dimensionner_cd(const Domaine_VEF& le_dom, const Domaine_Cl_VEF& le_dom_cl, Matrice_Morse& la_matrice) const
+{
+  const int N = le_dom_cl.equation().inconnue().valeurs().line_size(), nb_faces_elem = le_dom.domaine().nb_faces_elem();
+  const IntTab& e_f = le_dom.elem_faces(), &f_e = le_dom.face_voisins();
+
+  IntTab stencil;
+  stencil.resize(0, 2);
+
+  for (int f = 0; f < le_dom.nb_faces_tot(); f++)
+    {
+      for (int n = 0; n < N; n++)
+        stencil.append_line(N * f + n, N * f + n);
+      for (int i = 0, e; i < 2; i++)
+        if ((e = f_e(f, i)) >= 0)
+          for (int j = 0, k; j < nb_faces_elem; j++)
+            if ((k = e_f(e, j)) != f)
+              for (int n = 0; n < N; n++)
+                stencil.append_line(N * f + n, N * e_f(e, j) + n);
+    }
+  tableau_trier_retirer_doublons(stencil);
+  Matrice_Morse mat2;
+  Matrix_tools::allocate_morse_matrix(N * le_dom.nb_faces_tot(), N * le_dom.nb_faces_tot(), stencil, mat2);
+  la_matrice.nb_colonnes() ? la_matrice += mat2 : la_matrice = mat2;
 }
 
 /*! @brief Modification des coef de la matrice et du second membre pour les conditions de Dirichlet
