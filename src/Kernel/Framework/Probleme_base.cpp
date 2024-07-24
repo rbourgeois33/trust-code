@@ -22,6 +22,7 @@
 #include <Postraitement.h>
 #include <stat_counters.h>
 #include <Debog.h>
+#include <pdi.h>
 
 Implemente_base_sans_destructeur(Probleme_base,"Probleme_base",Probleme_U);
 
@@ -1117,7 +1118,6 @@ void Probleme_base::finir()
 
   if (schema_temps().temps_sauv() > 0.0)
     sauver();
-
   save_restart_.finir();
 }
 
