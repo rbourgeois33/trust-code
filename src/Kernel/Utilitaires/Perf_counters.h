@@ -23,7 +23,7 @@
 // A class Time is introduced in Perf_counters.cpp for extracting the time
 class Counter;
 
-enum class STD_COUNTERS : int
+enum class STD_COUNTERS : unsigned int
 { temps_total_execution_counter_ ,
   initialisation_calcul_counter_ ,
   timestep_counter_ ,
@@ -187,6 +187,8 @@ public:
    * @param new_max_counter_lvl_to_print
    */
   void set_max_counter_lvl_to_print(int new_max_counter_lvl_to_print);
+
+  void compute_avg_min_max_var_per_step(int tstep);
 
 private:
   Perf_counters();

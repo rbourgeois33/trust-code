@@ -19,7 +19,13 @@
 #include <map>
 #include <tuple>
 #include <chrono>
+#include <assert.h>
+#include <thread>
+#include <sys/utsname.h>
+#include <math.h>
+
 #include "Perf_counters.h"
+
 
 /**************************************************************************************************************************
  *
@@ -44,11 +50,7 @@ public:
     return is_comm_;
   }
 
-  inline void begin_count_()
-  {
-    last_open_time_ = Counter::get_time_now();
-    is_running_ = true;
-  }
+  void begin_count_();
 
   void end_count_(int count_increment, double quantity_increment);
   //check std::chrono
@@ -64,9 +66,11 @@ protected:
   std::string family_ ;
   bool is_comm_;
   bool is_running_;
+  bool start_at_the_beginning_of_the_time_step_;
   int count_;
   double quantity_;
   std::chrono::duration<double> total_time_;
+  std::chrono::duration<double> time_time_step_;
   std::chrono::time_point<std::chrono::high_resolution_clock> last_open_time_;
   double avg_time_per_step_;
   double min_time_per_step_;
@@ -82,12 +86,14 @@ Counter::Counter(int counter_level, std::string counter_name, std::string counte
   family_ = counter_family;
   is_comm_ = is_comm;
   is_running_ = false;
+  start_at_the_beginning_of_the_time_step_ = false;
   count_ = 0;
   quantity_ = 0.0;
   avg_time_per_step_ = 0.0 ;
   min_time_per_step_ = 0.0 ;
   max_time_per_step_ = 0.0 ;
   sd_time_per_step_ = 0.0 ;
+  time_time_step_ = std::chrono::duration<double>::zero();
   total_time_ = std::chrono::duration<double>::zero() ;
   last_open_time_ = std::chrono::high_resolution_clock::now();
 }
@@ -99,21 +105,55 @@ Counter::Counter()
   family_ = "";
   is_comm_ = false;
   is_running_ = false;
+  start_at_the_beginning_of_the_time_step_ = false;
   count_ = 0;
   quantity_ = 0.0;
   avg_time_per_step_ = 0.0 ;
   min_time_per_step_ = 0.0 ;
   max_time_per_step_ = 0.0 ;
   sd_time_per_step_ = 0.0 ;
+  time_time_step_ = std::chrono::duration<double>::zero();
   total_time_ = std::chrono::duration<double>::zero() ;
   last_open_time_ = std::chrono::high_resolution_clock::now();
+}
+
+void Counter::begin_count_()
+{
+  if (start_at_the_beginning_of_the_time_step_ == false)
+  {
+	  start_at_the_beginning_of_the_time_step_ = true;
+
+  }
+
+  last_open_time_ = Counter::get_time_now();
+  is_running_ = true;
+
+#ifdef PETSCKSP_H
+    Nom info(si.description[id]);
+    info+="\n";
+    PetscInfo(0,"%s",info.getChar());
+#endif
+
+#ifdef TRUST_USE_CUDA
+    // Level 1 only to avoid MPI calls
+    if (si.counter_level[id]==1)
+      nvtxRangePush(si.description[id]);
+#endif
 }
 
 void Counter::end_count_(int count_increment, double quantity_increment)
 {
   assert(is_running_);
-  std::chrono::time_point <std::chrono::high_resolution_clock> time_stop_counter = Counter::get_time_now();
-  total_time_ += time_stop_counter-last_open_time_;
+  std::chrono::duration <double> time_step_duration = Counter::get_time_now()-last_open_time_;
+  is_running_=false;
+  quantity_ += quantity_increment;
+  total_time_ += time_step_duration;
+  count_ += count_increment;
+
+#ifdef TRUST_USE_CUDA
+          // Level 1 only to avoid MPI calls
+          if (si.counter_level[id]==1) nvtxRangePop();
+#endif
 }
 
 /**************************************************************************************************************************
@@ -201,7 +241,7 @@ void Perf_counters::create_custom_counter(int counter_level, std::string counter
  */
 void Perf_counters::begin_count(STD_COUNTERS std_cnt)
 {
-  std_counters_[std_cnt].begin_count();
+  std_counters_[std_cnt].begin_count_();
 }
 
 /*! Custom counters
@@ -210,7 +250,7 @@ void Perf_counters::begin_count(STD_COUNTERS std_cnt)
  */
 void Perf_counters::begin_count(const std::string& custom_count_name)
 {
-  custom_counter_map_str_to_counter_[custom_count_name].begin_count();
+  custom_counter_map_str_to_counter_[custom_count_name].begin_count_();
 }
 
 /*! @brief End the count of a counter and update the counter values
@@ -237,6 +277,35 @@ void Perf_counters::end_count(const std::string& custom_count_name, int count_in
 {
   assert(custom_counter_map_str_to_counter_[custom_count_name].is_running_);
   custom_counter_map_str_to_counter_[custom_count_name].end_count_(count_increment,quantity_increment);
+}
+
+
+/*! @brief Compute for each counter avg_time_per_step_, min_time_per_step_, max_time_per_step_ and sd_time_per_step_
+ *
+ * Called at the end of each time step
+ * @param tstep number of time steps elapsed since the start of the computation
+ *
+ * The value of the
+ */
+void Perf_counters::compute_avg_min_max_var_per_step(int tstep)
+{
+  int step = three_first_steps_elapsed_ ? tstep - 3 : tstep;
+  for (Counter &c: std_counters_)
+    {
+      c.min_time_per_step_ = (c.min_time_per_step_ < c.time_time_step_) ? c.min_time_per_step_ : c.time_time_step_;
+      c.max_time_per_step_ = (c.min_time_per_step_ > c.time_time_step_) ? c.min_time_per_step_ : c.time_time_step_;
+      c.avg_time_per_step_ = ((step-1)*c.avg_time_per_step_ + c.time_time_step_)/step;
+      c.sd_time_per_step_ += (c.time_time_step_* c.time_time_step_ -2*c.time_time_step_* c.avg_time_per_step_ +  c.avg_time_per_step_ *  c.avg_time_per_step_)/step;
+      c.sd_time_per_step_ = sqrt(c.sd_time_per_step_);
+
+      if (c.sd_time_per_step_ < 0)
+        c.sd_time_per_step_ = 0;
+
+      c.start_at_the_beginning_of_the_time_step_ = false ;
+    }
+
+
+
 }
 
 

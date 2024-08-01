@@ -247,7 +247,7 @@ inline Statistiques& statistiques()
 // a tout recompiler si on change Stat.
 class Stat_Internals;
 
-/*! @brief An object that is used to store counter data
+/*! @brief An object used to store counter data
  *
  */
 class Stat_Results
