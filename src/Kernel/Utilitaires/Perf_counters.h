@@ -106,10 +106,6 @@ public:
    */
   void create_custom_counter(int counter_level, std::string counter_description, std::string counter_family ,bool is_comm);
 
-  /*! @brief Get current time
-   *
-   */
-  double get_current_time();
 
   /*! @brief Sort the vector of counters based on counter level
    *
@@ -189,6 +185,14 @@ public:
   void set_max_counter_lvl_to_print(int new_max_counter_lvl_to_print);
 
   void compute_avg_min_max_var_per_step(int tstep);
+
+  std::string get_os();
+
+  std::string get_cpu();
+
+  std::string get_gpu();
+
+  std::string get_date();
 
 private:
   Perf_counters();

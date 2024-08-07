@@ -23,6 +23,10 @@
 #include <thread>
 #include <sys/utsname.h>
 #include <math.h>
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <ctime>
 
 #include "Perf_counters.h"
 
@@ -40,7 +44,7 @@ public:
 
   Counter(int counter_level, std::string counter_name, std::string counter_family = "None", bool is_comm = false);
 
-  inline std::chrono::time_point<std::chrono::high_resolution_clock> get_time_now()
+  inline std::chrono::time_point<std::chrono::high_resolution_clock> get_time_now_()
   {
     return std::chrono::high_resolution_clock::now();
   }
@@ -125,7 +129,7 @@ void Counter::begin_count_()
 
   }
 
-  last_open_time_ = Counter::get_time_now();
+  last_open_time_ = Counter::get_time_now_();
   is_running_ = true;
 
 #ifdef PETSCKSP_H
@@ -144,7 +148,7 @@ void Counter::begin_count_()
 void Counter::end_count_(int count_increment, double quantity_increment)
 {
   assert(is_running_);
-  std::chrono::duration <double> time_step_duration = Counter::get_time_now()-last_open_time_;
+  std::chrono::duration <double> time_step_duration = Counter::get_time_now_()-last_open_time_;
   is_running_=false;
   quantity_ += quantity_increment;
   total_time_ += time_step_duration;
@@ -304,9 +308,46 @@ void Perf_counters::compute_avg_min_max_var_per_step(int tstep)
       c.start_at_the_beginning_of_the_time_step_ = false ;
     }
 
-
-
 }
+
+std::string Perf_counters::get_os()
+{
+  std::string result;
+  struct utsname buffer;
+  result += buffer.sysname;
+  result += buffer.release;
+  result += buffer.version;
+  result += buffer.machine;
+  return result;
+}
+
+std::string Perf_counters::get_cpu()
+{
+  system("lscpu | grep 'Nom de modèle' > cpu_detail.txt");
+  system("lscpu | grep 'Model name' >> cpu_detail.txt");
+  std::stringstream cpu_desc;
+  cpu_desc << std::ifstream("cpu_detail.txt").rdbuf();
+  system("rm cpu_detail.txt");
+  return cpu_desc.str();
+}
+
+std::string Perf_counters::get_gpu()
+{
+  std::string gpu_description = "No GPU";
+#ifdef TRUST_USE_CUDA
+  system("nvidia-smi | grep NVIDIA > gpu_detail.txt");
+#elif TRUST_USE_HIP
+      system("rocminfo |grep Marketing > gpu_detail.txt");
+
+  std::stringstream gpu_desc;
+  cpu_desc << std::ifstream("gpu_detail.txt").rdbuf();
+  system("rm gpu_detail.txt");
+  gpu_description = cpu_desc.str()
+#endif
+  return gpu_description;
+}
+
+
 
 
 
