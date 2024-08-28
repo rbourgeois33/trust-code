@@ -26,7 +26,6 @@
 #include <petsc_for_kernel.h>
 #include <communications.h>
 #include <TRUSTArray.h>
-#include <communications.h>
 #include <Comm_Group_MPI.h>
 
 #ifdef VTRACE

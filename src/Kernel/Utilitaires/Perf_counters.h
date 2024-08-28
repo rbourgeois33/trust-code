@@ -19,12 +19,14 @@
 #include <tuple>
 #include <chrono>
 #include <array>
+#include <vector>
 // This file contains all of the needed for the description of the counter associated with the tracking of performance in the TRUST code.
 // A class Time is introduced in Perf_counters.cpp for extracting the time
 class Counter;
 
 enum class STD_COUNTERS : unsigned int
-{ temps_total_execution_counter_ ,
+{
+  temps_total_execution_counter_ ,
   initialisation_calcul_counter_ ,
   timestep_counter_ ,
   solv_sys_counter_,
@@ -83,8 +85,8 @@ enum class STD_COUNTERS : unsigned int
 class Perf_counters
 {
 public:
-
-
+  Perf_counters();
+  ~Perf_counters();
   //	static Perf_counters & GetInstance() {
   //		static Perf_counters * inst = new Perf_counters(); // initialized only once!
   //		return inst;
@@ -182,7 +184,7 @@ public:
    *
    * @param new_max_counter_lvl_to_print
    */
-  void set_max_counter_lvl_to_print(int new_max_counter_lvl_to_print);
+  void set_max_counter_lvl_to_print(unsigned int new_max_counter_lvl_to_print);
 
   void compute_avg_min_max_var_per_step(int tstep);
 
@@ -195,10 +197,8 @@ public:
   std::string get_date();
 
 private:
-  Perf_counters();
-  ~Perf_counters();
   bool three_first_steps_elapsed_;
-  int max_counter_lvl_to_print;
+  unsigned int max_counter_lvl_to_print_;
   /* std::array <Counter, static_cast<int>(STD_COUNTERS::LAST_COUNT)-1> std_counters_ ;
   std::map <std::string, Counter> custom_counters_ ; */
 
