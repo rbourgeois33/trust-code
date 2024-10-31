@@ -1335,6 +1335,7 @@ then
 fi
 m="# TRUST will use ROCM ?";e="TRUST_USE_ROCM=\"$TRUST_USE_ROCM\" && export TRUST_USE_ROCM";ecrit $m"|"$e"|"$env
 
+
 ###########################################################
 # Introduction de TRUST_USE_GPU pour gerer Nvidia/AMD/Intel
 ###########################################################
@@ -1343,6 +1344,17 @@ TRUST_USE_GPU=0
 [ "$TRUST_USE_ROCM" = 1 ] && TRUST_USE_GPU=1
 # [ "$TRUST_USE_SYCL" = 1 ] && TRUST_USE_GPU=1 # Futur
 m="# TRUST use GPU ?";e="TRUST_USE_GPU=\"$TRUST_USE_GPU\" && export TRUST_USE_GPU"; ecrit $m"|"$e"|"$env
+
+
+#################
+# Infos systeme #
+#################
+system="os.txt"
+lscpu 2>/dev/null | grep 'Model name' > $system
+lscpu 2>/dev/null | grep 'Proc' >> $system
+[ "$TRUST_USE_CUDA" = 1 ] && nvidia-smi 2>/dev/null | grep NVIDIA >> $system
+[ "$TRUST_USE_ROCM" = 1 ] && rocminfo   2>/dev/null | grep Marketing >> $system
+
 
 #############
 # Debut MPI #
