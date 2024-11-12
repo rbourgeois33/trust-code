@@ -55,9 +55,9 @@ public:
 		return is_comm_;
 	}
 
-	void begin_count_();
+	void begin_count_(int counter_level, std::chrono::time_point<std::chrono::high_resolution_clock> t);
 
-	void end_count_(int count_increment, double quantity_increment);
+	void end_count_(int count_increment, double quantity_increment, std::chrono::time_point<std::chrono::high_resolution_clock> t_stop);
 	//check std::chrono
 
 	/*! @brief update variables : avg_time_per_step_ , min_time_per_step_ , max_time_per_step_ , sd_time_per_step_
@@ -77,8 +77,10 @@ protected:
 	int count_;
 	double quantity_;
 	std::chrono::duration<double> total_time_;
+	std::chrono::duration<double> time_alone_;   // time when the counter is open minus the time where an counter of lower lvl was open
 	std::chrono::duration<double> time_timestep_;
-	std::chrono::time_point last_open_time_;
+	std::chrono::time_point<std::chrono::high_resolution_clock> last_open_time_;
+	std::chrono::time_point<std::chrono::high_resolution_clock> last_open_time_alone_;
 	double avg_time_per_step_;
 	double min_time_per_step_;
 	double max_time_per_step_;
@@ -124,8 +126,13 @@ Counter::Counter()
 	last_open_time_ = std::chrono::time_point<std::chrono::high_resolution_clock>();
 }
 
-void Counter::begin_count_()
+void Counter::begin_count_(int counter_level, std::chrono::time_point<std::chrono::high_resolution_clock> t)
 {
+	if (counter_level != level_)
+	{
+		Cerr<< "You did not specified the expected counter lvl of : :" <<description_ <<std::endl;
+		level_ = counter_level;
+	}
 	if (is_running_==1)
 	{
 		Cerr<< "Try to start an already launch counter named :" <<description_ <<std::endl;
@@ -134,10 +141,9 @@ void Counter::begin_count_()
 	if (start_at_the_beginning_of_the_time_step_ == false)
 	{
 		start_at_the_beginning_of_the_time_step_ = true;
-
 	}
 
-	last_open_time_ = std::chrono::high_resolution_clock::now();
+	last_open_time_ = t;
 	is_running_ = 1;
 
 #ifdef PETSCKSP_H
@@ -153,14 +159,15 @@ void Counter::begin_count_()
 #endif
 }
 
-void Counter::end_count_(int count_increment, double quantity_increment)
+void Counter::end_count_(int count_increment, double quantity_increment, std::chrono::time_point<std::chrono::high_resolution_clock> t_stop)
 {
 	assert(is_running_);
-	std::chrono::time_point t_stop = std::chrono::high_resolution_clock::now();
-	std::chrono::duration<double> t = t_stop-last_open_time_;
+	std::chrono::duration<double> t_tot = t_stop-last_open_time_;
+	std::chrono::duration<double> t_alone = t_stop - last_open_time_alone_;
 	is_running_=false;
 	quantity_ += quantity_increment;
-	total_time_ += t;
+	total_time_ += t_tot;
+	time_alone_ += t_alone;
 	count_ += count_increment;
 
 #ifdef TRUST_USE_CUDA
@@ -277,24 +284,60 @@ void Perf_counters::create_custom_counter(int counter_level, std::string counter
  *
  * @param
  */
-void Perf_counters::begin_count(STD_COUNTERS std_cnt)
+void Perf_counters::begin_count(STD_COUNTERS std_cnt, unsigned int counter_lvl)
 {
+	std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
+	if (counter_lvl != current_highest_counter_lvl_ +1)
+	{
+		Cerr << "Try to start a counter whose lvl is lower than the one already open"<< std::endl;
+		break;
+	}
 	Counter & c = std_counters_[std_cnt];
 	if(!c.is_running_)
 	{
 		Cerr << "Trying to start an already started counter"<<std::endl;
 		break;
 	}
-	c.begin_count_();
+	c.begin_count_(counter_lvl,t);
+	current_highest_counter_lvl_ = counter_lvl;
+	if (counter_lvl>0)
+	{
+		if (!running_counters_.empty())
+		{
+			*running_counters_.back()->time_alone_ += t - *running_counters_.back()->last_open_time_alone_ ;
+		}
+		running_counters_.push_back(&c);
+	}
 }
 
 /*! Custom counters
  *
  * @param custom_count_name
  */
-void Perf_counters::begin_count(const std::string& custom_count_name)
+void Perf_counters::begin_count(const std::string& custom_count_name, unsigned int counter_lvl)
 {
-	custom_counter_map_str_to_counter_[custom_count_name].begin_count_();
+	std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
+	if (counter_lvl != current_highest_counter_lvl_ +1)
+	{
+		Cerr << "Try to start a counter whose lvl is lower than the one already open"<< std::endl;
+		break;
+	}
+	Counter & c = custom_counter_map_str_to_counter_.at(custom_count_name);
+	if(!c.is_running_)
+	{
+		Cerr << "Trying to start an already started counter"<<std::endl;
+		break;
+	}
+	c.begin_count_(counter_lvl, t);
+	current_highest_counter_lvl_ = counter_lvl;
+	if (counter_lvl>0)
+	{
+		if (!running_counters_.empty())
+		{
+			*running_counters_.back()->time_alone_ += t - *running_counters_.back()->last_open_time_alone_ ;
+		}
+		running_counters_.push_back(&c);
+	}
 }
 
 /*! @brief End the count of a counter and update the counter values
@@ -305,13 +348,34 @@ void Perf_counters::begin_count(const std::string& custom_count_name)
  */
 void Perf_counters::end_count(const STD_COUNTERS std_cnt, int count_increment, double quantity_increment)
 {
+	std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
 	Counter & c = std_counters_[std_cnt];
-	if(c.is_running_)
+
+	if (&c!=running_counters_.back())
+	{
+		Cerr << "You are trying to close a different counter than the one last opened"<<std::endl;
+	}
+
+	if (c.level_ != current_highest_counter_lvl_)
+	{
+		Cerr << "Try to start a counter whose lvl is lower than the one already open"<< std::endl;
+		break;
+	}
+	if(!c.is_running_)
 	{
 		Cerr << "Trying to close an already closed counter"<<std::endl;
 		break;
 	}
-	c.end_count_(count_increment, quantity_increment);
+	c.end_count_(count_increment, quantity_increment,t);
+	current_highest_counter_lvl_ = c.level_ -1;
+	if (c.level_>0)
+	{
+		if (!running_counters_.empty())
+		{
+			running_counters_.pop_back();
+			*running_counters_.back()->last_open_time_alone_ = t;
+		}
+	}
 }
 
 
@@ -323,8 +387,35 @@ void Perf_counters::end_count(const STD_COUNTERS std_cnt, int count_increment, d
  */
 void Perf_counters::end_count(const std::string& custom_count_name, int count_increment, double quantity_increment)
 {
-	assert(custom_counter_map_str_to_counter_[custom_count_name].is_running_);
-	custom_counter_map_str_to_counter_[custom_count_name].end_count_(count_increment,quantity_increment);
+	std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
+	Counter & c = custom_counter_map_str_to_counter_.at(custom_count_name);
+
+	if (&c!=running_counters_.back())
+	{
+		Cerr << "You are trying to close a different counter than the one last opened"<<std::endl;
+		break;
+	}
+
+	if (c.level_ != current_highest_counter_lvl_)
+	{
+		Cerr << "Try to start a counter whose lvl is lower than the one already open"<< std::endl;
+		break;
+	}
+	if(!c.is_running_)
+	{
+		Cerr << "Trying to close an already closed counter"<<std::endl;
+		break;
+	}
+	c.end_count_(count_increment, quantity_increment,t);
+	current_highest_counter_lvl_ = c.level_ -1;
+	if (c.level_>0)
+	{
+		if (!running_counters_.empty())
+		{
+			running_counters_.pop_back();
+			*running_counters_.back()->last_open_time_alone_ = t;
+		}
+	}
 }
 
 
@@ -431,7 +522,7 @@ std::string Perf_counters::get_date()
  */
 void Perf_counters::stop_counters()
 {
-	std::chrono::time_point t_stop = std::chrono::high_resolution_clock::now();
+	std::chrono::time_point<std::chrono::high_resolution_clock> t_stop = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> time_elapsed_before_stop;
 	for (Counter &c: std_counters_)
 	{
@@ -460,7 +551,7 @@ void Perf_counters::stop_counters()
  */
 void Perf_counters::restart_counters()
 {
-	std::chrono::time_point t_restart = std::chrono::high_resolution_clock::now();
+	std::chrono::time_point<std::chrono::high_resolution_clock> t_restart = std::chrono::high_resolution_clock::now();
 	for (Counter &c: std_counters_)
 	{
 		if (c.is_running_ == 2)
@@ -606,7 +697,7 @@ void Perf_counters::print_performance_to_csv(std::string message, bool mode_appe
 	double avg_time_per_step, min_time_per_step, max_time_per_step, sd_time_per_step;
 
 	auto fill_items = [&](int proc_nb, const std::string& desc, const std::string& familly)
-        {
+        						{
 		tmp_item << message; ///< Convert into string the item we want to print in the line, here the overall simulation step
 		line_items[0] = tmp_item.str(); ///< Add the item to the vector line_itmes, used to construct the line of the _csv.TU file
 
@@ -689,7 +780,7 @@ void Perf_counters::print_performance_to_csv(std::string message, bool mode_appe
 		tmp_item<< SD_quantity;
 		line_items[22] = tmp_item.str(); ///< Detail per proc, so the min, max and SD on proc is equal to 0
 		tmp_item.str("");
-        };
+        						};
 
 	std::string family_flag = "";
 	int size = std::size(std_counters_);
