@@ -85,31 +85,31 @@ enum class STD_COUNTERS : unsigned int
 class Perf_counters
 {
 private:
-	static Perf_counters* counters_stat_ ;
-	static std::mutex mutex_;
+
 	Perf_counters() ;
 	Perf_counters(const Perf_counters&) = delete;
 	Perf_counters& operator=(const Perf_counters&) = delete;
 
-	bool three_first_steps_elapsed_ = true;
+	bool three_first_steps_elapsed_;
+	bool end_of_cache_;
 	unsigned int max_counter_lvl_to_print_;
 
 	std::array <Counter,static_cast<int>(STD_COUNTERS::interprete_scatter_counter_)-1> std_counters_ ; // array of the standard counters of TRUST, always used in practice
 	std::map <std::string, Counter> custom_counter_map_str_to_counter_ ; // Link the custom counters descriptions to the counter type
-    std::vector <const Counter*> running_counters_;
-	int current_highest_counter_lvl_=-1;
+	Counter * last_opened_counter_;
+	bool counters_stop_;
 
 public:
 
-    static Perf_counters* getInstance() {
-        if (counters_stat_ == nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);  // Protection contre les accès simultanés dans un contexte multithread
-            if (counters_stat_ == nullptr) {
-            	counters_stat_ = new Perf_counters();  // Création de l'instance unique
-            }
-        }
-        return counters_stat_;
-    }
+	static Perf_counters* getInstance() {
+		static Perf_counters* counters_stat_ = nullptr;
+		if (counters_stat_ == nullptr) {
+			if (counters_stat_ == nullptr) {
+				counters_stat_ = new Perf_counters();  // Création de l'instance unique
+			}
+		}
+		return counters_stat_;
+	}
 
 	void declare_base_counters();
 
@@ -146,6 +146,12 @@ public:
 	 * @param custom_count_name
 	 */
 	void begin_count(const std::string& custom_count_name, unsigned int counter_lvl);
+
+
+	void check_begin(Counter& c, unsigned int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+
+
+	void check_end(Counter& c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
 
 
 	/*! @brief End the count of a counter and update the counter values
