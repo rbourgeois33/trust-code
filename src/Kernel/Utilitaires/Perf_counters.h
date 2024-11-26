@@ -75,7 +75,8 @@ enum class STD_COUNTERS : unsigned int
 	gpu_copyfromdevice_counter_ ,
 	IO_EcrireFicPartageMPIIO_counter_ ,
 	IO_EcrireFicPartageBin_counter_ ,
-	interprete_scatter_counter_
+	interprete_scatter_counter_,
+	NB_OF_STD_COUNTER
 };
 
 
@@ -90,11 +91,11 @@ private:
 	Perf_counters(const Perf_counters&) = delete;
 	Perf_counters& operator=(const Perf_counters&) = delete;
 
-	bool three_first_steps_elapsed_;
+	bool two_first_steps_elapsed_;
 	bool end_of_cache_;
 	unsigned int max_counter_lvl_to_print_;
 
-	std::array <Counter,static_cast<int>(STD_COUNTERS::interprete_scatter_counter_)-1> std_counters_ ; // array of the standard counters of TRUST, always used in practice
+	std::array <Counter,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; // array of the standard counters of TRUST, always used in practice
 	std::map <std::string, Counter> custom_counter_map_str_to_counter_ ; // Link the custom counters descriptions to the counter type
 	Counter * last_opened_counter_;
 	bool counters_stop_;
@@ -186,7 +187,7 @@ public:
 	 */
 	inline void set_three_first_steps_elapsed(bool is_the_three_first_time_steps_elapsed)
 	{
-		three_first_steps_elapsed_ = is_the_three_first_time_steps_elapsed;
+		two_first_steps_elapsed_ = is_the_three_first_time_steps_elapsed;
 	}
 
 	/*! @brief Create the csv.TU file.
@@ -216,8 +217,6 @@ public:
 	std::string get_gpu();
 
 	std::string get_date();
-
-
 
 };
 
