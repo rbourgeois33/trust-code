@@ -16,6 +16,7 @@
 #include <Discretisation_base.h>
 #include <Operateur_Div.h>
 #include <stat_counters.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Operateur_Div,"Operateur_Div",OWN_PTR(Operateur_Div_base));
 
@@ -53,9 +54,12 @@ void Operateur_Div::typer()
 DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
                                   DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
+  statistics.begin_count(STD_COUNTERS::divergence_,1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(divergence_counter_);
+  statistics.end_count(STD_COUNTERS::divergence_);
   return tmp;
 }
 
@@ -69,9 +73,12 @@ DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Div::calculer(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
+  statistics.begin_count(STD_COUNTERS::divergence_,1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(divergence_counter_);
+  statistics.end_count(STD_COUNTERS::divergence_);
   return tmp;
 }
 

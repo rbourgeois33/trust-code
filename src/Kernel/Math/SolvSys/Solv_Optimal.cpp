@@ -23,6 +23,7 @@
 #include <petsc_for_kernel.h>
 #undef setbit // Car sinon conflit avec Petsc
 #include <MD_Vector_tools.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Test_solveur,"Test_solveur",Interprete);
 // XD test_solveur interprete test_solveur 1 To test several solvers
@@ -60,31 +61,36 @@ Entree& Test_solveur::readOn(Entree& is )
 
 void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution, int nmax, ArrOfDouble& temps, double seuil_verification=DMAXFLOAT)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
   Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
-
+statistics.create_custom_counter(1,"SolveurSys::resoudre_systeme",0);
   for (int i=0; i<n; i++)
     {
       solution=solution_ref;
 
       // etape de resolution
       Stat_Results stat_resol_0;
-
+      double t_0,t;
       statistiques().get_stats(solv_sys_counter_l, stat_resol_0);
+      t_0 = statistics.get_time("SolveurSys::resoudre_systeme");
       Cout<<"------------------------------------"<<finl;
       Cout<<"Try " << i << " of solver " << solveur <<finl;
       //solveur->fixer_limpr(0);
       statistiques().begin_count(solv_sys_counter_l);
+      statistics.begin_count("SolveurSys::resoudre_systeme",1);
       solveur.nommer("test_solver");
 
       solveur.resoudre_systeme(matrice,secmem,solution);
       statistiques().end_count(solv_sys_counter_l);
-
+      statistics.end_count("SolveurSys::resoudre_systeme");
       Stat_Results stat_resol;
       statistiques().get_stats(solv_sys_counter_l, stat_resol);
+      t = statistics.get_time("SolveurSys::resoudre_systeme");
       // on recupere un delta time et non un time absolu !!
       double time_resol=stat_resol.time-stat_resol_0.time;
+      time_resol=t-t_0;
       DoubleVect test(secmem);
       test*=-1;
       matrice.ajouter_multvect(solution,test);

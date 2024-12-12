@@ -29,6 +29,7 @@
 #include <Dirichlet.h>
 #include <Param.h>
 #include <cmath>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id convection_counter_;
 
@@ -232,7 +233,9 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, co
  */
 void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
+  statistics.begin_count(STD_COUNTERS::convection_,1);
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Face_PolyMAC_P0& ch = ref_cast(Champ_Face_PolyMAC_P0, equation().inconnue());
   const Conds_lim& cls = la_zcl_poly_->les_conditions_limites();
@@ -396,4 +399,5 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleT
         }
     }
   statistiques().end_count(convection_counter_);
+  statistics.end_count(STD_COUNTERS::convection_);
 }

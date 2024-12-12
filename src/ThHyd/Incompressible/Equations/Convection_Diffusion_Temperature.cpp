@@ -27,6 +27,7 @@
 #include <Matrice_Morse.h>
 #include <Champ_Uniforme.h>
 #include <Statistiques.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id assemblage_sys_counter_;
 extern Stat_Counter_Id source_counter_;
@@ -356,6 +357,7 @@ double Convection_Diffusion_Temperature::get_time_factor() const
 // ajoute les contributions des operateurs et des sources
 void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const DoubleTab& inco, DoubleTab& resu)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   const double rhoCp = get_time_factor();
 
   // Test de verification de la methode contribuer_a_avec
@@ -376,8 +378,10 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
           // Cette approche necessite de coder 3 methodes (contribuer_a_avec, contribuer_au_second_membre et ajouter pour l'explicite)
           sources().contribuer_a_avec(inco,matrice);
           statistiques().end_count(assemblage_sys_counter_,0,0);
+          statistics.end_count(STD_COUNTERS::matrix_assembly_,0,0);
           sources().ajouter(resu);
           statistiques().begin_count(assemblage_sys_counter_);
+          statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
           matrice.ajouter_multvect(inco, resu); // Add source residual first
           for (int op = 0; op < nombre_d_operateurs(); op++)
             {
@@ -417,6 +421,7 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
           if (op == 1) mat *= rhoCp; // la derivee est multipliee par rhoCp pour la convection
           matrice += mat;
           statistiques().end_count(assemblage_sys_counter_, 0, 0);
+          statistics.end_count(STD_COUNTERS::matrix_assembly_,0,0);
           {
             DoubleTab resu_tmp(resu);
             resu_tmp = 0.;
@@ -425,12 +430,15 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
             resu += resu_tmp;
           }
           statistiques().begin_count(assemblage_sys_counter_);
+          statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
         }
 
       sources().contribuer_a_avec(inco,matrice);
       statistiques().end_count(assemblage_sys_counter_,0,0);
+      statistics.end_count(STD_COUNTERS::matrix_assembly_,0,0);
       sources().ajouter(resu);
       statistiques().begin_count(assemblage_sys_counter_);
+      statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
       // comme dans le cas VIA_CONTRIBUER_AU_SECOND_MEMBRE mais le cas Canal_perio_3D (keps
@@ -445,6 +453,7 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
 
 void Convection_Diffusion_Temperature::assembler_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   if (discretisation().is_polymac_family() || probleme().que_suis_je().debute_par("Pb_Multiphase"))
     {
       Equation_base::assembler_blocs(matrices, secmem, semi_impl);
@@ -483,13 +492,17 @@ void Convection_Diffusion_Temperature::assembler_blocs(matrices_t matrices, Doub
 
     }
   statistiques().end_count(assemblage_sys_counter_, 0, 0);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_,0,0);
 
   statistiques().begin_count(source_counter_);
+  statistics.begin_count(STD_COUNTERS::rhs_,1);
   for (int i = 0; i < les_sources.size(); i++)
     les_sources(i)->ajouter_blocs(matrices, secmem, semi_impl);
   statistiques().end_count(source_counter_);
+  statistics.end_count(STD_COUNTERS::rhs_);
 
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
 
   const std::string& nom_inco = inconnue().le_nom().getString();
   Matrice_Morse *mat = matrices.count(nom_inco)?matrices.at(nom_inco):nullptr;

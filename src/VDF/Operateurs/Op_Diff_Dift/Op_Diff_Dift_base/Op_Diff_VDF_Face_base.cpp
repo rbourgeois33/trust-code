@@ -16,6 +16,7 @@
 #include <Op_Diff_VDF_Face_base.h>
 #include <Check_espace_virtuel.h>
 #include <Statistiques.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id diffusion_counter_;
 
@@ -38,7 +39,9 @@ void Op_Diff_VDF_Face_base::dimensionner_blocs(matrices_t matrices, const tabs_t
 
 void Op_Diff_VDF_Face_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
+  statistics.begin_count(STD_COUNTERS::diffusion_,1);
   assert_invalide_items_non_calcules(secmem, 0.);
   iter_->ajouter_blocs(matrices, secmem, semi_impl);
 
@@ -46,6 +49,7 @@ void Op_Diff_VDF_Face_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
   Op_Diff_VDF_base::ajoute_terme_pour_axi(matrices, secmem, semi_impl);
 
   statistiques().end_count(diffusion_counter_);
+  statistics.end_count(STD_COUNTERS::diffusion_);
 }
 
 double Op_Diff_VDF_Face_base::calculer_dt_stab() const { return Op_Diff_VDF_base::calculer_dt_stab_(iter_->domaine()); }

@@ -20,6 +20,7 @@
 #include <stat_counters.h>
 #include <TRUSTTrav.h>
 #include <Operateur.h>
+#include <Perf_counters.h>
 
 Sortie& Operateur::ecrire(Sortie& os) const
 {
@@ -172,11 +173,14 @@ void Operateur::mettre_a_jour(double temps)
 double Operateur::calculer_pas_de_temps() const
 {
   // Si l'equation de l'operateur n'est pas resolue, on ne calcule pas son pas de temps de stabilite
+  Perf_counters & statistics = Perf_counters::getInstance();
   if (equation().equation_non_resolue())
     return DMAXFLOAT;
   statistiques().begin_count(dt_counter_);
+  statistics.begin_count(STD_COUNTERS::compute_dt_,1);
   double dt_stab = l_op_base().calculer_dt_stab();
   statistiques().end_count(dt_counter_);
+  statistics.end_count(STD_COUNTERS::compute_dt_);
   // Verification que l'operateur a bien un mp_min de fait:
   assert(dt_stab==Process::mp_min(dt_stab));
   return dt_stab;

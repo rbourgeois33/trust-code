@@ -25,6 +25,7 @@
 #include <TRUSTTrav.h>
 #include <EChaine.h>
 #include <Param.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id assemblage_sys_counter_;
 extern Stat_Counter_Id source_counter_;
@@ -223,7 +224,9 @@ void Convection_Diffusion_Espece_Multi_QC::assembler(Matrice_Morse& matrice, con
 
 void Convection_Diffusion_Espece_Multi_QC::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   const std::string& nom_inco = inconnue().le_nom().getString();
   const DoubleTab& inco = inconnue().valeurs();
   Matrice_Morse *mat = matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
@@ -260,13 +263,17 @@ void Convection_Diffusion_Espece_Multi_QC::assembler_blocs_avec_inertie(matrices
         (*mat)(i, i) += divu1(i);
     }
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
 
   statistiques().begin_count(source_counter_);
+  statistics.begin_count(STD_COUNTERS::rhs_,1);
   for (int i = 0; i < sources().size(); i++)
     sources()(i)->ajouter_blocs(matrices, secmem, semi_impl);
   statistiques().end_count(source_counter_);
+  statistics.end_count(STD_COUNTERS::rhs_);
 
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   if (mat)
     mat->ajouter_multvect(inco, secmem);
 
@@ -276,4 +283,5 @@ void Convection_Diffusion_Espece_Multi_QC::assembler_blocs_avec_inertie(matrices
     modifier_pour_Cl(*mat, secmem);
 
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
 }

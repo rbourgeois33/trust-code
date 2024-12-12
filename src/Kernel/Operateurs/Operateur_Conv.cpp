@@ -16,6 +16,7 @@
 #include <Discretisation_base.h>
 #include <Operateur_Conv.h>
 #include <stat_counters.h>
+#include <Perf_counters.h>
 #include <Champ_base.h>
 
 Implemente_instanciable(Operateur_Conv,"Operateur_Conv",OWN_PTR(Operateur_Conv_base));
@@ -88,9 +89,12 @@ void Operateur_Conv::typer()
 DoubleTab& Operateur_Conv::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
+  statistics.begin_count(STD_COUNTERS::convection_,1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(convection_counter_);
+  statistics.end_count(STD_COUNTERS::convection_);
   return tmp;
 }
 
@@ -103,9 +107,12 @@ DoubleTab& Operateur_Conv::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Conv::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
+  statistics.begin_count(STD_COUNTERS::convection_,1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(convection_counter_);
+  statistics.end_count(STD_COUNTERS::convection_);
   return tmp;
 }
 

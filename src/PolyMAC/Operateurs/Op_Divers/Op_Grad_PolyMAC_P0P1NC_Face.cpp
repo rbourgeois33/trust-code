@@ -31,6 +31,7 @@
 #include <Dirichlet.h>
 #include <TRUSTTrav.h>
 #include <cfloat>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id gradient_counter_;
 
@@ -114,7 +115,9 @@ void Op_Grad_PolyMAC_P0P1NC_Face::dimensionner_blocs(matrices_t matrices, const 
 
 void Op_Grad_PolyMAC_P0P1NC_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
+  statistics.begin_count(STD_COUNTERS::gradient_,1);
   const Domaine_PolyMAC_P0P1NC& domaine = ref_cast(Domaine_PolyMAC_P0P1NC, ref_domaine.valeur());
   const IntTab& f_e = domaine.face_voisins(), &e_f = domaine.elem_faces(),
                 &fcl = ref_cast(Champ_Face_PolyMAC_P0P1NC, equation().inconnue()).fcl();
@@ -183,4 +186,5 @@ void Op_Grad_PolyMAC_P0P1NC_Face::ajouter_blocs(matrices_t matrices, DoubleTab& 
         }
     }
   statistiques().end_count(gradient_counter_);
+  statistics.end_count(STD_COUNTERS::gradient_);
 }

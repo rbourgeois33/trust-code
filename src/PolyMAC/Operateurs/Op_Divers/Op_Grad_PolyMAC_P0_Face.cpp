@@ -28,6 +28,7 @@
 #include <Milieu_base.h>
 #include <Periodique.h>
 #include <TRUSTTrav.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id gradient_counter_;
 
@@ -217,7 +218,9 @@ void Op_Grad_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs
 
 void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
+  statistics.begin_count(STD_COUNTERS::gradient_,1);
   const Domaine_PolyMAC_P0& domaine = ref_cast(Domaine_PolyMAC_P0, ref_domaine.valeur());
   const Champ_Face_PolyMAC_P0& ch = ref_cast(Champ_Face_PolyMAC_P0, equation().inconnue());
   const Conds_lim& cls = ref_dcl->les_conditions_limites();
@@ -369,4 +372,5 @@ void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secm
             (*mat_v)(i_jc.first, k_d.first) += j_c.second * k_d.second;
 
   statistiques().end_count(gradient_counter_);
+  statistics.end_count(STD_COUNTERS::gradient_);
 }

@@ -17,6 +17,7 @@
 #include <SolveurSys.h>
 #include <Motcle.h>
 #include <Param.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(SolveurSys, "SolveurSys", OWN_PTR(SolveurSys_base));
 
@@ -42,17 +43,20 @@ static int nested_solver = 0;
 
 int SolveurSys::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   valeur().save_matrice_secmem_conditionnel(matrice, secmem, solution);
 
   // Cas de solveurs emboites: n'afficher que le temps du solveur "exterieur"
   // temporaire : test issu du baltik IJK_FT en commentaire car sinon erreur dans .TU avec PETSC (solveurs Ax=B => 0%)
   statistiques().begin_count(solv_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::system_solver_,1);
   nested_solver++;
   int nb_iter = valeur().resoudre_systeme(matrice, secmem, solution);
 
   nested_solver--;
   // temporaire : test issu du baltik IJK_FT en commentaire car sinon erreur avec script Check_solver.sh pour test PETSC_VEF
   statistiques().end_count(solv_sys_counter_, nb_iter);
+
 
   // Si limpr vaut -1, on n'imprime pas
   //if (le_nom()=="??")
@@ -61,7 +65,9 @@ int SolveurSys::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& 
     Cout << " Convergence in " << nb_iter << " iterations for " << le_nom() << finl;
 
   if (valeur().limpr() == 1)
-    Cout << "clock Ax=B: " << statistiques().last_time(solv_sys_counter_) << " s for " << le_nom() << finl;
+   // Cout << "clock Ax=B: " << statistiques().last_time(solv_sys_counter_) << " s for " << le_nom() << finl;
+  Cout << "clock Ax=B: " << statistics.get_time_since_last_open(STD_COUNTERS::system_solver_) << " s for " << le_nom() << finl;
+  statistics.end_count(STD_COUNTERS::system_solver_,1,nb_iter);
 
   return nb_iter;
 }

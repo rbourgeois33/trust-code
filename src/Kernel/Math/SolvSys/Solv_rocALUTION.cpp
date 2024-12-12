@@ -25,6 +25,7 @@
 #include <Device.h>
 #include <stat_counters.h>
 #include <Array_tools.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable_sans_constructeur_ni_destructeur(Solv_rocALUTION, "Solv_rocALUTION", Solv_Externe);
 // XD rocalution petsc rocalution 0 Solver via rocALUTION API
@@ -277,7 +278,7 @@ Solver<GlobalMatrix<T>, GlobalVector<T>, T>* Solv_rocALUTION::create_rocALUTION_
         }
       // Coarse solver for local AMG
       try
-        {
+      {
           auto& base_amg = dynamic_cast<BaseAMG<LocalMatrix<T>, LocalVector<T>, T> &>(*lp);
           if (coarse_grid_solver_ == "LU") // Solveur direct construit et inverse sur CPU
             local_solver = new LU<LocalMatrix<T>, LocalVector<T>, T>();
@@ -294,12 +295,12 @@ Solver<GlobalMatrix<T>, GlobalVector<T>, T>* Solv_rocALUTION::create_rocALUTION_
           // Plante:
           //base_amg.SetHostLevels(coarse_grids_host_); // Par defaut 0 (donc tous les levels sur GPU)
           //Cout << "[rocALUTION] Solving " << coarse_grids_host_ << " coarse grids on the host." << finl;
-        }
+      }
       catch (const std::bad_cast&)
-        {
+      {
           Cout << "Error, you can't use smoother " << coarse_grid_solver_ << " with this solver." << finl;
           //Process::exit();
-        }
+      }
 
       // Set local preconditionner to BlockJacobi global one
       dynamic_cast<BlockJacobi<GlobalMatrix<T>, GlobalVector<T>, T> &>(*p).Set(*lp);
@@ -444,7 +445,7 @@ void Solv_rocALUTION::create_solver(Entree& entree)
       sp_ls = create_rocALUTION_solver<float>(solver);
       sp_ls->SetPreconditioner(*sp_p);
       sp_ls->InitTol(atol_, rtol_, div_tol); // ToDo "The stopping criteria for the inner solver has to be tuned well for good performance."
-      */
+       */
     }
   else
     {
@@ -515,17 +516,21 @@ double residual(const Matrice_Base& a, const DoubleVect& b, const DoubleVect& x)
 }
 double residual_device(const GlobalMatrix<double>& a, const GlobalVector<double>& b, const GlobalVector<double>& x, GlobalVector<double>& e)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gpu_library_counter_);
+  statistics.begin_count(STD_COUNTERS::gpu_library_);
   a.Apply(x, &e);
   e.ScaleAdd(-1.0, b);
   double norm = e.Norm();
   statistiques().end_count(gpu_library_counter_);
+  statistics.end_count(STD_COUNTERS::gpu_library_);
   return norm;
 }
 #endif
 
 int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b, DoubleVect& x)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
 #ifdef ROCALUTION_ROCALUTION_HPP_
   if (write_system_) save++;
   double tick;
@@ -615,11 +620,19 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
     {
       Update_lhs_rhs<Kokkos::DefaultExecutionSpace>(b, x);
       // Les vecteurs rocALUTION sont deplaces sur le device pour une mise a jour sur le device (optimal)
-      if (gpu) statistiques().begin_count(gpu_copytodevice_counter_);
+      if (gpu)
+        {
+          statistiques().begin_count(gpu_copytodevice_counter_);
+          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+        }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
       e.MoveToAccelerator();
-      if (gpu) statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
+      if (gpu)
+        {
+          statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3.0 * (int)sizeof(double) * nb_rows_);
+        }
       sol.GetInterior().CopyFromData(addrOnDevice(lhs_));
       rhs.GetInterior().CopyFromData(addrOnDevice(rhs_));
     }
@@ -629,11 +642,19 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       // Les vecteurs sont remplis sur le host puis deplaces vers le device
       sol.GetInterior().CopyFromData(lhs_.addr());
       rhs.GetInterior().CopyFromData(rhs_.addr());
-      if (gpu) statistiques().begin_count(gpu_copytodevice_counter_);
+      if (gpu)
+        {
+          statistiques().begin_count(gpu_copytodevice_counter_);
+          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+        }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
       e.MoveToAccelerator();
-      if (gpu) statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
+      if (gpu)
+        {
+          statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3.0 * (int)sizeof(double) * nb_rows_);
+        }
     }
 
 
@@ -684,9 +705,17 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
     }
   // Calcul des residus sur le host la premiere fois (plus sur) puis sur device ensuite (plus rapide)
   double res_initial = first_solve_ ? residual(a, b, x) : residual_device(mat, rhs, sol, e);
-  if (gpu) statistiques().begin_count(gpu_library_counter_);
+  if (gpu)
+    {
+      statistiques().begin_count(gpu_library_counter_);
+      statistics.begin_count(STD_COUNTERS::gpu_library_,2);
+    }
   ls->Solve(rhs, &sol);
-  if (gpu) statistiques().end_count(gpu_library_counter_);
+  if (gpu)
+    {
+      statistiques().end_count(gpu_library_counter_);
+      statistics.end_count(STD_COUNTERS::gpu_library_,2);
+    }
   if (ls->GetSolverStatus()==3) Process::exit("Divergence for solver.");
   if (ls->GetSolverStatus()==4)
     {
@@ -710,9 +739,17 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
   else
     {
       // Le vecteur est deplace sur le host pour mettre a jour la solution
-      if (gpu) statistiques().begin_count(gpu_copyfromdevice_counter_);
+      if (gpu)
+        {
+          statistiques().begin_count(gpu_copyfromdevice_counter_);
+          statistics.begin_count(STD_COUNTERS::gpu_copyfromdevice_,2);
+        }
       sol.MoveToHost();
-      if (gpu) statistiques().end_count(gpu_copyfromdevice_counter_, (int)sizeof(double) * nb_rows_);
+      if (gpu)
+        {
+          statistiques().end_count(gpu_copyfromdevice_counter_, (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copyfromdevice_,1,(int)sizeof(double) * nb_rows_);
+        }
       sol.GetInterior().CopyToData(lhs_.addr());
       Update_solution<Kokkos::DefaultHostExecutionSpace>(x);
     }
@@ -757,6 +794,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
 void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 {
 #ifdef ROCALUTION_ROCALUTION_HPP_
+  Perf_counters & statistics = Perf_counters::getInstance();
   double tick = rocalution_time();
   const ArrOfInt& tab1 = csr.get_tab1();
   const ArrOfInt& tab2 = csr.get_tab2();
@@ -945,7 +983,7 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
   if (Process::is_parallel())
     mat.SetGhostDataPtrCSR(reinterpret_cast<int **>(&ghost_tab1_c), reinterpret_cast<int **>(&ghost_tab2_c),
                            reinterpret_cast<double **>(&ghost_coeff_c), "ghost", ghost_coeff_c.size());    // LocalMatrix ghost
-  */
+   */
   mat.Sort();
 
   if (debug)
@@ -964,8 +1002,10 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 #endif
   tick = rocalution_time();
   statistiques().begin_count(gpu_copytodevice_counter_);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_);
   mat.MoveToAccelerator(); // Important: move mat to device so after ls is built on device (best for performance)
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
   Cout << "[rocALUTION] Time to copy matrix on device: " << (rocalution_time() - tick) / 1e6 << finl;
 
   tick = rocalution_time();
@@ -983,7 +1023,7 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
   if (lp!=nullptr)
     {
       try
-        {
+      {
           auto& mg = dynamic_cast<BaseAMG<LocalMatrix<double>, LocalVector<double>, double> &>(*lp);
           mg.SetOperator(mat.GetInterior());
           mg.BuildHierarchy();
@@ -1029,12 +1069,12 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
           gs[0]->Print();
           mg.SetSmoother(sm);
           mg.Verbose(precond_verbosity_);
-        }
+      }
       catch (const std::bad_cast&)
-        {
+      {
           Cout << "[rocALUTION] You can't use smoother " << smoother_ << " with this solver." << finl;
           //Process::exit();
-        };
+      };
     }
 
   ls->Build();

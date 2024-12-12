@@ -28,7 +28,7 @@
 #include <Ecrire_YAML.h>
 #include <sys/stat.h>
 #include <Avanc.h>
-
+#include <Perf_counters.h>
 #define CHECK_ALLOCATE 0
 #ifdef CHECK_ALLOCATE
 #include <unistd.h> // Pour acces a int close(int fd); avec PGI
@@ -246,7 +246,9 @@ void Save_Restart::prepare_PDI_restart(int resume_last_time)
 
 void Save_Restart::sauver_xyz(int verbose) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(sauvegarde_counter_);
+  statistics.begin_count(STD_COUNTERS::backup_file_,1);
   Nom nom_fich_xyz("");
   if (verbose)
     {
@@ -276,8 +278,9 @@ void Save_Restart::sauver_xyz(int verbose) const
   (ficsauv_.valeur()).flush();
   (ficsauv_.valeur()).syncfile();
   ficsauv_.detach();
-  Cout << "[IO] " << statistiques().last_time(sauvegarde_counter_) << " s to write xyz file." << finl;
+  Cout << "[IO] " << statistics.get_time_since_last_open(STD_COUNTERS::backup_file_) << " s to write xyz file." << finl;
   statistiques().end_count(sauvegarde_counter_, bytes);
+  statistics.end_count(STD_COUNTERS::backup_file_,1,bytes);
 }
 
 

@@ -33,6 +33,7 @@
 #include <Dirichlet.h>
 #include <Symetrie.h>
 #include <Statistiques.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id gradient_counter_;
 
@@ -243,7 +244,9 @@ void Op_Grad_VDF_Face::dimensionner_blocs(matrices_t matrices, const tabs_t& sem
 
 void Op_Grad_VDF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
+  statistics.begin_count(STD_COUNTERS::gradient_,1)
   Matrice_Morse *mat = matrices.count("pression") ? matrices.at("pression") : nullptr;
   const DoubleTab& inco = semi_impl.count("pression") ? semi_impl.at("pression") : (le_champ_inco.non_nul() ? le_champ_inco->valeurs() : ref_cast(Navier_Stokes_std, equation()).pression().valeurs()),
                    *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
@@ -320,4 +323,5 @@ void Op_Grad_VDF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, con
 
   secmem.echange_espace_virtuel();
   statistiques().end_count(gradient_counter_);
+  statistics.end_count(STD_COUNTERS::gradient_);
 }

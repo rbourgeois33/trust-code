@@ -26,6 +26,7 @@
 #include <Debog.h>
 #include <Statistiques.h>
 #include <kokkos++.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id assemblage_sys_counter_;
 extern Stat_Counter_Id source_counter_;
@@ -249,7 +250,9 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_avec_inertie_impl(const Nav
 
 void Navier_Stokes_Fluide_Dilatable_Proto::assembler_blocs_avec_inertie(const Navier_Stokes_std& eqn, matrices_t matrices, DoubleTab& tab_secmem, const tabs_t& semi_impl)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   const std::string& nom_inco = eqn.inconnue().le_nom().getString();
   Matrice_Morse *mat = matrices.count(nom_inco)?matrices.at(nom_inco):nullptr;
   const DoubleTab& present = eqn.inconnue().valeurs();
@@ -286,14 +289,18 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_blocs_avec_inertie(const Na
   // Op conv
   eqn.operateur(1).l_op_base().ajouter_blocs(matrices, tab_secmem, {{nom_inco,rhovitesse}});
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
 
   // sources
   statistiques().begin_count(source_counter_);
+  statistics.begin_count(STD_COUNTERS::rhs_,1);
   for (int i = 0; i < eqn.sources().size(); i++)
     eqn.sources()(i)->ajouter_blocs(matrices, tab_secmem, semi_impl);
   statistiques().end_count(source_counter_);
+  statistics.end_count(STD_COUNTERS::rhs_);
 
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   // on resout en rho u on stocke donc rho u dans present
   rho_vitesse_impl(tab_rho_face_np1,present,ref_cast_non_const(DoubleTab,present));
   mat->ajouter_multvect(present,tab_secmem);
@@ -342,6 +349,7 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_blocs_avec_inertie(const Na
     }
   tab_secmem.echange_espace_virtuel();
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
 
 }
 

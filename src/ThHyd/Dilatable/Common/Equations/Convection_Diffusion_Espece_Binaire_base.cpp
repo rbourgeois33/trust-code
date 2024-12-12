@@ -21,6 +21,7 @@
 #include <Probleme_base.h>
 #include <Statistiques.h>
 #include <TRUSTTrav.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id assemblage_sys_counter_;
 
@@ -113,7 +114,9 @@ void Convection_Diffusion_Espece_Binaire_base::assembler( Matrice_Morse& matrice
 
 void Convection_Diffusion_Espece_Binaire_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(*this, matrices, secmem, semi_impl);
   schema_temps().ajouter_blocs(matrices, secmem, *this);
   if (!discretisation().is_polymac_family())
@@ -123,5 +126,6 @@ void Convection_Diffusion_Espece_Binaire_base::assembler_blocs_avec_inertie(matr
       modifier_pour_Cl(*mat,secmem);
     }
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
 
 }

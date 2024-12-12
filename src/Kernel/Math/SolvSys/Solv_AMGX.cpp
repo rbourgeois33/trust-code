@@ -18,6 +18,8 @@
 #include <ctime>
 #include <communications.h>
 #include <stat_counters.h>
+#include <Perf_counters.h>
+#include <chrono>
 #include <Device.h>
 
 Implemente_instanciable_sans_constructeur(Solv_AMGX,"Solv_AMGX",Solv_Petsc);
@@ -50,9 +52,10 @@ void Solv_AMGX::initialize()
   4. (uppercase) letter: whether the index type is 32-bit int (I) or else (not currently supported).
   typedef enum { AMGX_mode_hDDI, AMGX_mode_hDFI, AMGX_mode_hFFI, AMGX_mode_dDDI, AMGX_mode_dDFI, AMGX_mode_dFFI } AMGX_Mode; */
   Cerr << "Initializing Amgx and reading the " << config() << " file." << finl;
-  double start = Statistiques::get_time_now();;
+  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   SolveurAmgX_.initialize(PETSC_COMM_WORLD, AmgXmode.getString(), config().getString());
-  Cout << "[AmgX] Time to initialize: " << Statistiques::get_time_now() - start << finl;
+  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
+  Cout << "[AmgX] Time to initialize: " << t.count() << finl;
   amgx_initialized_ = true;
   // MPI_Barrier(PETSC_COMM_WORLD); Voir dans https://github.com/barbagroup/AmgXWrapper/pull/30/commits/1554808a3689f51fa43ab81a35c47a9a1525939a
 }
@@ -60,6 +63,7 @@ void Solv_AMGX::initialize()
 // Creation des objets
 void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   initialize();
   if (read_matrix())
     {
@@ -70,10 +74,12 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   if (MatricePetsc_ != nullptr) MatDestroy(&MatricePetsc_);
 
   Create_MatricePetsc(MatricePetsc_, mataij_, mat_morse);
-  double start = Statistiques::get_time_now();
+  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   petscToCSR(MatricePetsc_, SolutionPetsc_, SecondMembrePetsc_);
-  Cout << "[AmgX] Time to create CSR pointers: " << Statistiques::get_time_now() - start << finl;
+  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
+  Cout << "[AmgX] Time to create CSR pointers: " << t.count() << finl;
   statistiques().begin_count(gpu_copytodevice_counter_);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
   // Use device pointer to enable device consolidation in AmgXWrapper:
   double* values_device;
   cudaMalloc((void**)&values_device, nNz * sizeof(double));
@@ -82,7 +88,8 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   SolveurAmgX_.setA(nRowsGlobal, nRowsLocal, nNz, rowOffsets, colIndices, values_device, nullptr);
   //cudaFree(values_device);delete[] hostArray;
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz));
-  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistiques().last_time(gpu_copytodevice_counter_) << finl; // Attention balise lue par fiche de validation
+  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice_) << finl;// Attention balise lue par fiche de validation
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice_);
 }
 
 void Solv_AMGX::Create_vectors(const DoubleVect& b)
@@ -157,11 +164,14 @@ PetscErrorCode Solv_AMGX::petscToCSR(Mat& A, Vec& lhs_petsc, Vec& rhs_petsc)
 
 void Solv_AMGX::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   // La matrice CSR de PETSc a ete mise a jour dans check_stencil
   statistiques().begin_count(gpu_copytodevice_counter_);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
   SolveurAmgX_.updateA(nRowsLocal, nNz, values);  // ToDo erreur valgrind au premier appel de updateA...
   statistiques().end_count(gpu_copytodevice_counter_, (int)sizeof(double)*nNz);
-  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistiques().last_time(gpu_copytodevice_counter_) << finl; // Attention balise lue par fiche de validation
+  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice_) << finl; // Attention balise lue par fiche de validation
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1 , (double)sizeof(double)*(double)nNz);
 }
 
 // Check and return true if new stencil
@@ -175,7 +185,7 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
       Cout << "[AmgX] In Solv_AMGX::check_stencil same_stencil=true cause bug in SolveurAmgX_::updateA on multi-GPU (ToDo: fix by switching to CSR interface)!" << finl;
       return true;
     }
-  double start = Statistiques::get_time_now();
+  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   // Parcours de la matrice_morse (qui peut contenir des 0 et qui n'est pas triee par colonnes croissantes)
   // si matrice sur le GPU deja construite (qui est sans 0 et qui est triee par colonnes croissantes):
   const ArrOfInt& tab1 = mat_morse.get_tab1();
@@ -229,19 +239,23 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
         }
     }
   new_stencil = mp_max(new_stencil);
-  Cout << "[AmgX] Time to check stencil: " << Statistiques::get_time_now() - start << finl;
+  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
+  Cout << "[AmgX] Time to check stencil: " << t.count() << finl;
   return new_stencil;
 }
 
 // Resolution
 int Solv_AMGX::solve(ArrOfDouble& residu)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   mapToDevice(rhs_);
   computeOnTheDevice(lhs_);
   statistiques().begin_count(gpu_library_counter_);
+  statistics.begin_count(STD_COUNTERS::gpu_library_,2);
   // Offer device pointers to AmgX:
   SolveurAmgX_.solve(addrOnDevice(lhs_), addrOnDevice(rhs_), nRowsLocal, seuil_);
   statistiques().end_count(gpu_library_counter_);
+  statistics.end_count(STD_COUNTERS::gpu_library_);
   Cout << "[AmgX] Time to solve system on GPU: " << statistiques().last_time(gpu_library_counter_) << finl;
   return nbiter(residu);
 }

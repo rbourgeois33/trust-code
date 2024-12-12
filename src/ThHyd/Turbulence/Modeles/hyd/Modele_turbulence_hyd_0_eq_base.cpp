@@ -25,6 +25,7 @@
 #include <Domaine.h>
 #include <Motcle.h>
 #include <Param.h>
+#include <Perf_counters.h>
 
 Implemente_base(Modele_turbulence_hyd_0_eq_base, "Modele_turbulence_hyd_0_eq_base", Modele_turbulence_hyd_base);
 
@@ -145,7 +146,9 @@ void Modele_turbulence_hyd_0_eq_base::completer()
 
 void Modele_turbulence_hyd_0_eq_base::mettre_a_jour(double)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(nut_counter_);
+  statistics.begin_count(STD_COUNTERS::turbulent_viscosity_,1);
   calculer_viscosite_turbulente();
   calculer_energie_cinetique_turb();
   loipar_->calculer_hyd(la_viscosite_turbulente_, energie_cinetique_turbulente());
@@ -155,6 +158,7 @@ void Modele_turbulence_hyd_0_eq_base::mettre_a_jour(double)
   energie_cinetique_turb_->valeurs().echange_espace_virtuel();
   la_viscosite_turbulente_->valeurs().echange_espace_virtuel();
   statistiques().end_count(nut_counter_);
+  statistics.end_count(STD_COUNTERS::turbulent_viscosity_);
 }
 
 void Modele_turbulence_hyd_0_eq_base::imprimer(Sortie& os) const

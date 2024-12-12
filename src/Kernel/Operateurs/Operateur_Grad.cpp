@@ -17,6 +17,7 @@
 #include <Operateur_Grad.h>
 #include <Probleme_base.h>
 #include <stat_counters.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Operateur_Grad,"Operateur_Grad",OWN_PTR(Operateur_Grad_base));
 
@@ -59,9 +60,12 @@ void Operateur_Grad::typer_direct(const Nom& un_type)
 DoubleTab& Operateur_Grad::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
+  statistics.begin_count(STD_COUNTERS::gradient_,1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(gradient_counter_);
+  statistics.end_count(STD_COUNTERS::gradient_);
   return tmp;
 }
 
@@ -75,8 +79,11 @@ DoubleTab& Operateur_Grad::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Grad::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
+  statistics.begin_count(STD_COUNTERS::gradient_,1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(gradient_counter_);
+  statistics.end_count(STD_COUNTERS::gradient_);
   return tmp;
 }

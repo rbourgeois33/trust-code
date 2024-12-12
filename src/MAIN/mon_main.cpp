@@ -23,6 +23,7 @@
 #include <Journal.h>
 #include <cstdio>
 #include <Statistiques.h>
+#include <Perf_counters.h>
 #include <communications.h>
 #include <petsc_for_kernel.h>
 #include <stat_counters.h>
@@ -314,9 +315,13 @@ void mon_main::dowork(const Nom& nom_du_cas)
     {
       declare_stat_counters();
     }
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(temps_total_execution_counter_);
   // Ce compteur est arrete dans Resoudre*
   statistiques().begin_count(initialisation_calcul_counter_);
+
+  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
+  statistics.begin_count(STD_COUNTERS::computation_start_up_,1);
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)
@@ -475,9 +480,12 @@ void mon_main::dowork(const Nom& nom_du_cas)
 
       statistiques().dump("Statistiques de post resolution", mode_append);
       print_statistics_analyse("Statistiques de post resolution", 1);
+      statistics.print_global_TU("Post-treatment statistics",1);
+      statistics.print_performance_to_csv("Post-treatment statistics",1);
     }
 
   double temps = statistiques().get_total_time();
+  temps = statistics.get_time_since_last_open(STD_COUNTERS::total_execution_time_);
   Cout << finl;
   Cout << "--------------------------------------------" << finl;
   Cout << "clock: Total execution: " << temps << " s" << finl;

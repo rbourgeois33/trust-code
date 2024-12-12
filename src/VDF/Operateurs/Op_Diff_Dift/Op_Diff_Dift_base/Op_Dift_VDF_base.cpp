@@ -18,6 +18,7 @@
 #include <Op_Dift_VDF_base.h>
 #include <Eval_Dift_VDF.h>
 #include <Statistiques.h>
+#include <Perf_counters.h>
 
 #include <TRUSTTrav.h>
 #include <Motcle.h>
@@ -31,13 +32,16 @@ Entree& Op_Dift_VDF_base::readOn(Entree& is) { return Op_Diff_VDF_base::readOn(i
 
 void Op_Dift_VDF_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
+  statistics.begin_count(STD_COUNTERS::diffusion_,1);
   iter_->ajouter_blocs(matrices,secmem,semi_impl);
 
   // On ajoute des termes si axi ...
   Op_Dift_VDF_base::ajoute_terme_pour_axi_turb(matrices, secmem, semi_impl);
 
   statistiques().end_count(diffusion_counter_);
+  statistics.end_count(STD_COUNTERS::diffusion_);
 }
 
 // Ajout du terme supplementaire en V/(R*R) dans le cas des coordonnees axisymetriques

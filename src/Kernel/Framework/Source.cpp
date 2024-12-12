@@ -20,6 +20,7 @@
 #include <Milieu_base.h>
 #include <TRUSTTabs.h>
 #include <Source.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Source,"Source",OWN_PTR(Source_base));
 
@@ -72,9 +73,12 @@ void Source::typer(const Nom& typ, const Equation_base& eqn)
  */
 DoubleTab& Source::ajouter(DoubleTab& xx) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(source_counter_);
+  statistics.begin_count(STD_COUNTERS::rhs_,1);
   DoubleTab& tmp = valeur().ajouter(xx);
   statistiques().end_count(source_counter_);
+  statistics.end_count(STD_COUNTERS::rhs_);
   return tmp;
 }
 
@@ -87,8 +91,11 @@ DoubleTab& Source::ajouter(DoubleTab& xx) const
  */
 DoubleTab& Source::calculer(DoubleTab& xx) const
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(source_counter_);
+  statistics.begin_count(STD_COUNTERS::rhs_,1);
   DoubleTab& tmp = valeur().calculer(xx);
   statistiques().end_count(source_counter_);
+  statistics.end_count(STD_COUNTERS::rhs_);
   return tmp;
 }

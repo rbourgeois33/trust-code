@@ -19,205 +19,247 @@
 #include <map>
 #include <tuple>
 #include <array>
-#include <vector>
+
+#ifndef PERFS_COUNTERS_H
+#define PERFS_COUNTERS_H
+
 // This file contains all of the needed for the description of the counter associated with the tracking of performance in the TRUST code.
 // A class Time is introduced in Perf_counters.cpp for extracting the time
+
 class Counter;
 
 enum class STD_COUNTERS : unsigned int
 {
-	temps_total_execution_counter_ ,
-	initialisation_calcul_counter_ ,
-	timestep_counter_ ,
-	solv_sys_counter_,
-	solv_sys_petsc_counter_,
-	diffusion_implicite_counter_,
-	dt_counter_ ,
-	nut_counter_ ,
-	convection_counter_ ,
-	diffusion_counter_ ,
-	decay_counter_ ,
-	gradient_counter_ ,
-	divergence_counter_ ,
-	source_counter_ ,
-	postraitement_counter_ ,
-	sauvegarde_counter_ ,
-	temporary_counter_ ,
-	assemblage_sys_counter_ ,
-	update_vars_counter_ ,
-	update_fields_counter_ ,
-	mettre_a_jour_counter_  ,
-	divers_counter_ ,
-	probleme_fluide_ ,
-	probleme_combustible_ ,
-	echange_vect_counter_ ,
-	mpi_sendrecv_counter_  ,
-	mpi_send_counter_ ,
-	mpi_recv_counter_ ,
-	mpi_bcast_counter_ ,
-	mpi_alltoall_counter_ ,
-	mpi_allgather_counter_ ,
-	mpi_gather_counter_ ,
-	mpi_partialsum_counter_,
-	mpi_sumdouble_counter_ ,
-	mpi_mindouble_counter_,
-	mpi_maxdouble_counter_ ,
-	mpi_sumfloat_counter_ ,
-	mpi_minfloat_counter_ ,
-	mpi_maxfloat_counter_ ,
-	mpi_sumint_counter_ ,
-	mpi_minint_counter_ ,
-	mpi_maxint_counter_ ,
-	mpi_barrier_counter_ ,
-	gpu_library_counter_ ,
-	gpu_kernel_counter_ ,
-	gpu_copytodevice_counter_ ,
-	gpu_copyfromdevice_counter_ ,
-	IO_EcrireFicPartageMPIIO_counter_ ,
-	IO_EcrireFicPartageBin_counter_ ,
-	interprete_scatter_counter_,
-	NB_OF_STD_COUNTER
+  total_execution_time_ , ///< Lowest level counter that track the total time of the computation
+  computation_start_up_ , ///< Track the time before the Resoudre loop
+  timestep_ ,   ///< Track time elapsed in the time loop
+  system_solver_, ///< Track time elapsed in SolveurSys::resoudre_systeme
+  petsc_solver_,  ///< Track the time elapsed using petsc solver
+  implicit_diffusion_,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
+  compute_dt_ , ///< Track time used to compute the time step dt
+  turbulent_viscosity_ ,
+  convection_ ,
+  diffusion_ ,
+  gradient_ ,
+  divergence_ ,
+  rhs_ ,
+  postreatment_ ,
+  backup_file_ ,
+  restart_ ,
+  matrix_assembly_ ,
+  update_variables_  ,
+  virtual_swap_ ,
+  mpi_sendrecv_  ,
+  mpi_send_ ,
+  mpi_recv_ ,
+  mpi_bcast_ ,
+  mpi_alltoall_ ,
+  mpi_allgather_ ,
+  mpi_gather_ ,
+  mpi_partialsum_,
+  mpi_sumdouble_ ,
+  mpi_mindouble_,
+  mpi_maxdouble_ ,
+  mpi_sumfloat_ ,
+  mpi_minfloat_ ,
+  mpi_maxfloat_ ,
+  mpi_sumint_ ,
+  mpi_minint_ ,
+  mpi_maxint_ ,
+  mpi_barrier_ ,
+  gpu_library_ ,
+  gpu_kernel_ ,
+  gpu_copytodevice_ ,
+  gpu_copyfromdevice_ ,
+  IO_EcrireFicPartageMPIIO_ ,
+  IO_EcrireFicPartageBin_ ,
+  interprete_scatter_,
+  read_scatter_,
+  NB_OF_STD_COUNTER
 };
 
 
-/*!  @brief This class store counters in TRUST
+/*!  @brief This class stores and manages counters in TRUST
  *
  */
 class Perf_counters
 {
-private:
-
-	Perf_counters() ;
-	Perf_counters(const Perf_counters&) = delete;
-	Perf_counters& operator=(const Perf_counters&) = delete;
-
-	bool two_first_steps_elapsed_;
-	bool end_of_cache_;
-	unsigned int max_counter_lvl_to_print_;
-
-	std::array <Counter,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; // array of the standard counters of TRUST, always used in practice
-	std::map <std::string, Counter> custom_counter_map_str_to_counter_ ; // Link the custom counters descriptions to the counter type
-	Counter * last_opened_counter_;
-	bool counters_stop_;
-
 public:
 
-	static Perf_counters* getInstance() {
-		static Perf_counters* counters_stat_ = nullptr;
-		if (counters_stat_ == nullptr) {
-			if (counters_stat_ == nullptr) {
-				counters_stat_ = new Perf_counters();  // Création de l'instance unique
-			}
-		}
-		return counters_stat_;
-	}
+  static Perf_counters* getInstance()
+  {
+    static Perf_counters counters_stat_ ;
+    return &counters_stat_;
+  }
 
-	void declare_base_counters();
+  /*! @brief Function filling the array std_counters_ with the base counters of TRUST
+   *
+   */
+  void declare_base_counters();
 
-	/*! @brief Create a new counter and add it to the vector of counters
-	 *
-	 * @param counter_level
-	 * @param counter_description
-	 * @param counter_family
-	 * @param is_comm
-	 * @return create a new counter
-	 */
-	void create_custom_counter(int counter_level, std::string counter_description, std::string counter_family ,bool is_comm);
+  /*! @brief Create a new counter and add it to the vector of counters
+   *
+   * @param counter_level
+   * @param counter_description
+   * @param counter_family
+   * @param is_comm
+   * @return create a new counter
+   */
+  void create_custom_counter(unsigned int counter_level, std::string counter_description, std::string counter_family = "None",bool is_comm);
 
-
-	/*! @brief Sort the vector of counters based on counter level
-	 *
-	 */
-	void sort_counters_by_level();
-
-	/*! @brief Start the count of a counter
-	 *
-	 */
-	//	void begin_count(Counter c);
+  /*! @brief Start the count of a counter
+   *
+   */
+  //	void begin_count(Counter c);
 
 
-	/*! Standard counters
-	 *
-	 * @param
-	 */
-	void begin_count(const STD_COUNTERS std_cnt, unsigned int counter_lvl);
+  /*! Standard counters, start the tracking of the wanted operation
+   *
+   * @param std_cnt reference to the standard counter
+   * @param counter_lvl level of the counter you try to open, warning it changes the value of the counter level associated with counter std_cnt
+   */
+  void begin_count(const STD_COUNTERS std_cnt, int counter_lvl);
 
-	/*! Custom counters
-	 *
-	 * @param custom_count_name
-	 */
-	void begin_count(const std::string& custom_count_name, unsigned int counter_lvl);
+  /*! Custom counters, start the tracking of the wanted operation
+   *
+   * @param custom_count_name string key in the custom counter map
+   * @param counter_lvl level of the counter you try to open, warning it changes the value of the level of the counter associated with custom_count_name
+   */
+  void begin_count(const std::string& custom_count_name, unsigned int counter_lvl);
+
+  /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
+   *
+   * @param c counter you try to open
+   * @param counter_lvl
+   * @param t time of opening
+   */
+  void check_begin(Counter& c, unsigned int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+
+  /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
+   *
+   * @param c counter you try to close
+   * @param t time of closing
+   */
+  void check_end(Counter& c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
 
 
-	void check_begin(Counter& c, unsigned int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+  /*! @brief End the count of a counter and update the counter values
+   *
+   * @param c is the counter to end the count
+   * @param count_increment is the count increment. If not specified, then it is equal to 1
+   * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
+   */
+  void end_count(const std::string& custom_count_name, int count_increment=1, int quantity_increment=0);
+
+  /*! @brief End the count of a counter and update the counter values
+   *
+   * @param c is the counter to end the count
+   * @param count_increment is the count increment. If not specified, then it is equal to 1
+   * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
+   */
+  void end_count(const STD_COUNTERS std_cnt, int count_increment=1, int quantity_increment=0);
+
+  /*! @brief Stop all counters, has to be called on every processor simultaneously
+   *
+   */
+  void stop_counters();
+
+  /*! @brief Restart all counters, has to be called on every processor simultaneously
+   *
+   */
+  void restart_counters();
+
+  /*! @brief Reset counters to zero, used between the start-up of the computation, the computation itself and the post-processing
+   *
+   */
+  void reset_counters();
+
+  /*!
+   *
+   * @param is_the_three_first_time_steps_elapsed == True, then the thre first time steps are discarded
+   */
+  inline void set_three_first_steps_elapsed(bool is_the_three_first_time_steps_elapsed)
+  {
+    two_first_steps_elapsed_ = is_the_three_first_time_steps_elapsed;
+  }
+
+  /*! @brief Create the csv.TU file.
+   *
+   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+   */
+  void print_performance_to_csv(std::string message, bool mode_append);
+
+  /*! @brief Create the global .Tu file with agglomerated stats
+   *
+   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+   */
+  void print_global_TU(std::string message, bool mode_append);
+
+  inline double get_time(STD_COUNTERS name)
+  {
+    Counter & c = std_counters_[name];
+    return (c.total_time_.count());
+  }
+
+  inline double get_time(std::string name)
+  {
+    Counter & c = custom_counter_map_str_to_counter_.at(name);
+    return (c.total_time_.count());
+  }
+
+  /*!
+   * This function aims at starting the tracking of time per time step of counters that have been started before the time current time step
+   */
+  void start_timestep();
+
+  /*!
+   *
+   * @param name
+   * @return the time since the last opening of the counter
+   */
+  double get_time_since_last_open(STD_COUNTERS name);
+
+  double get_time_since_last_open(std::string name);
+
+  double get_total_time(STD_COUNTERS name);
+
+  double get_total_time(std::string name);
 
 
-	void check_end(Counter& c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+  void compute_avg_min_max_var_per_step(int tstep);
 
+  std::string get_os();
 
-	/*! @brief End the count of a counter and update the counter values
-	 *
-	 * @param c is the counter to end the count
-	 * @param count_increment is the count increment. If not specified, then it is equal to 1
-	 * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
-	 */
-	void end_count(const std::string& custom_count_name, int count_increment=1, double quantity_increment=0);
+  std::string get_cpu();
 
-	/*! @brief End the count of a counter and update the counter values
-	 *
-	 * @param c is the counter to end the count
-	 * @param count_increment is the count increment. If not specified, then it is equal to 1
-	 * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
-	 */
-	void end_count(const STD_COUNTERS std_cnt, int count_increment, double quantity_increment);
+  std::string get_gpu();
 
-	/*! @brief Stop all counters, has to be called on every processor simultaneously
-	 *
-	 */
-	void stop_counters();
+  std::string get_date();
 
-	/*! @brief Restart all counters, has to be called on every processor simultaneously
-	 *
-	 */
-	void restart_counters();
+private:
 
-	/*!
-	 *
-	 * @param is_the_three_first_time_steps_elapsed == True, then the thre first time steps are discarded
-	 */
-	inline void set_three_first_steps_elapsed(bool is_the_three_first_time_steps_elapsed)
-	{
-		two_first_steps_elapsed_ = is_the_three_first_time_steps_elapsed;
-	}
+  Perf_counters()
+  {
+    Perf_counters::declare_base_counters();
+    two_first_steps_elapsed_ = true;
+    end_cache_=false;
+    counters_stop_=false;
+    last_opened_counter_ = nullptr;
+  }
 
-	/*! @brief Create the csv.TU file.
-	 *
-	 * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
-	 */
-	void print_performance_to_csv(std::string message, bool mode_append);
+  Perf_counters(const Perf_counters&) = delete;
+  Perf_counters& operator=(const Perf_counters&) = delete;
 
-	/*! @brief Create the global .Tu file with agglomerated stats
-	 *
-	 * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
-	 */
-	void print_global_TU(std::string message, bool mode_append);
+  bool two_first_steps_elapsed_;
+  bool end_cache_;
+  std::chrono::duration<double> time_cache_;
+  bool counters_stop_;
 
-	/*! Change the maximum counter level to be print in the Tu files
-	 *
-	 * @param new_max_counter_lvl_to_print
-	 */
-	void set_max_counter_lvl_to_print(unsigned int new_max_counter_lvl_to_print);
-
-	void compute_avg_min_max_var_per_step(int tstep);
-
-	std::string get_os();
-
-	std::string get_cpu();
-
-	std::string get_gpu();
-
-	std::string get_date();
+  std::array <Counter,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the standard counters of TRUST
+  std::map <std::string, Counter> custom_counter_map_str_to_counter_ ; ///< Map that link the custom counters descriptions to the counter type
+  Counter * last_opened_counter_;
 
 };
 
+#endif
 

@@ -22,6 +22,8 @@
 #include <map>
 #include <tuple>
 #include <kokkos++.h>
+#include <Perf_counters.h>
+#include <chrono>
 #ifndef LATATOOLS
 #include <comm_incl.h>
 #include <Comm_Group_MPI.h>

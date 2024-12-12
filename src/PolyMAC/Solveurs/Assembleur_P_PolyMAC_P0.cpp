@@ -34,6 +34,7 @@
 #include <Dirichlet.h>
 #include <Debog.h>
 #include <Piso.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id assemblage_sys_counter_;
 
@@ -45,10 +46,12 @@ Entree& Assembleur_P_PolyMAC_P0::readOn(Entree& s) { return Assembleur_P_PolyMAC
 
 int  Assembleur_P_PolyMAC_P0::assembler_mat(Matrice& la_matrice,const DoubleVect& diag,int incr_pression,int resoudre_en_u)
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   set_resoudre_increment_pression(incr_pression);
   set_resoudre_en_u(resoudre_en_u);
   Cerr << "Assemblage de la matrice de pression ... ";
   statistiques().begin_count(assemblage_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   la_matrice.typer("Matrice_Morse");
   Matrice_Morse& mat = ref_cast(Matrice_Morse, la_matrice.valeur());
 
@@ -103,6 +106,7 @@ int  Assembleur_P_PolyMAC_P0::assembler_mat(Matrice& la_matrice,const DoubleVect
   if (!has_P_ref && is_first_proc_with_real_elems) mat(0, 0) *= 2;
 
   statistiques().end_count(assemblage_sys_counter_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_);
   return 1;
 }
 

@@ -15,8 +15,8 @@
 
 #include <SolveurPP1B.h>
 #include <Champ_P1_isoP1Bulle.h>
-#include <stat_counters.h>
 #include <Solv_AMG.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(SolveurPP1B,"SolveurPP1B",SolveurSys_base);
 
@@ -39,7 +39,8 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
                                   DoubleVect& x)
 {
   // Stop the solv_sys_counter_ counter to not count the changing base
-  statistiques().end_count(solv_sys_counter_,0,-1);
+  Perf_counters & statistics = Perf_counters::getInstance();
+  statistics.end_count(STD_COUNTERS::system_solver_,0);
   b_ = second_membre;
   assembleur_pression_->changer_base_second_membre(b_);
   assembleur_pression_->changer_base_pression(x);
@@ -62,7 +63,7 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
     }
 
   assembleur_pression_->changer_base_pression_inverse(x);
-  statistiques().begin_count(solv_sys_counter_);
+  statistics.begin_count(STD_COUNTERS::system_solver_,2);
   return nb_iter;
 }
 

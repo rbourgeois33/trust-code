@@ -39,6 +39,7 @@
 
 #include <Convert_ICoCoTrioField.h>
 #include <stat_counters.h>
+#include <Perf_counters.h>
 #include <Field_base.h>
 
 
@@ -115,6 +116,7 @@ void ProblemTrio::setMPIComm(void* mpicomm)
  */
 bool ProblemTrio::initialize()
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   Process::exception_sur_exit=1;
   if (((*my_params).problem_name=="default_vvvvv") || ((*my_params).data_file=="default_vvvvv"))
     throw WrongArgument("??","Constructor","data","data shoud point to the name of a Probleme_U");
@@ -185,9 +187,13 @@ bool ProblemTrio::initialize()
     {
       statistiques().dump("Statistiques d'initialisation du calcul", 0);
       print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
+      statistics.print_global_TU("Computation start-up statistics",0);
+      statistics.print_performance_to_csv("Computation start-up statistics",0);
     }
   statistiques().reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
+  statistics.reset_counters();
+  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
@@ -215,8 +221,11 @@ void ProblemTrio::terminate()
   int mode_append=1;
   if (!Objet_U::disable_TU)
     {
+	  Perf_counters & statistics = Perf_counters::getInstance();
       statistiques().dump("Statistiques Resolution", mode_append);
       print_statistics_analyse("Statistiques Resolution", 1);
+      statistics.print_global_TU("Computation statistics",0);
+      statistics.print_performance_to_csv("Computation statistics",0);
     }
   if(p)
     {
@@ -287,7 +296,9 @@ bool ProblemTrio::initTimeStep(double dt)
  */
 bool ProblemTrio::solveTimeStep()
 {
+  Perf_counters & statistics = Perf_counters::getInstance();
   statistiques().begin_count(timestep_counter_);
+  statistics.begin_count(STD_COUNTERS::timestep_,0);
   if (pb->lsauv())
     pb->sauver();
   bool res=pb->solveTimeStep();
@@ -306,6 +317,7 @@ bool ProblemTrio::solveTimeStep()
 void ProblemTrio::validateTimeStep()
 {
   pb->validateTimeStep();
+  Perf_counters & statistics = Perf_counters::getInstance();
   if(sub_type(Probleme_base,*pb))
     {
       const Probleme_base& pb_base = ref_cast(Probleme_base,*pb);
@@ -319,6 +331,7 @@ void ProblemTrio::validateTimeStep()
       pb->postraiter(0);
     }
   statistiques().end_count(timestep_counter_);
+  statistics.end_count(STD_COUNTERS::timestep_,0);
 }
 
 /*! @brief Tells if the Problem unknowns have changed during the last time step.
