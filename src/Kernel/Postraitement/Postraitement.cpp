@@ -1766,7 +1766,7 @@ int Postraitement::postraiter_tableau(const Domaine& dom,const Noms& unites,cons
         else
           val_post(i, 0) = valeurs(i, ncomp);
       });
-      end_gpu_timer(Objet_U::computeOnDevice, __KERNEL_NAME__);
+      end_gpu_timer(__KERNEL_NAME__);
     }
   else
     {
