@@ -19,7 +19,7 @@
 #include <IJK_communications.h>
 #include <communications.h>
 #include <stat_counters.h>
-#include <IJK_Splitting.h>
+#include <Domaine_IJK.h>
 #include <Statistiques.h>
 #include <TRUST_Vector.h>
 #include <TRUSTVect.h>

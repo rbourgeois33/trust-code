@@ -14,7 +14,7 @@
 *****************************************************************************/
 
 #include <Coarsen_Operator_K.h>
-#include <IJK_Grid_Geometry.h>
+#include <Domaine_IJK.h>
 #include <EFichier.h>
 #include <communications.h>
 #include <TRUSTTab.h>

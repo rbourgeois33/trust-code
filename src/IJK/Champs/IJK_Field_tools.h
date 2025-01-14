@@ -20,7 +20,7 @@
 #include <TRUSTLists.h>
 #include <TRUSTVect.h>
 #include <TRUSTArray.h>
-#include <IJK_Splitting.h>
+#include <Domaine_IJK.h>
 #include <IJ_layout.h>
 #include <IJK_Field_local_template.h>
 #include <IJK_Field_template.h>
