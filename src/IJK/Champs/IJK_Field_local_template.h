@@ -20,7 +20,7 @@
 #include <stat_counters.h>
 #include <Statistiques.h>
 #include <TRUSTVect.h>
-#include <IJK_Splitting.h>
+#include <Domaine_IJK.h>
 
 /*! @brief : This class describes a scalar field in an ijk box without any parallel information.
  *

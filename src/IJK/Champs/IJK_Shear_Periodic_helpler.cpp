@@ -15,7 +15,7 @@
 
 
 #include <IJK_Shear_Periodic_helpler.h>
-#include <IJK_Splitting.h>
+#include <Domaine_IJK.h>
 
 
 void IJK_Shear_Periodic_helpler::allocate(const int ni_local, const int nj_local, const int nk_local, int ghost_size, int ncompo, int type, double rov, double rol, int use_inv_rho_in_pressure_solver)
