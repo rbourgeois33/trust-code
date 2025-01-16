@@ -27,7 +27,7 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
 {
   if (Process::je_suis_maitre())
     {
-      const IJK_Splitting& splitting = f.get_splitting();
+      const Domaine_IJK& splitting = f.get_splitting();
       SFichier master_file;
       Nom prefix = Nom(filename) + Nom(".");
       SFichier binary_file;
@@ -157,7 +157,7 @@ void dumplata_scalar(const char *filename, const char *fieldname,
     {
       master_file.ouvrir(filename, ios::app);
       Nom loc;
-      if (f.get_localisation() == IJK_Splitting::ELEM)
+      if (f.get_localisation() == Domaine_IJK::ELEM)
         loc = "ELEM";
       else
         loc = "SOM";
@@ -186,7 +186,7 @@ void dumplata_scalar_parallele_plan(const char *filename, const char *fieldname,
     {
       master_file.ouvrir(filename, ios::app);
       Nom loc;
-      if (f.get_localisation() == IJK_Splitting::ELEM)
+      if (f.get_localisation() == Domaine_IJK::ELEM)
         loc = "ELEM";
       else
         loc = "SOM";
@@ -214,7 +214,7 @@ void read_lata_parallel_template(const char *filename_with_path, int tstep, cons
        << " field=" << fieldname
        << " component= " << i_compo << finl;
   Process::barrier(); // to print message before crash
-  const IJK_Splitting& splitting = field.get_splitting();
+  const Domaine_IJK& splitting = field.get_splitting();
   const int offset_j = splitting.get_offset_local(DIRECTION_J);
   const int offset_k = splitting.get_offset_local(DIRECTION_K);
   const int ni_local = field.ni();
@@ -246,9 +246,9 @@ void read_lata_parallel_template(const char *filename_with_path, int tstep, cons
           split_path_filename(filename_with_path, path, dbname);
           lata_db.read_master_file(path, filename_with_path);
           const char * locstring;
-          if (field.get_localisation() == IJK_Splitting::ELEM)
+          if (field.get_localisation() == Domaine_IJK::ELEM)
             locstring = "ELEM";
-          else if (field.get_localisation() == IJK_Splitting::NODES)
+          else if (field.get_localisation() == Domaine_IJK::NODES)
             locstring = "SOM";
           else
             locstring = "FACES";
@@ -268,7 +268,7 @@ void read_lata_parallel_template(const char *filename_with_path, int tstep, cons
                    << input_ni_tot-1 << " " << input_nj_tot-1 << " " << input_nk_tot-1 << finl;
               Process::exit();
             }
-          if (field.get_localisation() == IJK_Splitting::ELEM)
+          if (field.get_localisation() == Domaine_IJK::ELEM)
             {
               input_ni_tot--;
               input_nj_tot--;
@@ -374,15 +374,15 @@ void lire_dans_lata(const char *filename_with_path, int tstep, const char *geome
     }
 
 
-  if (f.get_localisation() != IJK_Splitting::ELEM && f.get_localisation() != IJK_Splitting::NODES)
+  if (f.get_localisation() != Domaine_IJK::ELEM && f.get_localisation() != Domaine_IJK::NODES)
     {
       Cerr << "Error in lire_dans_lata(scalar field): provided field has unsupported localisation" << finl;
       Process::exit();
     }
   const int master = Process::je_suis_maitre();
   // Collate data on processor 0
-  const IJK_Splitting& splitting = f.get_splitting();
-  const IJK_Splitting::Localisation loc = f.get_localisation();
+  const Domaine_IJK& splitting = f.get_splitting();
+  const Domaine_IJK::Localisation loc = f.get_localisation();
   const int nitot = splitting.get_nb_items_global(loc, DIRECTION_I);
   const int njtot = splitting.get_nb_items_global(loc, DIRECTION_J);
   const int nktot = splitting.get_nb_items_global(loc, DIRECTION_K);
@@ -395,7 +395,7 @@ void lire_dans_lata(const char *filename_with_path, int tstep, const char *geome
   //db.read_master_file(path, dbname);
 
   const char * locstring;
-  if (f.get_localisation() == IJK_Splitting::ELEM)
+  if (f.get_localisation() == Domaine_IJK::ELEM)
     locstring = "ELEM";
   else
     locstring = "SOM";
@@ -451,22 +451,22 @@ void lire_dans_lata(const char *filename_with_path, int tstep, const char *geome
     }
 
 
-  if (vx.get_localisation() != IJK_Splitting::FACES_I
-      || vy.get_localisation() != IJK_Splitting::FACES_J
-      || vz.get_localisation() != IJK_Splitting::FACES_K)
+  if (vx.get_localisation() != Domaine_IJK::FACES_I
+      || vy.get_localisation() != Domaine_IJK::FACES_J
+      || vz.get_localisation() != Domaine_IJK::FACES_K)
     {
       Cerr << "Error in lire_dans_lata(vx, vy, vz): provided fields have incorrect localisation" << finl;
       Process::exit();
     }
-  const IJK_Splitting& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_splitting();
   // Collate data on processor 0
   // In lata format, the velocity is written as an array of (vx, vy, vz) vectors.
   // Size of the array is the total number of nodes in the mesh.
   // The velocity associated with a node is the combination of velocities at the faces
   // at the right of the node (in each direction).
-  const int nitot = splitting.get_nb_items_global(IJK_Splitting::ELEM, 0) + 1;
-  const int njtot = splitting.get_nb_items_global(IJK_Splitting::ELEM, 1) + 1;
-  const int nktot = splitting.get_nb_items_global(IJK_Splitting::ELEM, 2) + 1;
+  const int nitot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 0) + 1;
+  const int njtot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 1) + 1;
+  const int nktot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 2) + 1;
 
   const int master = Process::je_suis_maitre();
 

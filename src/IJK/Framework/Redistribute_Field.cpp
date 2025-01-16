@@ -17,18 +17,18 @@
 #include <Linear_algebra_tools.h>
 #include <stat_counters.h>
 
-void Redistribute_Field::initialize(const IJK_Splitting& input,
-                                    const IJK_Splitting& output,
-                                    const IJK_Splitting::Localisation loc)
+void Redistribute_Field::initialize(const Domaine_IJK& input,
+                                    const Domaine_IJK& output,
+                                    const Domaine_IJK::Localisation loc)
 {
   // map vide => ok pour des maillages de tailles identiques
   VECT(IntTab) map;
   initialize(input, output, loc, map);
 }
 
-void Redistribute_Field::initialize(const IJK_Splitting& input,
-                                    const IJK_Splitting& output,
-                                    const IJK_Splitting::Localisation loc,
+void Redistribute_Field::initialize(const Domaine_IJK& input,
+                                    const Domaine_IJK& output,
+                                    const Domaine_IJK::Localisation loc,
                                     const VECT(IntTab) & redistribute_maps)
 {
   IntTab map;
@@ -153,9 +153,9 @@ void Redistribute_Field::intersect(const int s1, const int n1, int& s2, int& n2,
 //  (colonne 0: indice local du premier element a envoyer,
 //   colonne 1: numero de la tranche destination,
 //   colonne 2: nombre d'elements consecutifs a envoyer)
-void Redistribute_Field::compute_send_blocs(const IJK_Splitting& input,
-                                            const IJK_Splitting& output,
-                                            const IJK_Splitting::Localisation localisation,
+void Redistribute_Field::compute_send_blocs(const Domaine_IJK& input,
+                                            const Domaine_IJK& output,
+                                            const Domaine_IJK::Localisation localisation,
                                             const int dir,
                                             const IntTab& global_index_mapping,
                                             IntTab& send_blocs)

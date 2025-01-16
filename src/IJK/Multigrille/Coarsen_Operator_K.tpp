@@ -125,15 +125,15 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
   // on the coarse and on the fine meshes must coincide (message "cannot merge")
   // Compute the splitting of the coarse mesh: coarsened cells are on the same processor than the fine cells
   // they come from:
-  IJK_Splitting coarse_splitting;
+  Domaine_IJK coarse_splitting;
   // Same processor mapping as fine mesh
   IntTab processor_mapping;
   fine.get_splitting().get_processor_mapping(processor_mapping);
   // Same splitting in i and j directions
   ArrOfInt slice_size_i, slice_size_j, fine_slice_size_k, coarse_slice_size_k;
-  fine.get_splitting().get_slice_size(0, IJK_Splitting::ELEM, slice_size_i);
-  fine.get_splitting().get_slice_size(1, IJK_Splitting::ELEM, slice_size_j);
-  fine.get_splitting().get_slice_size(2, IJK_Splitting::ELEM, fine_slice_size_k);
+  fine.get_splitting().get_slice_size(0, Domaine_IJK::ELEM, slice_size_i);
+  fine.get_splitting().get_slice_size(1, Domaine_IJK::ELEM, slice_size_j);
+  fine.get_splitting().get_slice_size(2, Domaine_IJK::ELEM, fine_slice_size_k);
   coarse_slice_size_k.resize_array(fine_slice_size_k.size_array());
   // compute sizes of slices in the k direction:
   {

@@ -87,33 +87,33 @@ Entree& IJK_discretization::readOn(Entree& is)
 
   splitting_.initialize(grid_geom, splitting[0], splitting[1], splitting[2]);
 
-  vdf_to_ijk_i_.initialize(domaine_vdf, splitting_, IJK_Splitting::FACES_I, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
-  vdf_to_ijk_j_.initialize(domaine_vdf, splitting_, IJK_Splitting::FACES_J, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
-  vdf_to_ijk_k_.initialize(domaine_vdf, splitting_, IJK_Splitting::FACES_K, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
-  vdf_to_ijk_elem_.initialize(domaine_vdf, splitting_, IJK_Splitting::ELEM, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
-  vdf_to_ijk_nodes_.initialize(domaine_vdf, splitting_, IJK_Splitting::NODES, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
+  vdf_to_ijk_i_.initialize(domaine_vdf, splitting_, Domaine_IJK::FACES_I, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
+  vdf_to_ijk_j_.initialize(domaine_vdf, splitting_, Domaine_IJK::FACES_J, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
+  vdf_to_ijk_k_.initialize(domaine_vdf, splitting_, Domaine_IJK::FACES_K, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
+  vdf_to_ijk_elem_.initialize(domaine_vdf, splitting_, Domaine_IJK::ELEM, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
+  vdf_to_ijk_nodes_.initialize(domaine_vdf, splitting_, Domaine_IJK::NODES, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
 
   return is;
 }
 
-const IJK_Splitting& IJK_discretization::get_IJK_splitting() const
+const Domaine_IJK& IJK_discretization::get_IJK_splitting() const
 {
   return splitting_;
 }
 
-const VDF_to_IJK& IJK_discretization::get_vdf_to_ijk(IJK_Splitting::Localisation loc) const
+const VDF_to_IJK& IJK_discretization::get_vdf_to_ijk(Domaine_IJK::Localisation loc) const
 {
   switch(loc)
     {
-    case IJK_Splitting::FACES_I:
+    case Domaine_IJK::FACES_I:
       return vdf_to_ijk_i_;
-    case IJK_Splitting::FACES_J:
+    case Domaine_IJK::FACES_J:
       return vdf_to_ijk_j_;
-    case IJK_Splitting::FACES_K:
+    case Domaine_IJK::FACES_K:
       return vdf_to_ijk_k_;
-    case IJK_Splitting::ELEM:
+    case Domaine_IJK::ELEM:
       return vdf_to_ijk_elem_;
-    case IJK_Splitting::NODES:
+    case Domaine_IJK::NODES:
       return vdf_to_ijk_nodes_;
     default:
       Cerr << "Error in IJK_discretization::get_vdf_to_ijk: unknown loc" << finl;

@@ -43,7 +43,7 @@ void dumplata_header(const char *filename)
     }
 }
 
-void dumplata_add_geometry(const char *filename, const IJK_Splitting& splitting)
+void dumplata_add_geometry(const char *filename, const Domaine_IJK& splitting)
 {
   if (Process::je_suis_maitre())
     {

@@ -18,7 +18,7 @@
 
 #include <IJK_Shear_Periodic_helpler.h>
 #include <IJK_communications.h>
-#include <IJK_Splitting.h>
+#include <Domaine_IJK.h>
 
 
 template<typename _TYPE_, typename _TYPE_ARRAY_>
@@ -282,7 +282,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::echange_espace_virtuel(int le_gho
 {
   statistiques().begin_count(echange_vect_counter_);
   assert(le_ghost <= (IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::ghost()));
-  const IJK_Splitting& splitting = splitting_ref_.valeur();
+  const Domaine_IJK& splitting = splitting_ref_.valeur();
   int pe_imin_ = splitting.get_neighbour_processor(0, 0);
   int pe_imax_ = splitting.get_neighbour_processor(1, 0);
   int pe_jmin_ = splitting.get_neighbour_processor(0, 1);
@@ -390,15 +390,15 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::redistribute_with_shear_domain_ft
   // According to the shear periodicity condition
 
   _TYPE_ *dest = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::data().addr();
-  IJK_Splitting splitting_ns = input.get_splitting();
-  IJK_Splitting& splitting_ft = splitting_ref_.valeur();
+  Domaine_IJK splitting_ns = input.get_splitting();
+  Domaine_IJK& splitting_ft = splitting_ref_.valeur();
   double Lx =  splitting_ns.get_grid_geometry().get_domain_length(0);
   int ni = input.ni();
   double DX = Lx/ni ;
   const int nii = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::ni();
   const int njj = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::nj();
   const int nkk = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::nk();
-  int last_global_k = splitting_ns.get_nb_items_global(IJK_Splitting::ELEM, 2)-1;
+  int last_global_k = splitting_ns.get_nb_items_global(Domaine_IJK::ELEM, 2)-1;
 
   ArrOfDouble output_tmp;
   output_tmp.resize_array(nii);
@@ -447,7 +447,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::ajouter_second_membre_shear_perio
 {
   if (shear_BC_helpler_.monofluide_variable_==1)
     {
-      const IJK_Splitting& splitting = splitting_ref_.valeur();
+      const Domaine_IJK& splitting = splitting_ref_.valeur();
       const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
       const int ni = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::ni();
       const int nj = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::nj();
@@ -466,7 +466,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::ajouter_second_membre_shear_perio
       // Le coeff a appliquer est donc dx*dy/dz/rho
 
       double coeff_matrice = dxi * dxj / dxk;
-      int last_global_k = splitting.get_nb_items_global(IJK_Splitting::ELEM, 2);
+      int last_global_k = splitting.get_nb_items_global(Domaine_IJK::ELEM, 2);
 
       // EQUIVALENCE GHOST_MIN_MAX ARRAY AVEC INDICE Z REEL POUR SPLITTING_NS_
       // I_sigma_kappa_ghost_zmin_[0] --> -ghost (derniere maille ghost)
@@ -538,10 +538,10 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::ajouter_second_membre_shear_perio
 
 // Initializes the field and allocates memory
 // splitting: reference to the geometry of the IJK mesh and how the mesh is split on processors.
-//   The field stores a reference to this IJK_Splitting object so do not delete it.
+//   The field stores a reference to this Domaine_IJK object so do not delete it.
 // loc: localisation of the field (elements, nodes, faces in direction i, j, or k)
 //   The number of "real" items in each direction (returned by the ni(), nj() or nk() method) is obtained from
-//   the IJK_Splitting object. Warning: on a processor that is in the middle of the mesh, the nodes on the
+//   the Domaine_IJK object. Warning: on a processor that is in the middle of the mesh, the nodes on the
 //   right of the rightmost real element are not real, they are virtual, values are copied from the neigbour
 //   processor.
 // ghost_size: number of ghost layers to allocate. When an exchange of ghost cells data is requested, a smaller
@@ -554,7 +554,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::ajouter_second_membre_shear_perio
 //   Also, components are not grouped by node but stored by layers in k. nb_compo>1 is essentially used
 //   in the multigrid solver to optimize memory accesses to the components of the matrix.
 template<typename _TYPE_, typename _TYPE_ARRAY_>
-void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::allocate(const IJK_Splitting& splitting, IJK_Splitting::Localisation loc, int ghost_size, int additional_k_layers, int ncompo, bool external_storage, int type, double phy_ppty_v, double phy_ppty_l, int use_inv_rho_in_pressure_solver)
+void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::allocate(const Domaine_IJK& splitting, Domaine_IJK::Localisation loc, int ghost_size, int additional_k_layers, int ncompo, bool external_storage, int type, double phy_ppty_v, double phy_ppty_l, int use_inv_rho_in_pressure_solver)
 {
   const int ni_local = splitting.get_nb_items_local(loc, 0);
   const int nj_local = splitting.get_nb_items_local(loc, 1);

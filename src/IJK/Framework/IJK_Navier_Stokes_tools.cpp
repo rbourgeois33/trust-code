@@ -65,7 +65,7 @@ static void extend_array(const IJK_Grid_Geometry& geom1, const int direction, co
 // split2 : Resultat etendu contenant le domaine ou vivent les interfaces.
 // n_cells : Nombre de cellules supplementaires crees de chaque cote.
 //           (doit etre inferieur au nombre de mailles dans le domaine decoupee).
-void build_extended_splitting(const IJK_Splitting& split1, IJK_Splitting& split2, int n_cells)
+void build_extended_splitting(const Domaine_IJK& split1, Domaine_IJK& split2, int n_cells)
 {
   const IJK_Grid_Geometry& geom1 = split1.get_grid_geometry();
 
@@ -86,7 +86,7 @@ void build_extended_splitting(const IJK_Splitting& split1, IJK_Splitting& split2
   split2.initialize(geom2, split1.get_nprocessor_per_direction(DIRECTION_I), split1.get_nprocessor_per_direction(DIRECTION_J), split1.get_nprocessor_per_direction(DIRECTION_K));
 }
 
-Probleme_base& creer_domaine_vdf(const IJK_Splitting& splitting, const Nom& nom_domaine)
+Probleme_base& creer_domaine_vdf(const Domaine_IJK& splitting, const Nom& nom_domaine)
 {
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   // On va construire une partie de jdd a faire interpreter:
@@ -175,7 +175,7 @@ void force_zero_on_walls(IJK_Field_double& vz)
   const int nj = vz.nj();
   const int ni = vz.ni();
   const int kmin = vz.get_splitting().get_offset_local(DIRECTION_K);
-  const int nktot = vz.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K);
+  const int nktot = vz.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K);
   if (kmin == 0)
     {
       for (int j = 0; j < nj; j++)
@@ -199,16 +199,16 @@ static void ijk_interpolate_implementation(const IJK_Field_double& field, const 
   const int nj = field.nj();
   const int nk = field.nk();
 
-  const IJK_Splitting& splitting = field.get_splitting();
+  const Domaine_IJK& splitting = field.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   const double dx = geom.get_constant_delta(DIRECTION_I);
   const double dy = geom.get_constant_delta(DIRECTION_J);
   const double dz = geom.get_constant_delta(DIRECTION_K);
-  const IJK_Splitting::Localisation loc = field.get_localisation();
+  const Domaine_IJK::Localisation loc = field.get_localisation();
   // L'origine est sur un noeud. Donc que la premiere face en I est sur get_origin(DIRECTION_I)
-  double origin_x = geom.get_origin(DIRECTION_I) + ((loc == IJK_Splitting::FACES_J || loc == IJK_Splitting::FACES_K || loc == IJK_Splitting::ELEM) ? (dx * 0.5) : 0.);
-  double origin_y = geom.get_origin(DIRECTION_J) + ((loc == IJK_Splitting::FACES_K || loc == IJK_Splitting::FACES_I || loc == IJK_Splitting::ELEM) ? (dy * 0.5) : 0.);
-  double origin_z = geom.get_origin(DIRECTION_K) + ((loc == IJK_Splitting::FACES_I || loc == IJK_Splitting::FACES_J || loc == IJK_Splitting::ELEM) ? (dz * 0.5) : 0.);
+  double origin_x = geom.get_origin(DIRECTION_I) + ((loc == Domaine_IJK::FACES_J || loc == Domaine_IJK::FACES_K || loc == Domaine_IJK::ELEM) ? (dx * 0.5) : 0.);
+  double origin_y = geom.get_origin(DIRECTION_J) + ((loc == Domaine_IJK::FACES_K || loc == Domaine_IJK::FACES_I || loc == Domaine_IJK::ELEM) ? (dy * 0.5) : 0.);
+  double origin_z = geom.get_origin(DIRECTION_K) + ((loc == Domaine_IJK::FACES_I || loc == Domaine_IJK::FACES_J || loc == Domaine_IJK::ELEM) ? (dz * 0.5) : 0.);
   const int nb_coords = coordinates.dimension(0);
   result.resize_array(nb_coords);
   for (int idx = 0; idx < nb_coords; idx++)
@@ -419,7 +419,7 @@ void add_gradient_times_constant(const IJK_Field_double& pressure, const double 
       // k component:
       bool on_the_wall = false;
       const int k_min = vz.get_splitting().get_offset_local(DIRECTION_K);
-      const int nk_tot = vz.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K);
+      const int nk_tot = vz.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K);
       const int offset = vz.get_splitting().get_offset_local(DIRECTION_K);
       const ArrOfDouble& delta_z_all = geom.get_delta(DIRECTION_K);
       bool perio_k = vz.get_splitting().get_grid_geometry().get_periodic_flag(DIRECTION_K);
@@ -477,7 +477,7 @@ void add_gradient_times_constant_over_rho(const IJK_Field_double& pressure, cons
       // k component:
       bool on_the_wall = false;
       const int k_min = vz.get_splitting().get_offset_local(DIRECTION_K);
-      const int nk_tot = vz.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K);
+      const int nk_tot = vz.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K);
       const int offset = vz.get_splitting().get_offset_local(DIRECTION_K);
       const ArrOfDouble& delta_z_all = geom.get_delta(DIRECTION_K);
       bool perio_k = vz.get_splitting().get_grid_geometry().get_periodic_flag(DIRECTION_K);
@@ -533,7 +533,7 @@ void add_gradient_times_constant_times_inv_rho(const IJK_Field_double& pressure,
       // k component:
       bool on_the_wall = false;
       const int k_min = vz.get_splitting().get_offset_local(DIRECTION_K);
-      const int nk_tot = vz.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K);
+      const int nk_tot = vz.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K);
       const int offset = vz.get_splitting().get_offset_local(DIRECTION_K);
       const ArrOfDouble& delta_z_all = geom.get_delta(DIRECTION_K);
       bool perio_k = vz.get_splitting().get_grid_geometry().get_periodic_flag(DIRECTION_K);
@@ -937,7 +937,7 @@ void build_local_coords(const IJK_Field_double& f, ArrOfDouble& coord_i, ArrOfDo
   coord_j.resize_array(nj);
   coord_k.resize_array(nk);
 
-  if (f.get_localisation() == IJK_Splitting::NODES || f.get_localisation() == IJK_Splitting::FACES_I)
+  if (f.get_localisation() == Domaine_IJK::NODES || f.get_localisation() == Domaine_IJK::FACES_I)
     {
       for (int i = 0; i < ni; i++)
         coord_i[i] = nodes_i[i + i_offset];
@@ -947,7 +947,7 @@ void build_local_coords(const IJK_Field_double& f, ArrOfDouble& coord_i, ArrOfDo
       for (int i = 0; i < ni; i++)
         coord_i[i] = (nodes_i[i + i_offset] + nodes_i[i + i_offset + 1]) * 0.5;
     }
-  if (f.get_localisation() == IJK_Splitting::NODES || f.get_localisation() == IJK_Splitting::FACES_J)
+  if (f.get_localisation() == Domaine_IJK::NODES || f.get_localisation() == Domaine_IJK::FACES_J)
     {
       for (int i = 0; i < nj; i++)
         coord_j[i] = nodes_j[i + j_offset];
@@ -957,7 +957,7 @@ void build_local_coords(const IJK_Field_double& f, ArrOfDouble& coord_i, ArrOfDo
       for (int i = 0; i < nj; i++)
         coord_j[i] = (nodes_j[i + j_offset] + nodes_j[i + j_offset + 1]) * 0.5;
     }
-  if (f.get_localisation() == IJK_Splitting::NODES || f.get_localisation() == IJK_Splitting::FACES_K)
+  if (f.get_localisation() == Domaine_IJK::NODES || f.get_localisation() == Domaine_IJK::FACES_K)
     {
       for (int i = 0; i < nk; i++)
         coord_k[i] = nodes_k[i + k_offset];
@@ -1352,16 +1352,16 @@ double get_channel_control_volume(IJK_Field_double& field, int local_k_layer, co
   const double delta_y = field.get_splitting().get_grid_geometry().get_constant_delta(1);
   switch(field.get_localisation())
     {
-    case IJK_Splitting::ELEM:
-    case IJK_Splitting::FACES_I:
-    case IJK_Splitting::FACES_J:
+    case Domaine_IJK::ELEM:
+    case Domaine_IJK::FACES_I:
+    case Domaine_IJK::FACES_J:
       delta_z = delta_z_local[local_k_layer];
       break;
-    case IJK_Splitting::FACES_K:
+    case Domaine_IJK::FACES_K:
       if (!field.get_splitting().get_grid_geometry().get_periodic_flag(DIRECTION_K))
         {
           const int global_k_index = local_k_layer + field.get_splitting().get_offset_local(DIRECTION_K);
-          const int last_global_k = field.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K) - 1;
+          const int last_global_k = field.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K) - 1;
           // We have walls, are we on a wall ?
           if (global_k_index == 0)
             {
@@ -1398,13 +1398,13 @@ void mass_solver_with_rho(IJK_Field_double& velocity, const IJK_Field_double& rh
   const double volume = get_channel_control_volume(velocity, k, delta_z_local);
   switch(velocity.get_localisation())
     {
-    case IJK_Splitting::FACES_I:
+    case Domaine_IJK::FACES_I:
       mass_solver_with_rho_DIR(DIRECTION::X, rho, velocity, volume, k);
       break;
-    case IJK_Splitting::FACES_J:
+    case Domaine_IJK::FACES_J:
       mass_solver_with_rho_DIR(DIRECTION::Y, rho, velocity, volume, k);
       break;
-    case IJK_Splitting::FACES_K:
+    case Domaine_IJK::FACES_K:
       mass_solver_with_rho_DIR(DIRECTION::Z, rho, velocity, volume, k);
       break;
     default:
@@ -1419,13 +1419,13 @@ void mass_solver_with_inv_rho(IJK_Field_double& velocity, const IJK_Field_double
   const double volume = get_channel_control_volume(velocity, k, delta_z_local);
   switch(velocity.get_localisation())
     {
-    case IJK_Splitting::FACES_I:
+    case Domaine_IJK::FACES_I:
       mass_solver_with_inv_rho_DIR(DIRECTION::X, inv_rho, velocity, volume, k);
       break;
-    case IJK_Splitting::FACES_J:
+    case Domaine_IJK::FACES_J:
       mass_solver_with_inv_rho_DIR(DIRECTION::Y, inv_rho, velocity, volume, k);
       break;
-    case IJK_Splitting::FACES_K:
+    case Domaine_IJK::FACES_K:
       mass_solver_with_inv_rho_DIR(DIRECTION::Z, inv_rho, velocity, volume, k);
       break;
     default:
@@ -1455,13 +1455,13 @@ void density_solver_with_rho(IJK_Field_double& velocity, const IJK_Field_double&
 {
   switch(velocity.get_localisation())
     {
-    case IJK_Splitting::FACES_I:
+    case Domaine_IJK::FACES_I:
       mass_solver_with_rho_DIR(DIRECTION::X, rho, velocity, 1., k);
       break;
-    case IJK_Splitting::FACES_J:
+    case Domaine_IJK::FACES_J:
       mass_solver_with_rho_DIR(DIRECTION::Y, rho, velocity, 1., k);
       break;
-    case IJK_Splitting::FACES_K:
+    case Domaine_IJK::FACES_K:
       mass_solver_with_rho_DIR(DIRECTION::Z, rho, velocity, 1., k);
       break;
     default:
@@ -1512,7 +1512,7 @@ void compute_and_store_gradU_cell(const IJK_Field_double& vitesse_i, const IJK_F
                                   IJK_Field_double& dudy,
                                   IJK_Field_double& dvdx, IJK_Field_double& dwdy, IJK_Field_double& lambda2)
 {
-  const IJK_Splitting& splitting = vitesse_i.get_splitting();
+  const Domaine_IJK& splitting = vitesse_i.get_splitting();
 
   // Pour detacher de toute classe :
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
@@ -1521,11 +1521,11 @@ void compute_and_store_gradU_cell(const IJK_Field_double& vitesse_i, const IJK_F
   const ArrOfDouble& tab_dz = geom.get_delta(2);
 
   // Nombre total de mailles en K
-  const int nktot = splitting.get_nb_items_global(IJK_Splitting::ELEM, DIRECTION_K);
+  const int nktot = splitting.get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_K);
   // Nombre local de mailles :
-  const int imax = splitting.get_nb_items_local(IJK_Splitting::ELEM, 0);
-  const int jmax = splitting.get_nb_items_local(IJK_Splitting::ELEM, 1);
-  const int kmax = splitting.get_nb_items_local(IJK_Splitting::ELEM, 2);
+  const int imax = splitting.get_nb_items_local(Domaine_IJK::ELEM, 0);
+  const int jmax = splitting.get_nb_items_local(Domaine_IJK::ELEM, 1);
+  const int kmax = splitting.get_nb_items_local(Domaine_IJK::ELEM, 2);
   const int offset = splitting.get_offset_local(DIRECTION_K);
   double residue = 0.;
   for (int k = 0; k < kmax; k++)
@@ -1951,7 +1951,7 @@ void update_integral_indicatrice(const IJK_Field_double& indic, const double del
 
 double calculer_v_moyen(const IJK_Field_double& vx)
 {
-  const IJK_Splitting& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   const int ni = vx.ni();
   const int nj = vx.nj();
@@ -2000,7 +2000,7 @@ double calculer_v_moyen(const IJK_Field_double& vx)
 
 double calculer_vl_moyen(const IJK_Field_double& vx, const IJK_Field_double& indic)
 {
-  const IJK_Splitting& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   const int ni = vx.ni();
   const int nj = vx.nj();
@@ -2070,7 +2070,7 @@ double calculer_rho_cp_u_moyen(const IJK_Field_double& vx, const IJK_Field_doubl
   rho_cp_u_moy = Process::mp_sum(rho_cp_u_moy);
   // Maillage uniforme, il suffit donc de diviser par le nombre total de mailles:
   // cast en double au cas ou on voudrait faire un maillage >2 milliards
-  const IJK_Splitting& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   const double n_mailles_tot = ((double) geom.get_nb_elem_tot(0)) * geom.get_nb_elem_tot(1) * geom.get_nb_elem_tot(2);
   rho_cp_u_moy /= n_mailles_tot;
@@ -2080,7 +2080,7 @@ double calculer_rho_cp_u_moyen(const IJK_Field_double& vx, const IJK_Field_doubl
 double calculer_temperature_adimensionnelle_theta_moy(const IJK_Field_double& vx, const IJK_Field_double& temperature_adimensionnelle_theta, const IJK_Field_double& cp_rhocp_rhocpinv,
                                                       const IJK_Field_double& rho_field, const double& rho_cp, const int rho_cp_case)
 {
-  const IJK_Splitting& splitting = temperature_adimensionnelle_theta.get_splitting();
+  const Domaine_IJK& splitting = temperature_adimensionnelle_theta.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   double theta_adim_moy = 0;
   double rho_cp_u_moy = 0;
@@ -2134,7 +2134,7 @@ double calculer_temperature_adimensionnelle_theta_moy(const IJK_Field_double& vx
 double calculer_variable_wall(const IJK_Field_double& variable, const IJK_Field_double& cp_rhocp_rhocpinv, const IJK_Field_double& rho_field, const double& rho_cp, const int kmin, const int kmax,
                               const int rho_cp_case)
 {
-  const IJK_Splitting& splitting = variable.get_splitting();
+  const Domaine_IJK& splitting = variable.get_splitting();
   const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
   double variable_moy = 0;
   double rho_cp_moy = 0.;
@@ -2232,7 +2232,7 @@ void add_gradient_temperature(const IJK_Field_double& temperature, const double 
       int bctype_kmax = boundary.get_bctype_k_max();
 
       const int k_min = grad_T_z.get_splitting().get_offset_local(DIRECTION_K);
-      const int nk_tot = grad_T_z.get_splitting().get_nb_items_global(IJK_Splitting::FACES_K, DIRECTION_K);
+      const int nk_tot = grad_T_z.get_splitting().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K);
       const int offset = grad_T_z.get_splitting().get_offset_local(DIRECTION_K);
       const ArrOfDouble& delta_z_all = geom.get_delta(DIRECTION_K);
       bool perio_k = grad_T_z.get_splitting().get_grid_geometry().get_periodic_flag(DIRECTION_K);

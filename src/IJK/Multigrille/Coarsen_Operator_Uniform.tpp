@@ -78,7 +78,7 @@ void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_templ
                                      src_grid_geom.get_periodic_flag(1),
                                      src_grid_geom.get_periodic_flag(2));
 
-  IJK_Splitting coarse_splitting;
+  Domaine_IJK coarse_splitting;
   // Same processor mapping as fine mesh
   IntTab processor_mapping;
   fine.get_splitting().get_processor_mapping(processor_mapping);
@@ -86,7 +86,7 @@ void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_templ
   VECT(ArrOfInt) slice_sizes(3);
   for (int dir = 0; dir < 3; dir++)
     {
-      fine.get_splitting().get_slice_size(dir, IJK_Splitting::ELEM, slice_sizes[dir]);
+      fine.get_splitting().get_slice_size(dir, Domaine_IJK::ELEM, slice_sizes[dir]);
       const int n = slice_sizes[dir].size_array();
       for (int i = 0; i < n; i++)
         slice_sizes[dir][i] /= coarsen_factors_[dir];

@@ -24,7 +24,7 @@ void Matrice_Grossiere::build_matrix(const IJK_Field_template<_TYPE_,_TYPE_ARRAY
   shear_x_time_=IJK_Shear_Periodic_helpler::shear_x_time_;
   defilement_=IJK_Shear_Periodic_helpler::defilement_;
   order_interpolation_poisson_solver_=IJK_Shear_Periodic_helpler::order_interpolation_poisson_solver_;
-  const IJK_Splitting& splitting = coeffs_face.get_splitting();
+  const Domaine_IJK& splitting = coeffs_face.get_splitting();
 
   int i, j, k;
   const int ni = splitting.get_nb_elem_local(DIRECTION_I);
