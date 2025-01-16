@@ -208,7 +208,7 @@ Entree& Domaine_IJK::readOn(Entree& is)
   initialize_origin_deltas(origin[0], origin[1], origin[2], delta_dir[0], delta_dir[1],
                            delta_dir[2], perio_flags[0], perio_flags[1], perio_flags[2]);
 
-  initialize_splitting(nprocs[0], nprocs[1], nprocs[2], groups[0], groups[1], groups[2]);
+  initialize(*this, nprocs[0], nprocs[1], nprocs[2], groups[0], groups[1], groups[2]);
   update_volume_elem();
   return is;
 }
@@ -271,10 +271,10 @@ static void find_unique_coord(const DoubleTab& src, int column, ArrOfDouble& res
 // Extracts the mesh origin, dimensions and cell sizes from a distributed VDF mesh.
 //
 void Domaine_IJK::initialize_from_unstructured(const Domaine& domaine,
-                                                     int direction_for_x,
-                                                     int direction_for_y,
-                                                     int direction_for_z,
-                                                     bool perio_x, bool perio_y, bool perio_z)
+                                               int direction_for_x,
+                                               int direction_for_y,
+                                               int direction_for_z,
+                                               bool perio_x, bool perio_y, bool perio_z)
 {
   if (!sub_type(Hexaedre, domaine.type_elem().valeur()))
     {
@@ -346,10 +346,11 @@ void Domaine_IJK::initialize_from_unstructured(const Domaine& domaine,
  *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
  *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
  */
-void Domaine_IJK::initialize_splitting(int nproc_i, int nproc_j, int nproc_k,
-                                       int process_grouping_i,
-                                       int process_grouping_j,
-                                       int process_grouping_k)
+void Domaine_IJK::initialize(const Domaine_IJK& bidon,
+                             int nproc_i, int nproc_j, int nproc_k,
+                             int process_grouping_i,
+                             int process_grouping_j,
+                             int process_grouping_k)
 {
   assert(nproc_i % process_grouping_i == 0 && "While this will still work, may not bring expected results. Try having a process grouping number that divides the number of proc allocated to this direction.");
   assert(nproc_j % process_grouping_j == 0 && "While this will still work, may not bring expected results. Try having a process grouping number that divides the number of proc allocated to this direction.");
@@ -454,7 +455,7 @@ void Domaine_IJK::initialize_splitting(int nproc_i, int nproc_j, int nproc_k,
   envoyer_broadcast(sizes_all_slices, 0);
 
   // Initialize object with these data:
-  initialize_mapping(sizes_all_slices[0], sizes_all_slices[1], sizes_all_slices[2], mapping);
+  initialize(*this, sizes_all_slices[0], sizes_all_slices[1], sizes_all_slices[2], mapping);
 }
 
 /*! @brief Creates a splitting of the domain by specifying the slice
@@ -472,10 +473,10 @@ void Domaine_IJK::initialize_splitting(int nproc_i, int nproc_j, int nproc_k,
  *  @param slice_size_k Contains for each slice in the k direction, the number of cells this slice.
  *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
  */
-void Domaine_IJK::initialize_mapping(const ArrOfInt& slice_size_i,
-                                     const ArrOfInt& slice_size_j,
-                                     const ArrOfInt& slice_size_k,
-                                     const IntTab& processor_mapping)
+void Domaine_IJK::initialize(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
+                             const ArrOfInt& slice_size_j,
+                             const ArrOfInt& slice_size_k,
+                             const IntTab& processor_mapping)
 {
   assert(slice_size_i.size_array() == processor_mapping.dimension(0));
   assert(slice_size_j.size_array() == processor_mapping.dimension(1));
@@ -708,7 +709,7 @@ void Domaine_IJK::init_subregion(int ni, int nj, int nk,
   int nproc_i = nproc_per_direction_[0];
   int nproc_j = nproc_per_direction_[1];
   int nproc_k = nproc_per_direction_[2];
-  initialize_splitting(nproc_i, nproc_j, nproc_k);
+  initialize(*this, nproc_i, nproc_j, nproc_k);
 }
 
 /*! @brief Creates a splitting of the domain by specifying the mapping.

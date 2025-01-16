@@ -37,6 +37,8 @@
 #include <Connectivite_som_elem.h>
 #include <Scatter.h>
 
+using Int3 = FixedVector<int,3>;
+
 /*! @brief This class encapsulates all the information related to the eulerian mesh for TrioIJK
  *
  * Multiples methods regarding how to navigates through it, volume of the each cells, etc...
@@ -45,6 +47,12 @@ class Domaine_IJK : public Domaine_base
 {
   Declare_instanciable_sans_constructeur(Domaine_IJK);
 public:
+  // TODO ABN to remove
+  const Domaine_IJK& get_grid_geometry() const { return *this; }
+  const Domaine_IJK& get_splitting() const { return *this; }
+  Domaine_IJK& get_grid_geometry()  { return *this; }
+  Domaine_IJK& get_splitting()  { return *this; }
+
   /*! @brief Localisation sub class
    */
   enum Localisation {ELEM, NODES, FACES_I, FACES_J, FACES_K};
@@ -88,9 +96,11 @@ public:
    *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
    *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
    */
-  void initialize_splitting(int nproc_i, int nproc_j, int nproc_k,
-                            int process_grouping_i = 1, int process_grouping_j = 1,
-                            int process_grouping_k = 1);
+  // TODO ABN  rename initialize_splitting
+  void initialize(const Domaine_IJK& bidon,
+                  int nproc_i, int nproc_j, int nproc_k,
+                  int process_grouping_i = 1, int process_grouping_j = 1,
+                  int process_grouping_k = 1);
 
   /*! @brief Creates a splitting of the domain by specifying the slice
    *         sizes and the processor mapping.
@@ -107,10 +117,11 @@ public:
    *  @param slice_size_k Contains for each slice in the k direction, the number of cells this slice.
    *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
    */
-  void initialize_mapping(const ArrOfInt& slice_size_i,
-                          const ArrOfInt& slice_size_j,
-                          const ArrOfInt& slice_size_k,
-                          const IntTab& processor_mapping);
+  //TODO ABN  rename : initialize_mapping
+  void initialize(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
+                  const ArrOfInt& slice_size_j,
+                  const ArrOfInt& slice_size_k,
+                  const IntTab& processor_mapping);
 
   /*! @brief Initializes class elements given dataset's parameters.
    *
