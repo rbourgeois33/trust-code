@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -91,8 +91,8 @@ void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_templ
       for (int i = 0; i < n; i++)
         slice_sizes[dir][i] /= coarsen_factors_[dir];
     }
-  coarse_splitting.initialize(grid_geom, slice_sizes[0], slice_sizes[1], slice_sizes[2],
-                              processor_mapping);
+  coarse_splitting.initialize_mapping(grid_geom, slice_sizes[0], slice_sizes[1], slice_sizes[2],
+                                      processor_mapping);
   const int ghost_domaine_size = fine.get_ghost_size();
   coarse.initialize(coarse_splitting, ghost_domaine_size, additional_k_layers);
 }

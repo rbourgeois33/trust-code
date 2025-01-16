@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -85,7 +85,7 @@ Entree& IJK_discretization::readOn(Entree& is)
                                          direction_mapping[0], direction_mapping[1], direction_mapping[2],
                                          perio_flags[0], perio_flags[1], perio_flags[2]);
 
-  splitting_.initialize(grid_geom, splitting[0], splitting[1], splitting[2]);
+  splitting_.initialize_splitting(grid_geom, splitting[0], splitting[1], splitting[2]);
 
   vdf_to_ijk_i_.initialize(domaine_vdf, splitting_, Domaine_IJK::FACES_I, direction_mapping[0], direction_mapping[1], direction_mapping[2]);
   vdf_to_ijk_j_.initialize(domaine_vdf, splitting_, Domaine_IJK::FACES_J, direction_mapping[0], direction_mapping[1], direction_mapping[2]);

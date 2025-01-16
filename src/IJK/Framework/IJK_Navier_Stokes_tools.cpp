@@ -83,7 +83,7 @@ void build_extended_splitting(const Domaine_IJK& split1, Domaine_IJK& split2, in
   geom2.initialize_origin_deltas(origin_x, origin_y, origin_z, dx, dy, dz, geom1.get_periodic_flag(0), geom1.get_periodic_flag(1), geom1.get_periodic_flag(2));
   // Construction du decoupage parallele: on utilise les memes parametres
   // de decoupage que pour le maillage d'origine:
-  split2.initialize(geom2, split1.get_nprocessor_per_direction(DIRECTION_I), split1.get_nprocessor_per_direction(DIRECTION_J), split1.get_nprocessor_per_direction(DIRECTION_K));
+  split2.initialize_splitting(geom2, split1.get_nprocessor_per_direction(DIRECTION_I), split1.get_nprocessor_per_direction(DIRECTION_J), split1.get_nprocessor_per_direction(DIRECTION_K));
 }
 
 Probleme_base& creer_domaine_vdf(const Domaine_IJK& splitting, const Nom& nom_domaine)

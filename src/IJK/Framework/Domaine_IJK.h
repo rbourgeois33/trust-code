@@ -96,11 +96,11 @@ public:
    *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
    *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
    */
-  // TODO ABN  rename initialize_splitting
-  void initialize(const Domaine_IJK& bidon,
-                  int nproc_i, int nproc_j, int nproc_k,
-                  int process_grouping_i = 1, int process_grouping_j = 1,
-                  int process_grouping_k = 1);
+  // TODO ABN  remove first arg
+  void initialize_splitting(const Domaine_IJK& bidon,
+                            int nproc_i, int nproc_j, int nproc_k,
+                            int process_grouping_i = 1, int process_grouping_j = 1,
+                            int process_grouping_k = 1);
 
   /*! @brief Creates a splitting of the domain by specifying the slice
    *         sizes and the processor mapping.
@@ -118,10 +118,10 @@ public:
    *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
    */
   //TODO ABN  rename : initialize_mapping
-  void initialize(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
-                  const ArrOfInt& slice_size_j,
-                  const ArrOfInt& slice_size_k,
-                  const IntTab& processor_mapping);
+  void initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
+                          const ArrOfInt& slice_size_j,
+                          const ArrOfInt& slice_size_k,
+                          const IntTab& processor_mapping);
 
   /*! @brief Initializes class elements given dataset's parameters.
    *
