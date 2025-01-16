@@ -84,7 +84,6 @@ public:
   /*! @brief Buils a splitting of the given deometry on the requested number of processors
    *         in each direction.
    *
-   *
    *         Process_grouping allows to rearrange process ranks by packets of ni*nj*nk processes
    *         to matc the topology of the cluster/node. ex: 8 cores node/machine => use groups
    *         of size 2x2x2 to minimize extra-node messages.
@@ -105,7 +104,6 @@ public:
   /*! @brief Creates a splitting of the domain by specifying the slice
    *         sizes and the processor mapping.
    *
-   *
    *         The total cell number in directions i, j, and k must match the
    *         total number of cells in the whole geometry for each direction.
    *         The number of slices in each direction must match each corresponding
@@ -124,7 +122,6 @@ public:
                           const IntTab& processor_mapping);
 
   /*! @brief Initializes class elements given dataset's parameters.
-   *
    *
    *  @param x0 Origin of the whole domain on the x axis.
    *  @param y0 Origin of the whole domain on the y axis.
@@ -145,7 +142,6 @@ public:
   /*! @brief Builds the geometry, parallel splitting and DOF correspondance
    *         between a "father" region and a "son" region which is a subpart
    *         of the father region.
-   *
    *
    *         Only conformal subregion is supported for now, with ELEMENT types.
    *         Missing features: be able to build a subregion which is the boundary
@@ -168,7 +164,6 @@ public:
                       bool perio_x = false, bool perio_y = false, bool perio_z = false);
 
   /*! @brief Creates a splitting of the domain by specifying the mapping.
-   *
    *
    *         The total cell number in directions i,j,k must match the total
    *         number of cells in each direction.
@@ -218,7 +213,6 @@ public:
 
   /*! @brief Returns the number of nodes owned by this processor (generally equal to nb_elem_local())
    *
-   *
    *  The last node of the last element is owned by the next processor.
    *
    *  @param direction In IJK, x(0), y(1) or z(2)
@@ -231,7 +225,6 @@ public:
   }
 
   /*! @brief Returns the number, in requested direction, of faces that are oriented in direction of "compo"
-   *
    *
    *  The last face of the last element is owned by the next processor.
    *
@@ -247,7 +240,6 @@ public:
   }
 
   /*! @brief Returns the number of local items (on this processor) for the given localisation in the requested direction
-   *
    *
    *  @param loc In IJK, ELEM, NODES, FACES_I, FACES_J or FACES_K
    *  @param direction In IJK, x(0), y(1) or z(2)
@@ -300,7 +292,6 @@ public:
     return offset_[direction];
   }
 
-
   /*! @brief Returns the position of the local subdomain in the requested direction
    *
    *  @param direction In IJK, x(0), y(1) or z(2)
@@ -313,7 +304,6 @@ public:
   }
 
   /*! @brief Returns the index of the requested neighbour processor (-1 if no neighbour).
-   *
    *
    *  previous_or_next = 0 => get processor at left (in the direction of smaller indices).
    *  previous_or_next = 1 => get processor at right (in the direction of the larger indices).
@@ -373,13 +363,11 @@ public:
 
   /*! @brief Returns the size of cells in a direction
    *
+   * This requires the size of all cells in this direction to be the same,
+   * Which means is_uniform(direction) has to be true.
    *
-   * 	This requires the size of all cells in this direction to be the same,
-   * 	Which means is_uniform(direction) has to be true.
-   *
-   * 	@param direction In IJK, x(0), y(1) or z(2).
-   *
-   * 	@return length of cells in this direction.
+   * @param direction In IJK, x(0), y(1) or z(2).
+   * @return length of cells in this direction.
    */
   inline double get_constant_delta(int direction) const
   {
@@ -506,9 +494,7 @@ public:
 
   /*! @brief Find the element which contains the item's coodirnates.
    *
-   *
    *  The element's coordinates can be outside of this processor's subdomain.
-   *
    *
    *  @param x First coordinate of an item in the mesh.
    *  @param y Second coordinate of an item in the mesh.
@@ -558,36 +544,16 @@ public:
   }
 
   /* FREQUENTLY ASKED METHODS FROM DOMAINE_VF */
-
   inline int elem_faces(int num_elem, int j) const
   {
     return elem_faces_(num_elem, j);
   }
 
-  inline IntTab& elem_faces()
-  {
-    return elem_faces_;
-  }
-
-  inline const IntTab& elem_faces() const
-  {
-    return elem_faces_;
-  }
-
-  inline int face_voisins(int num_face, int i) const
-  {
-    return face_voisins_(num_face, i);
-  }
-
-  inline IntTab& face_voisins()
-  {
-    return face_voisins_;
-  }
-
-  inline const IntTab& face_voisins() const
-  {
-    return face_voisins_;
-  }
+  inline IntTab& elem_faces() { return elem_faces_; }
+  inline const IntTab& elem_faces() const { return elem_faces_; }
+  inline int face_voisins(int num_face, int i) const { return face_voisins_(num_face, i); }
+  inline IntTab& face_voisins() { return face_voisins_; }
+  inline const IntTab& face_voisins() const { return face_voisins_; }
 
   /*! @brief Does nothing as of now since I'm not sure how to order them.
    *         Also to check how "important" this is for IJK
@@ -601,107 +567,78 @@ public:
 
 private:
 
-  /*! @brief  Coordinates of all nodes (when cell size is needed, take delta_xyz_ which is more accurate)
-   * 			    in directions i, j and k.
+  /*! @brief  Coordinates of all nodes (when cell size is needed, take delta_xyz_ which is more accurate) in directions i, j and k.
    *
-   *
-   * 			We have: node_coordinates_xyz_.size() == 3  (3 directions in space)
-   * 			node_coordinates_xyz_[DIRECTION_I/J/K] == number of cells in direction i,j,k plus one
-   * 			The coordinate of the last node is the end coordinate of the mesh: if mesh is periodic, the last
-   * 			node coordinate is not equal to the first one.
+   * We have: node_coordinates_xyz_.size() == 3  (3 directions in space)
+   * node_coordinates_xyz_[DIRECTION_I/J/K] == number of cells in direction i,j,k plus one
+   * The coordinate of the last node is the end coordinate of the mesh: if mesh is periodic, the last
+   * node coordinate is not equal to the first one.
    */
   VECT(ArrOfDouble) node_coordinates_xyz_;
-
   /*! @brief Mesh cell sizes for the entire mesh.
    *
-   *
-   * 		   The size of each array is equal to the total number of cells in each direction.
-   * 		   If possible, this data is not computed from nodes (less truncation errors for uniform meshes)
+   *  The size of each array is equal to the total number of cells in each direction.
+   *  If possible, this data is not computed from nodes (less truncation errors for uniform meshes)
    */
   VECT(ArrOfDouble) delta_xyz_;
-
-  /*! @brief Number of processors in each direction
-   */
+  /*! Number of processors in each direction */
   FixedVector<int, 3> nproc_per_direction_;
-
-  /*! @brief Global processor mapping: for each subdomain, which processor has it (indexed like this: mapping_(i, j, k))
-   */
+  /*! @brief Global processor mapping: for each subdomain, which processor has it (indexed like this: mapping_(i, j, k)) */
   IntTab mapping_;
-
-  /*! @brief For each direction, offsets of all slices
-   */
-  VECT(ArrOfInt) offsets_all_slices_;
-
-  /*! @brief For each direction, size of all slices
-   */
+  /*! For each direction, offsets of all slices */
+  VECT(ArrOfInt) offsets_all_slices_; ///< F
+  /*! @brief For each direction, size of all slices */
   VECT(ArrOfInt) sizes_all_slices_;
-
-  /*! @brief Stores the uniform flag for each direction
-   */
+  /*! @brief Stores the uniform flag for each direction */
   bool uniform_[3];
-
-  /*! @brief Stores the periodic flag for each direction
-   */
+  /*! @brief Stores the periodic flag for each direction */
   bool periodic_[3];
 
   /* RELATED TO DOMAINE VF */
 
   IntTab face_voisins_;
-
   IntTab elem_faces_;
 
-  // Descripteur parallele pour les tableaux aux faces (size() == nb_faces())
+  /*! Descripteur parallele pour les tableaux aux faces (size() == nb_faces()) */
   MD_Vector md_vector_faces_;
-  // Idem pour les faces frontiere (size() == nb_faces_front())
+  /*! Idem pour les faces frontiere (size() == nb_faces_front()) */
   MD_Vector md_vector_faces_front_;
-  // Celui pour les aretes
+  /*! Celui pour les aretes */
   MD_Vector md_vector_aretes_;
-
-  DoubleVect face_surfaces_;                // surface des faces
-
-  /*! @brief Elements center of gravity
-   */
+  /*! surface des faces */
+  DoubleVect face_surfaces_;
+  /*! @brief Elements center of gravity*/
   DoubleTab elem_cog_;
 
   // Local data (processor dependent)
   // --------------------------------
 
-  /*! @brief Where is this processor in the global domain (slice number in each direction, -1 if processor has no data)
-   */
+  /*! @brief Where is this processor in the global domain (slice number in each direction, -1 if processor has no data) */
   FixedVector<int, 3> processor_position_;
-
   /*! @brief Number of element in requested direction.
    * 		 If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_elem_local_;
-
   /*! @brief Number of nodes in requested direction.
    * 		   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_nodes_local_;
-
-  /*! @brief indexing is nb_faces_local_[for orientation i][number of faces in direction j]
-   */
+  /*! indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
   FixedVector<FixedVector<int, 3>, 3> nb_faces_local_;
-
-  /*! @brief Index in the global mesh of the first (non ghost) element on this processor, in each direction
-   */
+  /*! Index in the global mesh of the first (non ghost) element on this processor, in each direction */
   FixedVector<int, 3> offset_;
-
   /*! @brief MPI ranks of the processors that hold the neighbour domains.
    * 		   Indexing is neighbour_processors_[previous=0, next=1][direction].
    * 		   Contains -1 if no neighbour.
    * 		   Wraps if periodic domain, if there is only one processor in a direction, the neighbour might be myself.
    */
   FixedVector<FixedVector<int, 3>, 2> neighbour_processors_;
-
-  /*! @brief Volume of each element on this processor
-   */
+  /*! Volume of each element on this processor */
   DoubleVect volume_elem_;
-
-  /*! @brief State of volume_elem_ on this processor
-   */
+  /*! State of volume_elem_ on this processor */
   grid_status volume_elem_status_;
+
+
 };
 
 #endif
