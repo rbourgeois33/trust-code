@@ -80,7 +80,7 @@ Entree& IJK_discretization::readOn(Entree& is)
   const Probleme_base& pb = ref_cast(Probleme_base, Interprete_bloc::objet_global(vdf_problem));
   const Domaine_VF& domaine_vdf = ref_cast(Domaine_VF, pb.domaine_dis());
 
-  IJK_Grid_Geometry grid_geom;
+  Domaine_IJK grid_geom;
   grid_geom.initialize_from_unstructured(domaine_vdf.domaine(),
                                          direction_mapping[0], direction_mapping[1], direction_mapping[2],
                                          perio_flags[0], perio_flags[1], perio_flags[2]);

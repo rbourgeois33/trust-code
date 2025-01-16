@@ -227,7 +227,7 @@ double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x
             if (step[grid_level] == 0)
               {
                 Nom dom = Nom("DOM")+Nom(grid_level);
-                IJK_Grid_Geometry& geom = ref_cast_non_const(IJK_Grid_Geometry,x.get_splitting().get_grid_geometry() );
+                Domaine_IJK& geom = ref_cast_non_const(Domaine_IJK,x.get_splitting().get_grid_geometry() );
                 geom.nommer(dom); // On nomme la geom pour pouvoir l'ecrire.
                 dumplata_header(lata_name, x /* on passe un champ pour ecrire la geometrie */);
               }

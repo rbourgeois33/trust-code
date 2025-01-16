@@ -28,7 +28,7 @@ double compute_fractionnal_timestep_rk3(const double dt_tot, int step)
   return intermediate_tstep[step] * dt_tot;
 }
 
-static void extend_array(const IJK_Grid_Geometry& geom1, const int direction, const int ncells, ArrOfDouble& delta, double& origin)
+static void extend_array(const Domaine_IJK& geom1, const int direction, const int ncells, ArrOfDouble& delta, double& origin)
 {
   delta = geom1.get_delta(direction);
   origin = geom1.get_origin(direction);
@@ -67,7 +67,7 @@ static void extend_array(const IJK_Grid_Geometry& geom1, const int direction, co
 //           (doit etre inferieur au nombre de mailles dans le domaine decoupee).
 void build_extended_splitting(const Domaine_IJK& split1, Domaine_IJK& split2, int n_cells)
 {
-  const IJK_Grid_Geometry& geom1 = split1.get_grid_geometry();
+  const Domaine_IJK& geom1 = split1.get_grid_geometry();
 
   double origin_x, origin_y, origin_z;
   ArrOfDouble dx, dy, dz;
@@ -77,7 +77,7 @@ void build_extended_splitting(const Domaine_IJK& split1, Domaine_IJK& split2, in
 
   // Le domaine etendu n'est pas periodique: le champ n'est pas continu
   // entre les bords opposes du domaine etendu.
-  IJK_Grid_Geometry geom2;
+  Domaine_IJK geom2;
   Nom n(geom1.le_nom());
   geom2.nommer(n + "_EXT");
   geom2.initialize_origin_deltas(origin_x, origin_y, origin_z, dx, dy, dz, geom1.get_periodic_flag(0), geom1.get_periodic_flag(1), geom1.get_periodic_flag(2));
@@ -88,7 +88,7 @@ void build_extended_splitting(const Domaine_IJK& split1, Domaine_IJK& split2, in
 
 Probleme_base& creer_domaine_vdf(const Domaine_IJK& splitting, const Nom& nom_domaine)
 {
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   // On va construire une partie de jdd a faire interpreter:
   const double x0 = geom.get_origin(DIRECTION_I);
   const double y0 = geom.get_origin(DIRECTION_J);
@@ -200,7 +200,7 @@ static void ijk_interpolate_implementation(const IJK_Field_double& field, const 
   const int nk = field.nk();
 
   const Domaine_IJK& splitting = field.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   const double dx = geom.get_constant_delta(DIRECTION_I);
   const double dy = geom.get_constant_delta(DIRECTION_J);
   const double dz = geom.get_constant_delta(DIRECTION_K);
@@ -333,7 +333,7 @@ double ijk_interpolate(const IJK_Field_double& field, const Vecteur3& coordinate
 // Computed as the sum on each face of ("velocity" scalar "normal vector" times "surface of the face")
 void compute_divergence_times_constant(const IJK_Field_double& vx, const IJK_Field_double& vy, const IJK_Field_double& vz, const double constant, IJK_Field_double& resu)
 {
-  const IJK_Grid_Geometry& geom = vx.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = vx.get_splitting().get_grid_geometry();
   const double delta_x = geom.get_constant_delta(0);
   const double delta_y = geom.get_constant_delta(1);
   const int kmax = resu.nk();
@@ -362,7 +362,7 @@ void compute_divergence_times_constant(const IJK_Field_double& vx, const IJK_Fie
 // without the product with volume or a constant.
 void compute_divergence(const IJK_Field_double& vx, const IJK_Field_double& vy, const IJK_Field_double& vz, IJK_Field_double& resu)
 {
-  const IJK_Grid_Geometry& geom = vx.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = vx.get_splitting().get_grid_geometry();
   const double delta_x = geom.get_constant_delta(0);
   const double delta_y = geom.get_constant_delta(1);
   const int kmax = resu.nk();
@@ -392,7 +392,7 @@ void compute_divergence(const IJK_Field_double& vx, const IJK_Field_double& vy, 
 // On the walls, don't touch velocity
 void add_gradient_times_constant(const IJK_Field_double& pressure, const double constant, IJK_Field_double& vx, IJK_Field_double& vy, IJK_Field_double& vz)
 {
-  const IJK_Grid_Geometry& geom = vx.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = vx.get_splitting().get_grid_geometry();
   const int kmax = std::max(std::max(vx.nk(), vy.nk()), vz.nk());
   for (int k = 0; k < kmax; k++)
     {
@@ -450,7 +450,7 @@ void add_gradient_times_constant(const IJK_Field_double& pressure, const double 
 // On the walls, don't touch velocity
 void add_gradient_times_constant_over_rho(const IJK_Field_double& pressure, const IJK_Field_double& rho, const double constant, IJK_Field_double& vx, IJK_Field_double& vy, IJK_Field_double& vz)
 {
-  const IJK_Grid_Geometry& geom = vx.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = vx.get_splitting().get_grid_geometry();
   const int kmax = std::max(std::max(vx.nk(), vy.nk()), vz.nk());
   for (int k = 0; k < kmax; k++)
     {
@@ -506,7 +506,7 @@ void add_gradient_times_constant_over_rho(const IJK_Field_double& pressure, cons
 void add_gradient_times_constant_times_inv_rho(const IJK_Field_double& pressure, const IJK_Field_double& inv_rho, const double constant, IJK_Field_double& vx, IJK_Field_double& vy,
                                                IJK_Field_double& vz)
 {
-  const IJK_Grid_Geometry& geom = vx.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = vx.get_splitting().get_grid_geometry();
   const int kmax = std::max(std::max(vx.nk(), vy.nk()), vz.nk());
   for (int k = 0; k < kmax; k++)
     {
@@ -922,7 +922,7 @@ void runge_kutta3_update_surfacic_fluxes(IJK_Field_double& dv, IJK_Field_double&
 // (used in set_field_data() )
 void build_local_coords(const IJK_Field_double& f, ArrOfDouble& coord_i, ArrOfDouble& coord_j, ArrOfDouble& coord_k)
 {
-  const IJK_Grid_Geometry& geom = f.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = f.get_splitting().get_grid_geometry();
   const int i_offset = f.get_splitting().get_offset_local(DIRECTION_I);
   const int j_offset = f.get_splitting().get_offset_local(DIRECTION_J);
   const int k_offset = f.get_splitting().get_offset_local(DIRECTION_K);
@@ -1515,7 +1515,7 @@ void compute_and_store_gradU_cell(const IJK_Field_double& vitesse_i, const IJK_F
   const Domaine_IJK& splitting = vitesse_i.get_splitting();
 
   // Pour detacher de toute classe :
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   const double dx = geom.get_constant_delta(0);
   const double dy = geom.get_constant_delta(1);
   const ArrOfDouble& tab_dz = geom.get_delta(2);
@@ -1952,7 +1952,7 @@ void update_integral_indicatrice(const IJK_Field_double& indic, const double del
 double calculer_v_moyen(const IJK_Field_double& vx)
 {
   const Domaine_IJK& splitting = vx.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   const int ni = vx.ni();
   const int nj = vx.nj();
   const int nk = vx.nk();
@@ -2001,7 +2001,7 @@ double calculer_v_moyen(const IJK_Field_double& vx)
 double calculer_vl_moyen(const IJK_Field_double& vx, const IJK_Field_double& indic)
 {
   const Domaine_IJK& splitting = vx.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   const int ni = vx.ni();
   const int nj = vx.nj();
   const int nk = vx.nk();
@@ -2071,7 +2071,7 @@ double calculer_rho_cp_u_moyen(const IJK_Field_double& vx, const IJK_Field_doubl
   // Maillage uniforme, il suffit donc de diviser par le nombre total de mailles:
   // cast en double au cas ou on voudrait faire un maillage >2 milliards
   const Domaine_IJK& splitting = vx.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   const double n_mailles_tot = ((double) geom.get_nb_elem_tot(0)) * geom.get_nb_elem_tot(1) * geom.get_nb_elem_tot(2);
   rho_cp_u_moy /= n_mailles_tot;
   return rho_cp_u_moy;
@@ -2081,7 +2081,7 @@ double calculer_temperature_adimensionnelle_theta_moy(const IJK_Field_double& vx
                                                       const IJK_Field_double& rho_field, const double& rho_cp, const int rho_cp_case)
 {
   const Domaine_IJK& splitting = temperature_adimensionnelle_theta.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   double theta_adim_moy = 0;
   double rho_cp_u_moy = 0;
   double rho = 1.;
@@ -2135,7 +2135,7 @@ double calculer_variable_wall(const IJK_Field_double& variable, const IJK_Field_
                               const int rho_cp_case)
 {
   const Domaine_IJK& splitting = variable.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = splitting.get_grid_geometry();
   double variable_moy = 0;
   double rho_cp_moy = 0.;
   const int nk = variable.nk();
@@ -2200,7 +2200,7 @@ void calculer_rho_cp_var(const IJK_Field_double& variable, const IJK_Field_doubl
 void add_gradient_temperature(const IJK_Field_double& temperature, const double constant, IJK_Field_double& grad_T_x, IJK_Field_double& grad_T_y, IJK_Field_double& grad_T_z,
                               const Boundary_Conditions_Thermique& boundary, const IJK_Field_double& lambda)
 {
-  const IJK_Grid_Geometry& geom = grad_T_x.get_splitting().get_grid_geometry();
+  const Domaine_IJK& geom = grad_T_x.get_splitting().get_grid_geometry();
   const int kmax = std::max(std::max(grad_T_x.nk(), grad_T_y.nk()), grad_T_z.nk());
   for (int k = 0; k < kmax; k++)
     {

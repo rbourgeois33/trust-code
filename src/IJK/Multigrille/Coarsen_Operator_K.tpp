@@ -15,7 +15,7 @@
 #ifndef Coarsen_Operator_K_TPP_H
 #define Coarsen_Operator_K_TPP_H
 
-#include <IJK_Grid_Geometry.h>
+#include <Domaine_IJK.h>
 #include <EFichier.h>
 #include <communications.h>
 #include <TRUSTTab.h>
@@ -34,7 +34,7 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
 
   avg_coefficients_.resize_array(0);
 
-  const IJK_Grid_Geometry& src_grid_geom = fine.get_grid_geometry();
+  const Domaine_IJK& src_grid_geom = fine.get_grid_geometry();
   const ArrOfDouble& coord_z_fine = src_grid_geom.get_node_coordinates(2 /* k direction */);
   const ArrOfDouble& coord_z_coarse = z_coord_all_;
 
@@ -110,7 +110,7 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
       assert(current_fine_cell < n_coord_fine - 1);
     }
 
-  IJK_Grid_Geometry grid_geom;
+  Domaine_IJK grid_geom;
   grid_geom.initialize_origin_deltas(src_grid_geom.get_origin(0),
                                      src_grid_geom.get_origin(1),
                                      src_grid_geom.get_origin(2),

@@ -57,7 +57,7 @@ void Grid_Level_Data_template<_TYPE_>::initialize(const Domaine_IJK& splitting, 
   ijk_residue_.allocate(grid_splitting_, Domaine_IJK::ELEM, ghost);
   ijk_residue_.data() = 0.;
 
-  const IJK_Grid_Geometry& geometry = grid_splitting_.get_grid_geometry();
+  const Domaine_IJK& geometry = grid_splitting_.get_grid_geometry();
   for (int dir = 0; dir < 3; dir++)
     grid_splitting_.get_local_mesh_delta(dir, ghost, local_delta_xyz_[dir]);
   for (int i = 0; i < 3; i++)

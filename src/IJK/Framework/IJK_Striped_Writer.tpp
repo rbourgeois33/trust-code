@@ -226,7 +226,7 @@ void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRA
   // (that supposes that virtual cell available and uptodate, if not, written data at the right end will not reflect the periodicity)
   if (input.ghost() > 0 && input.get_localisation() != Domaine_IJK::ELEM)
     {
-      const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+      const Domaine_IJK& geom = splitting.get_grid_geometry();
       // if periodic and we are at the right end the domain:
       // MODIFS GABRIEL : il faut boucler sur les 3 directions !!
       for (int dir = 0; dir < 3 /* pas 2 */; dir++)

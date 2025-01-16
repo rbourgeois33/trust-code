@@ -448,7 +448,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::ajouter_second_membre_shear_perio
   if (shear_BC_helpler_.monofluide_variable_==1)
     {
       const Domaine_IJK& splitting = splitting_ref_.valeur();
-      const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+      const Domaine_IJK& geom = splitting.get_grid_geometry();
       const int ni = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::ni();
       const int nj = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::nj();
       const int nk = IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::nk();

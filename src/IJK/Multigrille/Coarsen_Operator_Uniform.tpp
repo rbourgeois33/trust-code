@@ -15,7 +15,7 @@
 #ifndef Coarsen_Operator_Uniform_TPP_H
 #define Coarsen_Operator_Uniform_TPP_H
 
-#include <IJK_Grid_Geometry.h>
+#include <Domaine_IJK.h>
 #include <stat_counters.h>
 
 template<typename _TYPE_>
@@ -23,7 +23,7 @@ void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_templ
                                                      Grid_Level_Data_template<_TYPE_>& coarse,
                                                      int additional_k_layers)
 {
-  const IJK_Grid_Geometry& src_grid_geom = fine.get_grid_geometry();
+  const Domaine_IJK& src_grid_geom = fine.get_grid_geometry();
   VECT(ArrOfDouble) coarse_delta(3);
   ArrOfInt nlocal(3);
 
@@ -67,7 +67,7 @@ void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_templ
         }
     }
 
-  IJK_Grid_Geometry grid_geom;
+  Domaine_IJK grid_geom;
   grid_geom.initialize_origin_deltas(src_grid_geom.get_origin(0),
                                      src_grid_geom.get_origin(1),
                                      src_grid_geom.get_origin(2),
