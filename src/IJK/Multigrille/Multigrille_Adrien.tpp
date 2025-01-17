@@ -38,12 +38,6 @@ void Multigrille_Adrien::prepare_secmem_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>
 template <typename _TYPE_, typename _TYPE_ARRAY_>
 void Multigrille_Adrien::dump_lata_(const Nom& field, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& data, int tstep) const
 {
-  /* const Domaine_IJK & g = grids_data_float_[0].get_grid_geometry();
-  data.dumplata(field,
-   g.get_node_coordinates(0),
-   g.get_node_coordinates(1),
-   g.get_node_coordinates(2),
-   tstep); */
   Process::exit();
 }
 
