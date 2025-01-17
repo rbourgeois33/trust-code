@@ -126,9 +126,9 @@ void Parallel_io_parameters::run_bench_write(const Nom& ijk_splitting_name)
   dumplata_vector("test.lata", "VELOCITY", vx, vy, vz, 1);
   statistiques().end_count(cnt);
   double t = statistiques().last_time(cnt);
-  double sz = (double) (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_I)+1)
-              * (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_J)+1)
-              * (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_K)+1)
+  double sz = (double) (splitting.get_nb_elem_tot(DIRECTION_I)+1)
+              * (splitting.get_nb_elem_tot(DIRECTION_J)+1)
+              * (splitting.get_nb_elem_tot(DIRECTION_K)+1)
               * 3 * sizeof(float);
   Nom bw = (t==0)? Nom("infty") : Nom(sz/1024/1024/1024/t);
   Cerr << "Parallel_io_parameters benchmark write: data_size= " << sz/1024/1024/1024
@@ -175,14 +175,14 @@ void Parallel_io_parameters::run_bench_read(const Nom& ijk_splitting_name)
   static Stat_Counter_Id cnt = statistiques().new_counter(1, "Parallel_io benchmark_read");
   statistiques().begin_count(cnt);
   lire_dans_lata("test.lata", 1 /* timestep */,
-                 splitting.get_grid_geometry().le_nom(),
+                 splitting.le_nom(),
                  "VELOCITY", vx, vy, vz);
   statistiques().end_count(cnt);
 
   double t = statistiques().last_time(cnt);
-  double sz = (double) (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_I)+1)
-              * (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_J)+1)
-              * (splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_K)+1)
+  double sz = (double) (splitting.get_nb_elem_tot(DIRECTION_I)+1)
+              * (splitting.get_nb_elem_tot(DIRECTION_J)+1)
+              * (splitting.get_nb_elem_tot(DIRECTION_K)+1)
               * 3 * sizeof(float);
   Nom bw = (t==0)? Nom("infty") : Nom(sz/1024/1024/1024/t);
   Cerr << "Parallel_io_parameters benchmark read: data_size= " << sz/1024/1024/1024

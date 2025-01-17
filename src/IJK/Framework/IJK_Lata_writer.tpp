@@ -27,7 +27,7 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
 {
   if (Process::je_suis_maitre())
     {
-      const Domaine_IJK& splitting = f.get_splitting();
+      const Domaine_IJK& splitting = f.get_domaine();
       SFichier master_file;
       Nom prefix = Nom(filename) + Nom(".");
       SFichier binary_file;
@@ -38,7 +38,7 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
       master_file.set_bin(0);
       master_file.ouvrir(filename, ios::app);
       Noms fname(3);
-      const Nom& geomname = splitting.get_grid_geometry().le_nom();
+      const Nom& geomname = splitting.le_nom();
       if (geomname == "??")
         {
           Cerr << "Error in  dumplata_header: geometry has no name" << finl;
@@ -49,7 +49,7 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
           fname[dir] = prefix + geomname + Nom(".coord") + Nom((char)('x'+dir));
           int i;
           binary_file.ouvrir(fname[dir]);
-          const ArrOfDouble& coord = splitting.get_grid_geometry().get_node_coordinates(dir);
+          const ArrOfDouble& coord = splitting.get_node_coordinates(dir);
           n = coord.size_array();
           tmp.resize_array(n);
           for (i = 0; i < n; i++)
@@ -62,17 +62,17 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
 #ifdef INT_is_64_
       master_file << " file_offset=6";
 #endif
-      master_file << " size=" << splitting.get_grid_geometry().get_nb_elem_tot(0)+1 << " composantes=1" << finl;
+      master_file << " size=" << splitting.get_nb_elem_tot(0)+1 << " composantes=1" << finl;
       master_file << "Champ SOMMETS_IJK_J " << basename(fname[1]) << " geometrie=" << geomname;
 #ifdef INT_is_64_
       master_file << " file_offset=6";
 #endif
-      master_file << " size=" << splitting.get_grid_geometry().get_nb_elem_tot(1)+1 << " composantes=1" << finl;
+      master_file << " size=" << splitting.get_nb_elem_tot(1)+1 << " composantes=1" << finl;
       master_file << "Champ SOMMETS_IJK_K " << basename(fname[2]) << " geometrie=" << geomname;
 #ifdef INT_is_64_
       master_file << " file_offset=6";
 #endif
-      master_file << " size=" << splitting.get_grid_geometry().get_nb_elem_tot(2)+1 << " composantes=1" << finl;
+      master_file << " size=" << splitting.get_nb_elem_tot(2)+1 << " composantes=1" << finl;
       master_file.close();
     }
 }
@@ -98,7 +98,7 @@ void dumplata_vector(const char *filename, const char *fieldname,
     {
       SFichier master_file;
       master_file.ouvrir(filename, ios::app);
-      const Nom& geomname = vx.get_splitting().get_grid_geometry().le_nom();
+      const Nom& geomname = vx.get_domaine().le_nom();
 
       master_file << "Champ " << fieldname << " " << basename(fd) << " geometrie=" << geomname;
 #ifdef INT_is_64_
@@ -124,7 +124,7 @@ void dumplata_vector_parallele_plan(const char *filename, const char *fieldname,
     {
       SFichier master_file;
       master_file.ouvrir(filename, ios::app);
-      const Nom& geomname = vx.get_splitting().get_grid_geometry().le_nom();
+      const Nom& geomname = vx.get_domaine().le_nom();
 
       master_file << "Champ " << fieldname << " " << basename(fd_global) << " geometrie=" << geomname;
 #ifdef INT_is_64_
@@ -161,7 +161,7 @@ void dumplata_scalar(const char *filename, const char *fieldname,
         loc = "ELEM";
       else
         loc = "SOM";
-      const Nom& geomname = f.get_splitting().get_grid_geometry().le_nom();
+      const Nom& geomname = f.get_domaine().le_nom();
       master_file << "Champ " << fieldname << " " << basename(fd) << " geometrie=" << geomname;
 #ifdef INT_is_64_
       master_file << " file_offset=6";
@@ -190,7 +190,7 @@ void dumplata_scalar_parallele_plan(const char *filename, const char *fieldname,
         loc = "ELEM";
       else
         loc = "SOM";
-      const Nom& geomname = f.get_splitting().get_grid_geometry().le_nom();
+      const Nom& geomname = f.get_domaine().le_nom();
       master_file << "Champ " << fieldname << " " << basename(fd_global) << " geometrie=" << geomname;
 #ifdef INT_is_64_
       master_file << " file_offset=6";
@@ -214,7 +214,7 @@ void read_lata_parallel_template(const char *filename_with_path, int tstep, cons
        << " field=" << fieldname
        << " component= " << i_compo << finl;
   Process::barrier(); // to print message before crash
-  const Domaine_IJK& splitting = field.get_splitting();
+  const Domaine_IJK& splitting = field.get_domaine();
   const int offset_j = splitting.get_offset_local(DIRECTION_J);
   const int offset_k = splitting.get_offset_local(DIRECTION_K);
   const int ni_local = field.ni();
@@ -256,14 +256,14 @@ void read_lata_parallel_template(const char *filename_with_path, int tstep, cons
           input_ni_tot = (int)lata_db.get_field(tstep, geometryname, "SOMMETS_IJK_I", "", LataDB::FIRST_AND_CURRENT).size_;
           input_nj_tot = (int)lata_db.get_field(tstep, geometryname, "SOMMETS_IJK_J", "", LataDB::FIRST_AND_CURRENT).size_;
           input_nk_tot = (int)lata_db.get_field(tstep, geometryname, "SOMMETS_IJK_K", "", LataDB::FIRST_AND_CURRENT).size_;
-          if (input_ni_tot-1 != splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_I)
-              || input_nj_tot-1 != splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_J)
-              || input_nk_tot-1 != splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_K))
+          if (input_ni_tot-1 != splitting.get_nb_elem_tot(DIRECTION_I)
+              || input_nj_tot-1 != splitting.get_nb_elem_tot(DIRECTION_J)
+              || input_nk_tot-1 != splitting.get_nb_elem_tot(DIRECTION_K))
             {
               Cerr << "Error: size mismatch. Current grid (number of elements): "
-                   << splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_I) << " "
-                   << splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_J) << " "
-                   << splitting.get_grid_geometry().get_nb_elem_tot(DIRECTION_K) << finl;
+                   << splitting.get_nb_elem_tot(DIRECTION_I) << " "
+                   << splitting.get_nb_elem_tot(DIRECTION_J) << " "
+                   << splitting.get_nb_elem_tot(DIRECTION_K) << finl;
               Cerr << "Grid in lata file: "
                    << input_ni_tot-1 << " " << input_nj_tot-1 << " " << input_nk_tot-1 << finl;
               Process::exit();
@@ -381,7 +381,7 @@ void lire_dans_lata(const char *filename_with_path, int tstep, const char *geome
     }
   const int master = Process::je_suis_maitre();
   // Collate data on processor 0
-  const Domaine_IJK& splitting = f.get_splitting();
+  const Domaine_IJK& splitting = f.get_domaine();
   const Domaine_IJK::Localisation loc = f.get_localisation();
   const int nitot = splitting.get_nb_items_global(loc, DIRECTION_I);
   const int njtot = splitting.get_nb_items_global(loc, DIRECTION_J);
@@ -458,7 +458,7 @@ void lire_dans_lata(const char *filename_with_path, int tstep, const char *geome
       Cerr << "Error in lire_dans_lata(vx, vy, vz): provided fields have incorrect localisation" << finl;
       Process::exit();
     }
-  const Domaine_IJK& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_domaine();
   // Collate data on processor 0
   // In lata format, the velocity is written as an array of (vx, vy, vz) vectors.
   // Size of the array is the total number of nodes in the mesh.

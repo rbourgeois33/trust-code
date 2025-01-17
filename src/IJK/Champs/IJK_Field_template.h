@@ -54,7 +54,7 @@ public:
     localisation_(Domaine_IJK::Localisation::ELEM)
   { }
   void allocate(const Domaine_IJK&, Domaine_IJK::Localisation, int ghost_size, int additional_k_layers = 0, int nb_compo = 1, bool external_storage = false, int monofluide=0, double rov=0., double rol=0., int use_inv_rho_in_pressure_solver=0);
-  const Domaine_IJK& get_splitting() const { return splitting_ref_.valeur(); }
+  const Domaine_IJK& get_domaine() const { return domaine_ref_.valeur(); }
   Domaine_IJK::Localisation get_localisation() const { return localisation_; }
   void echange_espace_virtuel(int ghost);
   //_TYPE_ interpolation_for_shear_periodicity(const int phase, const int send_j, const int send_k);
@@ -67,7 +67,7 @@ public:
   inline const IJK_Shear_Periodic_helpler& get_shear_BC_helpler() const { return shear_BC_helpler_; }
 
 protected:
-  OBS_PTR(Domaine_IJK) splitting_ref_;
+  OBS_PTR(Domaine_IJK) domaine_ref_;
   Domaine_IJK::Localisation localisation_;
   IJK_Shear_Periodic_helpler shear_BC_helpler_;
 

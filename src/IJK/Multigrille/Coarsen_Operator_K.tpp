@@ -34,7 +34,7 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
 
   avg_coefficients_.resize_array(0);
 
-  const Domaine_IJK& src_grid_geom = fine.get_grid_geometry();
+  const Domaine_IJK& src_grid_geom = fine.get_domaine();
   const ArrOfDouble& coord_z_fine = src_grid_geom.get_node_coordinates(2 /* k direction */);
   const ArrOfDouble& coord_z_coarse = z_coord_all_;
 
@@ -128,12 +128,12 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
   Domaine_IJK coarse_splitting;
   // Same processor mapping as fine mesh
   IntTab processor_mapping;
-  fine.get_splitting().get_processor_mapping(processor_mapping);
+  fine.get_domaine().get_processor_mapping(processor_mapping);
   // Same splitting in i and j directions
   ArrOfInt slice_size_i, slice_size_j, fine_slice_size_k, coarse_slice_size_k;
-  fine.get_splitting().get_slice_size(0, Domaine_IJK::ELEM, slice_size_i);
-  fine.get_splitting().get_slice_size(1, Domaine_IJK::ELEM, slice_size_j);
-  fine.get_splitting().get_slice_size(2, Domaine_IJK::ELEM, fine_slice_size_k);
+  fine.get_domaine().get_slice_size(0, Domaine_IJK::ELEM, slice_size_i);
+  fine.get_domaine().get_slice_size(1, Domaine_IJK::ELEM, slice_size_j);
+  fine.get_domaine().get_slice_size(2, Domaine_IJK::ELEM, fine_slice_size_k);
   coarse_slice_size_k.resize_array(fine_slice_size_k.size_array());
   // compute sizes of slices in the k direction:
   {
@@ -183,12 +183,12 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
     avg_coefficients_local_.reset();
 
 
-    const int fine_k_offset = fine.get_splitting().get_offset_local(DIRECTION_K);
+    const int fine_k_offset = fine.get_domaine().get_offset_local(DIRECTION_K);
     const int fine_start = fine_k_offset;
-    const int fine_nlocal = fine.get_splitting().get_nb_elem_local(DIRECTION_K);
-    const int coarse_k_offset = coarse.get_splitting().get_offset_local(DIRECTION_K);
+    const int fine_nlocal = fine.get_domaine().get_nb_elem_local(DIRECTION_K);
+    const int coarse_k_offset = coarse.get_domaine().get_offset_local(DIRECTION_K);
     const int coarse_start = coarse_k_offset;
-    const int coarse_nlocal = coarse.get_splitting().get_nb_elem_local(DIRECTION_K);
+    const int coarse_nlocal = coarse.get_domaine().get_nb_elem_local(DIRECTION_K);
 
     const int n = src_dest_index_.dimension(0);
     Journal() << "Coarsen_Operator_K: local coarsening coefficients:\nfine_k coarse_k coarsen_coeff avg_coeff:" << endl;

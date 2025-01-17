@@ -34,7 +34,7 @@ Size_t IJK_Striped_Writer::write_data_template(const char * filename, const IJK_
       Process::exit();
     }
   // Collate data on processor 0
-  const Domaine_IJK& splitting = f.get_splitting();
+  const Domaine_IJK& splitting = f.get_domaine();
   const Domaine_IJK::Localisation loc = f.get_localisation();
   const int nitot = splitting.get_nb_items_global(loc, DIRECTION_I);
   const int njtot = splitting.get_nb_items_global(loc, DIRECTION_J);
@@ -75,7 +75,7 @@ Size_t IJK_Striped_Writer::write_data_template(const char * filename, const IJK_
       Cerr << "Error in  IJK_Striped_Writer::write_data_template(vx, vy, vz): provided fields have incorrect localisation" << finl;
       Process::exit();
     }
-  const Domaine_IJK& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_domaine();
   // Collate data on processor 0
   // In lata format, the velocity is written as an array of (vx, vy, vz) vectors.
   // Size of the array is the total number of nodes in the mesh.
@@ -117,7 +117,7 @@ Size_t IJK_Striped_Writer::write_data_parallele_plan_template(const char * filen
       Process::exit();
     }
 
-  const Domaine_IJK& splitting = f.get_splitting();
+  const Domaine_IJK& splitting = f.get_domaine();
   const int nitot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 0);
   const int njtot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 1);
   const int nktot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 2);
@@ -152,7 +152,7 @@ Size_t IJK_Striped_Writer::write_data_parallele_plan_template(const char * filen
       Cerr << "Error in  IJK_Striped_Writer::write_data_parallele_plan_template(vx, vy, vz): provided fields have incorrect localisation" << finl;
       Process::exit();
     }
-  const Domaine_IJK& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_domaine();
   const int nitot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 0) + 1;
   const int njtot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 1) + 1;
   const int nktot = splitting.get_nb_items_global(Domaine_IJK::ELEM, 2) + 1;
@@ -215,7 +215,7 @@ template<typename _OUT_TYPE_, typename _TYPE_, typename _TYPE_ARRAY_>
 void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& input, BigTRUSTArray<_OUT_TYPE_>& output,
                                       const int nitot, const int njtot, const int nktot, const int nbcompo, const int component)
 {
-  const Domaine_IJK& splitting = input.get_splitting();
+  const Domaine_IJK& geom = input.get_domaine();
   // For the moment, assume data is collected on mpi process 0
   // mpi processes send data to master
   TRUSTArray<_OUT_TYPE_> sendtmp;
@@ -226,12 +226,11 @@ void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRA
   // (that supposes that virtual cell available and uptodate, if not, written data at the right end will not reflect the periodicity)
   if (input.ghost() > 0 && input.get_localisation() != Domaine_IJK::ELEM)
     {
-      const Domaine_IJK& geom = splitting.get_grid_geometry();
       // if periodic and we are at the right end the domain:
       // MODIFS GABRIEL : il faut boucler sur les 3 directions !!
       for (int dir = 0; dir < 3 /* pas 2 */; dir++)
         {
-          if (geom.get_periodic_flag(dir) && splitting.get_local_slice_index(dir) == splitting.get_nprocessor_per_direction(dir) - 1)
+          if (geom.get_periodic_flag(dir) && geom.get_local_slice_index(dir) == geom.get_nprocessor_per_direction(dir) - 1)
             {
               int& n = (dir==0)?ni:((dir==1)?nj:nk);
               n++;
@@ -245,13 +244,13 @@ void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRA
         sendtmp[(k*nj+j)*ni+i] = (_OUT_TYPE_)input(i,j,k);
 
   // Some processors might have empty domain, will not receive any message so do not send !
-  if (!Process::je_suis_maitre() && splitting.get_nb_elem_local(0) > 0)
+  if (!Process::je_suis_maitre() && geom.get_nb_elem_local(0) > 0)
     {
-      envoyer(splitting.get_offset_local(0), 0, 0);
+      envoyer(geom.get_offset_local(0), 0, 0);
       envoyer(ni, 0, 0);
-      envoyer(splitting.get_offset_local(1), 0, 0);
+      envoyer(geom.get_offset_local(1), 0, 0);
       envoyer(nj, 0, 0);
-      envoyer(splitting.get_offset_local(2), 0, 0);
+      envoyer(geom.get_offset_local(2), 0, 0);
       envoyer(nk, 0, 0);
       envoyer(sendtmp, 0, 0);
     }
@@ -260,7 +259,7 @@ void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRA
     {
       // Master mpi process collects the data
       IntTab mapping;
-      splitting.get_processor_mapping(mapping);
+      geom.get_processor_mapping(mapping);
       TRUSTArray<_OUT_TYPE_> recv_tmp;
       for (int kproc = 0; kproc < mapping.dimension(2); kproc++)
         {
@@ -273,9 +272,9 @@ void IJK_Striped_Writer::redistribute(const IJK_Field_template<_TYPE_,_TYPE_ARRA
                   if (numproc == Process::me())
                     {
                       recv_tmp = sendtmp;
-                      imin2 = splitting.get_offset_local(0);
-                      jmin2 = splitting.get_offset_local(1);
-                      kmin2 = splitting.get_offset_local(2);
+                      imin2 = geom.get_offset_local(0);
+                      jmin2 = geom.get_offset_local(1);
+                      kmin2 = geom.get_offset_local(2);
                       ni2 = ni;
                       nj2 = nj;
                       nk2 = nk;
@@ -308,7 +307,7 @@ template<typename _IN_TYPE_, typename _TYPE_, typename _TYPE_ARRAY_>
 void IJK_Striped_Writer::redistribute_load(const BigTRUSTArray<_IN_TYPE_>& input, IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& output,
                                            const int nitot, const int njtot, const int nktot, const int nbcompo, const int component)
 {
-  const Domaine_IJK& splitting = output.get_splitting();
+  const Domaine_IJK& splitting = output.get_domaine();
   // For the moment, assume data is collected on mpi process 0
   // mpi processes send data to master
   int ni = output.ni();
@@ -404,7 +403,7 @@ Size_t IJK_Striped_Writer::write_data_parallel_template(const char * filename, c
       Cerr << "Error in  IJK_Striped_Writer::write_data_parallel_template(vx, vy, vz): provided fields have incorrect localisation" << finl;
       Process::exit();
     }
-  const Domaine_IJK& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_domaine();
   // In lata format, the velocity is written as an array of (vx, vy, vz) vectors.
   // Size of the array is the total number of nodes in the mesh.
   // The velocity associated with a node is the combination of velocities at the faces
@@ -421,7 +420,7 @@ Size_t IJK_Striped_Writer::write_data_parallel_template(const char * filename, c
 template<typename _OUT_TYPE_, typename _TYPE_, typename _TYPE_ARRAY_>
 Size_t IJK_Striped_Writer::write_data_parallel_template(const char * filename, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& f)
 {
-  const Domaine_IJK& splitting = f.get_splitting();
+  const Domaine_IJK& splitting = f.get_domaine();
 
   int nitot = 0, njtot = 0, nktot = 0;
   if (f.get_localisation() == Domaine_IJK::ELEM)
@@ -453,7 +452,7 @@ void IJK_Striped_Writer::write_data_parallel2_template(const char * filename,
                                                        const int file_ni_tot, const int file_nj_tot, const int file_nk_tot,
                                                        const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& vx, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& vy, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& vz)
 {
-  const Domaine_IJK& splitting = vx.get_splitting();
+  const Domaine_IJK& splitting = vx.get_domaine();
   const int nb_components = ((&vy == &vx) && (&vz == &vx)) ? 1 : 3;
 
   // Number of processes that write to the file:

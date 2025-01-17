@@ -26,9 +26,9 @@ template <typename _TYPE_, typename _TYPE_ARRAY_>
 void Multigrille_Adrien::prepare_secmem_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x) const
 {
   double moyenne = somme_ijk(x);
-  double nb_elem_tot = (double) x.get_splitting().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_I)
-                       * (double) x.get_splitting().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_J)
-                       * (double) x.get_splitting().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_K);
+  double nb_elem_tot = (double) x.get_domaine().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_I)
+                       * (double) x.get_domaine().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_J)
+                       * (double) x.get_domaine().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_K);
   double val = moyenne / nb_elem_tot;
   const int m = x.data().size_array();
   for (int i = 0; i < m; i++)
@@ -315,7 +315,7 @@ void Multigrille_Adrien::alloc_field_( IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& 
   int n = 0;
   if (with_additional_layers)
     n = ghost_size_;
-  field.allocate(get_grid_data<_TYPE_>(level).get_splitting(), Domaine_IJK::ELEM, ghost_size_, n);
+  field.allocate(get_grid_data<_TYPE_>(level).get_domaine(), Domaine_IJK::ELEM, ghost_size_, n);
 }
 
 

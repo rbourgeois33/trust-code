@@ -74,9 +74,9 @@ public:
     for (int i = 0; i < N; i++)
       this->data_[i]->echange_espace_virtuel(this->data_[i]->ghost());
   }
-  const Domaine_IJK& get_splitting() const
+  const Domaine_IJK& get_domaine() const
   {
-    return this->data_[0]->get_splitting();
+    return this->data_[0]->get_domaine();
   }
 #endif
 protected:

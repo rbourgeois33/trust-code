@@ -49,9 +49,9 @@ class Domaine_IJK : public Domaine_base
 public:
   // TODO ABN to remove
   const Domaine_IJK& get_grid_geometry() const { return *this; }
-  const Domaine_IJK& get_splitting() const { return *this; }
+//  const Domaine_IJK& get_domaine() const { return *this; }
   Domaine_IJK& get_grid_geometry()  { return *this; }
-  Domaine_IJK& get_splitting()  { return *this; }
+//  Domaine_IJK& get_domaine()  { return *this; }
 
   /*! @brief Localisation sub class
    */

@@ -103,9 +103,9 @@ void VDF_to_IJK::initialize(const Domaine_VF& domaine_vf, const Domaine_IJK& spl
   const int np = Process::nproc();
   const int moi = Process::me();
 
-  const ArrOfDouble& all_coord_i = splitting.get_grid_geometry().get_node_coordinates(0);
-  const ArrOfDouble& all_coord_j = splitting.get_grid_geometry().get_node_coordinates(1);
-  const ArrOfDouble& all_coord_k = splitting.get_grid_geometry().get_node_coordinates(2);
+  const ArrOfDouble& all_coord_i = splitting.get_node_coordinates(0);
+  const ArrOfDouble& all_coord_j = splitting.get_node_coordinates(1);
+  const ArrOfDouble& all_coord_k = splitting.get_node_coordinates(2);
 
   // For each direction, global position of the first element of each slice
   VECT(ArrOfInt) slice_offsets(3);

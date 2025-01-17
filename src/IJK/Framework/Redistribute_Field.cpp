@@ -236,7 +236,7 @@ void Redistribute_Field::redistribute_(const IJK_Field_double& input_field,
           const int dest_slice_k  = send_blocs[2](ibloc[2], 1);
           const int nk            = send_blocs[2](ibloc[2], 2);
 
-          const int dest_pe = output_field.get_splitting().get_processor_by_ijk(dest_slice_i, dest_slice_j, dest_slice_k);
+          const int dest_pe = output_field.get_domaine().get_processor_by_ijk(dest_slice_i, dest_slice_j, dest_slice_k);
           // Si le processeur destination est moi meme, on prend un tableau local sans passer par MPI:
           ArrOfDouble *buf_ptr;
           if (dest_pe == Process::me())
@@ -283,7 +283,7 @@ void Redistribute_Field::redistribute_(const IJK_Field_double& input_field,
           const int src_slice_k   = recv_blocs[2](ibloc[2], 1);
           const int nk            = recv_blocs[2](ibloc[2], 2);
 
-          const int src_pe = input_field.get_splitting().get_processor_by_ijk(src_slice_i, src_slice_j, src_slice_k);
+          const int src_pe = input_field.get_domaine().get_processor_by_ijk(src_slice_i, src_slice_j, src_slice_k);
           ArrOfDouble *buf_ptr;
           if (src_pe == Process::me())
             {
