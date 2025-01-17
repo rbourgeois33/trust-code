@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,18 +13,18 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_discretization_included
-#define IJK_discretization_included
+#ifndef IJK_VDF_converter_included
+#define IJK_VDF_converter_included
 #include <Domaine_IJK.h>
 #include <VDF_to_IJK.h>
 #include <Objet_U.h>
 
 // This class holds an IJK split mesh converted from a vdf source mesh and splitting
-class IJK_discretization : public Objet_U
+class IJK_VDF_converter : public Objet_U
 {
-  Declare_instanciable(IJK_discretization);
+  Declare_instanciable(IJK_VDF_converter);
 public:
-  const Domaine_IJK& get_IJK_splitting() const;
+  const Domaine_IJK& get_domaine() const { return domaine_ijk_; }
   const VDF_to_IJK& get_vdf_to_ijk(Domaine_IJK::Localisation) const;
   void nommer(const Nom& n) override
   {
@@ -38,7 +38,7 @@ public:
 protected:
   Nom object_name_;
 
-  Domaine_IJK splitting_;
+  Domaine_IJK domaine_ijk_;
 
   // For faces data:
   VDF_to_IJK vdf_to_ijk_i_;
