@@ -47,11 +47,6 @@ class Domaine_IJK : public Domaine_base
 {
   Declare_instanciable_sans_constructeur(Domaine_IJK);
 public:
-  // TODO ABN to remove
-  const Domaine_IJK& get_grid_geometry() const { return *this; }
-//  const Domaine_IJK& get_domaine() const { return *this; }
-  Domaine_IJK& get_grid_geometry()  { return *this; }
-//  Domaine_IJK& get_domaine()  { return *this; }
 
   /*! @brief Localisation sub class
    */
@@ -114,7 +109,6 @@ public:
    *  @param slice_size_k Contains for each slice in the k direction, the number of cells this slice.
    *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
    */
-  //TODO ABN  rename : initialize_mapping
   void initialize_mapping(Domaine_IJK& dom, const ArrOfInt& slice_size_i,
                           const ArrOfInt& slice_size_j,
                           const ArrOfInt& slice_size_k,
@@ -542,27 +536,6 @@ public:
     return volume_elem_;
   }
 
-  /* FREQUENTLY ASKED METHODS FROM DOMAINE_VF */
-  inline int elem_faces(int num_elem, int j) const
-  {
-    return elem_faces_(num_elem, j);
-  }
-
-  inline IntTab& elem_faces() { return elem_faces_; }
-  inline const IntTab& elem_faces() const { return elem_faces_; }
-  inline int face_voisins(int num_face, int i) const { return face_voisins_(num_face, i); }
-  inline IntTab& face_voisins() { return face_voisins_; }
-  inline const IntTab& face_voisins() const { return face_voisins_; }
-
-  /*! @brief Does nothing as of now since I'm not sure how to order them.
-   *         Also to check how "important" this is for IJK
-   */
-  inline void reordonner(Faces&) const {}
-
-  inline void creer_tableau_faces(Array_base& t, RESIZE_OPTIONS opt) const
-  {
-    MD_Vector_tools::creer_tableau_distribue(md_vector_faces_, t, opt);
-  }
   inline int ft_extension() const { return ft_extension_; }
 
   void set_extension_from_bulle_param(double vol_bulle, double diam_bulle);
@@ -596,21 +569,6 @@ private:
   /*! @brief Stores the periodic flag for each direction */
   bool periodic_[3];
 
-  /* RELATED TO DOMAINE VF */
-
-  IntTab face_voisins_;
-  IntTab elem_faces_;
-
-  /*! Descripteur parallele pour les tableaux aux faces (size() == nb_faces()) */
-  MD_Vector md_vector_faces_;
-  /*! Idem pour les faces frontiere (size() == nb_faces_front()) */
-  MD_Vector md_vector_faces_front_;
-  /*! Celui pour les aretes */
-  MD_Vector md_vector_aretes_;
-  /*! surface des faces */
-  DoubleVect face_surfaces_;
-  /*! @brief Elements center of gravity*/
-  DoubleTab elem_cog_;
 
   // Local data (processor dependent)
   // --------------------------------
@@ -618,11 +576,11 @@ private:
   /*! @brief Where is this processor in the global domain (slice number in each direction, -1 if processor has no data) */
   FixedVector<int, 3> processor_position_;
   /*! @brief Number of element in requested direction.
-   * 		 If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
+   *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_elem_local_;
   /*! @brief Number of nodes in requested direction.
-   * 		   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
+   *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_nodes_local_;
   /*! indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
@@ -630,9 +588,9 @@ private:
   /*! Index in the global mesh of the first (non ghost) element on this processor, in each direction */
   FixedVector<int, 3> offset_;
   /*! @brief MPI ranks of the processors that hold the neighbour domains.
-   * 		   Indexing is neighbour_processors_[previous=0, next=1][direction].
-   * 		   Contains -1 if no neighbour.
-   * 		   Wraps if periodic domain, if there is only one processor in a direction, the neighbour might be myself.
+   *   Indexing is neighbour_processors_[previous=0, next=1][direction].
+   *   Contains -1 if no neighbour.
+   *   Wraps if periodic domain, if there is only one processor in a direction, the neighbour might be myself.
    */
   FixedVector<FixedVector<int, 3>, 2> neighbour_processors_;
   /*! Volume of each element on this processor */
