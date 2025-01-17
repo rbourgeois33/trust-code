@@ -83,7 +83,7 @@ Entree& Domaine_IJK::readOn(Entree& is)
   if(motlu != "{")
     Process::exit(" The symbol { was expected after 'read|lire'");
 
-  Motcles les_mots(7);
+  Motcles les_mots(50);
   {
     les_mots[0] = "nbelem";
     les_mots[1] = "size_dom";
@@ -92,6 +92,7 @@ Entree& Domaine_IJK::readOn(Entree& is)
     les_mots[4] = "perio";
     les_mots[5] = "nproc";
     les_mots[6] = "process_grouping";
+    les_mots[7] = "ijk_splitting_ft_extension";
   }
 
   is >> motlu;
@@ -127,6 +128,9 @@ Entree& Domaine_IJK::readOn(Entree& is)
         case 6:
           for(int i = 0; i < dim; ++i)
             is >> groups[i];
+          break;
+        case 7:
+          is >> ft_extension_;
           break;
         default:
           Cerr << "Keyword : " << motlu <<" not understood by Domaine_IJK::readOn. Either update if needed or change the keyword." << finl;
@@ -339,6 +343,7 @@ void Domaine_IJK::initialize_from_unstructured(const Domaine& domaine,
  *         to matc the topology of the cluster/node. ex: 8 cores node/machine => use groups
  *         of size 2x2x2 to minimize extra-node messages.
  *
+ *  @param geom another domaine
  *  @param nproc_i Number of processors in i direction.
  *  @param nproc_j Number of processors in j direction.
  *  @param nproc_k Number of processors in k direction.
@@ -346,7 +351,7 @@ void Domaine_IJK::initialize_from_unstructured(const Domaine& domaine,
  *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
  *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
  */
-void Domaine_IJK::initialize_splitting(const Domaine_IJK& bidon,
+void Domaine_IJK::initialize_splitting(Domaine_IJK& geom,
                                        int nproc_i, int nproc_j, int nproc_k,
                                        int process_grouping_i,
                                        int process_grouping_j,
@@ -366,18 +371,18 @@ void Domaine_IJK::initialize_splitting(const Domaine_IJK& bidon,
       Process::exit();
     }
 
-  if (nproc_i > get_nb_elem_tot(0)
-      || nproc_j > get_nb_elem_tot(1)
-      || nproc_k > get_nb_elem_tot(2))
+  if (nproc_i > geom.get_nb_elem_tot(0)
+      || nproc_j > geom.get_nb_elem_tot(1)
+      || nproc_k > geom.get_nb_elem_tot(2))
     {
       Cerr << "Error in Domaine_IJK::initialize_splitting(nproc_i = " << nproc_i
            << ", nproc_j = " << nproc_j
            << ", nproc_k = " << nproc_k
            << "): requested splitting larger than total number of cells in one direction";
       Cerr << "\n (number of cells: "
-           << get_nb_elem_tot(0) << " "
-           << get_nb_elem_tot(1) << " "
-           << get_nb_elem_tot(2) << ")" << endl;
+           << geom.get_nb_elem_tot(0) << " "
+           << geom.get_nb_elem_tot(1) << " "
+           << geom.get_nb_elem_tot(2) << ")" << endl;
       Process::exit();
     }
 
@@ -442,7 +447,7 @@ void Domaine_IJK::initialize_splitting(const Domaine_IJK& bidon,
       for (int i = 0; i < 3; i++)
         {
           const int n = mapping.dimension(i);
-          const int ne = get_nb_elem_tot(i);
+          const int ne = geom.get_nb_elem_tot(i);
           sizes_all_slices[i].resize_array(n);
           for (int j = 0; j < n; j++)
             {
@@ -455,7 +460,7 @@ void Domaine_IJK::initialize_splitting(const Domaine_IJK& bidon,
   envoyer_broadcast(sizes_all_slices, 0);
 
   // Initialize object with these data:
-  initialize_mapping(*this, sizes_all_slices[0], sizes_all_slices[1], sizes_all_slices[2], mapping);
+  initialize_mapping(geom, sizes_all_slices[0], sizes_all_slices[1], sizes_all_slices[2], mapping);
 }
 
 /*! @brief Creates a splitting of the domain by specifying the slice
@@ -473,7 +478,7 @@ void Domaine_IJK::initialize_splitting(const Domaine_IJK& bidon,
  *  @param slice_size_k Contains for each slice in the k direction, the number of cells this slice.
  *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
  */
-void Domaine_IJK::initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
+void Domaine_IJK::initialize_mapping(Domaine_IJK& geom, const ArrOfInt& slice_size_i,
                                      const ArrOfInt& slice_size_j,
                                      const ArrOfInt& slice_size_k,
                                      const IntTab& processor_mapping)
@@ -481,6 +486,9 @@ void Domaine_IJK::initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_s
   assert(slice_size_i.size_array() == processor_mapping.dimension(0));
   assert(slice_size_j.size_array() == processor_mapping.dimension(1));
   assert(slice_size_k.size_array() == processor_mapping.dimension(2));
+
+  // Copy all geometrical information:
+  *this = geom;
 
   mapping_ = processor_mapping;
   sizes_all_slices_[0] = slice_size_i;
@@ -494,7 +502,7 @@ void Domaine_IJK::initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_s
       offsets_all_slices_[i][0] = 0;
       for (int j = 1; j < n; ++j)
         offsets_all_slices_[i][j] = offsets_all_slices_[i][j - 1] + sizes_all_slices_[i][j - 1];
-      assert(offsets_all_slices_[i][n - 1] + sizes_all_slices_[i][n - 1] == get_nb_elem_tot(i));
+      assert(offsets_all_slices_[i][n - 1] + sizes_all_slices_[i][n - 1] == geom.get_nb_elem_tot(i));
     }
   // Find my rank in the processor mapping, fill processor_position_
   bool ok = false;
@@ -543,7 +551,7 @@ void Domaine_IJK::initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_s
         {
           nb_elem_local_[i] = sizes_all_slices_[i][processor_position_[i]];
           nb_nodes_local_[i] = nb_elem_local_[i];
-          if (!get_periodic_flag(i) && processor_position_[i] == nproc_per_direction_[i] -1)
+          if (!geom.get_periodic_flag(i) && processor_position_[i] == nproc_per_direction_[i] -1)
             {
               // We have one more node on this processor only if we are the last processor in this direction
               // and if the domain is not periodic (otherwise, last node is owned by the next processor)
@@ -573,7 +581,7 @@ void Domaine_IJK::initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_s
                 other_pos[i]++;
               if (other_pos[i] < 0 || other_pos[i] >= nproc_per_direction_[i])
                 {
-                  if (get_periodic_flag(i))
+                  if (geom.get_periodic_flag(i))
                     {
                       // wrap to processor at other end
                       other_pos[i] = nproc_per_direction_[i] - 1 - processor_position_[i];
@@ -1315,3 +1323,15 @@ void Domaine_IJK::update_volume_elem()
       return;
     }
 }
+
+void Domaine_IJK::set_extension_from_bulle_param(double vol_bulle, double diam_bulle)
+{
+  int ijk_splitting_ft_extension_from_diameter = 0;
+  for (int c=0; c<3; c++)
+    {
+      const double delta = get_constant_delta(c);
+      ijk_splitting_ft_extension_from_diameter = std::max(ijk_splitting_ft_extension_from_diameter, (int) ceil(diam_bulle/delta));
+    }
+  ft_extension_ = (ijk_splitting_ft_extension_from_diameter > ft_extension_) ? ijk_splitting_ft_extension_from_diameter : ft_extension_;
+}
+

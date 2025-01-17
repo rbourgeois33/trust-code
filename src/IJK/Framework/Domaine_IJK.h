@@ -95,8 +95,7 @@ public:
    *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
    *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
    */
-  // TODO ABN  remove first arg
-  void initialize_splitting(const Domaine_IJK& bidon,
+  void initialize_splitting(Domaine_IJK& dom,
                             int nproc_i, int nproc_j, int nproc_k,
                             int process_grouping_i = 1, int process_grouping_j = 1,
                             int process_grouping_k = 1);
@@ -116,7 +115,7 @@ public:
    *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
    */
   //TODO ABN  rename : initialize_mapping
-  void initialize_mapping(Domaine_IJK& bidon, const ArrOfInt& slice_size_i,
+  void initialize_mapping(Domaine_IJK& dom, const ArrOfInt& slice_size_i,
                           const ArrOfInt& slice_size_j,
                           const ArrOfInt& slice_size_k,
                           const IntTab& processor_mapping);
@@ -558,12 +557,15 @@ public:
   /*! @brief Does nothing as of now since I'm not sure how to order them.
    *         Also to check how "important" this is for IJK
    */
-  inline void reordonner(Faces&) const {};
+  inline void reordonner(Faces&) const {}
 
   inline void creer_tableau_faces(Array_base& t, RESIZE_OPTIONS opt) const
   {
     MD_Vector_tools::creer_tableau_distribue(md_vector_faces_, t, opt);
   }
+  inline int ft_extension() const { return ft_extension_; }
+
+  void set_extension_from_bulle_param(double vol_bulle, double diam_bulle);
 
 private:
 
@@ -637,7 +639,8 @@ private:
   DoubleVect volume_elem_;
   /*! State of volume_elem_ on this processor */
   grid_status volume_elem_status_;
-
+  /*! Number of element used to extend the computational domain at each side of periodic boundary to accommodate for bubble evolution. */
+  int ft_extension_ = 0;
 
 };
 
