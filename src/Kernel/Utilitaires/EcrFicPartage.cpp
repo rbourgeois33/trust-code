@@ -18,6 +18,7 @@
 #include <PE_Groups.h>
 #include <Comm_Group.h>
 #include <communications.h>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id IO_EcrireFicPartageBin_counter_;
 
@@ -193,6 +194,7 @@ Sortie& EcrFicPartage::syncfile()
   const Comm_Group& group = PE_Groups::current_group();
   if(je_suis_maitre())
     {
+      Perf_counters& statistics = Perf_counters::getInstance();
       int p;
       const int nb_proc = nproc();
       for(p=0; p<nb_proc; p++)
@@ -231,8 +233,10 @@ Sortie& EcrFicPartage::syncfile()
                 {
                   // Ecriture binaire sans conversion :
                   statistiques().begin_count(IO_EcrireFicPartageBin_counter_);
+                  statistics.begin_count(STD_COUNTERS::IO_EcrireFicPartageBin_,2);
                   os.write(buffer_data, buf_size);
                   statistiques().end_count(IO_EcrireFicPartageBin_counter_, buf_size);
+                  statistics.end_count(STD_COUNTERS::IO_EcrireFicPartageBin_,1,buf_size);
                 }
               else
                 {

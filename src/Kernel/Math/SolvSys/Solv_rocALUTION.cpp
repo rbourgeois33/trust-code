@@ -278,7 +278,7 @@ Solver<GlobalMatrix<T>, GlobalVector<T>, T>* Solv_rocALUTION::create_rocALUTION_
         }
       // Coarse solver for local AMG
       try
-      {
+        {
           auto& base_amg = dynamic_cast<BaseAMG<LocalMatrix<T>, LocalVector<T>, T> &>(*lp);
           if (coarse_grid_solver_ == "LU") // Solveur direct construit et inverse sur CPU
             local_solver = new LU<LocalMatrix<T>, LocalVector<T>, T>();
@@ -295,12 +295,12 @@ Solver<GlobalMatrix<T>, GlobalVector<T>, T>* Solv_rocALUTION::create_rocALUTION_
           // Plante:
           //base_amg.SetHostLevels(coarse_grids_host_); // Par defaut 0 (donc tous les levels sur GPU)
           //Cout << "[rocALUTION] Solving " << coarse_grids_host_ << " coarse grids on the host." << finl;
-      }
+        }
       catch (const std::bad_cast&)
-      {
+        {
           Cout << "Error, you can't use smoother " << coarse_grid_solver_ << " with this solver." << finl;
           //Process::exit();
-      }
+        }
 
       // Set local preconditionner to BlockJacobi global one
       dynamic_cast<BlockJacobi<GlobalMatrix<T>, GlobalVector<T>, T> &>(*p).Set(*lp);
@@ -530,7 +530,7 @@ double residual_device(const GlobalMatrix<double>& a, const GlobalVector<double>
 
 int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b, DoubleVect& x)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
 #ifdef ROCALUTION_ROCALUTION_HPP_
   if (write_system_) save++;
   double tick;
@@ -794,7 +794,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
 void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 {
 #ifdef ROCALUTION_ROCALUTION_HPP_
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   double tick = rocalution_time();
   const ArrOfInt& tab1 = csr.get_tab1();
   const ArrOfInt& tab2 = csr.get_tab2();
@@ -1023,7 +1023,7 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
   if (lp!=nullptr)
     {
       try
-      {
+        {
           auto& mg = dynamic_cast<BaseAMG<LocalMatrix<double>, LocalVector<double>, double> &>(*lp);
           mg.SetOperator(mat.GetInterior());
           mg.BuildHierarchy();
@@ -1069,12 +1069,12 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
           gs[0]->Print();
           mg.SetSmoother(sm);
           mg.Verbose(precond_verbosity_);
-      }
+        }
       catch (const std::bad_cast&)
-      {
+        {
           Cout << "[rocALUTION] You can't use smoother " << smoother_ << " with this solver." << finl;
           //Process::exit();
-      };
+        };
     }
 
   ls->Build();

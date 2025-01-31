@@ -61,11 +61,11 @@ Entree& Test_solveur::readOn(Entree& is )
 
 void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution, int nmax, ArrOfDouble& temps, double seuil_verification=DMAXFLOAT)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
   Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
-statistics.create_custom_counter(1,"SolveurSys::resoudre_systeme",0);
+  statistics.create_custom_counter(1,"SolveurSys::resoudre_systeme");
   for (int i=0; i<n; i++)
     {
       solution=solution_ref;
@@ -74,7 +74,7 @@ statistics.create_custom_counter(1,"SolveurSys::resoudre_systeme",0);
       Stat_Results stat_resol_0;
       double t_0,t;
       statistiques().get_stats(solv_sys_counter_l, stat_resol_0);
-      t_0 = statistics.get_time("SolveurSys::resoudre_systeme");
+      t_0 = statistics.get_total_time("SolveurSys::resoudre_systeme");
       Cout<<"------------------------------------"<<finl;
       Cout<<"Try " << i << " of solver " << solveur <<finl;
       //solveur->fixer_limpr(0);

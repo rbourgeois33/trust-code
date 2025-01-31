@@ -322,7 +322,7 @@ void Solv_Petsc::create_solver(Entree& entree)
   int rang=les_solveurs.search(ksp);
   nommer(les_solveurs[rang]);
   switch(rang)
-  {
+    {
     case 0:
     case 14:
     case 15:
@@ -505,8 +505,8 @@ void Solv_Petsc::create_solver(Entree& entree)
         if (rang == 16)
           {
             Cerr
-            << "Activating BLR factorization. For more info, see http://mumps.enseeiht.fr/doc/userguide_5.1.2.pdf (page 18, 51, 52)."
-            << finl;
+                << "Activating BLR factorization. For more info, see http://mumps.enseeiht.fr/doc/userguide_5.1.2.pdf (page 18, 51, 52)."
+                << finl;
             add_option("mat_mumps_icntl_35", "1");
           }
 #else
@@ -607,7 +607,7 @@ void Solv_Petsc::create_solver(Entree& entree)
         Cerr << "See the reference manual for all Petsc options." << finl;
         Process::exit();
       }
-  }
+    }
 
   // On verifie que le solveur est supporte sur GPU:
   if (gpu_)
@@ -691,7 +691,7 @@ void Solv_Petsc::create_solver(Entree& entree)
       while (motlu!=accolade_fermee)
         {
           switch(les_parametres_solveur.search(motlu))
-          {
+            {
             case 16:
               {
                 fixer_limpr(-1);
@@ -761,7 +761,7 @@ void Solv_Petsc::create_solver(Entree& entree)
                     double tmp_double;
                     Nom tmp_string;
                     switch(les_parametres_precond.search(motlu))
-                    {
+                      {
                       case 0:
                         {
                           is >> tmp_double;
@@ -804,13 +804,13 @@ void Solv_Petsc::create_solver(Entree& entree)
                           else
                             {
                               Cerr << motlu
-                                  << " : unrecognized option among all of those possible on Petsc preconditioner:"
-                                  << finl;
+                                   << " : unrecognized option among all of those possible on Petsc preconditioner:"
+                                   << finl;
                               Cerr << les_parametres_precond << finl;
                               Process::exit();
                             }
                         }
-                    }
+                      }
                     is >> motlu;
                   }
                 break;
@@ -1086,7 +1086,7 @@ void Solv_Petsc::create_solver(Entree& entree)
                     Process::exit();
                   }
               }
-          }
+            }
           is >> motlu;
         }
       // Some checks
@@ -1133,7 +1133,7 @@ void Solv_Petsc::create_solver(Entree& entree)
           // Option du preconditionneur
           rang = les_precond.search(pc);
           switch(rang)
-          {
+            {
             case 0:
               {
                 PCSetType(PreconditionneurPetsc_, PCNONE);
@@ -1173,7 +1173,7 @@ void Solv_Petsc::create_solver(Entree& entree)
                 else
                   {
                     Cerr << "Error: CHANGES in the PETSc 3.6 version: Removed -pc_hypre_type euclid due to bit-rot."
-                        << finl;
+                         << finl;
                     Cerr << "So the ILU { level k } preconditioner no longer available. " << finl;
                     Cerr << "Change your data file." << finl;
                     Process::exit();
@@ -1449,22 +1449,22 @@ void Solv_Petsc::create_solver(Entree& entree)
                 //PetscNew(&pc_user_);
 
                 auto PCShellUserApply =  [](PC pc_apply, Vec x, Vec y)
-                        {
+                {
                   PCstruct *pcstruct;
 
                   PCShellGetContext(pc_apply,(void**) &pcstruct);
                   OWN_PTR(PCShell_base)& pcs=pcstruct->pc_shell;
                   return pcs->computePC(pc_apply,x,y);
-                        };
+                };
 
                 auto PCShellUserDestroy =  [](PC pc_apply)
-                        {
+                {
                   PCstruct *pcstruct;
 
                   PCShellGetContext(pc_apply,(void**) &pcstruct);
                   OWN_PTR(PCShell_base)& pcs=pcstruct->pc_shell;
                   return pcs->destroyPC(pc_apply);
-                        };
+                };
 
                 PCShellSetApply(PreconditionneurPetsc_, PCShellUserApply);
                 PCShellSetContext(PreconditionneurPetsc_, &pc_user_);
@@ -1507,7 +1507,7 @@ void Solv_Petsc::create_solver(Entree& entree)
                 Cerr << "See the reference manual of Petsc to do this." << finl;
                 Process::exit();
               }
-          }
+            }
         }
       else
         {
@@ -1986,7 +1986,6 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
   Perf_counters & statistics = Perf_counters::getInstance();
   // Create solver now just before solve if not created:
   if (SolveurPetsc_==nullptr) create_solver();
-
   std::fenv_t fenv;
   std::feholdexcept(&fenv);
   // Si on utilise un solver petsc on le signale pour les stats finales
@@ -2053,9 +2052,9 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
       check_aij(matrice_morse_intermediaire);
 
       bool la_matrice_est_morse_non_symetrique =
-          sub_type(Matrice_Morse, la_matrice) && !sub_type(Matrice_Morse_Sym, la_matrice);
+        sub_type(Matrice_Morse, la_matrice) && !sub_type(Matrice_Morse_Sym, la_matrice);
       const Matrice_Morse& matrice_morse = la_matrice_est_morse_non_symetrique ? ref_cast(Matrice_Morse, la_matrice)
-          : matrice_morse_intermediaire;
+                                           : matrice_morse_intermediaire;
 
       // Detect if the stencil state:
       if (MatricePetsc_ == nullptr || rebuild_matrix_ || read_matrix())
@@ -2198,7 +2197,7 @@ void setupSignalHandlers(bool on)
 
 int Solv_Petsc::solve(ArrOfDouble& residu)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   PetscLogStagePush(KSPSolve_Stage_);
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   // Affichage par MyKSPMonitor
@@ -2321,7 +2320,7 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
 #ifdef PETSCKSP_H
 void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // Assemblage du second membre et de la solution
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   bool DataOnDevice = solution.checkDataOnDevice(secmem);
@@ -2398,7 +2397,7 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
 {
   // Recuperation de la solution
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   bool DataOnDevice = solution.checkDataOnDevice();
   if (gpu_ && DataOnDevice && !isViennaCLVector()) // solution is on the device to SolutionPetsc_ -> solution update without copy
     {
@@ -2619,20 +2618,20 @@ void Solv_Petsc::Create_objects(const Matrice_Morse& mat, int blocksize)
           Cout << "The LU decomposition of a matrix with ";
           Cout << "Cholesky from MUMPS may take several minutes, please wait..." << finl;
           Cout
-          << "If the decomposition fails/crashes cause a lack of memory, then increase the number of CPUs for your calculation"
-          << finl;
+              << "If the decomposition fails/crashes cause a lack of memory, then increase the number of CPUs for your calculation"
+              << finl;
           Cout
-          << "or add reduce_ram option (syntax: cholesky { reduce_ram }) to suppress preventive memory increase (INCTL(14))"
-          << finl;
+              << "or add reduce_ram option (syntax: cholesky { reduce_ram }) to suppress preventive memory increase (INCTL(14))"
+              << finl;
           Cout
-          << "or use Cholesky_out_of_core keyword to write the decomposition on the disk, thus saving memory but with an extra CPU cost during solve."
-          << finl;
+              << "or use Cholesky_out_of_core keyword to write the decomposition on the disk, thus saving memory but with an extra CPU cost during solve."
+              << finl;
           Cout
-          << "To see the RAM required by the decomposition in the .out file, add impr option to the solver: petsc cholesky { impr }"
-          << finl;
+              << "To see the RAM required by the decomposition in the .out file, add impr option to the solver: petsc cholesky { impr }"
+              << finl;
           Cout
-          << "If an error INFOG(1)=-8|-9|-11|-17|-20 is returned, you can try to increase the ICNTL(14) parameter of MUMPS by using the -mat_mumps_icntl_14 command line option."
-          << finl;
+              << "If an error INFOG(1)=-8|-9|-11|-17|-20 is returned, you can try to increase the ICNTL(14) parameter of MUMPS by using the -mat_mumps_icntl_14 command line option."
+              << finl;
           message_affi = 0;
         }
       PCFactorSetMatSolverType(PreconditionneurPetsc_, MATSOLVERMUMPS);
@@ -2900,11 +2899,11 @@ void Solv_Petsc::Create_DM(const DoubleVect& b)
       std::map<std::string, std::vector<PetscInt>> champ;
       //liste (MD_Vector_composite, offset de ses elements, multiplicateur (nb d'items du tableau par item du MD_Vector) prefixe des noms de ses champs)
       std::vector<std::tuple<const MD_Vector_composite *, int, int, std::string>>
-      mdc_list =
-          {
-              std::make_tuple(&ref_cast(MD_Vector_composite, b.get_md_vector().valeur()), 0, b.line_size(),
-                              std::string("b"))
-          };
+                                                                               mdc_list =
+      {
+        std::make_tuple(&ref_cast(MD_Vector_composite, b.get_md_vector().valeur()), 0, b.line_size(),
+        std::string("b"))
+      };
       while (mdc_list.size()) //remplissage recursif de champs_ -> (nom du champ, indices)
         {
           const MD_Vector_composite& mdc = *std::get<0>(mdc_list.back());

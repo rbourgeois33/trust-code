@@ -43,7 +43,7 @@ static int nested_solver = 0;
 
 int SolveurSys::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   valeur().save_matrice_secmem_conditionnel(matrice, secmem, solution);
 
   // Cas de solveurs emboites: n'afficher que le temps du solveur "exterieur"
@@ -65,8 +65,8 @@ int SolveurSys::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& 
     Cout << " Convergence in " << nb_iter << " iterations for " << le_nom() << finl;
 
   if (valeur().limpr() == 1)
-   // Cout << "clock Ax=B: " << statistiques().last_time(solv_sys_counter_) << " s for " << le_nom() << finl;
-  Cout << "clock Ax=B: " << statistics.get_time_since_last_open(STD_COUNTERS::system_solver_) << " s for " << le_nom() << finl;
+    // Cout << "clock Ax=B: " << statistiques().last_time(solv_sys_counter_) << " s for " << le_nom() << finl;
+    Cout << "clock Ax=B: " << statistics.get_time_since_last_open(STD_COUNTERS::system_solver_) << " s for " << le_nom() << finl;
   statistics.end_count(STD_COUNTERS::system_solver_,1,nb_iter);
 
   return nb_iter;

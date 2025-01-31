@@ -321,7 +321,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
   statistiques().begin_count(initialisation_calcul_counter_);
 
   statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
-  statistics.begin_count(STD_COUNTERS::computation_start_up_,1);
+  statistics.begin_count(STD_COUNTERS::computation_start_up_,0);
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)

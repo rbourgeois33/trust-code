@@ -246,7 +246,7 @@ void Save_Restart::prepare_PDI_restart(int resume_last_time)
 
 void Save_Restart::sauver_xyz(int verbose) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(sauvegarde_counter_);
   statistics.begin_count(STD_COUNTERS::backup_file_,1);
   Nom nom_fich_xyz("");

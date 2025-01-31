@@ -20,6 +20,7 @@
 #include <communications.h>
 #include <Comm_Group_MPI.h>
 #include <string>
+#include <Perf_counters.h>
 
 extern Stat_Counter_Id IO_EcrireFicPartageMPIIO_counter_;
 
@@ -323,6 +324,7 @@ int EcrFicPartageMPIIO::put(const double* ob, std::streamsize n, std::streamsize
 // Ecriture d'une zone memoire pointee par ob contenant n MPI_TYPE :
 int EcrFicPartageMPIIO::put(MPI_Datatype MPI_TYPE, const void* ob, int n)
 {
+  Perf_counters& statistics = Perf_counters::getInstance();
   MPI_Datatype etype;
   etype=MPI_TYPE;
   True_int sizeof_etype;
@@ -372,8 +374,10 @@ int EcrFicPartageMPIIO::put(MPI_Datatype MPI_TYPE, const void* ob, int n)
 
   // Write all:
   statistiques().begin_count(IO_EcrireFicPartageMPIIO_counter_);
+  statistics.begin_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO_,2);
   MPI_File_write_all(mpi_file_, (void*)ob, n, etype, MPI_STATUS_IGNORE);
   statistiques().end_count(IO_EcrireFicPartageMPIIO_counter_, n * sizeof_etype);
+  statistics.end_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO_,1,n * sizeof_etype);
 
   // Update the position of the pointer file:
   disp_+=mp_sum(n) * sizeof_etype;

@@ -19,13 +19,13 @@
 #include <map>
 #include <tuple>
 #include <array>
+#include <memory>
 
-#ifndef PERFS_COUNTERS_H
-#define PERFS_COUNTERS_H
+#ifndef Perf_counters_included
+#define Perf_counters_included
 
 // This file contains all of the needed for the description of the counter associated with the tracking of performance in the TRUST code.
 // A class Time is introduced in Perf_counters.cpp for extracting the time
-
 class Counter;
 
 enum class STD_COUNTERS : unsigned int
@@ -79,23 +79,22 @@ enum class STD_COUNTERS : unsigned int
 };
 
 
-/*!  @brief This class stores and manages counters in TRUST
+/*!  @brief This class stores and manages counters in TRUST. It is a singleton.
  *
  */
 class Perf_counters
 {
 public:
 
-  static Perf_counters* getInstance()
+  /*! @brief The class Perf_counters is based on a singleton pattern. To access to the unique object inside the code, use the getInstance() function
+   *
+   * @return the unique Perf_counters object
+   */
+  static Perf_counters& getInstance()
   {
     static Perf_counters counters_stat_ ;
-    return &counters_stat_;
+    return counters_stat_;
   }
-
-  /*! @brief Function filling the array std_counters_ with the base counters of TRUST
-   *
-   */
-  void declare_base_counters();
 
   /*! @brief Create a new counter and add it to the vector of counters
    *
@@ -105,7 +104,7 @@ public:
    * @param is_comm
    * @return create a new counter
    */
-  void create_custom_counter(unsigned int counter_level, std::string counter_description, std::string counter_family = "None",bool is_comm);
+  void create_custom_counter(unsigned int counter_level, std::string counter_description, std::string counter_family = "None", bool is_comm=false);
 
   /*! @brief Start the count of a counter
    *
@@ -195,38 +194,49 @@ public:
    */
   void print_global_TU(std::string message, bool mode_append);
 
-  inline double get_time(STD_COUNTERS name)
-  {
-    Counter & c = std_counters_[name];
-    return (c.total_time_.count());
-  }
-
-  inline double get_time(std::string name)
-  {
-    Counter & c = custom_counter_map_str_to_counter_.at(name);
-    return (c.total_time_.count());
-  }
-
-  /*!
-   * This function aims at starting the tracking of time per time step of counters that have been started before the time current time step
-   */
-  void start_timestep();
-
-  /*!
+  /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the standard counter call name
    *
-   * @param name
-   * @return the time since the last opening of the counter
+   */
+  double get_total_time(STD_COUNTERS name);
+
+  /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the custom counter call name
+     *
+     */
+  double get_total_time(std::string name);
+
+  /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
+   *
    */
   double get_time_since_last_open(STD_COUNTERS name);
 
+  /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
+   *
+   */
   double get_time_since_last_open(std::string name);
 
-  double get_total_time(STD_COUNTERS name);
 
-  double get_total_time(std::string name);
+  /*!
+   * This function aims at starting the tracking of time per time step of counters that have been started before the time loop
+   */
+  void start_timestep();
 
-
+  /*!@brief This function compute statistics per time steps of counters used at least once during a time step.
+   *
+   * @param tstep is the current time step number
+   */
   void compute_avg_min_max_var_per_step(int tstep);
+
+  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+   *
+   * @return the reference of a the counter object associated with STD_COUNTERS::name
+   */
+  inline Counter& access_std_counter(STD_COUNTERS name) {return *std_counters_[static_cast<int>(name)];}
+
+  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+   *
+   * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
+   */
+  inline Counter& access_custom_counter(std::string name) {return *custom_counter_map_str_to_counter_.at(name);}
 
   std::string get_os();
 
@@ -238,27 +248,17 @@ public:
 
 private:
 
-  Perf_counters()
-  {
-    Perf_counters::declare_base_counters();
-    two_first_steps_elapsed_ = true;
-    end_cache_=false;
-    counters_stop_=false;
-    last_opened_counter_ = nullptr;
-  }
-
+  Perf_counters();
+  ~Perf_counters();
   Perf_counters(const Perf_counters&) = delete;
   Perf_counters& operator=(const Perf_counters&) = delete;
-
-  bool two_first_steps_elapsed_;
-  bool end_cache_;
-  std::chrono::duration<double> time_cache_;
-  bool counters_stop_;
-
-  std::array <Counter,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the standard counters of TRUST
-  std::map <std::string, Counter> custom_counter_map_str_to_counter_ ; ///< Map that link the custom counters descriptions to the counter type
-  Counter * last_opened_counter_;
-
+  bool two_first_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
+  bool end_cache_; ///< A flag used to know if the two first time steps are over or not
+  bool counters_stop_;  ///< A flag used to know if the counters are paused or not
+  std::chrono::duration<double> time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
+  Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
+  std::array <Counter*,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
+  std::map <std::string, Counter* > custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
 };
 
 #endif

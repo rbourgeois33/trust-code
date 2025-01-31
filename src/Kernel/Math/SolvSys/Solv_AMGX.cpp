@@ -63,7 +63,7 @@ void Solv_AMGX::initialize()
 // Creation des objets
 void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   initialize();
   if (read_matrix())
     {
@@ -89,7 +89,7 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   //cudaFree(values_device);delete[] hostArray;
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz));
   Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice_) << finl;// Attention balise lue par fiche de validation
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice_);
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1,(int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz);
 }
 
 void Solv_AMGX::Create_vectors(const DoubleVect& b)
@@ -164,7 +164,7 @@ PetscErrorCode Solv_AMGX::petscToCSR(Mat& A, Vec& lhs_petsc, Vec& rhs_petsc)
 
 void Solv_AMGX::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // La matrice CSR de PETSc a ete mise a jour dans check_stencil
   statistiques().begin_count(gpu_copytodevice_counter_);
   statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
@@ -251,12 +251,12 @@ int Solv_AMGX::solve(ArrOfDouble& residu)
   mapToDevice(rhs_);
   computeOnTheDevice(lhs_);
   statistiques().begin_count(gpu_library_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_library_,2);
+  statistics.begin_count(STD_COUNTERS::gpu_library_);
   // Offer device pointers to AmgX:
   SolveurAmgX_.solve(addrOnDevice(lhs_), addrOnDevice(rhs_), nRowsLocal, seuil_);
   statistiques().end_count(gpu_library_counter_);
   statistics.end_count(STD_COUNTERS::gpu_library_);
-  Cout << "[AmgX] Time to solve system on GPU: " << statistiques().last_time(gpu_library_counter_) << finl;
+  Cout << "[AmgX] Time to solve system on GPU: " << statistics.get_total_time(STD_COUNTERS::gpu_library_) << finl;
   return nbiter(residu);
 }
 
