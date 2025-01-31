@@ -267,25 +267,24 @@ static double ijk_interpolate_one_value(const IJK_Field_double& field, const Vec
   const int nj = field.nj();
   const int nk = field.nk();
 
-  const IJK_Splitting& splitting = field.get_splitting();
-  const IJK_Grid_Geometry& geom = splitting.get_grid_geometry();
+  const Domaine_IJK& geom = field.get_domaine();
   const double dx = geom.get_constant_delta(DIRECTION_I);
   const double dy = geom.get_constant_delta(DIRECTION_J);
   const double dz = geom.get_constant_delta(DIRECTION_K);
-  const IJK_Splitting::Localisation loc = field.get_localisation();
+  const Domaine_IJK::Localisation loc = field.get_localisation();
   // L'origine est sur un noeud. Donc que la premiere face en I est sur get_origin(DIRECTION_I)
-  double origin_x = geom.get_origin(DIRECTION_I) + ((loc == IJK_Splitting::FACES_J || loc == IJK_Splitting::FACES_K || loc == IJK_Splitting::ELEM) ? (dx * 0.5) : 0.);
-  double origin_y = geom.get_origin(DIRECTION_J) + ((loc == IJK_Splitting::FACES_K || loc == IJK_Splitting::FACES_I || loc == IJK_Splitting::ELEM) ? (dy * 0.5) : 0.);
-  double origin_z = geom.get_origin(DIRECTION_K) + ((loc == IJK_Splitting::FACES_I || loc == IJK_Splitting::FACES_J || loc == IJK_Splitting::ELEM) ? (dz * 0.5) : 0.);
+  double origin_x = geom.get_origin(DIRECTION_I) + ((loc == Domaine_IJK::FACES_J || loc == Domaine_IJK::FACES_K || loc == Domaine_IJK::ELEM) ? (dx * 0.5) : 0.);
+  double origin_y = geom.get_origin(DIRECTION_J) + ((loc == Domaine_IJK::FACES_K || loc == Domaine_IJK::FACES_I || loc == Domaine_IJK::ELEM) ? (dy * 0.5) : 0.);
+  double origin_z = geom.get_origin(DIRECTION_K) + ((loc == Domaine_IJK::FACES_I || loc == Domaine_IJK::FACES_J || loc == Domaine_IJK::ELEM) ? (dz * 0.5) : 0.);
   const double x = coordinates[0];
   const double y = coordinates[1];
   const double z = coordinates[2];
   const double x2 = (x - origin_x) / dx;
   const double y2 = (y - origin_y) / dy;
   const double z2 = (z - origin_z) / dz;
-  const int index_i = (int) (floor(x2)) - splitting.get_offset_local(DIRECTION_I);
-  const int index_j = (int) (floor(y2)) - splitting.get_offset_local(DIRECTION_J);
-  const int index_k = (int) (floor(z2)) - splitting.get_offset_local(DIRECTION_K);
+  const int index_i = (int) (floor(x2)) - geom.get_offset_local(DIRECTION_I);
+  const int index_j = (int) (floor(y2)) - geom.get_offset_local(DIRECTION_J);
+  const int index_k = (int) (floor(z2)) - geom.get_offset_local(DIRECTION_K);
   // Coordonnes barycentriques du points dans la cellule :
   const double xfact = x2 - floor(x2);
   const double yfact = y2 - floor(y2);
