@@ -215,9 +215,9 @@ static void ijk_interpolate_implementation(const IJK_Field_double& field, const 
         }
 
       const double r = (((1. - xfact) * field(index_i, index_j, index_k) + xfact * field(index_i + 1, index_j, index_k)) * (1. - yfact)
-                     + ((1. - xfact) * field(index_i, index_j + 1, index_k) + xfact * field(index_i + 1, index_j + 1, index_k)) * (yfact)) * (1. - zfact)
-                     + (((1. - xfact) * field(index_i, index_j, index_k + 1) + xfact * field(index_i + 1, index_j, index_k + 1)) * (1. - yfact)
-                     + ((1. - xfact) * field(index_i, index_j + 1, index_k + 1) + xfact * field(index_i + 1, index_j + 1, index_k + 1)) * (yfact)) * (zfact);
+                        + ((1. - xfact) * field(index_i, index_j + 1, index_k) + xfact * field(index_i + 1, index_j + 1, index_k)) * (yfact)) * (1. - zfact)
+                       + (((1. - xfact) * field(index_i, index_j, index_k + 1) + xfact * field(index_i + 1, index_j, index_k + 1)) * (1. - yfact)
+                          + ((1. - xfact) * field(index_i, index_j + 1, index_k + 1) + xfact * field(index_i + 1, index_j + 1, index_k + 1)) * (yfact)) * (zfact);
       result[idx] = r;
     }
 }
@@ -275,9 +275,9 @@ static double ijk_interpolate_one_value(const IJK_Field_double& field, const Vec
   static const int NB_ELEM_J = domain.get_nb_elem_tot(DIRECTION_J);
   static const int NB_ELEM_K = domain.get_nb_elem_tot(DIRECTION_K);
 
-  const double x = coordinates(idx, 0) < 0 && PERIO_I ? LENGTH_I + coordinates[0] : coordinates[0];
-  const double y = coordinates(idx, 1) < 0 && PERIO_J ? LENGTH_J + coordinates[1] : coordinates[0];
-  const double z = coordinates(idx, 2) < 0 && PERIO_K ? LENGTH_K + coordinates[2] : coordinates[0];
+  const double x = coordinates[0] < 0 && PERIO_I ? LENGTH_I + coordinates[0] : coordinates[0];
+  const double y = coordinates[1] < 0 && PERIO_J ? LENGTH_J + coordinates[1] : coordinates[0];
+  const double z = coordinates[2] < 0 && PERIO_K ? LENGTH_K + coordinates[2] : coordinates[0];
   const double x2 = (x - origin_x) / dx;
   const double y2 = (y - origin_y) / dy;
   const double z2 = (z - origin_z) / dz;
@@ -310,9 +310,9 @@ static double ijk_interpolate_one_value(const IJK_Field_double& field, const Vec
     }
 
   double r = (((1. - xfact) * field(index_i, index_j, index_k) + xfact * field(index_i + 1, index_j, index_k)) * (1. - yfact)
-           + ((1. - xfact) * field(index_i, index_j + 1, index_k) + xfact * field(index_i + 1, index_j + 1, index_k)) * (yfact)) * (1. - zfact)
-           + (((1. - xfact) * field(index_i, index_j, index_k + 1) + xfact * field(index_i + 1, index_j, index_k + 1)) * (1. - yfact)
-           + ((1. - xfact) * field(index_i, index_j + 1, index_k + 1) + xfact * field(index_i + 1, index_j + 1, index_k + 1)) * (yfact)) * (zfact);
+              + ((1. - xfact) * field(index_i, index_j + 1, index_k) + xfact * field(index_i + 1, index_j + 1, index_k)) * (yfact)) * (1. - zfact)
+             + (((1. - xfact) * field(index_i, index_j, index_k + 1) + xfact * field(index_i + 1, index_j, index_k + 1)) * (1. - yfact)
+                + ((1. - xfact) * field(index_i, index_j + 1, index_k + 1) + xfact * field(index_i + 1, index_j + 1, index_k + 1)) * (yfact)) * (zfact);
   return r;
 }
 
