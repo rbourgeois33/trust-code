@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -61,7 +61,7 @@ public:
 
   inline const Domaine_IJK& get_domain() const { return ijk_domain_.valeur(); }
 
-  inlineDomaine_IJK::Localisation get_localisation() const { return localisation_; }
+  inline Domaine_IJK::Localisation get_localisation() const { return localisation_; }
 
   void echange_espace_virtuel(int ghost);
 
