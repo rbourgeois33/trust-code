@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -193,9 +193,9 @@ void Matrice_Grossiere::build_matrix(const IJK_Field_template<_TYPE_,_TYPE_ARRAY
                 ajoute_coeff(i,j,k,i+1,j,k,coeffs_face(i+1,j,k,0));
                 ajoute_coeff(i,j,k,i,j+1,k,coeffs_face(i,j+1,k,1));
                 if (z_index == z_index_max && defilement_ == 1 && k == nk - 1)
-                    ajoute_coeff(i, j, k, i, j, k + 1, coeffs_face(i, j, k + 1, 2), -1.);
+                  ajoute_coeff(i, j, k, i, j, k + 1, coeffs_face(i, j, k + 1, 2), -1.);
                 else
-                    ajoute_coeff(i, j, k, i, j, k + 1, coeffs_face(i, j, k + 1, 2));
+                  ajoute_coeff(i, j, k, i, j, k + 1, coeffs_face(i, j, k + 1, 2));
               }
           }
       }

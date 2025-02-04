@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -26,7 +26,7 @@ public:
   FixedVector(int i, int j, int k) {  }
 
   inline static int size() { return N; }
-  
+
   T& operator[](int i)
   {
     assert(i>=0 && i<N);

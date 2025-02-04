@@ -164,15 +164,15 @@ Size_t IJK_Striped_Writer::write_data_parallele_plan_template(const char * filen
 
   int ni = domain.get_nb_items_local(Domaine_IJK::ELEM, 0);
   if ( (domain.get_local_slice_index(0) == domain.get_nprocessor_per_direction(0) - 1) )
-      ni++;
+    ni++;
 
   int nj = domain.get_nb_items_local(Domaine_IJK::ELEM, 1);
   if ( (domain.get_local_slice_index(1) == domain.get_nprocessor_per_direction(1) - 1) )
-      nj++;
+    nj++;
 
   int nk = domain.get_nb_items_local(Domaine_IJK::ELEM, 2);
   if ( domain.get_local_slice_index(2) == domain.get_nprocessor_per_direction(2) - 1)
-      nk++;
+    nk++;
   const int nbcompo = 3;
 
   TRUSTArray<_OUT_TYPE_> tmp;

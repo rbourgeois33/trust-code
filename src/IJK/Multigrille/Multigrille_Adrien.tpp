@@ -27,8 +27,8 @@ void Multigrille_Adrien::prepare_secmem_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>
 {
   double moyenne = somme_ijk(x);
   double nb_elem_tot = (double) x.get_domain().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_I)
-                     * (double) x.get_domain().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_J)
-                     * (double) x.get_domain().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_K);
+                       * (double) x.get_domain().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_J)
+                       * (double) x.get_domain().get_nb_items_global(Domaine_IJK::ELEM, DIRECTION_K);
   double val = moyenne / nb_elem_tot;
   const int m = x.data().size_array();
   for (int i = 0; i < m; i++)
@@ -158,9 +158,9 @@ void Multigrille_Adrien::set_inv_rho_template(const IJK_Field_template<_TYPE_,_T
             }
         }
       else
-          coarsen_operators_[i-1]->coarsen(set_grid_data<_TYPE_FUNC_>(i-1).get_rho(),
-                                           set_grid_data<_TYPE_FUNC_>(i).get_update_rho(),
-                                           1 /* compute average, not sum */);
+        coarsen_operators_[i-1]->coarsen(set_grid_data<_TYPE_FUNC_>(i-1).get_rho(),
+                                         set_grid_data<_TYPE_FUNC_>(i).get_update_rho(),
+                                         1 /* compute average, not sum */);
 
       set_grid_data<_TYPE_FUNC_>(i).get_update_rho().echange_espace_virtuel(ghost);
 
@@ -225,7 +225,7 @@ void Multigrille_Adrien::jacobi_residu_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>&
       x.echange_espace_virtuel(nb_passes_to_do);
 
       if (grid_level == 0)
-          flop_count = 0;
+        flop_count = 0;
 
       const bool last_pass_is_residue = (nb_passes_done + nb_passes_to_do == n_jacobi_tot + 1);
       Multipass_Jacobi_template<_TYPE_, _TYPE_ARRAY_, SSE_Kernels::GENERIC_STRIDE, SSE_Kernels::GENERIC_STRIDE>(x, *residu, coeffs_face, *secmem, nb_passes_to_do, last_pass_is_residue, relax);
@@ -233,7 +233,7 @@ void Multigrille_Adrien::jacobi_residu_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>&
       nb_passes_done += nb_passes_to_do;
 
       if (grid_level == 0)
-          flop_count = 0;
+        flop_count = 0;
     }
   statistiques().end_count(jacobi_residu_counter_, (int)flop_count);
 }
@@ -271,8 +271,8 @@ void Multigrille_Adrien::completer_template(const Domaine_IJK& domain)
 
   int i;
   for (i = 0; i < nb_operators; i++)
-      coarsen_operators_[i]->initialize_grid_data(set_grid_data<_TYPE_>(i), set_grid_data<_TYPE_>(i + 1),
-                                                  nsweeps_jacobi_residu(i + 1));
+    coarsen_operators_[i]->initialize_grid_data(set_grid_data<_TYPE_>(i), set_grid_data<_TYPE_>(i + 1),
+                                                nsweeps_jacobi_residu(i + 1));
 
   for (i = 0; i < nb_grids; i++)
     {
