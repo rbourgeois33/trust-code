@@ -92,7 +92,6 @@ Entree& Domaine_IJK::readOn(Entree& is)
     les_mots[4] = "perio";
     les_mots[5] = "nproc";
     les_mots[6] = "process_grouping";
-    les_mots[7] = "ijk_splitting_ft_extension";
   }
 
   is >> motlu;
@@ -128,9 +127,6 @@ Entree& Domaine_IJK::readOn(Entree& is)
         case 6:
           for(int i = 0; i < dim; ++i)
             is >> groups[i];
-          break;
-        case 7:
-          is >> ft_extension_;
           break;
         default:
           Cerr << "Keyword : " << motlu <<" not understood by Domaine_IJK::readOn. Either update if needed or change the keyword." << finl;
@@ -1323,15 +1319,3 @@ void Domaine_IJK::update_volume_elem()
       return;
     }
 }
-
-void Domaine_IJK::set_extension_from_bulle_param(double vol_bulle, double diam_bulle)
-{
-  int ijk_splitting_ft_extension_from_diameter = 0;
-  for (int c=0; c<3; c++)
-    {
-      const double delta = get_constant_delta(c);
-      ijk_splitting_ft_extension_from_diameter = std::max(ijk_splitting_ft_extension_from_diameter, (int) ceil(diam_bulle/delta));
-    }
-  ft_extension_ = (ijk_splitting_ft_extension_from_diameter > ft_extension_) ? ijk_splitting_ft_extension_from_diameter : ft_extension_;
-}
-

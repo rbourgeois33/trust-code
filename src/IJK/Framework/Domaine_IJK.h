@@ -536,10 +536,6 @@ public:
     return volume_elem_;
   }
 
-  inline int ft_extension() const { return ft_extension_; }
-
-  void set_extension_from_bulle_param(double vol_bulle, double diam_bulle);
-
 private:
 
   /*! @brief  Coordinates of all nodes (when cell size is needed, take delta_xyz_ which is more accurate) in directions i, j and k.
@@ -550,6 +546,7 @@ private:
    * node coordinate is not equal to the first one.
    */
   VECT(ArrOfDouble) node_coordinates_xyz_;
+
   /*! @brief Mesh cell sizes for the entire mesh.
    *
    *  The size of each array is equal to the total number of cells in each direction.
@@ -558,48 +555,56 @@ private:
   VECT(ArrOfDouble) delta_xyz_;
   /*! Number of processors in each direction */
   FixedVector<int, 3> nproc_per_direction_;
+
   /*! @brief Global processor mapping: for each subdomain, which processor has it (indexed like this: mapping_(i, j, k)) */
   IntTab mapping_;
-  /*! For each direction, offsets of all slices */
-  VECT(ArrOfInt) offsets_all_slices_; ///< F
+
+  /*! @brief For each direction, offsets of all slices */
+  VECT(ArrOfInt) offsets_all_slices_;
+
   /*! @brief For each direction, size of all slices */
   VECT(ArrOfInt) sizes_all_slices_;
+
   /*! @brief Stores the uniform flag for each direction */
   bool uniform_[3];
+
   /*! @brief Stores the periodic flag for each direction */
   bool periodic_[3];
-
 
   // Local data (processor dependent)
   // --------------------------------
 
   /*! @brief Where is this processor in the global domain (slice number in each direction, -1 if processor has no data) */
   FixedVector<int, 3> processor_position_;
+
   /*! @brief Number of element in requested direction.
    *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_elem_local_;
+
   /*! @brief Number of nodes in requested direction.
    *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_nodes_local_;
-  /*! indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
+
+  /*! @brief indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
   FixedVector<FixedVector<int, 3>, 3> nb_faces_local_;
-  /*! Index in the global mesh of the first (non ghost) element on this processor, in each direction */
+
+  /*! @brief Index in the global mesh of the first (non ghost) element on this processor, in each direction */
   FixedVector<int, 3> offset_;
+
   /*! @brief MPI ranks of the processors that hold the neighbour domains.
    *   Indexing is neighbour_processors_[previous=0, next=1][direction].
    *   Contains -1 if no neighbour.
    *   Wraps if periodic domain, if there is only one processor in a direction, the neighbour might be myself.
    */
   FixedVector<FixedVector<int, 3>, 2> neighbour_processors_;
-  /*! Volume of each element on this processor */
-  DoubleVect volume_elem_;
-  /*! State of volume_elem_ on this processor */
-  grid_status volume_elem_status_;
-  /*! Number of element used to extend the computational domain at each side of periodic boundary to accommodate for bubble evolution. */
-  int ft_extension_ = 0;
 
+  /*! @brief Volume of each element on this processor */
+  DoubleVect volume_elem_;
+
+  /*! @brief State of volume_elem_ on this processor */
+  grid_status volume_elem_status_;
 };
 
 #endif
