@@ -34,10 +34,9 @@ enum class STD_COUNTERS : unsigned int
   computation_start_up_ , ///< Track the time before the Resoudre loop
   timestep_ ,   ///< Track time elapsed in the time loop
   system_solver_, ///< Track time elapsed in SolveurSys::resoudre_systeme
-  petsc_solver_,  ///< Track the time elapsed using petsc solver
   implicit_diffusion_,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
-  compute_dt_ , ///< Track time used to compute the time step dt
-  turbulent_viscosity_ ,
+  matrix_assembly_ ,
+  update_variables_  ,
   convection_ ,
   diffusion_ ,
   gradient_ ,
@@ -45,9 +44,10 @@ enum class STD_COUNTERS : unsigned int
   rhs_ ,
   postreatment_ ,
   backup_file_ ,
+  petsc_solver_,  ///< Track the time elapsed using petsc solver
+  compute_dt_ , ///< Track time used to compute the time step dt
+  turbulent_viscosity_ ,
   restart_ ,
-  matrix_assembly_ ,
-  update_variables_  ,
   virtual_swap_ ,
   mpi_sendrecv_  ,
   mpi_send_ ,
@@ -96,15 +96,16 @@ public:
     return counters_stat_;
   }
 
-  /*! @brief Create a new counter and add it to the vector of counters
+  /*! @brief Create a new counter and add it to the map of custom counters
    *
+   * @param to_print_in_global_TU : if true, then the statistics associated with the counter will appear in the global_TU file
    * @param counter_level
    * @param counter_description
    * @param counter_family
    * @param is_comm
    * @return create a new counter
    */
-  void create_custom_counter(unsigned int counter_level, std::string counter_description, std::string counter_family = "None", bool is_comm=false);
+  void create_custom_counter(bool to_print_in_global_TU, int counter_level, std::string counter_description, std::string counter_family = "None", bool is_comm=false);
 
   /*! @brief Start the count of a counter
    *
@@ -112,12 +113,17 @@ public:
   //	void begin_count(Counter c);
 
 
+  void print_in_global_TU(const STD_COUNTERS& name, bool to_print_or_not_to_print);
+
+  void print_in_global_TU(const std::string& name, bool to_print_or_not_to_print);
+
+
   /*! Standard counters, start the tracking of the wanted operation
    *
    * @param std_cnt reference to the standard counter
    * @param counter_lvl level of the counter you try to open, warning it changes the value of the counter level associated with counter std_cnt
    */
-  void begin_count(const STD_COUNTERS std_cnt, int counter_lvl);
+  void begin_count(const STD_COUNTERS &std_cnt, int counter_lvl);
 
   /*! Custom counters, start the tracking of the wanted operation
    *
@@ -156,7 +162,7 @@ public:
    * @param count_increment is the count increment. If not specified, then it is equal to 1
    * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
    */
-  void end_count(const STD_COUNTERS std_cnt, int count_increment=1, int quantity_increment=0);
+  void end_count(const STD_COUNTERS &std_cnt, int count_increment=1, int quantity_increment=0);
 
   /*! @brief Stop all counters, has to be called on every processor simultaneously
    *
@@ -186,45 +192,44 @@ public:
    *
    * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
    */
-  void print_performance_to_csv(std::string message, bool mode_append);
+  void print_performance_to_csv(const std::string& message, const bool mode_append);
 
   /*! @brief Create the global .Tu file with agglomerated stats
    *
    * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
    */
-  void print_global_TU(std::string message, bool mode_append);
+  void print_global_TU(const std::string &message, const bool mode_append);
 
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the standard counter call name
    *
    */
-  double get_total_time(STD_COUNTERS name);
+  double get_total_time(const STD_COUNTERS& name);
 
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the custom counter call name
      *
      */
-  double get_total_time(std::string name);
+  double get_total_time(const std::string& name);
 
   /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
    *
    */
-  double get_time_since_last_open(STD_COUNTERS name);
+  double get_time_since_last_open(const STD_COUNTERS& name);
 
   /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
    *
    */
-  double get_time_since_last_open(std::string name);
-
+  double get_time_since_last_open(const std::string& name);
 
   /*!
    * This function aims at starting the tracking of time per time step of counters that have been started before the time loop
    */
-  void start_timestep();
+  void start_timeloop();
 
   /*!@brief This function compute statistics per time steps of counters used at least once during a time step.
    *
    * @param tstep is the current time step number
    */
-  void compute_avg_min_max_var_per_step(int tstep);
+  void compute_avg_min_max_var_per_step(const int& tstep);
 
   /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
    *
@@ -246,6 +251,7 @@ public:
 
   std::string get_date();
 
+
 private:
 
   Perf_counters();
@@ -257,8 +263,8 @@ private:
   bool counters_stop_;  ///< A flag used to know if the counters are paused or not
   std::chrono::duration<double> time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  std::array <Counter*,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  std::map <std::string, Counter* > custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  std::array <Counter *,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
+  std::map <std::string, Counter *> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
 };
 
 #endif

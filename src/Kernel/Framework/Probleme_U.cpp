@@ -286,7 +286,7 @@ bool Probleme_U::run()
       // Begin the CPU measure of the time step
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timestep_,0);
-      statistics.start_timestep();
+      statistics.start_timeloop();
 
 
       ok=false; // Is the time interval successfully solved ?
@@ -427,7 +427,7 @@ bool Probleme_U::runUntil(double time)
 
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timestep_,0);
-      statistics.start_timestep();
+      statistics.start_timeloop();
 
       ok=false;
 

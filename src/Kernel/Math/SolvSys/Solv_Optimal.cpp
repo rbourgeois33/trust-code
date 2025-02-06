@@ -65,7 +65,7 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
   Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
-  statistics.create_custom_counter(1,"SolveurSys::resoudre_systeme");
+  statistics.create_custom_counter(false,1,"SolveurSys::resoudre_systeme");
   for (int i=0; i<n; i++)
     {
       solution=solution_ref;
