@@ -14,10 +14,10 @@ message(STATUS "Found GTest library at: ${gtestlib}")
 #find_library(kern_num_lib NAMES TRUST_mpi_numeric_kernel.a PATHS $ENV{TRUST_ROOT}/lib REQUIRED)
 #message(STATUS "Found TRUST_mpi_numeric_kernel library at: ${kern_num_lib}")
 
-#
+# 
 #  Sequential
 #
-set(src_unit
+set(src_unit 
      main_gtest.cpp
      unit_misc.cpp
      unit_array.cpp
@@ -42,7 +42,7 @@ install (TARGETS ${exe_name} DESTINATION exec)
 # Parallel
 #
 
-set(src_unit_mpi
+set(src_unit_mpi 
      main_gtest_mpi.cpp
      unit_mpi.cpp
      unit_tab_tools.cpp
