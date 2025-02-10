@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -224,7 +224,7 @@ void Convection_Diffusion_Espece_Multi_QC::assembler(Matrice_Morse& matrice, con
 
 void Convection_Diffusion_Espece_Multi_QC::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
   statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   const std::string& nom_inco = inconnue().le_nom().getString();

@@ -357,7 +357,7 @@ double Convection_Diffusion_Temperature::get_time_factor() const
 // ajoute les contributions des operateurs et des sources
 void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const DoubleTab& inco, DoubleTab& resu)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   const double rhoCp = get_time_factor();
 
   // Test de verification de la methode contribuer_a_avec
@@ -453,7 +453,7 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
 
 void Convection_Diffusion_Temperature::assembler_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   if (discretisation().is_polymac_family() || probleme().que_suis_je().debute_par("Pb_Multiphase"))
     {
       Equation_base::assembler_blocs(matrices, secmem, semi_impl);

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -173,7 +173,7 @@ void Operateur::mettre_a_jour(double temps)
 double Operateur::calculer_pas_de_temps() const
 {
   // Si l'equation de l'operateur n'est pas resolue, on ne calcule pas son pas de temps de stabilite
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   if (equation().equation_non_resolue())
     return DMAXFLOAT;
   statistiques().begin_count(dt_counter_);

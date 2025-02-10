@@ -250,7 +250,7 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_avec_inertie_impl(const Nav
 
 void Navier_Stokes_Fluide_Dilatable_Proto::assembler_blocs_avec_inertie(const Navier_Stokes_std& eqn, matrices_t matrices, DoubleTab& tab_secmem, const tabs_t& semi_impl)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
   statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   const std::string& nom_inco = eqn.inconnue().le_nom().getString();

@@ -233,7 +233,7 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, co
  */
 void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
   statistics.begin_count(STD_COUNTERS::convection_,1);
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();

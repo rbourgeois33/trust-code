@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -32,7 +32,7 @@ Entree& Op_Dift_VDF_base::readOn(Entree& is) { return Op_Diff_VDF_base::readOn(i
 
 void Op_Dift_VDF_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
   statistics.begin_count(STD_COUNTERS::diffusion_,1);
   iter_->ajouter_blocs(matrices,secmem,semi_impl);

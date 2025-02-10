@@ -72,9 +72,9 @@ using ArrOfDouble_with_ghost = IJKArray_with_ghost<double,ArrOfDouble>;
 template<typename _TYPE_, typename _TYPE_ARRAY_>
 void IJKArray_with_ghost<_TYPE_,_TYPE_ARRAY_>::echange_espace_virtuel(int pe_min, int pe_max)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(echange_vect_counter_);
-  statistics.begin_count(STD_COUNTERS::virtual_swap_,1)
+  statistics.begin_count(STD_COUNTERS::virtual_swap_,1);
   // envoi a pe_max et reception de pe_min
   const int n = tab_.size_array() - ghost_ * 2;
   _TYPE_ *pdata = tab_.addr();

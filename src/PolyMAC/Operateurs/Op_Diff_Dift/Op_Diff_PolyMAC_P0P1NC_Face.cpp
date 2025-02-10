@@ -231,7 +231,7 @@ void Op_Diff_PolyMAC_P0P1NC_Face::dimensionner_blocs_ext(int aux_only, matrices_
 // renvoie resu
 void Op_Diff_PolyMAC_P0P1NC_Face::ajouter_blocs_ext(int aux_only, matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
   statistics.begin_count(STD_COUNTERS::diffusion_);
   const Champ_Face_PolyMAC_P0P1NC& ch = ref_cast(Champ_Face_PolyMAC_P0P1NC, le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().inconnue());

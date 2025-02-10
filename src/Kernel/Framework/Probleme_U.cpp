@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -246,7 +246,7 @@ bool Probleme_U::run()
   Cerr<<"First postprocessing, this can take some minutes"<<finl;
   postraiter(1);
   Cerr<<"First postprocessing OK"<<finl;
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   bool stop=false; // Does the Problem want to stop ?
   bool ok=true; // Is the time interval successfully solved ?
 
@@ -258,15 +258,15 @@ bool Probleme_U::run()
   // Print the initialization CPU statistics
   if (!disable_TU)
     {
-	  if(GET_COMM_DETAILS)
-	  {
-		  statistiques().print_communciation_tracking_details("Statistiques d'initialisation du calcul", 0);
-	  }// Into _csv.TU file
+      if(GET_COMM_DETAILS)
+        {
+          statistiques().print_communciation_tracking_details("Statistiques d'initialisation du calcul", 0);
+        }// Into _csv.TU file
 
       statistiques().dump("Statistiques d'initialisation du calcul", 0);
       print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
-	  statistics.print_performance_to_csv("Computation start-up statistics", 0);
-	  statistics.print_global_TU("Computation start-up statistics", 0);
+      statistics.print_performance_to_csv("Computation start-up statistics", 0);
+      statistics.print_global_TU("Computation start-up statistics", 0);
     }
   statistiques().reset_counters();
   statistics.reset_counters();
@@ -280,13 +280,14 @@ bool Probleme_U::run()
   VT_USER_START("Resolution");
 #endif
   // Time step loop
-  int tstep = 0;
+  unsigned int tstep = 0;
+  statistics.start_timeloop();
   while(!stop)
     {
       // Begin the CPU measure of the time step
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timestep_,0);
-      statistics.start_timeloop();
+      statistics.start_time_step();
 
 
       ok=false; // Is the time interval successfully solved ?
@@ -351,7 +352,7 @@ bool Probleme_U::run()
         {
           double temps = statistiques().last_time(timestep_counter_);
           Cout << finl << "clock: Total time step: " << temps << " s" << finl << finl;
-          temps = statistics.get_time(STD_COUNTERS::timestep_)/tstep;
+          temps = statistics.get_time_since_last_open(STD_COUNTERS::timestep_);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }
 
@@ -375,6 +376,7 @@ bool Probleme_U::run()
       VT_BUFFER_FLUSH();
 #endif
     }
+  statistics.end_timeloop();
 #ifdef VTRACE
   VT_USER_END("Resolution");
   VT_OFF();
@@ -410,7 +412,7 @@ bool Probleme_U::run()
  */
 bool Probleme_U::runUntil(double time)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // Error if time is already past
   if (time<presentTime())
     return false;
@@ -420,14 +422,14 @@ bool Probleme_U::runUntil(double time)
 
   // Compute the first time step length
   double dt=computeTimeStep(stop);
-
+  statistics.start_timeloop();
   // Boucle sur les pas de temps
   while(!stop)
     {
 
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timestep_,0);
-      statistics.start_timeloop();
+      statistics.start_time_step();
 
       ok=false;
 
@@ -467,18 +469,17 @@ bool Probleme_U::runUntil(double time)
       dt=computeTimeStep(stop);
 
       statistiques().end_count(timestep_counter_);
-      statistics.end_count(STD_COUNTERS::timestep_);
       if (je_suis_maitre() && limpr())
         {
           double temps = statistiques().last_time(timestep_counter_);
           Cout << "clock: Total time step: " << temps << " s" << finl;
-          temps = statistics.get_time(STD_COUNTERS::timestep_);
+          temps = statistics.get_time_since_last_open(STD_COUNTERS::timestep_);
           Cout << finl << "clock: Total time of the time loop: " << temps << " s" << finl << finl;
         }
-
+      statistics.end_count(STD_COUNTERS::timestep_);
       postraiter(0);
     }
-
+  statistics.end_timeloop();
   return ok;
 }
 

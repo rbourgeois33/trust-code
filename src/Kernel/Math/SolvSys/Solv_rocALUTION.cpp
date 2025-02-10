@@ -631,7 +631,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3.0 * (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3 * (int)sizeof(double) * nb_rows_);
         }
       sol.GetInterior().CopyFromData(addrOnDevice(lhs_));
       rhs.GetInterior().CopyFromData(addrOnDevice(rhs_));
@@ -653,7 +653,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3.0 * (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3* (int)sizeof(double) * nb_rows_);
         }
     }
 

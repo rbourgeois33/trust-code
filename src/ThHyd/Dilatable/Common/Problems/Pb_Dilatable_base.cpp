@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -97,7 +97,7 @@ void Pb_Dilatable_base::mettre_a_jour(double temps)
 
 bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   Debog::set_nom_pb_actuel(le_nom());
   Schema_Temps_base& sch=schema_temps();
   double temps_present=sch.temps_courant();

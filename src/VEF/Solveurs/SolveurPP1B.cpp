@@ -39,8 +39,8 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
                                   DoubleVect& x)
 {
   // Stop the solv_sys_counter_ counter to not count the changing base
-  Perf_counters & statistics = Perf_counters::getInstance();
-  statistics.end_count(STD_COUNTERS::system_solver_,0);
+  Perf_counters& statistics = Perf_counters::getInstance();
+  statistics.end_count(STD_COUNTERS::system_solver_,0,-1);
   b_ = second_membre;
   assembleur_pression_->changer_base_second_membre(b_);
   assembleur_pression_->changer_base_pression(x);

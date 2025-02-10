@@ -2358,7 +2358,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       if (gpu_)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2)
+          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
         }
       VecSetOption(SecondMembrePetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
       VecSetValues(SecondMembrePetsc_, size, ix.addr(), secmem.addr(), INSERT_VALUES);
@@ -2371,7 +2371,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       if (gpu_)
         {
           statistiques().end_count(gpu_copytodevice_counter_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice_)
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice_);
         }
       if (reorder_matrix_)
         {

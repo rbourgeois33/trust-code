@@ -628,7 +628,7 @@ void Statistiques::dump(const char * message, int mode_append)
     }
 
   /// Check if all of the processors see the same number of counter, if not print an error message in perfs_globales
-  int skip_globals = Objet_U::disable_TU;
+  bool skip_globals = Objet_U::disable_TU;
 
   int min_nb_of_counters = (int) Process::mp_min(si.nb_counters);
   int max_nb_of_counters = (int) Process::mp_max(si.nb_counters);
@@ -641,7 +641,7 @@ void Statistiques::dump(const char * message, int mode_append)
                          << " there is not the same number of counters on all"
                          " processors."<< std::endl;
         }
-      skip_globals = 1; ///< If min_nb_of_counters != max_nb_of_counters, aggregated stats are not printed
+      skip_globals = true; ///< If min_nb_of_counters != max_nb_of_counters, aggregated stats are not printed
     }
 
   /// Time of reference for statistics computation

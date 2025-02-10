@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -54,7 +54,7 @@ void Operateur_Div::typer()
 DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
                                   DoubleTab& resu) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
   statistics.begin_count(STD_COUNTERS::divergence_,1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
@@ -73,7 +73,7 @@ DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Div::calculer(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
   statistics.begin_count(STD_COUNTERS::divergence_,1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);

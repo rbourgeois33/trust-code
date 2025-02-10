@@ -194,7 +194,7 @@ int Schema_Temps_base::limpr() const
 
 void Schema_Temps_base::validateTimeStep()
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mettre_a_jour_counter_);
   statistics.begin_count(STD_COUNTERS::update_variables_,1);
   // Update the problem:
@@ -555,7 +555,7 @@ extern "C" {
  */
 int Schema_Temps_base::mettre_a_jour()
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   temps_precedent_ = temps_courant_;
   temps_courant_ += dt_;
   nb_pas_dt_++;
@@ -981,7 +981,7 @@ void Schema_Temps_base::imprimer_temps_courant(SFichier& os) const
  */
 void Schema_Temps_base::write_progress(bool init)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   if (je_suis_maitre() && !disable_progress())
     {
       if (init)

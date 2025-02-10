@@ -1457,7 +1457,7 @@ DoubleTab& Equation_base::derivee_en_temps_conv(DoubleTab& secmem, const DoubleT
  */
 void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& solution, int size_terme_mul, const DoubleTab& terme_mul)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   if (le_schema_en_temps->impr_diffusion_implicite())
     Cout << "Implicited diffusion algorithm applied on " << que_suis_je() << " equation:" << finl;
   int marq_tot = 0;
@@ -1986,7 +1986,7 @@ void Equation_base::contribuer_termes_croises(const DoubleTab& inco, const Probl
 // ajoute les contributions des operateurs et des sources
 void Equation_base::assembler(Matrice_Morse& matrice, const DoubleTab& inco, DoubleTab& resu)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // Test de verification de la methode contribuer_a_avec
   for (int op=0; op<nombre_d_operateurs(); op++)
     operateur(op).l_op_base().tester_contribuer_a_avec(inco, matrice);
@@ -2079,12 +2079,14 @@ void Equation_base::modifier_pour_Cl(Matrice_Morse& mat_morse, DoubleTab& secmem
 // assemble, ajoute linertie,et modifie_pour_cl.
 void Equation_base::assembler_avec_inertie( Matrice_Morse& mat_morse,const DoubleTab& present, DoubleTab& secmem)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+
+  Perf_counters& statistics = Perf_counters::getInstance();
+  statistiques().begin_count(assemblage_sys_counter_);
   statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   assembler(mat_morse,present,secmem);
   schema_temps().ajouter_inertie(mat_morse,secmem,(*this));
   modifier_pour_Cl(mat_morse,secmem);
-  statistics.end_count(STD_COUNTERS::matrix_assembly_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly_,1,0);
 }
 
 /* verifie que tous les termes sont compatibles */
@@ -2110,7 +2112,7 @@ void Equation_base::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_i
 
 void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   /* mise a zero */
   secmem = 0;
   for (auto && i_m : matrices) i_m.second->get_set_coeff() = 0;
@@ -2141,7 +2143,7 @@ void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, cons
 
 void Equation_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
   statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
   assembler_blocs(matrices, secmem, semi_impl);

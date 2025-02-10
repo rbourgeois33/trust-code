@@ -65,7 +65,7 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
   Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
-  statistics.create_custom_counter(false,1,"SolveurSys::resoudre_systeme");
+  statistics.create_custom_counter(false,1,"Custom solver");
   for (int i=0; i<n; i++)
     {
       solution=solution_ref;
@@ -87,7 +87,7 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
       statistics.end_count("SolveurSys::resoudre_systeme");
       Stat_Results stat_resol;
       statistiques().get_stats(solv_sys_counter_l, stat_resol);
-      t = statistics.get_time("SolveurSys::resoudre_systeme");
+      t = statistics.get_time_since_last_open("SolveurSys::resoudre_systeme");
       // on recupere un delta time et non un time absolu !!
       double time_resol=stat_resol.time-stat_resol_0.time;
       time_resol=t-t_0;

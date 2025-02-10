@@ -116,7 +116,7 @@ void ProblemTrio::setMPIComm(void* mpicomm)
  */
 bool ProblemTrio::initialize()
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   Process::exception_sur_exit=1;
   if (((*my_params).problem_name=="default_vvvvv") || ((*my_params).data_file=="default_vvvvv"))
     throw WrongArgument("??","Constructor","data","data shoud point to the name of a Probleme_U");
@@ -221,11 +221,11 @@ void ProblemTrio::terminate()
   int mode_append=1;
   if (!Objet_U::disable_TU)
     {
-	  Perf_counters & statistics = Perf_counters::getInstance();
+      Perf_counters& statistics = Perf_counters::getInstance();
       statistiques().dump("Statistiques Resolution", mode_append);
       print_statistics_analyse("Statistiques Resolution", 1);
-      statistics.print_global_TU("Computation statistics",0);
-      statistics.print_performance_to_csv("Computation statistics",0);
+      statistics.print_global_TU("Computation time loop statistics",0);
+      statistics.print_performance_to_csv("Computation time loop statistics",0);
     }
   if(p)
     {
@@ -296,7 +296,7 @@ bool ProblemTrio::initTimeStep(double dt)
  */
 bool ProblemTrio::solveTimeStep()
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(timestep_counter_);
   statistics.begin_count(STD_COUNTERS::timestep_,0);
   if (pb->lsauv())
@@ -317,7 +317,7 @@ bool ProblemTrio::solveTimeStep()
 void ProblemTrio::validateTimeStep()
 {
   pb->validateTimeStep();
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   if(sub_type(Probleme_base,*pb))
     {
       const Probleme_base& pb_base = ref_cast(Probleme_base,*pb);

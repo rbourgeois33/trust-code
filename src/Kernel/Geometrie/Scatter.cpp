@@ -127,7 +127,7 @@ void dump_lata(const Domaine& dom)
  */
 Entree& Scatter::interpreter(Entree& is)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // Nom des fichiers de decoupage : nomentree.xxxx
   Nom nomentree;
   is >> nomentree;
@@ -473,7 +473,7 @@ void Scatter::read_domain_no_comm(Entree& fic)
  */
 void Scatter::lire_domaine(Nom& nomentree, Noms& liste_bords_periodiques)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   // On determine si le fichier est au nouveau format ou a l'ancien
   if (Process::je_suis_maitre())
     Cerr << "Reading geometry from .Zones file(s) ..." << finl;

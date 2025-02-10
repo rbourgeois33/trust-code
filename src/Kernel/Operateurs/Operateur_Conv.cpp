@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -89,7 +89,7 @@ void Operateur_Conv::typer()
 DoubleTab& Operateur_Conv::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
   statistics.begin_count(STD_COUNTERS::convection_,1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
@@ -107,7 +107,7 @@ DoubleTab& Operateur_Conv::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Conv::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
   statistics.begin_count(STD_COUNTERS::convection_,1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);

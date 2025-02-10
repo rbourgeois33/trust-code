@@ -177,7 +177,7 @@ void Op_Diff_VDF_Elem_base::dimensionner_blocs(matrices_t matrices, const tabs_t
 
 void Op_Diff_VDF_Elem_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
   statistics.begin_count(STD_COUNTERS::diffusion_,1);
   if (!op_ext_init_) init_op_ext();

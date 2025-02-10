@@ -43,7 +43,7 @@ Entree& Assembleur_P_PolyMAC_P0P1NC::readOn(Entree& s) { return Assembleur_base:
 
 int  Assembleur_P_PolyMAC_P0P1NC::assembler_mat(Matrice& la_matrice,const DoubleVect& diag,int incr_pression,int resoudre_en_u)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   set_resoudre_increment_pression(incr_pression);
   set_resoudre_en_u(resoudre_en_u);
   Cerr << "Assemblage de la matrice de pression ... " ;

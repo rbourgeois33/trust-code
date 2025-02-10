@@ -505,7 +505,7 @@ int Probleme_base::sauvegarder(Sortie& os) const
  */
 int Probleme_base::reprendre(Entree& is)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(temporary_counter_);
   statistics.begin_count(STD_COUNTERS::restart_,1);
   Debog::set_nom_pb_actuel(le_nom());
@@ -1049,7 +1049,7 @@ void Probleme_base::allocation() const
  */
 int Probleme_base::postraiter(int force)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(postraitement_counter_);
   statistics.begin_count(STD_COUNTERS::postreatment_,1);
   Schema_Temps_base& sch = schema_temps();
@@ -1109,7 +1109,7 @@ int Probleme_base::postraiter(int force)
  */
 void Probleme_base::sauver() const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(sauvegarde_counter_);
   statistics.begin_count(STD_COUNTERS::backup_file_,1);
   int bytes = save_restart_.sauver();
