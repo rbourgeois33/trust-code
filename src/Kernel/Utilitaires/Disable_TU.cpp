@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,6 @@ Entree& Disable_TU::readOn(Entree& is)
 Entree& Disable_TU::interpreter(Entree& is)
 {
   Cerr << "Reading of disable_TU flag => Disable the writing of the *.TU and *_csv.TU files."<< finl;
-  disable_TU = 1; // Flag to disable the writing of the .TU files
+  disable_TU = true; // Flag to disable the writing of the .TU files
   return is;
 }

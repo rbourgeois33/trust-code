@@ -120,7 +120,7 @@ public:
   static const Objet_U& self_cast(const Objet_U&);
   static Objet_U& self_cast( Objet_U&);
 
-  static int disable_TU; // Flag to disable the writing of the .TU files
+  static bool disable_TU; // Flag to disable the writing of the .TU files
   static bool stat_per_proc_perf_log; // Flag to enable the writing of the statistics detailed per processor in _csv.TU file
 
 protected:
