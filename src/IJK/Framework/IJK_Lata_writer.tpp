@@ -67,6 +67,7 @@ void dumplata_add_geometry(const char *filename, const  IJK_Field_template<_TYPE
       master_file << "Champ SOMMETS_IJK_J " << basename(fname[1]) << " geometrie=" << geomname;
       master_file << " size=" << splitting.get_nb_elem_tot(1)+1 << " composantes=1" << finl;
       master_file << "Champ SOMMETS_IJK_K " << basename(fname[2]) << " geometrie=" << geomname;
+      master_file << " size=" << splitting.get_nb_elem_tot(2)+1 << " composantes=1" << finl;
       master_file.close();
     }
 }
