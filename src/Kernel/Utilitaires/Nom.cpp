@@ -117,6 +117,15 @@ Nom::Nom(long i)
   operator=(chaine);
 }
 
+Nom::Nom(long long i)
+{
+  nb_noms++;
+  nom_ = "";
+  // 22 caracteres suffisent pour stocker n'importe quel entier long long
+  char chaine[22];
+  snprintf(chaine, 22, "%lld", i);
+  operator=(chaine);
+}
 
 /*! @brief Construction d'un nom a partir d'une chaine de caracteres La chaine est copiee
  *

@@ -34,6 +34,7 @@ public:
   Nom();                                         // construit "??"
   Nom(True_int i);                                // Nom(485)="485"
   Nom(long i);                                    // Nom(485)="485"
+  Nom(long long i);                                    // Nom(485)="485"
   Nom(const char* nom);
   Nom(const std::string& nom);
   Nom(const Nom&);
