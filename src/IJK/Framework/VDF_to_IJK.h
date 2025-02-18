@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -27,7 +27,7 @@ class Domaine_IJK;
 class VDF_to_IJK
 {
 public:
-  void initialize(const Domaine_VF& domaine_vf, const Domaine_IJK& splitting,
+  void initialize(const Domaine_VF& domaine_vf, const Domaine_IJK& domain,
                   Domaine_IJK::Localisation localisation,
                   int direction_for_x,
                   int direction_for_y,

@@ -441,11 +441,6 @@ public:
     return mapping_(slice_i, slice_j, slice_k);
   }
 
-  /*! Returns the processor associated with slice indices i,j,k  accounting for periodicity
-   * e.g. a slice index -1 can refer to the last slice along a periodic direction.
-   */
-  int periodic_get_processor_by_ijk(int slice_i, int slice_j, int slice_k) const;
-
   /*! @brief Determines the dof of an element along a localisation
    *
    *  TODO: Not sure about the brief?
@@ -458,47 +453,6 @@ public:
    *  @return A vector with the coordinates of dof
    */
   Vecteur3 get_coords_of_dof(int i, int j, int k, Localisation loc) const;
-
-  inline double get_coord_of_dof_along_dir(int dir, int i, Localisation loc) const;
-
-
-  /*! independent_index adds a ghost_size to the packed index.
-   * It is similar to the linear_index defined in IJK_Field_local_template, but with
-   * a universal, predefined ghost_size of 256 instead of a field-dependent ghost_size.
-   * Since the ghost_size_ value is larger than any ghost_size expected to be used in
-   * practice, any virtual cell can be represented by the independent index.
-   */
-  int get_independent_index(int i, int j, int k) const;
-  Int3 get_ijk_from_independent_index(int independent_index) const;
-
-  /*! signed_independent_index: encodes in the sign the phase of the cell in a
-   * two-phase flow: positive sign for phase 0, and negative sign for phase 1.
-   * With a cut-cell method, this can be used to disambiguate the sub-cell.
-   */
-  int get_signed_independent_index(int phase, int i, int j, int k) const;
-  int get_independent_index_from_signed_independent_index(int signed_independent_index) const;
-  int get_phase_from_signed_independent_index(int signed_independent_index) const;
-
-  /*! Check whether the cell (i,j,k) is contained within the specified ghost along any direction.
-   */
-  bool within_ghost(int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const;
-
-  /*! Check whether the cell (i,j,k) is contained within the specified ghost along a specific direction.
-   */
-  bool within_ghost_along_dir(int dir, int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const;
-
-  template <int _DIR_>
-  bool within_ghost_(int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const
-  {
-    int dir = static_cast<int>(_DIR_);
-    return within_ghost_along_dir(dir, i, j, k, negative_ghost_size, positive_ghost_size);
-  }
-
-  int correct_perio_i_local(int direction, int i) const;
-  int get_i_along_dir_no_perio(int direction, double coord_dir, Localisation loc) const;
-  int get_i_along_dir_perio(int direction, double coord_dir, Localisation loc) const;
-
-  Int3 get_ijk_from_coord(double coord_x, double coord_y, double coord_z, Localisation loc) const;
 
   /*! @brief Converts the ijk index of an element to a cell index.
    *
@@ -582,10 +536,6 @@ public:
     return volume_elem_;
   }
 
-  inline int ft_extension() const { return ft_extension_; }
-
-  void set_extension_from_bulle_param(double vol_bulle, double diam_bulle);
-
 private:
 
   /*! @brief  Coordinates of all nodes (when cell size is needed, take delta_xyz_ which is more accurate) in directions i, j and k.
@@ -596,6 +546,7 @@ private:
    * node coordinate is not equal to the first one.
    */
   VECT(ArrOfDouble) node_coordinates_xyz_;
+
   /*! @brief Mesh cell sizes for the entire mesh.
    *
    *  The size of each array is equal to the total number of cells in each direction.
@@ -604,63 +555,56 @@ private:
   VECT(ArrOfDouble) delta_xyz_;
   /*! Number of processors in each direction */
   FixedVector<int, 3> nproc_per_direction_;
+
   /*! @brief Global processor mapping: for each subdomain, which processor has it (indexed like this: mapping_(i, j, k)) */
   IntTab mapping_;
-  /*! For each direction, offsets of all slices */
-  VECT(ArrOfInt) offsets_all_slices_; ///< F
+
+  /*! @brief For each direction, offsets of all slices */
+  VECT(ArrOfInt) offsets_all_slices_;
+
   /*! @brief For each direction, size of all slices */
   VECT(ArrOfInt) sizes_all_slices_;
+
   /*! @brief Stores the uniform flag for each direction */
   bool uniform_[3];
+
   /*! @brief Stores the periodic flag for each direction */
   bool periodic_[3];
-
 
   // Local data (processor dependent)
   // --------------------------------
 
   /*! @brief Where is this processor in the global domain (slice number in each direction, -1 if processor has no data) */
   FixedVector<int, 3> processor_position_;
+
   /*! @brief Number of element in requested direction.
    *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_elem_local_;
+
   /*! @brief Number of nodes in requested direction.
    *   If the current processor has an empty subdomain, the number of elements, nodes, faces is zero.
    */
   FixedVector<int, 3> nb_nodes_local_;
-  /*! indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
+
+  /*! @brief indexing is nb_faces_local_[for orientation i][number of faces in direction j] */
   FixedVector<FixedVector<int, 3>, 3> nb_faces_local_;
-  /*! Index in the global mesh of the first (non ghost) element on this processor, in each direction */
+
+  /*! @brief Index in the global mesh of the first (non ghost) element on this processor, in each direction */
   FixedVector<int, 3> offset_;
+
   /*! @brief MPI ranks of the processors that hold the neighbour domains.
    *   Indexing is neighbour_processors_[previous=0, next=1][direction].
    *   Contains -1 if no neighbour.
    *   Wraps if periodic domain, if there is only one processor in a direction, the neighbour might be myself.
    */
   FixedVector<FixedVector<int, 3>, 2> neighbour_processors_;
-  /*! Volume of each element on this processor */
+
+  /*! @brief Volume of each element on this processor */
   DoubleVect volume_elem_;
-  /*! State of volume_elem_ on this processor */
+
+  /*! @brief State of volume_elem_ on this processor */
   grid_status volume_elem_status_;
-  /*! Number of element used to extend the computational domain at each side of periodic boundary to accommodate for bubble evolution. */
-  int ft_extension_ = 0;
-
 };
-
-inline double Domaine_IJK::get_coord_of_dof_along_dir(int dir, int i, Localisation loc) const
-{
-  int gi = i + offset_[dir];
-  double x = get_node_coordinates(dir)[gi];
-
-  bool loc_equal_dir = (((loc == FACES_I) && (dir == 0)) || ((loc == FACES_J) && (dir == 1)) || ((loc == FACES_K) && (dir == 2)));
-  bool loc_equal_dir_or_nodes = loc_equal_dir || (loc == NODES);
-
-  if (!loc_equal_dir_or_nodes)
-    x += get_delta(dir)[gi] * 0.5;
-
-  return x;
-}
-
 
 #endif

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,6 +16,7 @@
 #define FixedVector_included
 #include <assert.h>
 class Domaine_IJK;
+
 // Generic vector of fixed size
 template<class T, int N>
 class FixedVector
@@ -24,15 +25,14 @@ public:
   FixedVector() { }
   FixedVector(int i, int j, int k) {  }
 
-  static int size()
-  {
-    return N;
-  }
+  inline static int size() { return N; }
+
   T& operator[](int i)
   {
     assert(i>=0 && i<N);
     return data_[i];
   }
+
   const T& operator[](int i) const
   {
     assert(i>=0 && i<N);
@@ -44,10 +44,8 @@ public:
     for (int i = 0; i < N; i++)
       data_[i].echange_espace_virtuel(data_[i].ghost());
   }
-  const Domaine_IJK& get_domaine() const
-  {
-    return data_[0].get_domaine();
-  }
+
+  inline const Domaine_IJK& get_domain() const { return data_[0].get_domain(); }
 #endif
 protected:
   T data_[N];
