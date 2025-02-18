@@ -121,7 +121,7 @@ int Postraitements::lire_postraitements(Entree& is, const Motcle& motlu, const P
       OWN_PTR(Postraitement_base) & post = add( OWN_PTR(Postraitement_base)() );
       if (mon_pb.que_suis_je() == "Pb_STT")
         post.typer("Postraitement_STT");
-      else if (mon_pb.que_suis_je().debute_par("Probleme_FT_IJK"))
+      else if (mon_pb.que_suis_je().debute_par("Probleme_FTD_IJK"))
         post.typer("Postprocessing_IJK");
       else
         post.typer("Postraitement");
