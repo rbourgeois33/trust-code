@@ -138,9 +138,16 @@ int Postraitements::lire_postraitements(Entree &is, const Motcle &motlu, const P
     is >> motlu2;
     if (motlu2 != "{")
     {
-      Cerr << "Error while reading the list of Postraitements," << finl;
-      Cerr << " we expected a {" << finl;
-      exit();
+      // Creation et lecture d'un postraitement unique standard
+      OWN_PTR(Postraitement_base) &post = add(OWN_PTR(Postraitement_base)());
+      if (mon_pb.que_suis_je() == "Pb_STT")
+        post.typer("Postraitement_STT");
+      else if (mon_pb.que_suis_je().debute_par("Probleme_FTD_IJK"))
+        post.typer("Postprocessing_IJK");
+      else
+        post.typer("Postraitement");
+      post->associer_nom_et_pb_base("neant", mon_pb);
+      is >> post.valeur();
     }
     is >> motlu2;
     while (motlu2 != "}")
