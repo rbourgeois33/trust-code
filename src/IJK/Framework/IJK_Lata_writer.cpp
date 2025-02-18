@@ -13,16 +13,19 @@
 *
 *****************************************************************************/
 
-
 #include <IJK_Lata_writer.h>
+#include <iomanip>
 
 void dumplata_newtime(const char *filename, double time)
 {
   if (Process::je_suis_maitre())
     {
       SFichier master_file;
+      const auto default_prec{std::cout.precision()};
+      constexpr auto max_prec{std::numeric_limits<long double>::digits10 + 1};
+
       master_file.ouvrir(filename, ios::app);
-      master_file << "TEMPS " << time << finl;
+      master_file << "TEMPS " << std::setprecision(max_prec) << time << std::setprecision(default_prec) << finl;
     }
 }
 
