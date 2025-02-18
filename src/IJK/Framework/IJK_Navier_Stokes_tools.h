@@ -27,13 +27,11 @@
 
 double compute_fractionnal_timestep_rk3(const double dt_tot, int step);
 
-
-void build_extended_splitting(const Domaine_IJK& split, Domaine_IJK& split_ext, int n_cells);
-
-Probleme_base& creer_domaine_vdf(const Domaine_IJK& splitting, const Nom& nom_domaine);
+Probleme_base& creer_domaine_ijk(const Domaine_IJK& domain, const Nom& nom_domaine);
 
 void ijk_interpolate(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result);
-void ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result, const double value_for_bad_points);
+void ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result,
+                                         const double value_for_bad_points);
 
 double ijk_interpolate(const IJK_Field_double& field, const Vecteur3& coordinates);
 double ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const Vecteur3& coordinates, const double value_for_bad_points);
@@ -81,7 +79,7 @@ void runge_kutta3_update_surfacic_fluxes(IJK_Field_double& dv, IJK_Field_double&
 void force_zero_on_walls(IJK_Field_double& vz);
 
 template<class T, int N>
-void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost, double DU=0.)
+void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost, double DU = 0.)
 {
   assert(static_cast<int>(N) == 3);
 
@@ -89,21 +87,21 @@ void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghos
   v.get_ptr(1) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
   v.get_ptr(2) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
 
-  v[0].allocate(s, Domaine_IJK::FACES_I, ghost);
-  v[1].allocate(s, Domaine_IJK::FACES_J, ghost);
-  v[2].allocate(s, Domaine_IJK::FACES_K, ghost);
+  v[0].allocate(domain, Domaine_IJK::FACES_I, ghost);
+  v[1].allocate(domain, Domaine_IJK::FACES_J, ghost);
+  v[2].allocate(domain, Domaine_IJK::FACES_K, ghost);
   v[0].get_shear_BC_helpler().set_dU_(DU);
   v[1].get_shear_BC_helpler().set_dU_(0.);
   v[2].get_shear_BC_helpler().set_dU_(0.);
 }
 
 template<class T, int N>
-void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost)
+void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost)
 {
-  for (int i=0; i<N ; i++)
+  for (int i = 0; i < N ; ++i)
     {
       v.get_ptr(i) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
-      v[i].allocate(s, Domaine_IJK::ELEM, ghost);
+      v[i].allocate(domain, Domaine_IJK::ELEM, ghost);
     }
 }
 
