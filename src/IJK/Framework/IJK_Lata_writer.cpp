@@ -21,11 +21,15 @@ void dumplata_newtime(const char *filename, double time)
   if (Process::je_suis_maitre())
     {
       SFichier master_file;
-      const auto default_prec{std::cout.precision()};
-      constexpr auto max_prec{std::numeric_limits<long double>::digits10 + 1};
+
+      // Write out time with maximal double precision:
+      const int default_prec = (int)std::cout.precision();
+      constexpr int max_prec = std::numeric_limits<double>::digits10 + 1;
+      std::ostringstream oss;
+      oss << "TEMPS " << std::setprecision(max_prec) << time << std::setprecision(default_prec);
 
       master_file.ouvrir(filename, ios::app);
-      master_file << "TEMPS " << std::setprecision(max_prec) << time << std::setprecision(default_prec) << finl;
+      master_file << oss.str() << finl;
     }
 }
 
