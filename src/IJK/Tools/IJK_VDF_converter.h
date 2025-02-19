@@ -13,45 +13,34 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef IJK_VDF_converter_included
+#define IJK_VDF_converter_included
+#include <Domaine_IJK.h>
+#include <Objet_U.h>
+#include <VDF_to_IJK.h>
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
-
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+// This class holds an IJK split mesh converted from a vdf source mesh and splitting
+class IJK_VDF_converter : public Objet_U
 {
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
+  Declare_instanciable(IJK_VDF_converter);
 public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
+  inline const Domaine_IJK& get_domain() const { return ijk_domain_; }
+  const VDF_to_IJK& get_vdf_to_ijk(Domaine_IJK::Localisation) const;
+  inline void nommer(const Nom& n) override { object_name_ = n; }
+  inline const Nom& le_nom() const override { return object_name_; }
+  static const char *get_conventional_name();
+protected:
+  Nom object_name_;
 
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+  Domaine_IJK ijk_domain_;
+
+  // For faces data:
+  VDF_to_IJK vdf_to_ijk_i_;
+  VDF_to_IJK vdf_to_ijk_j_;
+  VDF_to_IJK vdf_to_ijk_k_;
+  // For cell centered data:
+  VDF_to_IJK vdf_to_ijk_elem_;
+  // For nodes data
+  VDF_to_IJK vdf_to_ijk_nodes_;
 };
-
-#endif /* IJK_Vector_included */
+#endif

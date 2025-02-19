@@ -13,45 +13,42 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef Boundary_Conditions_included
+#define Boundary_Conditions_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Objet_U.h>
 
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+class Boundary_Conditions : public Objet_U
 {
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
+  Declare_instanciable(Boundary_Conditions);
 public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
+  enum BCType { Paroi = 0, Symetrie = 1, Perio = 2, Mixte_shear = 3 };
+  BCType get_bctype_k_min() const { return (BCType) bctype_kmin_; }
+  BCType get_bctype_k_max() const { return (BCType) bctype_kmax_; }
 
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+  void set_vx_kmin(double value) { vxkmin_ = value; }
+  void set_vx_kmax(double value) { vxkmax_ = value; }
+  void set_dU_perio(double value) { dU_perio_ = value; }
+
+  double get_vx_kmin() const { return vxkmin_; }
+  double get_vx_kmax() const { return vxkmax_; }
+  double get_dU_perio(int fluctuations=0) const { return !fluctuations ? dU_perio_ :  0.; }
+  double get_t0_shear() const { return t0_shear_; }
+  int get_defilement() const { return defilement_; }
+  int get_correction_interp_monofluide() const { return interp_monofluide_; }
+  int get_correction_conserv_qdm() const { return conserv_qdm_; }
+  int get_resolution_u_prime_() const { return resolution_u_prime_; }
+
+protected:
+  int bctype_kmin_, bctype_kmax_;
+  double vxkmin_, vxkmax_;
+  double dU_perio_;
+  double t0_shear_;
+  int defilement_;
+  int order_interpolation_poisson_solver_;
+  int interp_monofluide_;
+  int conserv_qdm_;
+  int resolution_u_prime_;
 };
 
-#endif /* IJK_Vector_included */
+#endif /* Boundary_Conditions_included */

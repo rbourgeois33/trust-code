@@ -13,45 +13,45 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef IJK_Field_tools_included
+#define IJK_Field_tools_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Static_Int_Lists.h>
+#include <TRUSTLists.h>
+#include <TRUSTVect.h>
+#include <TRUSTArray.h>
+#include <Domaine_IJK.h>
+#include <IJ_layout.h>
+#include <IJK_Field_local_template.h>
+#include <IJK_Field_template.h>
+#include <IJKArray_with_ghost.h>
+#include <IJK_communications.h>
 
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+// pour IJK_Lata_writer.cpp. TODO : FIXME : to do enum class !!!!!
+#define DIRECTION_I 0
+#define DIRECTION_J 1
+#define DIRECTION_K 2
+
+// .Description
+// Useless class but for some reason, verifie_pere only seems to work if it's here ??
+class IJK_Field_tools : public Objet_U
 {
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+  Declare_instanciable(IJK_Field_tools);
 };
 
-#endif /* IJK_Vector_included */
+
+template<typename _TYPE_, typename _TYPE_ARRAY_>
+double norme_ijk(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x);
+
+template<typename _TYPE_, typename _TYPE_ARRAY_>
+_TYPE_ prod_scal_ijk(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& y);
+
+template<typename _TYPE_, typename _TYPE_ARRAY_>
+double somme_ijk(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& residu);
+
+template<typename _TYPE_, typename _TYPE_ARRAY_>
+_TYPE_ max_ijk(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& residu);
+
+#include <IJK_Field_tools.tpp>
+
+#endif

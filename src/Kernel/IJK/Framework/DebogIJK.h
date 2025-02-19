@@ -13,45 +13,40 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef DebogIJK_included
+#define DebogIJK_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Interprete.h>
+#include <EFichier.h>
+#include <SFichier.h>
+#include <IJK_Field_forward.h>
+#include <TRUSTTabs_forward.h>
 
-/*! @brief classe IJK_Vector
+/*! @brief : class DebogIJK
  *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
+ *  <Description of class DebogIJK>
  *
- *  - Elle demande 2 template arguments
+ *
+ *
  */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+class DebogIJK : public Interprete
 {
-protected:
+  Declare_instanciable(DebogIJK) ;
 
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+public :
+  Entree& interpreter(Entree&) override;
+  enum DebogMode { DISABLED=0, WRITE_PASS=1, CHECK_PASS=2 };
+  static void verifier(const char *msg, const IJK_Field_float&);
+  static void verifier(const char *msg, const IJK_Field_double&);
+  static void verifier(const double);
+protected :
+  static double seuil_absolu_, seuil_relatif_, seuil_minimum_relatif_;
+  static int debog_mode_;
+  static Nom filename_;
+  static EFichier infile_;
+  static SFichier outfile_;
+  static void compute_signature(const IJK_Field_float&, ArrOfDouble& signature);
+  static void compute_signature(const IJK_Field_double&, ArrOfDouble& signature);
 };
 
-#endif /* IJK_Vector_included */
+#endif /* DebogIJK_included */
