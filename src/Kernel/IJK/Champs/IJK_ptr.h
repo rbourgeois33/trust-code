@@ -13,45 +13,39 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef IJK_ptr_included
+#define IJK_ptr_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <ConstIJK_ptr.h>
 
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+// We can automaticaly cast an IJK_ptr to a constIJK_ptr but not reversed.
+template <typename _TYPE_, typename _TYPE_ARRAY_ >
+class IJK_ptr : public ConstIJK_ptr<_TYPE_, _TYPE_ARRAY_>
 {
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
 public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
+  IJK_ptr(IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>& field, int i, int j, int k): ConstIJK_ptr<_TYPE_, _TYPE_ARRAY_>(field, i, j, k)
   {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
+  }
+  /*! @brief Performs the assignment: field(i+i_offset,j,k) = val
+   *
+   */
+  void put_val(int i_offset, const _TYPE_ & val)
+  {
+    assert(this->i_ + i_offset >= this->i_min_ && this->i_ + i_offset < this->i_max_);
+    // cast en non const ok car on avait un IJK_Field non const au depart
+    const _TYPE_ *ptr = this->ptr_;
+    ((_TYPE_*)ptr)[i_offset] = val;
+  }
+  void put_val(int i_offset, const Simd_template<_TYPE_>& val)
+  {
+    assert(this->i_ + i_offset >= this->i_min_ && this->i_ + i_offset < this->i_max_);
+    const _TYPE_ *ptr = this->ptr_;
+    SimdPut((_TYPE_*)ptr + i_offset, val);
   }
 };
 
-#endif /* IJK_Vector_included */
+using IJK_float_ptr = IJK_ptr<float, ArrOfFloat>;
+using IJK_double_ptr = IJK_ptr<double, ArrOfDouble>;
+
+
+#endif

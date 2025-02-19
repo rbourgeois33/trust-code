@@ -13,45 +13,8 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#include <IJK_Field_tools.h>
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
-
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
-{
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
-};
-
-#endif /* IJK_Vector_included */
+Implemente_instanciable(IJK_Field_tools, "IJK_Field_tools", Objet_U);
+Sortie& IJK_Field_tools::printOn(Sortie& os) const { return os; }
+Entree& IJK_Field_tools::readOn(Entree& is) { return is; }

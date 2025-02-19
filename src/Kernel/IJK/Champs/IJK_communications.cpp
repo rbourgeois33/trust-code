@@ -13,45 +13,23 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#include <Comm_Group_MPI.h>
+#include <Comm_Group.h>
+#include <IJK_communications.h>
+#include <PE_Groups.h>
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
-
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+void envoyer_recevoir(const void *send_buf, int send_buf_size, int send_proc, void *recv_buf, int recv_buf_size, int recv_proc)
 {
-protected:
+#ifdef MPI_
+  const Comm_Group& grp = PE_Groups::current_group();
+  if (!sub_type(Comm_Group_MPI, grp))
+    {
+      if (send_proc == -1 && recv_proc == -1) return;
+      Cerr << "Error in envoyer_recevoir: non empty message and not Comm_Group_MPI" << finl;
+      Process::exit();
+    }
+  const Comm_Group_MPI& grpmpi = ref_cast(Comm_Group_MPI, grp);
+  grpmpi.ptop_send_recv(send_buf, send_buf_size, send_proc, recv_buf, recv_buf_size, recv_proc);
+#endif
+}
 
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
-};
-
-#endif /* IJK_Vector_included */

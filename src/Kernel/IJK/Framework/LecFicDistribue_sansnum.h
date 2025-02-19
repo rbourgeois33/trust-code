@@ -13,45 +13,37 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef LecFicDistribue_sansnum_included
+#define LecFicDistribue_sansnum_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Separateur.h>
+#include <EFichier.h>
 
-/*! @brief classe IJK_Vector
+class Objet_U;
+
+/*! @brief Cette classe implemente les operateurs et les methodes virtuelles de la classe EFichier de la facon suivante : Il y a autant de fichiers que de processus, physiquement localises sur le disque de la machine hebergeant la tache maitre de l'applicatin Trio-U (le processus de rang 0 dans le groupe "tous").
  *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
+ *     Le processus maitre lit tour a tour un item dans chacun des fichiers et l'envoie au processus correspondant.
+ *     Il en est de meme pour les methodes d'inspection de l'etat d'un fichier.
  *
- *  - Elle demande 2 template arguments
  */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+class LecFicDistribue_sansnum : public EFichier
 {
+  // le maitre lit le fichier et propage l'information
+private :
+  LecFicDistribue_sansnum(int);
+public:
+  LecFicDistribue_sansnum();
+  LecFicDistribue_sansnum(const char* name,IOS_OPEN_MODE mode=ios::in);
+
+  int ouvrir(const char* name,IOS_OPEN_MODE mode=ios::in) override;
+
+  ~LecFicDistribue_sansnum() override;
+
 protected:
 
-  inline unsigned taille_memoire() const override { throw; }
+private:
 
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
 };
 
-#endif /* IJK_Vector_included */
+#endif

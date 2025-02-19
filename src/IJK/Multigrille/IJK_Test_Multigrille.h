@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -20,7 +20,6 @@
 #include <Domaine_IJK.h>
 #include <IJK_Field.h>
 #include <IJK_Lata_writer.h>
-#include <IJK_Navier_Stokes_tools.h>
 
 // This class reads a Right Hand Side and a Poisson Coefficient from a lata file
 // and runs the multigrid algorithm to solve the problem, providing convergence and timing information

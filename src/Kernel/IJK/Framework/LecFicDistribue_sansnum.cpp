@@ -13,45 +13,66 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#include <LecFicDistribue_sansnum.h>
+#include <communications.h>
+#include <Nom.h>
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
-
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+LecFicDistribue_sansnum::LecFicDistribue_sansnum(int)
 {
-protected:
+  bin_=0;
+}
+LecFicDistribue_sansnum::LecFicDistribue_sansnum():EFichier()
+{}
+LecFicDistribue_sansnum::~LecFicDistribue_sansnum()
+{
+  EFichier::close();
+}
 
-  inline unsigned taille_memoire() const override { throw; }
+/*! @brief Constructeur Ouvre le fichier avec les parametres mode et prot donnes
+ *
+ *     Ces parametres sont les parametres de la methode open standard
+ *
+ * @param (const char* name) nom du fichier
+ * @param (int mode) parametre passe a open
+ * @param (int prot) parametre passe a open
+ */
+LecFicDistribue_sansnum::LecFicDistribue_sansnum(const char* name,IOS_OPEN_MODE mode)
+{
+  LecFicDistribue_sansnum::ouvrir(name, mode);
+}
 
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
 
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
+/*! @brief Ouvre le fichier avec les parametres mode et prot donnes Ces parametres sont les parametres de la methode open standard
+ *
+ * @param (const char* name) nom du fichier
+ * @param (int mode) parametre passe a open
+ * @param (int prot) parametre passe a open
+ * @return (Entree&) *this
+ */
+int LecFicDistribue_sansnum::ouvrir(const char* name,IOS_OPEN_MODE mode)
+{
+  Nom nom_fic(name);
+// if(Process::is_parallel())
+  // nom_fic=nom_fic.nom_me(Process::me());
 
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
+#ifdef FILESYSTEM_NON_GLOBAL
+  Nom localisation;
+  if(Process::je_suis_maitre())
+    localisation = pwd();
+  envoyer_broadcast(localisation, 0);
 
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
-};
+  nom_fic = localisation + "/" + nom_fic;
+#endif
 
-#endif /* IJK_Vector_included */
+  if (!EFichier::ouvrir((const char*)nom_fic,mode))
+    {
+      Cerr << "File " << nom_fic << " not found or could not be opened." << finl;
+      return 0;
+    }
+  else
+    {
+      Process::Journal() << "File " << nom_fic << " is opened." << finl;
+      return 1;
+    }
+}
+
