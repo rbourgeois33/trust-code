@@ -13,45 +13,27 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef IJK_Lata_Swap_JK_included
+#define IJK_Lata_Swap_JK_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Interprete.h>
 
-/*! @brief classe IJK_Vector
+/*! @brief : class IJK_Lata_Swap_JK
  *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
+ *  <Description of class IJK_Lata_Swap_JK>
  *
- *  - Elle demande 2 template arguments
+ *
+ *
  */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+class IJK_Lata_Swap_JK : public Interprete
 {
-protected:
 
-  inline unsigned taille_memoire() const override { throw; }
+  Declare_instanciable(IJK_Lata_Swap_JK) ;
 
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
+public :
+  Entree& interpreter(Entree&) override;
+protected :
 
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
 };
 
-#endif /* IJK_Vector_included */
+#endif /* IJK_Lata_Swap_JK_included */

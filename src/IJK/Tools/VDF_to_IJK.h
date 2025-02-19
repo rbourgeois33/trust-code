@@ -13,45 +13,51 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef VDF_to_IJK_included
+#define VDF_to_IJK_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+class Domaine_VF;
+class Domaine_IJK;
 
-/*! @brief classe IJK_Vector
- *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
- *
- *  - Elle demande 2 template arguments
- */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+#include <IJK_Field_forward.h>
+#include <TRUSTTabs_forward.h>
+#include <Static_Int_Lists.h>
+#include <Domaine_IJK.h>
+
+// This class provides methods to convert a vdf field to an ijk field and reversed
+class VDF_to_IJK
 {
-protected:
-
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
 public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
+  void initialize(const Domaine_VF& domaine_vf, const Domaine_IJK& domain,
+                  Domaine_IJK::Localisation localisation,
+                  int direction_for_x,
+                  int direction_for_y,
+                  int direction_for_z);
+  template <typename _TYPE_, typename _TYPE_ARRAY_>
+  void convert_from_ijk(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& ijk_x, DoubleVect& x, bool add = false) const;
+  template <typename _TYPE_, typename _TYPE_ARRAY_>
+  void convert_to_ijk(const DoubleVect& x, IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& ijk_x) const;
 
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+protected:
+  // List of processors to which vdf data will be sent
+  ArrOfInt pe_send_;
+  // List of processors from which vdf data will be received
+  ArrOfInt pe_recv_;
+  // Size of received data
+  ArrOfInt pe_recv_size_;
+  // For each processor to which vdf data is sent, list of indices
+  //  in the vdf field to send to the processor, ordered in
+  //  ascending order of the local storage on the destination processor
+  Static_Int_Lists pe_send_data_;
+  Static_Int_Lists pe_recv_data_;
+
+
+
+  // Local size of the ijk_field
+  int ijk_ni_;
+  int ijk_nj_;
 };
 
-#endif /* IJK_Vector_included */
+#include <VDF_to_IJK.tpp>
+
+#endif

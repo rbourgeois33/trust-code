@@ -13,45 +13,33 @@
 *
 *****************************************************************************/
 
-#ifndef IJK_Vector_included
-#define IJK_Vector_included
+#ifndef Boundary_Conditions_Thermique_included
+#define Boundary_Conditions_Thermique_included
 
-#include <TRUST_Vector.h>
-#include <TRUSTTab.h>
+#include <Objet_U.h>
 
-/*! @brief classe IJK_Vector
+/*! @brief : class Boundary_Conditions_Thermique
  *
- *  - La classe template IJK_Vector derive de la classe template TRUST_Vector
+ *  <Description of class Boundary_Conditions_Thermique>
  *
- *  - Elle demande 2 template arguments
  */
-template<template<typename, typename> class _TRUST_TABL_, typename _TYPE_, typename _TYPE_ARRAY_>
-class IJK_Vector: public TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>
+class Boundary_Conditions_Thermique : public Objet_U
 {
-protected:
+  Declare_instanciable( Boundary_Conditions_Thermique ) ;
+public :
+  enum BCType { Paroi_Temperature_imposee = 0, Paroi_Flux_impose = 1, Perio=2 };
+  BCType get_bctype_k_min() const { return (BCType) bctype_kmin_; }
+  BCType get_bctype_k_max() const { return (BCType) bctype_kmax_; }
+  double get_temperature_kmax() const { return temperature_imposee_kmax_; }
+  double get_temperature_kmin() const { return temperature_imposee_kmin_; }
+  double get_flux_kmax() const { return flux_impose_kmax_; }
+  double get_flux_kmin() const { return flux_impose_kmin_; }
 
-  inline unsigned taille_memoire() const override { throw; }
-
-  inline int duplique() const override
-  {
-    IJK_Vector *xxx = new IJK_Vector(*this);
-    if (!xxx) Process::exit("Not enough memory !");
-    return xxx->numero();
-  }
-
-  Sortie& printOn(Sortie& s) const override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::printOn(s); }
-  Entree& readOn(Entree& s) override { return TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::readOn(s); }
-
-public:
-  IJK_Vector() : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>() { }
-  IJK_Vector(int i) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(i) { }
-  IJK_Vector(const IJK_Vector& avect) : TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>(avect) { }
-
-  IJK_Vector& operator=(const IJK_Vector& avect)
-  {
-    TRUST_Vector<_TRUST_TABL_<_TYPE_, _TYPE_ARRAY_>>::operator=(avect);
-    return *this;
-  }
+protected :
+  int bctype_kmin_, bctype_kmax_;
+  double temperature_imposee_kmin_, temperature_imposee_kmax_;
+  double flux_impose_kmin_, flux_impose_kmax_;
 };
 
-#endif /* IJK_Vector_included */
+#endif /* Boundary_Conditions_Thermique_included */
+
