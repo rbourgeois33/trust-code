@@ -175,7 +175,7 @@ public:
    * @return -1 if nothing more was written, 1 otherwise.
    */
   virtual int write_extra_mesh() { return -1; }
-  const OBS_PTR(Domaine)& domaine() { return le_domaine; }
+  const OBS_PTR(Domaine)& domaine() { return le_domaine_; }
   int DeprecatedKeepDuplicatedProbes=0; // Ancien format des sondes dans les .son qui autorise les sondes dupliquees
 
 protected:
@@ -208,17 +208,17 @@ protected:
   LIST(OBS_PTR(IntVect)) tableaux_a_postraiter_; // Liste de references a des tableaux a post-traiter
   LIST(Nom) noms_tableaux_;
 
-  OWN_PTR(Format_Post_base) format_post;
+  OWN_PTR(Format_Post_base) format_post_;
 
   static LIST(Nom) noms_fichiers_sondes_;
   int sondes_demande_, champs_demande_, stat_demande_, stat_demande_definition_champs_;
-  int binaire, tableaux_demande_;
-  Nom nom_fich_, format, option_para;
+  int binaire_, tableaux_demande_;
+  Nom nom_fich_, format_, option_para_;
   Nom suffix_for_reset_; // Suffix appended to post base name when the method resetTime() was invoked - default to "_AFTER_RESET"
-  double temps_, dernier_temps; // temps du precedent appel a postraiter()
-  static Motcles formats_supportes;
-  OBS_PTR(Domaine) le_domaine;
-  OBS_PTR(Domaine_dis_base) domaine_dis_pour_faces;
+  double temps_, dernier_temps_; // temps du precedent appel a postraiter()
+  static Motcles formats_supportes_;
+  OBS_PTR(Domaine) le_domaine_;
+  OBS_PTR(Domaine_dis_base) domaine_dis_pour_faces_;
 
 private :
 };
@@ -227,14 +227,14 @@ private :
 inline int Postraitement::lpost(double temps_courant, double dt_post) const
 {
   double epsilon = 1.e-8;
-  if (dt_post<=temps_courant - dernier_temps)
+  if (dt_post<=temps_courant - dernier_temps_)
     return 1;
   else
     {
       // Voir Schema_Temps_base::limpr pour information sur epsilon et modf
       double i, j;
       modf(temps_courant/dt_post + epsilon, &i);
-      modf(dernier_temps/dt_post + epsilon, &j);
+      modf(dernier_temps_/dt_post + epsilon, &j);
       return ( i>j );
     }
 }
