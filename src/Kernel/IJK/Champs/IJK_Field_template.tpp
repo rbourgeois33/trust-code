@@ -549,6 +549,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::allocate(const Domaine_IJK& domai
   shear_BC_helpler_.allocate(ni_local,  nj_local, nk_local,  ghost_size,  ncompo,  type,  phy_ppty_v,  phy_ppty_l,  use_inv_rho_in_pressure_solver);
   ijk_domain_ = domain;
   localisation_ = loc;
+  alloc_counter_++;
 }
 
 
