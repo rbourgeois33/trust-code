@@ -13,41 +13,51 @@
 *
 *****************************************************************************/
 
-#ifndef Champs_compris_included
-#define Champs_compris_included
 
-#include <TRUST_List.h>
-#include <TRUST_Ref.h>
-#include <Noms.h>
-#include <IJK_Field_forward.h>
-#include <unordered_map>
+#include <Champs_compris_IJK.h>
 
-class Champ_base;
 
-/*! @brief classe Champs_compris Represente un champ compris par un objet de type Equation, Milieu,
- *
- *      Operateur, Source, Traitement_particulier.
- *
- * Parametrized by the type of field: typically Champ_base or IJK_Field_double
+/** A vectorial field is considered present in the structure if all its three components are there
  */
-template<typename FIELD_TYPE>
-class Champs_compris_T
+bool Champs_compris_IJK::has_champ_vectoriel(const Motcle& nom) const
 {
-public :
-  // Return the field if found, otherwise raises.
-  const FIELD_TYPE& get_champ(const Motcle& nom) const;
-  // Same thing, but without raising:
-  bool has_champ(const Motcle& nom, OBS_PTR(FIELD_TYPE)& ref_champ) const;
-  bool has_champ(const Motcle& nom) const;
-  void ajoute_champ(const FIELD_TYPE& champ);
-  const Noms liste_noms_compris() const;
-  void clear_champs_compris() { liste_champs_.clear(); }
+  assert(nom!="??");
+  auto item = liste_champs_vecto_.find(nom.getString());
+  return item != liste_champs_vecto_.end();
+}
 
-protected :
-  std::unordered_map<std::string, OBS_PTR(FIELD_TYPE)> liste_champs_;
-};
+const IJK_Field_vector3_double& Champs_compris_IJK::get_champ_vectoriel(const Motcle& nom) const
+{
+  assert(nom != "??");
+  auto item = liste_champs_vecto_.find(nom.getString());
+  if (item != liste_champs_vecto_.end()) return item->second;
+  throw std::runtime_error(std::string("Vectoriel field ") + nom.getString() + std::string(" not found !"));
+}
 
-using Champs_compris = Champs_compris_T<Champ_base>;
-using Champs_compris_IJK_base = Champs_compris_T<IJK_Field_double>;
+void Champs_compris_IJK::ajoute_champ_vectoriel(const IJK_Field_vector3_double& champ)
+{
+  // Adding a field name referring to champ inside liste_champs_ dictionnary
+  auto add_key = [&](const Nom& n)
+  {
+    std::string nom_champ = n.getString();
+    std::string upperCase = nom_champ, lowerCase = nom_champ;
+    std::transform(nom_champ.begin(), nom_champ.end(), upperCase.begin(), ::toupper);
+    std::transform(nom_champ.begin(), nom_champ.end(), lowerCase.begin(), ::tolower);
+    liste_champs_vecto_[upperCase] = champ;
+    liste_champs_vecto_[lowerCase] = champ;
+  };
 
-#endif /* Champs_compris_included */
+  // Adding field with its name...
+  add_key(champ.le_nom());
+
+  // ...its synonyms...
+  const Noms& syno = champ.get_synonyms();
+  int nb_syno = syno.size();
+  for (int s = 0; s < nb_syno; s++)
+    add_key(syno[s]);
+
+  // ...and its components
+  int nb_composantes = champ.nb_comp();
+  for (int i = 0; i < nb_composantes; i++)
+    ajoute_champ(champ[i]);
+}
