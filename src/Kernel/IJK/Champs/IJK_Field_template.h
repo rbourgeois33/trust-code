@@ -53,6 +53,7 @@ public:
     IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>(),
     localisation_(Domaine_IJK::Localisation::ELEM)
   { }
+<<<<<<< HEAD
   void allocate(const Domaine_IJK&, Domaine_IJK::Localisation, int ghost_size,
                 int additional_k_layers = 0, int nb_compo = 1,
                 bool external_storage = false, int monofluide = 0,
@@ -63,6 +64,12 @@ public:
 
   inline Domaine_IJK::Localisation get_localisation() const { return localisation_; }
 
+=======
+  void allocate(const Domaine_IJK&, Domaine_IJK::Localisation, int ghost_size, int additional_k_layers=0, int nb_compo=1, const Nom& name=Nom());
+  void allocate_shear_BC(int monofluide, double rov, double rol, int use_inv_rho_in_pressure_solver=0);
+  const Domaine_IJK& get_domaine() const { return domaine_ref_.valeur(); }
+  Domaine_IJK::Localisation get_localisation() const { return localisation_; }
+>>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
   void echange_espace_virtuel(int ghost);
 
   //_TYPE_ interpolation_for_shear_periodicity(const int phase, const int send_j, const int send_k);

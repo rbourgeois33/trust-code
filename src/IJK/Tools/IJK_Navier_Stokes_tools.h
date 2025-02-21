@@ -78,7 +78,11 @@ void runge_kutta3_update_surfacic_fluxes(IJK_Field_double& dv, IJK_Field_double&
 void force_zero_on_walls(IJK_Field_double& vz);
 
 template<class T, int N>
+<<<<<<< HEAD
 void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost, double DU = 0.)
+=======
+void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost, const Nom& nam=Nom())
+>>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
 {
   assert(static_cast<int>(N) == 3);
 
@@ -86,12 +90,22 @@ void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int
   v.get_ptr(1) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
   v.get_ptr(2) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
 
+<<<<<<< HEAD
   v[0].allocate(domain, Domaine_IJK::FACES_I, ghost);
   v[1].allocate(domain, Domaine_IJK::FACES_J, ghost);
   v[2].allocate(domain, Domaine_IJK::FACES_K, ghost);
   v[0].get_shear_BC_helpler().set_dU_(DU);
   v[1].get_shear_BC_helpler().set_dU_(0.);
   v[2].get_shear_BC_helpler().set_dU_(0.);
+=======
+  v[0].allocate(s, Domaine_IJK::FACES_I, ghost);
+  v[1].allocate(s, Domaine_IJK::FACES_J, ghost);
+  v[2].allocate(s, Domaine_IJK::FACES_K, ghost);
+
+  v[0].nommer(nam + Nom("_X"));
+  v[1].nommer(nam + Nom("_Y"));
+  v[2].nommer(nam + Nom("_Z"));
+>>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
 }
 
 template<class T, int N>
