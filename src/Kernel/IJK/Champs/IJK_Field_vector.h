@@ -68,7 +68,6 @@ public:
     assert(i>=0 && i<N);
     return this->data_[i];
   }
-#if 1
   void echange_espace_virtuel()
   {
     for (int i = 0; i < N; i++)
@@ -78,7 +77,6 @@ public:
   {
     return this->data_[0]->get_domaine();
   }
-#endif
 protected:
 };
 
