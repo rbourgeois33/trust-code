@@ -109,7 +109,11 @@ void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghos
 }
 
 template<class T, int N>
+<<<<<<< HEAD
 void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost)
+=======
+void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost, const Nom& nam=Nom())
+>>>>>>> 0a8df7713... name again
 {
   for (int i = 0; i < N ; ++i)
     {
@@ -121,6 +125,7 @@ void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, 
       IJK_Field_template<T,TRUSTArray<T>>::increase_alloc_counter();
 >>>>>>> 7a586220f... [IJK] Allocation counter for IJK fields.
     }
+  v.nommer(nam);
 }
 
 void calculer_rho_v(const IJK_Field_double& rho,
