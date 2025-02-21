@@ -66,6 +66,16 @@ void Champs_compris_T<FIELD_TYPE>::ajoute_champ(const FIELD_TYPE& champ)
     std::string upperCase = nom_champ, lowerCase = nom_champ;
     std::transform(nom_champ.begin(), nom_champ.end(), upperCase.begin(), ::toupper);
     std::transform(nom_champ.begin(), nom_champ.end(), lowerCase.begin(), ::tolower);
+
+// [ABN] I agree with the below, but this breaks too many TRUST cases for now.
+// To be reviewed at some point.
+
+//   if (has_champ(upperCase) || has_champ(lowerCase))
+//      {
+//        //TODO(teo.boutin) maybe check pointers equality before giving an error.
+//        Cerr << "Champs_compris_T<FIELD_TYPE>::ajoute_champ : trying to add a field twice : " << upperCase << finl;
+//        Process::exit();
+//      }
     liste_champs_[upperCase] = champ;
     liste_champs_[lowerCase] = champ;
   };
