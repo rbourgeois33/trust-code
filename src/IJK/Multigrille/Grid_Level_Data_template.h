@@ -38,7 +38,7 @@ protected:
 
 public:
   Grid_Level_Data_template();
-  void initialize(const Domaine_IJK&, int ghost, int additional_k_layers);
+  void initialize(const Domaine_IJK& domain, int ghost, int additional_k_layers);
 
   inline int get_ghost_size() const { return ghost_size_; }
   inline const Domaine_IJK& get_domain() const { return ijk_domain_; }

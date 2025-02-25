@@ -45,16 +45,9 @@ public:
     for (int i = 0; i < N; i++)
       data_[i].echange_espace_virtuel(data_[i].ghost());
   }
-<<<<<<< HEAD
 
   inline const Domaine_IJK& get_domain() const { return data_[0].get_domain(); }
-#endif
-=======
-  const Domaine_IJK& get_domaine() const
-  {
-    return data_[0].get_domaine();
-  }
->>>>>>> 381a0b6f4... champ comp ijk
+
 protected:
   T data_[N];
 };

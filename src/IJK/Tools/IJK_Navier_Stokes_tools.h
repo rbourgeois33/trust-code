@@ -23,18 +23,6 @@ class Boundary_Conditions_Thermique;
 
 double compute_fractionnal_timestep_rk3(const double dt_tot, int step);
 
-<<<<<<< HEAD:src/IJK/Framework/IJK_Navier_Stokes_tools.h
-Probleme_base& creer_domaine_ijk(const Domaine_IJK& domain, const Nom& nom_domaine);
-
-void ijk_interpolate(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result);
-void ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result,
-                                         const double value_for_bad_points);
-
-double ijk_interpolate(const IJK_Field_double& field, const Vecteur3& coordinates);
-double ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const Vecteur3& coordinates, const double value_for_bad_points);
-
-=======
->>>>>>> d4532f6a2... [IJK] Moving IJK stuff into Kernel where it belongs + splitting tools:src/IJK/Tools/IJK_Navier_Stokes_tools.h
 void compute_divergence_times_constant(const IJK_Field_double& vx, const IJK_Field_double& vy, const IJK_Field_double& vz,
                                        const double constant, IJK_Field_double& resu);
 
@@ -78,11 +66,7 @@ void runge_kutta3_update_surfacic_fluxes(IJK_Field_double& dv, IJK_Field_double&
 void force_zero_on_walls(IJK_Field_double& vz);
 
 template<class T, int N>
-<<<<<<< HEAD
-void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost, double DU = 0.)
-=======
-void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost, const Nom& nam=Nom())
->>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
+void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost, const Nom& name = Nom())
 {
   assert(static_cast<int>(N) == 3);
 
@@ -90,42 +74,24 @@ void allocate_velocity(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghos
   v.get_ptr(1) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
   v.get_ptr(2) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
 
-<<<<<<< HEAD
   v[0].allocate(domain, Domaine_IJK::FACES_I, ghost);
   v[1].allocate(domain, Domaine_IJK::FACES_J, ghost);
   v[2].allocate(domain, Domaine_IJK::FACES_K, ghost);
-  v[0].get_shear_BC_helpler().set_dU_(DU);
-  v[1].get_shear_BC_helpler().set_dU_(0.);
-  v[2].get_shear_BC_helpler().set_dU_(0.);
-=======
-  v[0].allocate(s, Domaine_IJK::FACES_I, ghost);
-  v[1].allocate(s, Domaine_IJK::FACES_J, ghost);
-  v[2].allocate(s, Domaine_IJK::FACES_K, ghost);
-
-  v[0].nommer(nam + Nom("_X"));
-  v[1].nommer(nam + Nom("_Y"));
-  v[2].nommer(nam + Nom("_Z"));
->>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
+  v[0].nommer(name + Nom("_X"));
+  v[1].nommer(name + Nom("_Y"));
+  v[2].nommer(name + Nom("_Z"));
 }
 
 template<class T, int N>
-<<<<<<< HEAD
-void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost)
-=======
-void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& s, int ghost, const Nom& nam=Nom())
->>>>>>> 0a8df7713... name again
+void allocate_cell_vector(IJK_Field_vector<T, N>& v, const Domaine_IJK& domain, int ghost, const Nom& name = Nom())
 {
   for (int i = 0; i < N ; ++i)
     {
       v.get_ptr(i) = std::make_shared<IJK_Field_template<T,TRUSTArray<T>>>();
-<<<<<<< HEAD
       v[i].allocate(domain, Domaine_IJK::ELEM, ghost);
-=======
-      v[i].allocate(s, Domaine_IJK::ELEM, ghost);
       IJK_Field_template<T,TRUSTArray<T>>::increase_alloc_counter();
->>>>>>> 7a586220f... [IJK] Allocation counter for IJK fields.
     }
-  v.nommer(nam);
+  v.nommer(name);
 }
 
 void calculer_rho_v(const IJK_Field_double& rho,

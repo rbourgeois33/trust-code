@@ -90,16 +90,12 @@ void Multigrille_Adrien::initialize(const Domaine_IJK& domain)
     }
 
   IJK_Field_float rho;
-<<<<<<< HEAD
-  if (IJK_Shear_Periodic_helpler::defilement_ == 1)
-    rho.allocate(domain, Domaine_IJK::ELEM, 0, 0 ,1, false, 2, IJK_Shear_Periodic_helpler::rho_vap_ref_for_poisson_, IJK_Shear_Periodic_helpler::rho_liq_ref_for_poisson_);
-=======
+
   if (IJK_Shear_Periodic_helpler::defilement_==1)
     {
-      rho.allocate(split, Domaine_IJK::ELEM, 0, 0 ,1);
+      rho.allocate(domain, Domaine_IJK::ELEM, 0, 0 ,1);
       rho.allocate_shear_BC(2, IJK_Shear_Periodic_helpler::rho_vap_ref_for_poisson_, IJK_Shear_Periodic_helpler::rho_liq_ref_for_poisson_);
     }
->>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
   else
     rho.allocate(domain, Domaine_IJK::ELEM, 0);
 
