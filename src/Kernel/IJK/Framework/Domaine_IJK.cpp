@@ -15,10 +15,6 @@
 #include <EFichier.h>
 #include <Domaine_IJK.h>
 #include <Hexaedre.h>
-<<<<<<< HEAD:src/IJK/Framework/Domaine_IJK.cpp
-=======
-#include <IJK_tools.h>
->>>>>>> d4532f6a2... [IJK] Moving IJK stuff into Kernel where it belongs + splitting tools:src/Kernel/IJK/Framework/Domaine_IJK.cpp
 
 #define print_vect(x) (Nom("[") + Nom(x[0]) + Nom(" ") + Nom(x[1]) + Nom(" ") + Nom(x[2]) + Nom("]"))
 

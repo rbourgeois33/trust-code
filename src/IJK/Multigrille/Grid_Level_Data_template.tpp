@@ -35,16 +35,11 @@ void Grid_Level_Data_template<_TYPE_>::initialize(const Domaine_IJK& domain, int
   ijk_domain_ = domain;
   perio_k_= domain.get_periodic_flag(DIRECTION_K);
   ghost_size_ = ghost;
-<<<<<<< HEAD
   if (IJK_Shear_Periodic_helpler::defilement_ == 1)
-    ijk_rho_.allocate(ijk_domain_, Domaine_IJK::ELEM, ghost, 0 ,1, false, 2, IJK_Shear_Periodic_helpler::rho_vap_ref_for_poisson_, IJK_Shear_Periodic_helpler::rho_liq_ref_for_poisson_);
-=======
-  if (IJK_Shear_Periodic_helpler::defilement_==1)
     {
-      ijk_rho_.allocate(domaine_ijk_, Domaine_IJK::ELEM, ghost, 0 ,1);
+      ijk_rho_.allocate(ijk_domain_, Domaine_IJK::ELEM, ghost, 0, 1);
       ijk_rho_.allocate_shear_BC(2, IJK_Shear_Periodic_helpler::rho_vap_ref_for_poisson_, IJK_Shear_Periodic_helpler::rho_liq_ref_for_poisson_);
     }
->>>>>>> 5f5142ed7... [IJK] Fields can be named fields. Shear BC allocation separated.
   else
     ijk_rho_.allocate(ijk_domain_, Domaine_IJK::ELEM, ghost);
 
