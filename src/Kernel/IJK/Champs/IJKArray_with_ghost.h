@@ -74,7 +74,7 @@ void IJKArray_with_ghost<_TYPE_,_TYPE_ARRAY_>::echange_espace_virtuel(int pe_min
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(echange_vect_counter_);
-  statistics.begin_count(STD_COUNTERS::virtual_swap_,1);
+  statistics.begin_count(STD_COUNTERS::virtual_swap);
   // envoi a pe_max et reception de pe_min
   const int n = tab_.size_array() - ghost_ * 2;
   _TYPE_ *pdata = tab_.addr();
@@ -82,7 +82,7 @@ void IJKArray_with_ghost<_TYPE_,_TYPE_ARRAY_>::echange_espace_virtuel(int pe_min
   // l'autre
   ::envoyer_recevoir(pdata + ghost_, ghost_ * sizeof(_TYPE_), pe_min, pdata + n + ghost_, ghost_ * sizeof(_TYPE_), pe_max);
   statistiques().end_count(echange_vect_counter_);
-  statistics.end_count(STD_COUNTERS::virtual_swap_);
+  statistics.end_count(STD_COUNTERS::virtual_swap);
 }
 
 

@@ -370,17 +370,17 @@ void Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(Convection_Dif
   DoubleTab secmem_tmp(secmem);
   eqn.operateur(0).l_op_base().ajouter_blocs({{nom_inco, &mat_diff}}, secmem_tmp, semi_impl);
   statistiques().end_count(assemblage_sys_counter_);
-  statistics.end_count(STD_COUNTERS::matrix_assembly_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly);
 
   statistiques().begin_count(source_counter_);
-  statistics.begin_count(STD_COUNTERS::rhs_,1);
+  statistics.begin_count(STD_COUNTERS::rhs);
   for (int i = 0; i < eqn.sources().size(); i++)
     eqn.sources()(i)->ajouter_blocs({{nom_inco, &mat_diff}}, secmem_tmp, semi_impl);
   statistiques().end_count(source_counter_);
-  statistics.end_count(STD_COUNTERS::rhs_);
+  statistics.end_count(STD_COUNTERS::rhs);
 
   statistiques().begin_count(assemblage_sys_counter_);
-  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly);
   DoubleVect& coeff_diffusif=mat_diff.get_set_coeff();
 
   const IntVect& tab1= mat->get_tab1();

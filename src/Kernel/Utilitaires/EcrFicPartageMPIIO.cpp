@@ -374,10 +374,10 @@ int EcrFicPartageMPIIO::put(MPI_Datatype MPI_TYPE, const void* ob, int n)
 
   // Write all:
   statistiques().begin_count(IO_EcrireFicPartageMPIIO_counter_);
-  statistics.begin_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO_,2);
+  statistics.begin_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO);
   MPI_File_write_all(mpi_file_, (void*)ob, n, etype, MPI_STATUS_IGNORE);
   statistiques().end_count(IO_EcrireFicPartageMPIIO_counter_, n * sizeof_etype);
-  statistics.end_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO_,1,n * sizeof_etype);
+  statistics.end_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO,1,n * sizeof_etype);
 
   // Update the position of the pointer file:
   disp_+=mp_sum(n) * sizeof_etype;

@@ -65,7 +65,7 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
   Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
-  statistics.create_custom_counter(false,1,"Custom solver");
+  statistics.create_custom_counter("Custom solver",1);
   for (int i=0; i<n; i++)
     {
       solution=solution_ref;
@@ -79,7 +79,7 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
       Cout<<"Try " << i << " of solver " << solveur <<finl;
       //solveur->fixer_limpr(0);
       statistiques().begin_count(solv_sys_counter_l);
-      statistics.begin_count("SolveurSys::resoudre_systeme",1);
+      statistics.begin_count("Custom solver");
       solveur.nommer("test_solver");
 
       solveur.resoudre_systeme(matrice,secmem,solution);

@@ -321,8 +321,8 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
 
   EcritureLectureSpecial::mode_lec=mode_lec_sa;
   statistiques().end_count(temporary_counter_);
-  Cerr << "End of resuming the file " << nom_fic << " after " << statistics.get_time_since_last_open(STD_COUNTERS::restart_) << " s" << finl;
-  statistics.end_count(STD_COUNTERS::restart_);
+  Cerr << "End of resuming the file " << nom_fic << " after " << statistics.get_time_since_last_open(STD_COUNTERS::restart) << " s" << finl;
+  statistics.end_count(STD_COUNTERS::restart);
 
   ////////////////////////////////////////
   // Transformation eventuelle du champ lu

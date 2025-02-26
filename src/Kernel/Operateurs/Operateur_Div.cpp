@@ -56,10 +56,10 @@ DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
-  statistics.begin_count(STD_COUNTERS::divergence_,1);
+  statistics.begin_count(STD_COUNTERS::divergence);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(divergence_counter_);
-  statistics.end_count(STD_COUNTERS::divergence_);
+  statistics.end_count(STD_COUNTERS::divergence);
   return tmp;
 }
 
@@ -75,10 +75,10 @@ DoubleTab& Operateur_Div::calculer(const DoubleTab& donnee,
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(divergence_counter_);
-  statistics.begin_count(STD_COUNTERS::divergence_,1);
+  statistics.begin_count(STD_COUNTERS::divergence);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(divergence_counter_);
-  statistics.end_count(STD_COUNTERS::divergence_);
+  statistics.end_count(STD_COUNTERS::divergence);
   return tmp;
 }
 

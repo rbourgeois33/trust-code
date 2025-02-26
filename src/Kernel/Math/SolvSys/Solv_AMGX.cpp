@@ -79,7 +79,7 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
   Cout << "[AmgX] Time to create CSR pointers: " << t.count() << finl;
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
   // Use device pointer to enable device consolidation in AmgXWrapper:
   double* values_device;
   cudaMalloc((void**)&values_device, nNz * sizeof(double));
@@ -88,8 +88,8 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   SolveurAmgX_.setA(nRowsGlobal, nRowsLocal, nNz, rowOffsets, colIndices, values_device, nullptr);
   //cudaFree(values_device);delete[] hostArray;
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz));
-  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice_) << finl;// Attention balise lue par fiche de validation
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1,(int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz);
+  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl;// Attention balise lue par fiche de validation
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz);
 }
 
 void Solv_AMGX::Create_vectors(const DoubleVect& b)
@@ -167,11 +167,11 @@ void Solv_AMGX::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
   Perf_counters& statistics = Perf_counters::getInstance();
   // La matrice CSR de PETSc a ete mise a jour dans check_stencil
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
   SolveurAmgX_.updateA(nRowsLocal, nNz, values);  // ToDo erreur valgrind au premier appel de updateA...
   statistiques().end_count(gpu_copytodevice_counter_, (int)sizeof(double)*nNz);
-  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice_) << finl; // Attention balise lue par fiche de validation
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1 , (double)sizeof(double)*(double)nNz);
+  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl; // Attention balise lue par fiche de validation
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1 , (double)sizeof(double)*(double)nNz);
 }
 
 // Check and return true if new stencil

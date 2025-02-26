@@ -456,6 +456,6 @@ void Op_Diff_PolyMAC_P0P1NC_Face::ajouter_blocs_ext(int aux_only, matrices_t mat
       }
 
   statistiques().end_count(diffusion_counter_);
-  statistics.end_count(STD_COUNTERS::diffusion_);
+  statistics.end_count(STD_COUNTERS::diffusion);
 }
 

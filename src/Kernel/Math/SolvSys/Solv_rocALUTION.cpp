@@ -623,7 +623,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+          statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
         }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
@@ -631,7 +631,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3 * (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3 * (int)sizeof(double) * nb_rows_);
         }
       sol.GetInterior().CopyFromData(addrOnDevice(lhs_));
       rhs.GetInterior().CopyFromData(addrOnDevice(rhs_));
@@ -645,7 +645,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice_,2);
+          statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
         }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
@@ -653,7 +653,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice_, 1 ,  3* (int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3* (int)sizeof(double) * nb_rows_);
         }
     }
 
@@ -708,13 +708,13 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
   if (gpu)
     {
       statistiques().begin_count(gpu_library_counter_);
-      statistics.begin_count(STD_COUNTERS::gpu_library_,2);
+      statistics.begin_count(STD_COUNTERS::gpu_library);
     }
   ls->Solve(rhs, &sol);
   if (gpu)
     {
       statistiques().end_count(gpu_library_counter_);
-      statistics.end_count(STD_COUNTERS::gpu_library_,2);
+      statistics.end_count(STD_COUNTERS::gpu_library);
     }
   if (ls->GetSolverStatus()==3) Process::exit("Divergence for solver.");
   if (ls->GetSolverStatus()==4)
@@ -742,13 +742,13 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copyfromdevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copyfromdevice_,2);
+          statistics.begin_count(STD_COUNTERS::gpu_copyfromdevice);
         }
       sol.MoveToHost();
       if (gpu)
         {
           statistiques().end_count(gpu_copyfromdevice_counter_, (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copyfromdevice_,1,(int)sizeof(double) * nb_rows_);
+          statistics.end_count(STD_COUNTERS::gpu_copyfromdevice,1,(int)sizeof(double) * nb_rows_);
         }
       sol.GetInterior().CopyToData(lhs_.addr());
       Update_solution<Kokkos::DefaultHostExecutionSpace>(x);

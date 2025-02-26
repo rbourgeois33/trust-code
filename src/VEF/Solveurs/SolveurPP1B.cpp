@@ -40,7 +40,8 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
 {
   // Stop the solv_sys_counter_ counter to not count the changing base
   Perf_counters& statistics = Perf_counters::getInstance();
-  statistics.end_count(STD_COUNTERS::system_solver_,0,-1);
+
+  statistics.end_count(STD_COUNTERS::system_solver,0,-1);
   b_ = second_membre;
   assembleur_pression_->changer_base_second_membre(b_);
   assembleur_pression_->changer_base_pression(x);
@@ -63,7 +64,7 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
     }
 
   assembleur_pression_->changer_base_pression_inverse(x);
-  statistics.begin_count(STD_COUNTERS::system_solver_,2);
+  statistics.begin_count(STD_COUNTERS::system_solver);
   return nb_iter;
 }
 

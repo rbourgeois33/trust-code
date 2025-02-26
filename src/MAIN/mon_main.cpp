@@ -320,8 +320,8 @@ void mon_main::dowork(const Nom& nom_du_cas)
   // Ce compteur est arrete dans Resoudre*
   statistiques().begin_count(initialisation_calcul_counter_);
 
-  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
-  statistics.begin_count(STD_COUNTERS::computation_start_up_,0);
+  statistics.begin_count(STD_COUNTERS::total_execution_time);
+  statistics.begin_count(STD_COUNTERS::computation_start_up);
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)
@@ -485,7 +485,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
     }
 
   double temps = statistiques().get_total_time();
-  temps = statistics.get_time_since_last_open(STD_COUNTERS::total_execution_time_);
+  temps = statistics.get_time_since_last_open(STD_COUNTERS::total_execution_time);
   Cout << finl;
   Cout << "--------------------------------------------" << finl;
   Cout << "clock: Total execution: " << temps << " s" << finl;

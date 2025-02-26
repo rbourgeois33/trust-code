@@ -200,7 +200,7 @@ Entree& Scatter::interpreter(Entree& is)
     Cerr << "Execution of the Scatter module." << finl;
 
   statistiques().begin_count(interprete_scatter_counter_);
-  statistics.begin_count(STD_COUNTERS::interprete_scatter_,2);
+  statistics.begin_count(STD_COUNTERS::interprete_scatter);
   // On recupere le domaine:
   Nom nomdomaine;
   is >> nomdomaine;
@@ -259,10 +259,10 @@ Entree& Scatter::interpreter(Entree& is)
   if(Process::me()==0)
     {
       double temps = statistiques().last_time(interprete_scatter_counter_);
-      temps = statistics.get_time_since_last_open(STD_COUNTERS::interprete_scatter_);
+      temps = statistics.get_time_since_last_open(STD_COUNTERS::interprete_scatter);
       Cerr << "Scatter time : " << temps << finl;
     }
-  statistics.end_count(STD_COUNTERS::interprete_scatter_);
+  statistics.end_count(STD_COUNTERS::interprete_scatter);
   return is;
 }
 
@@ -499,7 +499,7 @@ void Scatter::lire_domaine(Nom& nomentree, Noms& liste_bords_periodiques)
 static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "Scatter::lire_domaine", 0 /* Group */);
 
   statistiques().begin_count(stats);
-  statistics.begin_count(STD_COUNTERS::read_scatter_,2);
+  statistics.begin_count(STD_COUNTERS::read_scatter);
   ArrOfInt mergedDomaines(Process::nproc());
   mergedDomaines = 0;
   bool domain_not_built = true;
@@ -664,7 +664,7 @@ static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "Scatte
     }
 
   statistiques().end_count(stats);
-  statistics.end_count(STD_COUNTERS::read_scatter_);
+  statistics.end_count(STD_COUNTERS::read_scatter);
   barrier();
 }
 

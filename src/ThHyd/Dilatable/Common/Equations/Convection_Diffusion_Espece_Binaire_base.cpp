@@ -116,7 +116,7 @@ void Convection_Diffusion_Espece_Binaire_base::assembler_blocs_avec_inertie(matr
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(assemblage_sys_counter_);
-  statistics.begin_count(STD_COUNTERS::matrix_assembly_,1);
+  statistics.begin_count(STD_COUNTERS::matrix_assembly);
   Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(*this, matrices, secmem, semi_impl);
   schema_temps().ajouter_blocs(matrices, secmem, *this);
   if (!discretisation().is_polymac_family())
@@ -126,6 +126,6 @@ void Convection_Diffusion_Espece_Binaire_base::assembler_blocs_avec_inertie(matr
       modifier_pour_Cl(*mat,secmem);
     }
   statistiques().end_count(assemblage_sys_counter_);
-  statistics.end_count(STD_COUNTERS::matrix_assembly_);
+  statistics.end_count(STD_COUNTERS::matrix_assembly);
 
 }

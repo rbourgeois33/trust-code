@@ -193,7 +193,7 @@ bool ProblemTrio::initialize()
   statistiques().reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
   statistics.reset_counters();
-  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
+  statistics.begin_count(STD_COUNTERS::total_execution_time);
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
@@ -298,7 +298,7 @@ bool ProblemTrio::solveTimeStep()
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(timestep_counter_);
-  statistics.begin_count(STD_COUNTERS::timestep_,0);
+  statistics.begin_count(STD_COUNTERS::timeloop);
   if (pb->lsauv())
     pb->sauver();
   bool res=pb->solveTimeStep();
@@ -331,7 +331,7 @@ void ProblemTrio::validateTimeStep()
       pb->postraiter(0);
     }
   statistiques().end_count(timestep_counter_);
-  statistics.end_count(STD_COUNTERS::timestep_,0);
+  statistics.end_count(STD_COUNTERS::timeloop);
 }
 
 /*! @brief Tells if the Problem unknowns have changed during the last time step.

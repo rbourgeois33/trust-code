@@ -272,10 +272,10 @@ inline void MD_Vector_tools::call_echange_espace_virtuel(TRUSTVect<_TYPE_>& v, M
       if (sub_type(MD_Vector_seq, md.valeur())) return;
 
       statistiques().begin_count(echange_vect_counter_);
-      statistics.begin_count(STD_COUNTERS::virtual_swap_,1);
+      statistics.begin_count(STD_COUNTERS::virtual_swap);
       echange_espace_virtuel1_(v.get_md_vector(), v, opt);
       statistiques().end_count(echange_vect_counter_);
-      statistics.end_count(STD_COUNTERS::virtual_swap_);
+      statistics.end_count(STD_COUNTERS::virtual_swap);
     }
   //else Cerr << "Warning: A call to ::echange_espace_virtuel() is done on a non-distributed vector." << finl; /Process::exit();
 }

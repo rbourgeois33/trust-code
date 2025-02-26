@@ -254,7 +254,7 @@ bool Probleme_U::run()
   double dt=computeTimeStep(stop);
 
   statistiques().end_count(initialisation_calcul_counter_);
-  statistics.end_count(STD_COUNTERS::computation_start_up_);
+  statistics.end_count(STD_COUNTERS::computation_start_up);
   // Print the initialization CPU statistics
   if (!disable_TU)
     {
@@ -271,7 +271,7 @@ bool Probleme_U::run()
   statistiques().reset_counters();
   statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
-  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
+  statistics.begin_count(STD_COUNTERS::total_execution_time);
 
 #ifdef VTRACE
   //VT_USER_END("Initialization");
@@ -285,11 +285,10 @@ bool Probleme_U::run()
   while(!stop)
     {
       // Begin the CPU measure of the time step
-      statistiques().begin_count(timestep_counter_);
-      statistics.begin_count(STD_COUNTERS::timestep_,0);
       statistics.start_time_step();
-
-
+      statistiques().begin_count(timestep_counter_);
+      statistics.begin_count(STD_COUNTERS::timeloop);
+      Cerr << "Je passe bien ici"<< finl << finl << finl <<finl;
       ok=false; // Is the time interval successfully solved ?
 
       // Loop on the time interval tries
@@ -347,18 +346,18 @@ bool Probleme_U::run()
 
       // Stop the CPU measure of the time step and print:
       statistiques().end_count(timestep_counter_);
-      statistics.end_count(STD_COUNTERS::timestep_);
+
       if (limpr())
         {
           double temps = statistiques().last_time(timestep_counter_);
           Cout << finl << "clock: Total time step: " << temps << " s" << finl << finl;
-          temps = statistics.get_time_since_last_open(STD_COUNTERS::timestep_);
+          temps = statistics.get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }
 
+
       if(JUMP_3_FIRST_STEPS && tstep < 3)
         {
-          //demarrage des compteurs CPU
           if(tstep == 2)
             {
               statistiques().set_three_first_steps_elapsed(true);
@@ -369,7 +368,8 @@ bool Probleme_U::run()
           statistiques().compute_avg_min_max_var_per_step(tstep);
           statistics.compute_avg_min_max_var_per_step(tstep);
         }
-
+      statistics.end_count(STD_COUNTERS::timeloop);
+      Cerr << "Et là aussi"<< finl;
       tstep++;
 #ifdef VTRACE
       // Flush the buffer regulary to avoid setting VT_MAX_FLUSHES=0 variable...
@@ -398,7 +398,7 @@ bool Probleme_U::run()
   statistiques().reset_counters();
   statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
-  statistics.begin_count(STD_COUNTERS::total_execution_time_,-1);
+  statistics.begin_count(STD_COUNTERS::total_execution_time);
 
   return ok;
 }
@@ -426,11 +426,10 @@ bool Probleme_U::runUntil(double time)
   // Boucle sur les pas de temps
   while(!stop)
     {
-
-      statistiques().begin_count(timestep_counter_);
-      statistics.begin_count(STD_COUNTERS::timestep_,0);
       statistics.start_time_step();
-
+      statistiques().begin_count(timestep_counter_);
+      statistics.begin_count(STD_COUNTERS::timeloop);
+      Cerr << "Je viens d'ouvrir timstepcounter"<<finl << finl <<finl;
       ok=false;
 
       // Loop on the time interval tries
@@ -473,10 +472,11 @@ bool Probleme_U::runUntil(double time)
         {
           double temps = statistiques().last_time(timestep_counter_);
           Cout << "clock: Total time step: " << temps << " s" << finl;
-          temps = statistics.get_time_since_last_open(STD_COUNTERS::timestep_);
+          temps = statistics.get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Total time of the time loop: " << temps << " s" << finl << finl;
         }
-      statistics.end_count(STD_COUNTERS::timestep_);
+      statistics.end_count(STD_COUNTERS::timeloop);
+      Cerr << "Je viens de fermer timstepcounter"<<finl;
       postraiter(0);
     }
   statistics.end_timeloop();

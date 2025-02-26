@@ -91,10 +91,10 @@ DoubleTab& Operateur_Conv::ajouter(const DoubleTab& donnee,
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
-  statistics.begin_count(STD_COUNTERS::convection_,1);
+  statistics.begin_count(STD_COUNTERS::convection);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(convection_counter_);
-  statistics.end_count(STD_COUNTERS::convection_);
+  statistics.end_count(STD_COUNTERS::convection);
   return tmp;
 }
 
@@ -109,10 +109,10 @@ DoubleTab& Operateur_Conv::calculer(const DoubleTab& donnee,
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
-  statistics.begin_count(STD_COUNTERS::convection_,1);
+  statistics.begin_count(STD_COUNTERS::convection);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(convection_counter_);
-  statistics.end_count(STD_COUNTERS::convection_);
+  statistics.end_count(STD_COUNTERS::convection);
   return tmp;
 }
 

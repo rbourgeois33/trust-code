@@ -235,7 +235,7 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleT
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(convection_counter_);
-  statistics.begin_count(STD_COUNTERS::convection_,1);
+  statistics.begin_count(STD_COUNTERS::convection);
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Face_PolyMAC_P0& ch = ref_cast(Champ_Face_PolyMAC_P0, equation().inconnue());
   const Conds_lim& cls = la_zcl_poly_->les_conditions_limites();
@@ -399,5 +399,5 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleT
         }
     }
   statistiques().end_count(convection_counter_);
-  statistics.end_count(STD_COUNTERS::convection_);
+  statistics.end_count(STD_COUNTERS::convection);
 }

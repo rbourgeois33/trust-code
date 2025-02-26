@@ -75,10 +75,10 @@ DoubleTab& Source::ajouter(DoubleTab& xx) const
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(source_counter_);
-  statistics.begin_count(STD_COUNTERS::rhs_,1);
+  statistics.begin_count(STD_COUNTERS::rhs);
   DoubleTab& tmp = valeur().ajouter(xx);
   statistiques().end_count(source_counter_);
-  statistics.end_count(STD_COUNTERS::rhs_);
+  statistics.end_count(STD_COUNTERS::rhs);
   return tmp;
 }
 
@@ -93,9 +93,9 @@ DoubleTab& Source::calculer(DoubleTab& xx) const
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(source_counter_);
-  statistics.begin_count(STD_COUNTERS::rhs_,1);
+  statistics.begin_count(STD_COUNTERS::rhs);
   DoubleTab& tmp = valeur().calculer(xx);
   statistiques().end_count(source_counter_);
-  statistics.end_count(STD_COUNTERS::rhs_);
+  statistics.end_count(STD_COUNTERS::rhs);
   return tmp;
 }

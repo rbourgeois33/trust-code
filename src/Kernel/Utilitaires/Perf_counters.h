@@ -30,51 +30,51 @@ class Counter;
 
 enum class STD_COUNTERS : unsigned int
 {
-  total_execution_time_ , ///< Lowest level counter that track the total time of the computation
-  computation_start_up_ , ///< Track the time before the Resoudre loop
-  timestep_ ,   ///< Track time elapsed in the time loop
-  system_solver_, ///< Track time elapsed in SolveurSys::resoudre_systeme
-  implicit_diffusion_,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
-  matrix_assembly_ ,
-  update_variables_  ,
-  convection_ ,
-  diffusion_ ,
-  gradient_ ,
-  divergence_ ,
-  rhs_ ,
-  postreatment_ ,
-  backup_file_ ,
-  petsc_solver_,  ///< Track the time elapsed using petsc solver
-  compute_dt_ , ///< Track time used to compute the time step dt
-  turbulent_viscosity_ ,
-  restart_ ,
-  virtual_swap_ ,
-  mpi_sendrecv_  ,
-  mpi_send_ ,
-  mpi_recv_ ,
-  mpi_bcast_ ,
-  mpi_alltoall_ ,
-  mpi_allgather_ ,
-  mpi_gather_ ,
-  mpi_partialsum_,
-  mpi_sumdouble_ ,
-  mpi_mindouble_,
-  mpi_maxdouble_ ,
-  mpi_sumfloat_ ,
-  mpi_minfloat_ ,
-  mpi_maxfloat_ ,
-  mpi_sumint_ ,
-  mpi_minint_ ,
-  mpi_maxint_ ,
-  mpi_barrier_ ,
-  gpu_library_ ,
-  gpu_kernel_ ,
-  gpu_copytodevice_ ,
-  gpu_copyfromdevice_ ,
-  IO_EcrireFicPartageMPIIO_ ,
-  IO_EcrireFicPartageBin_ ,
-  interprete_scatter_,
-  read_scatter_,
+  total_execution_time , ///< Lowest level counter that track the total time of the computation
+  computation_start_up , ///< Track the time before the Resoudre loop
+  timeloop ,   ///< Track time elapsed in the time loop
+  system_solver, ///< Track time elapsed in SolveurSys::resoudre_systeme
+  implicit_diffusion,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
+  matrix_assembly ,
+  update_variables  ,
+  convection ,
+  diffusion ,
+  gradient ,
+  divergence ,
+  rhs ,
+  postreatment ,
+  backup_file ,
+  petsc_solver,  ///< Track the time elapsed using petsc solver
+  compute_dt , ///< Track time used to compute the time step dt
+  turbulent_viscosity ,
+  restart ,
+  virtual_swap ,
+  mpi_sendrecv  ,
+  mpi_send ,
+  mpi_recv ,
+  mpi_bcast ,
+  mpi_alltoall ,
+  mpi_allgather ,
+  mpi_gather ,
+  mpi_partialsum,
+  mpi_sumdouble ,
+  mpi_mindouble,
+  mpi_maxdouble ,
+  mpi_sumfloat ,
+  mpi_minfloat ,
+  mpi_maxfloat ,
+  mpi_sumint ,
+  mpi_minint ,
+  mpi_maxint ,
+  mpi_barrier ,
+  gpu_library ,
+  gpu_kernel ,
+  gpu_copytodevice ,
+  gpu_copyfromdevice ,
+  IO_EcrireFicPartageMPIIO ,
+  IO_EcrireFicPartageBin ,
+  interprete_scatter,
+  read_scatter,
   NB_OF_STD_COUNTER
 };
 
@@ -105,13 +105,12 @@ public:
    * @param is_comm
    * @return create a new counter
    */
-  void create_custom_counter(bool to_print_in_global_TU, int counter_level, std::string counter_description, std::string counter_family = "None", bool is_comm=false);
+  void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false,  bool to_print_in_global_TU =true);
 
   /*! @brief Start the count of a counter
    *
    */
   //	void begin_count(Counter c);
-
 
   void print_in_global_TU(const STD_COUNTERS& name, bool to_print_or_not_to_print);
 
@@ -123,14 +122,14 @@ public:
    * @param std_cnt reference to the standard counter
    * @param counter_lvl level of the counter you try to open, warning it changes the value of the counter level associated with counter std_cnt
    */
-  void begin_count(const STD_COUNTERS& std_cnt, int counter_lvl);
+  void begin_count(const STD_COUNTERS& std_cnt, int counter_lvl = -100000);
 
   /*! Custom counters, start the tracking of the wanted operation
    *
    * @param custom_count_name string key in the custom counter map
    * @param counter_lvl level of the counter you try to open, warning it changes the value of the level of the counter associated with custom_count_name
    */
-  void begin_count(const std::string& custom_count_name, unsigned int counter_lvl);
+  void begin_count(const std::string& custom_count_name, int counter_lvl= -100000);
 
   /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
    *
@@ -183,9 +182,9 @@ public:
    *
    * @param is_the_three_first_time_steps_elapsed == True, then the thre first time steps are discarded
    */
-  inline void set_three_first_steps_elapsed(bool is_the_three_first_time_steps_elapsed)
+  inline void set_time_steps_elapsed(int time_step_elapsed)
   {
-    nb_steps_elapsed_ = is_the_three_first_time_steps_elapsed;
+    nb_steps_elapsed_ = time_step_elapsed;
   }
 
   /*! @brief Create the csv.TU file.
@@ -262,7 +261,6 @@ public:
   std::string get_gpu();
 
   std::string get_date();
-
 
 private:
 
