@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -580,6 +580,12 @@ int operator !=(const char* const un_autre, const Nom& un_nom)
 {
   return ! (un_autre == un_nom);
 }
+
+bool operator <(const Nom& n1, const Nom& n2)
+{
+  return n1.nom_.compare(n2.nom_) < 0;
+}
+
 
 /*! @brief Renvoie *this;
  *
