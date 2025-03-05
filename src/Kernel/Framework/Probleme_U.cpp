@@ -271,7 +271,6 @@ bool Probleme_U::run()
   statistiques().reset_counters();
   statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
-  statistics.begin_count(STD_COUNTERS::total_execution_time);
 
 #ifdef VTRACE
   //VT_USER_END("Initialization");
@@ -288,7 +287,6 @@ bool Probleme_U::run()
       statistics.start_time_step();
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timeloop);
-      Cerr << "Je passe bien ici"<< finl << finl << finl <<finl;
       ok=false; // Is the time interval successfully solved ?
 
       // Loop on the time interval tries
@@ -369,7 +367,6 @@ bool Probleme_U::run()
           statistics.compute_avg_min_max_var_per_step(tstep);
         }
       statistics.end_count(STD_COUNTERS::timeloop);
-      Cerr << "Et là aussi"<< finl;
       tstep++;
 #ifdef VTRACE
       // Flush the buffer regulary to avoid setting VT_MAX_FLUSHES=0 variable...
@@ -398,7 +395,6 @@ bool Probleme_U::run()
   statistiques().reset_counters();
   statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
-  statistics.begin_count(STD_COUNTERS::total_execution_time);
 
   return ok;
 }
@@ -429,7 +425,6 @@ bool Probleme_U::runUntil(double time)
       statistics.start_time_step();
       statistiques().begin_count(timestep_counter_);
       statistics.begin_count(STD_COUNTERS::timeloop);
-      Cerr << "Je viens d'ouvrir timstepcounter"<<finl << finl <<finl;
       ok=false;
 
       // Loop on the time interval tries
@@ -476,7 +471,6 @@ bool Probleme_U::runUntil(double time)
           Cout << finl << "clock: Total time of the time loop: " << temps << " s" << finl << finl;
         }
       statistics.end_count(STD_COUNTERS::timeloop);
-      Cerr << "Je viens de fermer timstepcounter"<<finl;
       postraiter(0);
     }
   statistics.end_timeloop();

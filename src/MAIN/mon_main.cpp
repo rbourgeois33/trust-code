@@ -494,6 +494,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
       SFichier ficstop ( nomfic);
       ficstop  << "Finished correctly"<<finl;
     }
+  statistics.end_count(STD_COUNTERS::total_execution_time);
   //  end_stat_counters();
 }
 

@@ -34,9 +34,10 @@ enum class STD_COUNTERS : unsigned int
   computation_start_up , ///< Track the time before the Resoudre loop
   timeloop ,   ///< Track time elapsed in the time loop
   system_solver, ///< Track time elapsed in SolveurSys::resoudre_systeme
+  petsc_solver,  ///< Track the time elapsed using petsc solver
   implicit_diffusion,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
-  matrix_assembly ,
-  update_variables  ,
+  compute_dt , ///< Track time used to compute the time step dt
+  turbulent_viscosity ,
   convection ,
   diffusion ,
   gradient ,
@@ -44,11 +45,9 @@ enum class STD_COUNTERS : unsigned int
   rhs ,
   postreatment ,
   backup_file ,
-  petsc_solver,  ///< Track the time elapsed using petsc solver
-  compute_dt , ///< Track time used to compute the time step dt
-  turbulent_viscosity ,
   restart ,
-  virtual_swap ,
+  matrix_assembly ,
+  update_variables  ,
   mpi_sendrecv  ,
   mpi_send ,
   mpi_recv ,
@@ -74,9 +73,11 @@ enum class STD_COUNTERS : unsigned int
   IO_EcrireFicPartageMPIIO ,
   IO_EcrireFicPartageBin ,
   interprete_scatter,
+  virtual_swap ,
   read_scatter,
   NB_OF_STD_COUNTER
 };
+
 
 
 /*!  @brief This class stores and manages counters in TRUST. It is a singleton.
@@ -137,14 +138,14 @@ public:
    * @param counter_lvl
    * @param t time of opening
    */
-  void check_begin(Counter& c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+  void check_begin(Counter* const c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
 
   /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
    *
    * @param c counter you try to close
    * @param t time of closing
    */
-  void check_end(Counter& c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+  void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
 
 
   /*! @brief End the count of a counter and update the counter values
@@ -244,23 +245,23 @@ public:
    *
    * @return the reference of a the counter object associated with STD_COUNTERS::name
    */
-  inline Counter& access_std_counter(STD_COUNTERS name) {return *std_counters_[static_cast<int>(name)];}
+  inline Counter* access_std_counter(const STD_COUNTERS name) {return std_counters_[static_cast<int>(name)];}
 
   /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
    *
    * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
    */
-  inline Counter& access_custom_counter(std::string name) {return *custom_counter_map_str_to_counter_.at(name);}
+  inline Counter* access_custom_counter(const std::string name) {return custom_counter_map_str_to_counter_.at(name);}
 
   inline void set_nb_time_steps_elapsed(unsigned int n) {nb_steps_elapsed_ = n;}
 
-  std::string get_os();
+  std::string get_os() const;
 
-  std::string get_cpu();
+  std::string get_cpu() const;
 
-  std::string get_gpu();
+  std::string get_gpu() const;
 
-  std::string get_date();
+  std::string get_date() const;
 
 private:
 
@@ -275,8 +276,8 @@ private:
   std::chrono::duration<double> computation_time_; ///< Used to compute the total time of the simulation.
   std::chrono::duration<double> time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  std::array <Counter *,static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  std::map <std::string, Counter *> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
+  std::map <std::string, Counter * const> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
 };
 
 #endif
