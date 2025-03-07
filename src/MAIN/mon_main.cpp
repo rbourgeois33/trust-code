@@ -319,8 +319,6 @@ void mon_main::dowork(const Nom& nom_du_cas)
   statistiques().begin_count(temps_total_execution_counter_);
   // Ce compteur est arrete dans Resoudre*
   statistiques().begin_count(initialisation_calcul_counter_);
-
-  statistics.begin_count(STD_COUNTERS::total_execution_time);
   statistics.begin_count(STD_COUNTERS::computation_start_up);
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
@@ -494,7 +492,6 @@ void mon_main::dowork(const Nom& nom_du_cas)
       SFichier ficstop ( nomfic);
       ficstop  << "Finished correctly"<<finl;
     }
-  statistics.end_count(STD_COUNTERS::total_execution_time);
   //  end_stat_counters();
 }
 

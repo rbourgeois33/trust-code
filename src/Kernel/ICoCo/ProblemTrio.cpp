@@ -193,7 +193,6 @@ bool ProblemTrio::initialize()
   statistiques().reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
   statistics.reset_counters();
-  statistics.begin_count(STD_COUNTERS::total_execution_time);
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)

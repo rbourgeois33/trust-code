@@ -377,7 +377,7 @@ void Perf_counters::check_begin(Counter* const c, int counter_lvl, std::chrono::
       if (counter_lvl != expected_lvl)
         {
           std::stringstream error_msg ;
-          error_msg << "The counter you are trying to start does not have the expected level, counter running: " << last_opened_counter_->description_ << " counter that you try to open:" << c->description_  << " ; expected level: "<<  expected_lvl << std::endl << std::endl << c->level_ << std::endl << counter_lvl << std::endl;
+          error_msg << "The counter you are trying to start does not have the expected level, counter running: " << last_opened_counter_->description_ << " counter that you try to open:" << c->description_  << " ; expected level: "<<  expected_lvl << std::endl ;
           Process::exit(error_msg.str());
         }
       if (time_loop_)
@@ -498,7 +498,7 @@ void Perf_counters::start_time_step()
 {
   assert (last_opened_counter_!=nullptr);
   std::chrono::time_point<std::chrono::high_resolution_clock> t = std::chrono::high_resolution_clock::now();
-  if (last_opened_counter_ == nullptr || last_opened_counter_->level_<0)
+  if (last_opened_counter_ == nullptr)
     Process::exit("You are trying to start a time step outside the time loop");
   Counter* c = last_opened_counter_;
   while (c->parent_ != nullptr && c->level_>=0)
@@ -515,18 +515,30 @@ void Perf_counters::start_time_step()
 double Perf_counters::get_time_since_last_open(const STD_COUNTERS& name)
 {
   Counter* c = access_std_counter(name);
-  if (!c->is_running_)
-    Process::exit("The counter is not running: " + c->description_);
-  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - c->last_open_time_;
+  std::chrono::duration<double> t = std::chrono::duration<double>::zero();
+  if (!time_loop_ || end_cache_)
+    {
+      if (!c->is_running_)
+        Process::exit("The counter is not running: " + c->description_);
+      t = std::chrono::high_resolution_clock::now() - c->last_open_time_;
+    }
+  else
+    Cerr << "Time of this step is set to zero if you are during the cache" << std::endl;
   return (t.count());
 }
 
 double Perf_counters::get_time_since_last_open(const std::string& name)
 {
   Counter* c = access_custom_counter(name);
-  if (!c->is_running_)
-    Process::exit("The counter is not running: " + c->description_);
-  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - c->last_open_time_;
+  std::chrono::duration<double> t = std::chrono::duration<double>::zero();
+  if (!time_loop_ || end_cache_)
+    {
+      if (!c->is_running_)
+        Process::exit("The counter is not running: " + c->description_);
+      t = std::chrono::high_resolution_clock::now() - c->last_open_time_;
+    }
+  else
+    Cerr << "Time of this step is set to zero if you are during the cache" << std::endl;
   return (t.count());
 }
 
@@ -565,7 +577,7 @@ void Perf_counters::compute_avg_min_max_var_per_step(unsigned int tstep)
     Process::exit("You are trying to compute time loop statistics outside of the time loop");
   if (!end_cache_)
     {
-      end_cache_ = tstep >= nb_steps_elapsed_;
+      end_cache_ = tstep > nb_steps_elapsed_;
       if (end_cache_)
         {
           Process::barrier();
@@ -577,22 +589,25 @@ void Perf_counters::compute_avg_min_max_var_per_step(unsigned int tstep)
   {
     if (c!=nullptr && time_loop_ && c->level_>0 )
       {
-        c->min_time_per_step_ = (c->min_time_per_step_ < c->time_ts_ .count()) ? c->min_time_per_step_ : c->time_ts_ .count();
-        c->max_time_per_step_ = (c->min_time_per_step_ > c->time_ts_ .count()) ? c->min_time_per_step_ : c->time_ts_ .count();
-        c->avg_time_per_step_ = ((step-1)*c->avg_time_per_step_ + c->time_ts_ .count())/step;
-        c->sd_time_per_step_ += (c->time_ts_ .count()* c->time_ts_ .count() - 2*c->time_ts_ .count()* c->avg_time_per_step_ +  c->avg_time_per_step_ *  c->avg_time_per_step_)/step;
+        c->min_time_per_step_ = (c->min_time_per_step_ < (c->time_ts_).count()) ? c->min_time_per_step_ : (c->time_ts_).count();
+        c->max_time_per_step_ = (c->min_time_per_step_ > (c->time_ts_).count()) ? c->min_time_per_step_ : (c->time_ts_).count();
+        c->avg_time_per_step_ = ((step-1)*c->avg_time_per_step_ + (c->time_ts_).count())/step;
+        c->sd_time_per_step_ += ((c->time_ts_).count()* (c->time_ts_).count() - 2*((c->time_ts_).count())* c->avg_time_per_step_ +  c->avg_time_per_step_ *  c->avg_time_per_step_)/step;
         c->sd_time_per_step_ = sqrt(c->sd_time_per_step_);
         if (c->sd_time_per_step_ < 0)
           c->sd_time_per_step_ = 0;
       }
     c->open_time_ts_=std::chrono::time_point<std::chrono::high_resolution_clock>();
   };
-  for (Counter *c: std_counters_)
-    compute(c);
-  if (!custom_counter_map_str_to_counter_.empty())
+  if (end_cache_ || !time_loop_)
     {
-      for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
-        compute(map_it->second);
+      for (Counter *c: std_counters_)
+        compute(c);
+      if (!custom_counter_map_str_to_counter_.empty())
+        {
+          for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
+            compute(map_it->second);
+        }
     }
   Perf_counters::restart_counters();
 }
@@ -1079,8 +1094,9 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
 inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time, int& quantity, int& count)
 {
   assert(Process::is_parallel());
-  double min,max,avg,sd ;
-
+  double qty,cnt,min,max,avg,sd ;
+  qty=static_cast<double>(quantity);
+  cnt = static_cast<double>(count);
   min = Process::mp_min(time);
   max = Process::mp_max(time);
   avg = Process::mp_sum(time)/Process::nproc();
@@ -1089,18 +1105,18 @@ inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time,
 
   std::array<double,4> min_max_avg_sd_time = {min,max,avg,sd};
 
-  min = 1.0*Process::mp_min(quantity);
-  max = 1.0*Process::mp_max(quantity);
-  avg = 1.0*Process::mp_sum(quantity)/Process::nproc();
-  sd = sqrt(Process::mp_sum((quantity-avg)*(quantity-avg))/Process::nproc());
+  min = Process::mp_min(qty);
+  max = Process::mp_max(qty);
+  avg = Process::mp_sum(qty)/Process::nproc();
+  sd = sqrt(Process::mp_sum((qty-avg)*(qty-avg))/Process::nproc());
   quantity = static_cast<int>(std::floor (avg));
 
   std::array<double,4> min_max_avg_sd_quantity = {min,max,avg,sd};
 
-  min = 1.0*Process::mp_min(count);
-  max = 1.0*Process::mp_max(count);
-  avg = 1.0*Process::mp_sum(count)/Process::nproc();
-  sd = sqrt(Process::mp_sum((quantity-avg)*(quantity-avg))/Process::nproc());
+  min = 1.0*Process::mp_min(cnt);
+  max = 1.0*Process::mp_max(cnt);
+  avg = 1.0*Process::mp_sum(cnt)/Process::nproc();
+  sd = sqrt(Process::mp_sum((cnt-avg)*(cnt-avg))/Process::nproc());
   count = static_cast<int>(std::floor (avg));
 
   std::array<double,4> min_max_avg_sd_count = {min,max,avg,sd};
@@ -1416,9 +1432,9 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       double avg_wait_fraction = Process::mp_sum(wait_fraction)/ Process::nproc();
 
       c = access_std_counter(STD_COUNTERS::IO_EcrireFicPartageBin);
-      int debit_seq = c->total_time_.count()>0 ? (int) (Process::mp_sum(c->quantity_) / (1024 * 1024) / c->total_time_.count()) : 0;
+      int debit_seq = c->total_time_.count()>0 ? static_cast<int>(Process::mp_sum(static_cast<double>(c->quantity_)) / (1024 * 1024) / (c->total_time_.count())) : 0;
       c = access_std_counter(STD_COUNTERS::IO_EcrireFicPartageMPIIO);
-      int debit_par = c->total_time_.count()>0 ? (int) (Process::mp_sum(c->quantity_) / (1024 * 1024) / c->total_time_.count()) : 0;
+      int debit_par = c->total_time_.count()>0 ? static_cast<int>(Process::mp_sum(static_cast<double>(c->quantity_)) / (1024 * 1024) / (c->total_time_.count())) : 0;
 
       if (debit_seq>0 || debit_par>0)
         perfs_IO << std::endl << "------------------------------------------------------------------IO----------------------------------------------------------------------" << std::endl;

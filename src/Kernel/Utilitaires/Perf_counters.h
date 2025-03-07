@@ -203,12 +203,12 @@ public:
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the standard counter call name
    *
    */
-  double get_total_time(const STD_COUNTERS& name);
+  double get_total_time(const STD_COUNTERS& name) ;
 
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the custom counter call name
      *
      */
-  double get_total_time(const std::string& name);
+  double get_total_time(const std::string& name) ;
 
   /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
    *
@@ -218,7 +218,7 @@ public:
   /*!@brief Give as a double the time (in second) elapsed in the operation tracked by the standard counter call name since the counter was last opened
    *
    */
-  double get_time_since_last_open(const std::string& name);
+  double get_time_since_last_open(const std::string& name) ;
 
   /*!
    * @brief Set time_loop_ to true in order to account for cache properly
