@@ -1,17 +1,17 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Copyright (c) 2025, CEA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 
 #ifndef Domaine_IJK_included
 #define Domaine_IJK_included
@@ -37,7 +37,7 @@
 #include <Connectivite_som_elem.h>
 #include <Scatter.h>
 
-using Int3 = FixedVector<int,3>;
+using Int3 = FixedVector<int, 3>;
 
 /*! @brief This class encapsulates all the information related to the eulerian mesh for TrioIJK
  *
@@ -46,15 +46,26 @@ using Int3 = FixedVector<int,3>;
 class Domaine_IJK : public Domaine_base
 {
   Declare_instanciable_sans_constructeur(Domaine_IJK);
+
 public:
+  /*! @brief Localisation sub class. */
+  enum Localisation
+  {
+    ELEM,
+    NODES,
+    FACES_I,
+    FACES_J,
+    FACES_K
+  };
 
-  /*! @brief Localisation sub class
-   */
-  enum Localisation {ELEM, NODES, FACES_I, FACES_J, FACES_K};
+  /*! @brief status sub class to not compute the same structure twitce when not needed. */
+  enum grid_status
+  {
+    DEFAULT,
+    INITIALIZED,
+    DONE
+  };
 
-  /*! @brief status sub class to not compute the same structure twitce when not needed
-   */
-  enum grid_status {DEFAULT, INITIALIZED, DONE};
   /*! @brief Returns the face according to the direction
    *
    *  @param direction In IJK, x(0), y(1) or z(2).
@@ -70,7 +81,7 @@ public:
   Domaine_IJK();
 
   // Initializes the object by analysing the provided VDF domaine (works for a distributed mesh)
-  void initialize_from_unstructured(const Domaine&,
+  void initialize_from_unstructured(const Domaine &,
                                     int direction_for_x,
                                     int direction_for_y,
                                     int direction_for_z,
@@ -83,14 +94,10 @@ public:
    *         to matc the topology of the cluster/node. ex: 8 cores node/machine => use groups
    *         of size 2x2x2 to minimize extra-node messages.
    *
-   *  @param nproc_i Number of processors in i direction.
-   *  @param nproc_j Number of processors in j direction.
-   *  @param nproc_k Number of processors in k direction.
-   *  @param process_grouping_i 1 by default. Number of processors per subdomain in i direction.
-   *  @param process_grouping_j 1 by default. Number of processors per subdomain in j direction.
-   *  @param process_grouping_k 1 by default. Number of processors per subdomain in k direction.
+   *  @param nproc_i, nproc_j, nproc_k Number of processors in each direction.
+   *  @param process_grouping_i, process_grouping_j, process_grouping_k 1 by default. Number of processors per subdomain in each direction.
    */
-  void initialize_splitting(Domaine_IJK& dom,
+  void initialize_splitting(Domaine_IJK &dom,
                             int nproc_i, int nproc_j, int nproc_k,
                             int process_grouping_i = 1, int process_grouping_j = 1,
                             int process_grouping_k = 1);
@@ -104,32 +111,25 @@ public:
    *         dimensions of the mapping array.
    *         All processors do not have to be used!
    *
-   *  @param slice_size_i Contains for each slice in the i direction, the number of cells this slice.
-   *  @param slice_size_j Contains for each slice in the j direction, the number of cells this slice.
-   *  @param slice_size_k Contains for each slice in the k direction, the number of cells this slice.
+   *  @param dom Reference to an IJK domain.
+   *  @param slice_size_i, slice_size_j, slice_size_k Contains for each slice in each direction, the number of cells this slice.
    *  @param processor_mapping Provides the rank of the mpi process that will own this subdomain.
    */
-  void initialize_mapping(Domaine_IJK& dom, const ArrOfInt& slice_size_i,
-                          const ArrOfInt& slice_size_j,
-                          const ArrOfInt& slice_size_k,
-                          const IntTab& processor_mapping);
+  void initialize_mapping(Domaine_IJK &dom, const ArrOfInt &slice_size_i,
+                          const ArrOfInt &slice_size_j,
+                          const ArrOfInt &slice_size_k,
+                          const IntTab &processor_mapping);
 
   /*! @brief Initializes class elements given dataset's parameters.
    *
-   *  @param x0 Origin of the whole domain on the x axis.
-   *  @param y0 Origin of the whole domain on the y axis.
-   *  @param z0 Origin of the whole domain on the z axis.
-   *  @param delta_x Array with the sizes of the elements on the x axis.
-   *  @param delta_y Array with the sizes of the elements on the y axis.
-   *  @param delta_z Array with the sizes of the elements on the z axis.
-   *  @param perio_x Periodic flag along x axis.
-   *  @param perio_y Periodic flag along y axis.
-   *  @param perio_z Periodic flag along z axis.
+   *  @param x0, y0, z0 Coordinates of the origin of the whole domain.
+   *  @param delta_x, delta_y, delta_z Arrays with the sizes of the elements on the each axis.
+   *  @param perio_x, perio_y, perio_z Periodic flag along each axis
    */
   void initialize_origin_deltas(double x0, double y0, double z0,
-                                const ArrOfDouble& delta_x,
-                                const ArrOfDouble& delta_y,
-                                const ArrOfDouble& delta_z,
+                                const ArrOfDouble &delta_x,
+                                const ArrOfDouble &delta_y,
+                                const ArrOfDouble &delta_z,
                                 bool perio_x, bool perio_y, bool perio_z);
 
   /*! @brief Builds the geometry, parallel splitting and DOF correspondance
@@ -140,20 +140,14 @@ public:
    *         Missing features: be able to build a subregion which is the boundary
    *         of another, eg: father is "3D elements", son is "2D faces".
    *
-   *  @param ni Number of elements in direction(0)
-   *  @param nj Number of elements in direction(1)
-   *  @param nk Number of elements in direction(2)
-   *  @param offset_i Offset along x axis for the "son" subregion
-   *  @param offset_j Offset along x axis for the "son" subregion
-   *  @param offset_k Offset along x axis for the "son" subregion
+   *  @param ni, nj, nk Number of elements in each  directions
+   *  @param offset_i, offset_j, offset_j, offset_k  Offset along each axis for the subregion
    *  @param subregion_name Name of the "son" subregion
-   *  @param perio_x Whether if domain is periodic along x axis
-   *  @param perio_y Whether if domain is periodic along y axis
-   *  @param perio_z Whether if domain is periodic along z axis
+   *  @param perio_x, perio_y, perio_z Periodic flag along each axis
    */
   void init_subregion(int ni, int nj, int nk,
                       int offset_i, int offset_j, int offset_k,
-                      const Nom& subregion,
+                      const Nom &subregion,
                       bool perio_x = false, bool perio_y = false, bool perio_z = false);
 
   /*! @brief Creates a splitting of the domain by specifying the mapping.
@@ -163,24 +157,16 @@ public:
    *         The number of slices in direction i, j , k must match dimensions
    *         0,1 and 2 of the processor_mapping() array.
    *
-   *  @param slice_size_i Contains, for each slice in the x direction, the number of cells in this slice.
-   *  @param slice_size_j Contains, for each slice in the y direction, the number of cells in this slice.
-   *  @param slice_size_k Contains, for each slice in the z direction, the number of cells in this slice.
+   *  @param slice_size_i, slice_size_j, slice_size_k Contains, for each slice in each direction, the number of cells in this slice.
    *  @param processor_mapping Provides the rank of the mpi process that will have this subdomain.
    */
-  void initialize_with_mapping(const ArrOfInt& slice_size_i,
-                               const ArrOfInt& slice_size_j,
-                               const ArrOfInt& slice_size_k,
-                               const IntTab& processor_mapping);
+  void initialize_with_mapping(const ArrOfInt &slice_size_i,
+                               const ArrOfInt &slice_size_j,
+                               const ArrOfInt &slice_size_k,
+                               const IntTab &processor_mapping);
 
-  /*! @brief
-   *
-   */
-//  void discretiser();
-
-  /*! @brief renvoie new(Faces) ! elle est surchargee par Domaine_VDF par ex.
-   */
-  Faces* creer_faces();
+  /*! @brief renvoie new(Faces) ! elle est surchargee par Domaine_VDF par ex. */
+  Faces *creer_faces();
 
   /*! @brief Returns the number of elements owned by this processor in the given direction
    *
@@ -193,8 +179,7 @@ public:
     return nb_elem_local_[direction];
   }
 
-  /*! @brief Returns the number of element owned by this processor.
-   */
+  /*! @brief Returns the number of element owned by this processor. */
   inline int get_nb_elem_local() const
   {
     assert(Objet_U::dimension == 3);
@@ -250,8 +235,7 @@ public:
     return get_delta(direction).size_array();
   }
 
-  /*! @brief Returns the total (global) number of mesh cells.
-   */
+  /*! @brief Returns the total (global) number of mesh cells. */
   inline int get_nb_elem_tot() const
   {
     assert(Objet_U::dimension == 3);
@@ -328,7 +312,7 @@ public:
    *  @param direction In IJK, x(0), y(1) or z(2).
    *  @return node_coordinates_xyz_[direction]
    */
-  const ArrOfDouble& get_node_coordinates(int direction) const
+  inline const ArrOfDouble &get_node_coordinates(int direction) const
   {
     assert(direction >= 0 && direction < 3);
     return node_coordinates_xyz_[direction];
@@ -348,7 +332,7 @@ public:
    *  @param direction In IJK, x(0), y(1) or z(2).
    *  @return Array with the sizes.
    */
-  const ArrOfDouble& get_delta(int direction) const
+  inline const ArrOfDouble &get_delta(int direction) const
   {
     assert(direction >= 0 && direction < 3);
     return delta_xyz_[direction];
@@ -366,16 +350,15 @@ public:
   {
     assert(direction >= 0 && direction < 3);
     if (!is_uniform(direction))
-      {
-        Cerr << "Error in Domaine_IJK::get_constant_delta: grid is not uniform in direction : " << direction << endl;
-        assert(0);
-        Process::exit();
-      }
+    {
+      Cerr << "Error in Domaine_IJK::get_constant_delta: grid is not uniform in direction : " << direction << endl;
+      assert(0);
+      Process::exit();
+    }
     return delta_xyz_[direction][0];
   }
 
   /*! @brief Fills the "delta" array with the size of the cells owned by the processor in the requested direction.
-   *
    *
    *  "delta" is redimensionned with the specified number of ghost cells and filled.
    *  If domain is periodic, takes periodic mesh size in ghost cells on first and last subdomain,
@@ -386,7 +369,7 @@ public:
    *  @param delta Size of cells in each direction
    */
   void get_local_mesh_delta(int direction, int ghost_cells,
-                            ArrOfDouble_with_ghost& delta) const;
+                            ArrOfDouble_with_ghost &delta) const;
 
   /*! @brief Fills an array containing the mapping of processors
    *
@@ -396,7 +379,7 @@ public:
    *
    *  @param mapping Table in which we'll copy the mapping
    */
-  inline void get_processor_mapping(IntTab& mapping) const { mapping = mapping_; }
+  inline void get_processor_mapping(IntTab &mapping) const { mapping = mapping_; }
 
   /*! @brief Returns the indices of the first cell in requested direction
    *         of every slices in this direction
@@ -404,7 +387,7 @@ public:
    *  @param direction In IJK, x(0), y(1) or z(2).
    *  @param tab Array in which we'll store the offsets in that direction
    */
-  inline void get_slice_offsets(int direction, ArrOfInt& tab) const
+  inline void get_slice_offsets(int direction, ArrOfInt &tab) const
   {
     assert(direction >= 0 && direction < 3);
     tab = offsets_all_slices_[direction];
@@ -417,42 +400,74 @@ public:
    *  @param loc In IJK, ELEM, NODES, FACES_I, FACES_J or FACES_K
    *  @param tab Array in which we'll store the number of slices in given direction
    */
-  void get_slice_size(int direction, Localisation loc, ArrOfInt& tab) const;
+  void get_slice_size(int direction, Localisation loc, ArrOfInt &tab) const;
 
   /*! @brief Return the global index of the processor according to its position.
    *
    *  @param slice Vector with the x, y, and z coordinate of the processor.
    *  @return mapping_(slice[0], slice[1], slice[2])
    */
-  inline int get_processor_by_ijk(const FixedVector<int, 3>& slice) const
-  {
-    return mapping_(slice[0], slice[1], slice[2]);
-  }
+  inline int get_processor_by_ijk(const FixedVector<int, 3> &slice) const { return mapping_(slice[0], slice[1], slice[2]); }
 
   /*! @brief Return the global index of the processor according to its position.
    *
-   *  @param slice_i First index of the processor in the global mapping
-   *  @param slice_j Second index of the processor in the global mapping
-   *  @param slice_k Third index of the processor in the global mapping
+   *  @param slice_i, slice_j, slice_k Indexes of the processor in the global mapping
    *  @return return mapping_(slice_i, slice_j, slice_k)
    */
-  inline int get_processor_by_ijk(int slice_i, int slice_j, int slice_k) const
-  {
-    return mapping_(slice_i, slice_j, slice_k);
-  }
+  inline int get_processor_by_ijk(int slice_i, int slice_j, int slice_k) const { return mapping_(slice_i, slice_j, slice_k); }
+
+  /*! @brief Returns the processor associated with slice indices i,j,k  accounting for periodicity
+   * e.g. a slice index -1 can refer to the last slice along a periodic direction.
+   */
+  int periodic_get_processor_by_ijk(int slice_i, int slice_j, int slice_k) const;
 
   /*! @brief Determines the dof of an element along a localisation
    *
    *  TODO: Not sure about the brief?
    *
-   *  @param i Local index of an element along x axis.
-   *  @param j Local index of an element along y axis.
-   *  @param k Local index of an element along z axis.
-   *  @param In IJK, ELEM, NODES, FACES_I, FACES_J or FACES_K.
-   *
+   *  @param i, j, k Local index of an element along each axis.
+   *  @param loc IJK, ELEM, NODES, FACES_I, FACES_J or FACES_K.
    *  @return A vector with the coordinates of dof
    */
   Vecteur3 get_coords_of_dof(int i, int j, int k, Localisation loc) const;
+
+  inline double get_coord_of_dof_along_dir(int dir, int i, Localisation loc) const;
+
+  /*! independent_index adds a ghost_size to the packed index.
+   * It is similar to the linear_index defined in IJK_Field_local_template, but with
+   * a universal, predefined ghost_size of 256 instead of a field-dependent ghost_size.
+   * Since the ghost_size_ value is larger than any ghost_size expected to be used in
+   * practice, any virtual cell can be represented by the independent index.
+   */
+  int get_independent_index(int i, int j, int k) const;
+  Int3 get_ijk_from_independent_index(int independent_index) const;
+
+  /*! signed_independent_index: encodes in the sign the phase of the cell in a
+   * two-phase flow: positive sign for phase 0, and negative sign for phase 1.
+   * With a cut-cell method, this can be used to disambiguate the sub-cell.
+   */
+  inline int get_signed_independent_index(int phase, int i, int j, int k) const { return (phase == 1) ? -1 - get_independent_index(i, j, k) : get_independent_index(i, j, k); }
+  inline int get_independent_index_from_signed_independent_index(int signed_independent_index) const { return (signed_independent_index < 0) ? -1 - signed_independent_index : signed_independent_index; }
+  inline int get_phase_from_signed_independent_index(int signed_independent_index) const { return (signed_independent_index < 0) ? 1 : 0; }
+
+  /*! Check whether the cell (i,j,k) is contained within the specified ghost along any direction. */
+  bool within_ghost(int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const;
+
+  /*! Check whether the cell (i,j,k) is contained within the specified ghost along a specific direction. */
+  bool within_ghost_along_dir(int dir, int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const;
+
+  template <int _DIR_>
+  bool within_ghost_(int i, int j, int k, int negative_ghost_size, int positive_ghost_size) const
+  {
+    int dir = static_cast<int>(_DIR_);
+    return within_ghost_along_dir(dir, i, j, k, negative_ghost_size, positive_ghost_size);
+  }
+
+  int correct_perio_i_local(int direction, int i) const;
+  int get_i_along_dir_no_perio(int direction, double coord_dir, Localisation loc) const;
+  int get_i_along_dir_perio(int direction, double coord_dir, Localisation loc) const;
+
+  Int3 get_ijk_from_coord(double coord_x, double coord_y, double coord_z, Localisation loc) const;
 
   /*! @brief Converts the ijk index of an element to a cell index.
    *
@@ -461,17 +476,11 @@ public:
    *  @param ijk Vector with the x, y, and z coordinates.
    *  @return The LOCAL index of an element.
    */
-  inline int convert_ijk_cell_to_packed(const FixedVector<int, 3> ijk) const
-  {
-    return convert_ijk_cell_to_packed(ijk[0], ijk[1], ijk[2]);
-  }
+  inline int convert_ijk_cell_to_packed(const FixedVector<int, 3> ijk) const { return convert_ijk_cell_to_packed(ijk[0], ijk[1], ijk[2]); }
 
   /*! @brief With three indices, find the local index of an element
    *
-   *  @param i Local index of an element along x axis.
-   *  @param j Local index of an element along y axis.
-   *  @param k Local index of an element along z axis.
-   *
+   *  @param i, j, k Local index of an element along each axis.
    *  @return The LOCAL index of an element.
    */
   int convert_ijk_cell_to_packed(int i, int j, int k) const;
@@ -489,17 +498,15 @@ public:
    *
    *  The element's coordinates can be outside of this processor's subdomain.
    *
-   *  @param x First coordinate of an item in the mesh.
-   *  @param y Second coordinate of an item in the mesh.
-   *  @param z Third coordinate of an item in the mesh.
+   *  @param x, y, z Coordinates of an item in the mesh.
    *  @param ijk_global The global coordinates of the cell.
    *  @param ijk_local The local coordinates of the cell.
    *  @param ijk_me A sort of 3D flag. Will be [1,1,1] if the element belongs to me.
    */
-  void search_elem(const double& x, const double& y, const double& z,
-                   FixedVector<int, 3>& ijk_global,
-                   FixedVector<int, 3>& ijk_local,
-                   FixedVector<int, 3>& ijk_me) const;
+  void search_elem(const double &x, const double &y, const double &z,
+                   FixedVector<int, 3> &ijk_global,
+                   FixedVector<int, 3> &ijk_local,
+                   FixedVector<int, 3> &ijk_me) const;
 
   /*! @brief Method returns true if periodic in this direction
    *  @param direction In IJK, x(0), y(1) or z(2).
@@ -526,9 +533,8 @@ public:
    */
   void update_volume_elem();
 
-  /*! @brief Returns volume_elem_
-   */
-  inline const DoubleVect& get_volume_elem() const
+  /*! @brief Returns volume_elem_ */
+  inline const DoubleVect &get_volume_elem() const
   {
     assert(volume_elem_.size_array() > 0 && "volume_elem_ is empty. Update before trying to read it.");
     assert(volume_elem_.size_array() == get_nb_elem_local() && "volume_elem_ is not up to date. Update before trying to read it.");
@@ -537,7 +543,6 @@ public:
   }
 
 private:
-
   /*! @brief  Coordinates of all nodes (when cell size is needed, take delta_xyz_ which is more accurate) in directions i, j and k.
    *
    * We have: node_coordinates_xyz_.size() == 3  (3 directions in space)
@@ -545,14 +550,16 @@ private:
    * The coordinate of the last node is the end coordinate of the mesh: if mesh is periodic, the last
    * node coordinate is not equal to the first one.
    */
-  VECT(ArrOfDouble) node_coordinates_xyz_;
+  VECT(ArrOfDouble)
+  node_coordinates_xyz_;
 
   /*! @brief Mesh cell sizes for the entire mesh.
    *
    *  The size of each array is equal to the total number of cells in each direction.
    *  If possible, this data is not computed from nodes (less truncation errors for uniform meshes)
    */
-  VECT(ArrOfDouble) delta_xyz_;
+  VECT(ArrOfDouble)
+  delta_xyz_;
   /*! Number of processors in each direction */
   FixedVector<int, 3> nproc_per_direction_;
 
@@ -560,10 +567,12 @@ private:
   IntTab mapping_;
 
   /*! @brief For each direction, offsets of all slices */
-  VECT(ArrOfInt) offsets_all_slices_;
+  VECT(ArrOfInt)
+  offsets_all_slices_;
 
   /*! @brief For each direction, size of all slices */
-  VECT(ArrOfInt) sizes_all_slices_;
+  VECT(ArrOfInt)
+  sizes_all_slices_;
 
   /*! @brief Stores the uniform flag for each direction */
   bool uniform_[3];
