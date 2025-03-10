@@ -57,8 +57,8 @@ public:
       Process::exit("Not enough memory ");
     return xxx->numero();
   }
-  Sortie &printOn(Sortie &os) const override { return os; }
-  Entree &readOn(Entree &is) override { return is; }
+  Sortie& printOn(Sortie& os) const override { return os; }
+  Entree& readOn(Entree& is) override { return is; }
   //
 
   IJK_Field_vector()
@@ -68,32 +68,30 @@ public:
     loc_ = Entity::ELEMENT;
   }
 
-  IJK_Field_vector() { nature_ = Nature_du_champ::vectoriel; }
-
   static int size() { return N; }
 
-  Entity &localisation() { return loc_; }
-  const Entity &localisation() const { return loc_; }
+  Entity& localisation() { return loc_; }
+  const Entity& localisation() const { return loc_; }
 
-  IJK_Field_template<T, TRUSTArray<T>> &operator[](int i)
+  IJK_Field_template<T, TRUSTArray<T>>& operator[](int i)
   {
     assert(i >= 0 && i < N);
     return *this->data_[i];
   }
 
-  const IJK_Field_template<T, TRUSTArray<T>> &operator[](int i) const
+  const IJK_Field_template<T, TRUSTArray<T>>& operator[](int i) const
   {
     assert(i >= 0 && i < N);
     return *this->data_[i];
   }
 
-  std::shared_ptr<IJK_Field_template<T, TRUSTArray<T>>> &get_ptr(int i)
+  std::shared_ptr<IJK_Field_template<T, TRUSTArray<T>>>& get_ptr(int i)
   {
     assert(i >= 0 && i < N);
     return this->data_[i];
   }
 
-  const std::shared_ptr<IJK_Field_template<T, TRUSTArray<T>>> &get_ptr(int i) const
+  const std::shared_ptr<IJK_Field_template<T, TRUSTArray<T>>>& get_ptr(int i) const
   {
     assert(i >= 0 && i < N);
     return this->data_[i];
@@ -105,7 +103,7 @@ public:
       this->data_[i]->echange_espace_virtuel(this->data_[i]->ghost());
   }
 
-  const Domaine_IJK &get_domaine() const
+  const Domaine_IJK& get_domaine() const
   {
     return this->data_[0]->get_domaine();
   }
@@ -115,7 +113,7 @@ private:
 };
 
 template <class T, int N>
-inline IJK_Field_vector<double, N> operator-(const IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline IJK_Field_vector<double, N> operator-(const IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -124,7 +122,7 @@ inline IJK_Field_vector<double, N> operator-(const IJK_Field_vector<double, N> &
 }
 
 template <class T, int N>
-inline IJK_Field_vector<double, N> operator+(const IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline IJK_Field_vector<double, N> operator+(const IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -133,7 +131,7 @@ inline IJK_Field_vector<double, N> operator+(const IJK_Field_vector<double, N> &
 }
 
 template <class T, int N>
-inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -142,7 +140,7 @@ inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N> &
 }
 
 template <class T, int N>
-inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N> &v1, const IJK_Field_template<T, TRUSTArray<T>> &x)
+inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N>& v1, const IJK_Field_template<T, TRUSTArray<T>>& x)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -151,7 +149,7 @@ inline IJK_Field_vector<double, N> operator*(const IJK_Field_vector<double, N> &
 }
 
 template <class T, int N>
-inline const IJK_Field_vector<double, N> &operator*=(IJK_Field_vector<double, N> &v1, const IJK_Field_template<T, TRUSTArray<T>> &x)
+inline const IJK_Field_vector<double, N>& operator*=(IJK_Field_vector<double, N>& v1, const IJK_Field_template<T, TRUSTArray<T>>& x)
 {
   for (int i = 0; i < N; i++)
     v1[i] *= x;
@@ -159,7 +157,7 @@ inline const IJK_Field_vector<double, N> &operator*=(IJK_Field_vector<double, N>
 }
 
 template <class T, int N>
-inline const IJK_Field_template<T, TRUSTArray<T>> &produit_scalaire(IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline const IJK_Field_template<T, TRUSTArray<T>>& produit_scalaire(IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   IJK_Field_template<T, TRUSTArray<T>> resu;
   for (int i = 0; i < N; i++)
@@ -168,7 +166,7 @@ inline const IJK_Field_template<T, TRUSTArray<T>> &produit_scalaire(IJK_Field_ve
 }
 
 template <class T, int N>
-inline const IJK_Field_vector<double, N> &produit_scalaire(IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, 1> &v2)
+inline const IJK_Field_vector<double, N>& produit_scalaire(IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, 1>& v2)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -177,7 +175,7 @@ inline const IJK_Field_vector<double, N> &produit_scalaire(IJK_Field_vector<doub
 }
 
 template <class T, int N>
-inline const IJK_Field_vector<double, N> &produit_scalaire(IJK_Field_vector<double, N> &v1, const double v2)
+inline const IJK_Field_vector<double, N>& produit_scalaire(IJK_Field_vector<double, N>& v1, const double v2)
 {
   IJK_Field_vector<double, N> resu;
   for (int i = 0; i < N; i++)
@@ -186,7 +184,7 @@ inline const IJK_Field_vector<double, N> &produit_scalaire(IJK_Field_vector<doub
 }
 
 template <class T, int N>
-inline const IJK_Field_vector<double, N> &operator-=(IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline const IJK_Field_vector<double, N>& operator-=(IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   for (int i = 0; i < N; i++)
     v1[i] -= v2[i];
@@ -194,7 +192,7 @@ inline const IJK_Field_vector<double, N> &operator-=(IJK_Field_vector<double, N>
 }
 
 template <class T, int N>
-inline const IJK_Field_vector<double, N> &operator+=(IJK_Field_vector<double, N> &v1, const IJK_Field_vector<double, N> &v2)
+inline const IJK_Field_vector<double, N>& operator+=(IJK_Field_vector<double, N>& v1, const IJK_Field_vector<double, N>& v2)
 {
   for (int i = 0; i < N; i++)
     v1[i] += v2[i];
