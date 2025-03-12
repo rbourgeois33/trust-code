@@ -103,10 +103,7 @@ public:
       this->data_[i]->echange_espace_virtuel(this->data_[i]->ghost());
   }
 
-  const Domaine_IJK& get_domaine() const
-  {
-    return this->data_[0]->get_domaine();
-  }
+  inline const Domaine_IJK& get_domain() const { return this->data_[0]->get_domain(); }
 
 private:
   Entity loc_;
