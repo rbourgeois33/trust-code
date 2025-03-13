@@ -31,9 +31,9 @@ class Champ_base;
 class Champs_compris_IJK : public Champs_compris_IJK_base
 {
 public:
-  void ajoute_champ_vectoriel(const IJK_Field_vector3_double &champ);
-  bool has_champ_vectoriel(const Motcle &nom) const;
-  const IJK_Field_vector3_double &get_champ_vectoriel(const Motcle &nom) const;
+  void ajoute_champ_vectoriel(const IJK_Field_vector3_double& champ);
+  bool has_champ_vectoriel(const Motcle& nom) const;
+  const IJK_Field_vector3_double& get_champ_vectoriel(const Motcle& nom) const;
   const Noms liste_noms_compris_vectoriel() const;
 
 private:

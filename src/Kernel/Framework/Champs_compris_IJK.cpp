@@ -17,14 +17,14 @@
 
 /** A vectorial field is considered present in the structure if all its three components are there
  */
-bool Champs_compris_IJK::has_champ_vectoriel(const Motcle &nom) const
+bool Champs_compris_IJK::has_champ_vectoriel(const Motcle& nom) const
 {
   assert(nom != "??");
   auto item = liste_champs_vecto_.find(nom.getString());
   return item != liste_champs_vecto_.end();
 }
 
-const IJK_Field_vector3_double &Champs_compris_IJK::get_champ_vectoriel(const Motcle &nom) const
+const IJK_Field_vector3_double& Champs_compris_IJK::get_champ_vectoriel(const Motcle& nom) const
 {
   assert(nom != "??");
   auto item = liste_champs_vecto_.find(nom.getString());
@@ -33,7 +33,7 @@ const IJK_Field_vector3_double &Champs_compris_IJK::get_champ_vectoriel(const Mo
   throw std::runtime_error(std::string("Vectoriel field ") + nom.getString() + std::string(" not found !"));
 }
 
-void Champs_compris_IJK::ajoute_champ_vectoriel(const IJK_Field_vector3_double &champ)
+void Champs_compris_IJK::ajoute_champ_vectoriel(const IJK_Field_vector3_double& champ)
 {
   // Adding a field name referring to champ inside liste_champs_ dictionnary
   auto add_key = [&](const Nom &n)
@@ -50,7 +50,7 @@ void Champs_compris_IJK::ajoute_champ_vectoriel(const IJK_Field_vector3_double &
   add_key(champ.le_nom());
 
   // ...its synonyms...
-  const Noms &syno = champ.get_synonyms();
+  const Noms& syno = champ.get_synonyms();
   int nb_syno = syno.size();
   for (int s = 0; s < nb_syno; s++)
     add_key(syno[s]);
