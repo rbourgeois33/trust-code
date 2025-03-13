@@ -247,7 +247,7 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
 // Resolution
 int Solv_AMGX::solve(ArrOfDouble& residu)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   mapToDevice(rhs_);
   computeOnTheDevice(lhs_);
   statistiques().begin_count(gpu_library_counter_);

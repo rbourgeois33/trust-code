@@ -162,7 +162,7 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
                                                const Stat_Counter_Id& cnt_min_id,
                                                const Stat_Counter_Id& cnt_max_id) const
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   static_assert(TYP_IDX >= 1 && TYP_IDX <= 4, "Invalid type index!");
   MPI_Datatype mpi_typ = TYP_IDX==1 ? MPI_INT : (TYP_IDX==2 ? MPI_LONG : (TYP_IDX==3 ? MPI_DOUBLE : MPI_FLOAT));
   if (n <= 0) return;
@@ -170,24 +170,24 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
     {
     case Comm_Group::COLL_SUM:
       statistiques().begin_count(cnt_sum_id);
-      statistics.begin_count(STD_COUNTERS::mpi_sumdouble_);
+      statistics.begin_count(STD_COUNTERS::mpi_sumdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_SUM, mpi_comm_));
       statistiques().end_count(cnt_sum_id);
-      statistics.end_count(STD_COUNTERS::mpi_sumdouble_);
+      statistics.end_count(STD_COUNTERS::mpi_sumdouble);
       break;
     case Comm_Group::COLL_MIN:
       statistiques().begin_count(cnt_min_id);
-      statistics.begin_count(STD_COUNTERS::mpi_mindouble_);
+      statistics.begin_count(STD_COUNTERS::mpi_mindouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MIN, mpi_comm_));
       statistiques().end_count(cnt_min_id);
-      statistics.end_count(STD_COUNTERS::mpi_mindouble_);
+      statistics.end_count(STD_COUNTERS::mpi_mindouble);
       break;
     case Comm_Group::COLL_MAX:
       statistiques().begin_count(cnt_max_id);
-      statistics.begin_count(STD_COUNTERS::mpi_maxdouble_);
+      statistics.begin_count(STD_COUNTERS::mpi_maxdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MAX, mpi_comm_));
       statistiques().end_count(cnt_max_id);
-      statistics.end_count(STD_COUNTERS::mpi_maxdouble_);
+      statistics.end_count(STD_COUNTERS::mpi_maxdouble);
       break;
     case Comm_Group::COLL_PARTIAL_SUM:
       internal_collective(x, resu, n, &op, -1 /* only one operation */, 0 /* recursion level */);
@@ -951,7 +951,7 @@ trustIdType Comm_Group_MPI::mppartial_sum_impl(trustIdType x) const
 {
   Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_partialsum_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_partialsum_);
+  statistics.begin_count(STD_COUNTERS::mpi_partialsum);
   trustIdType somme = 0;
   MPI_Status status;
   int tag = get_new_tag();

@@ -516,14 +516,14 @@ double residual(const Matrice_Base& a, const DoubleVect& b, const DoubleVect& x)
 }
 double residual_device(const GlobalMatrix<double>& a, const GlobalVector<double>& b, const GlobalVector<double>& x, GlobalVector<double>& e)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(gpu_library_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_library_);
+  statistics.begin_count(STD_COUNTERS::gpu_library);
   a.Apply(x, &e);
   e.ScaleAdd(-1.0, b);
   double norm = e.Norm();
   statistiques().end_count(gpu_library_counter_);
-  statistics.end_count(STD_COUNTERS::gpu_library_);
+  statistics.end_count(STD_COUNTERS::gpu_library);
   return norm;
 }
 #endif
@@ -1002,10 +1002,10 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 #endif
   tick = rocalution_time();
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice_);
+  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
   mat.MoveToAccelerator(); // Important: move mat to device so after ls is built on device (best for performance)
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice_,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
+  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
   Cout << "[rocALUTION] Time to copy matrix on device: " << (rocalution_time() - tick) / 1e6 << finl;
 
   tick = rocalution_time();

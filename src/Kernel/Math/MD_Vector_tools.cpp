@@ -263,7 +263,7 @@ void MD_Vector_tools::echange_espace_virtuel1_(const MD_Vector& md, TRUSTVect<_T
 template<typename _TYPE_>
 inline void MD_Vector_tools::call_echange_espace_virtuel(TRUSTVect<_TYPE_>& v, MD_Vector_tools::Operations_echange opt)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
+  Perf_counters& statistics = Perf_counters::getInstance();
   const MD_Vector& md = v.get_md_vector();
   if (md.non_nul() && Process::is_parallel())
     {
