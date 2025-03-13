@@ -277,7 +277,7 @@ private:
   std::chrono::duration<double> time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
   std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  std::map <std::string, Counter * const> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
 };
 
 #endif

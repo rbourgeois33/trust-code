@@ -348,11 +348,12 @@ void Perf_counters::create_custom_counter(std::string counter_description , int 
     Process::exit("Custom counters should not be set with a zero or negative level value");
   if (custom_counter_map_str_to_counter_.count(counter_description)==0)
     {
-      std::string error_msg = "Another custom counter already has the same name that the one you have given to tour new counter: " + counter_description + "\n";
+      std::string error_msg = "Another custom counter already has the same name that the one you have given to your new counter: " + counter_description + "\n";
       Process::exit(error_msg);
     }
-  Counter* const new_counter = new Counter(to_print_in_global_TU,counter_level, counter_description, counter_family ,is_comm);
-  custom_counter_map_str_to_counter_.emplace(std::piecewise_construct, std::forward_as_tuple(counter_description), std::forward_as_tuple(new_counter));
+  auto result =custom_counter_map_str_to_counter_.emplace(counter_description, new Counter(to_print_in_global_TU,counter_level, counter_description, counter_family ,is_comm));
+  if (!result.second)
+    Process::exit("Failed to insert the new custom counter in the custom counter map");
 }
 
 void Perf_counters::print_in_global_TU(const STD_COUNTERS& name, bool to_print_or_not_to_print)
@@ -377,7 +378,7 @@ void Perf_counters::check_begin(Counter* const c, int counter_lvl, std::chrono::
       if (counter_lvl != expected_lvl)
         {
           std::stringstream error_msg ;
-          error_msg << "The counter you are trying to start does not have the expected level, counter running: " << last_opened_counter_->description_ << " counter that you try to open:" << c->description_  << " ; expected level: "<<  expected_lvl << std::endl ;
+          error_msg << "The counter you are trying to start does not have the expected level, counter running: " << last_opened_counter_->description_ << " counter that you try to open: " << c->description_  << " ; expected level: "<<  expected_lvl << std::endl ;
           Process::exit(error_msg.str());
         }
       if (time_loop_)
