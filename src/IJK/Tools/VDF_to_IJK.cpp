@@ -199,11 +199,6 @@ void VDF_to_IJK::initialize(const Domaine_VF& domaine_vf, const Domaine_IJK& dom
   VECT(ArrOfInt) to_send(np);
   for (int pe = 0; pe < np; pe++)
     {
-
-    }
-
-  for (int pe = 0; pe < np; pe++)
-    {
       tri_lexicographique_tableau(all_data[pe]);
       const int n = all_data[pe].dimension(0);
       if (n > 0)
