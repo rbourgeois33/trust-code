@@ -720,7 +720,6 @@ int Postraitement::lire_motcle_non_standard(const Motcle &mot, Entree &s)
     EChaine IN2(in);
     Interprete_bloc::interprete_courant().interpreter_bloc(IN2, Interprete_bloc::BLOC_EOF, 0);
     le_domaine_ = ref_cast(Domaine, Interprete_bloc::objet_global(nom_du_nouveau_dom));
-
     return 1;
   }
   else if (keyword == "Int_Probes")
@@ -1669,10 +1668,8 @@ int Postraitement::postraiter_tableaux()
     const int ref_size = 0;
 
     format_post_->ecrire_item_int(id_item, id_du_domaine, id_domaine, localisation, reference, val, ref_size);
-
     ++itr2;
   }
-
   return 1;
 }
 
