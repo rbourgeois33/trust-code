@@ -223,8 +223,8 @@ void ProblemTrio::terminate()
       Perf_counters& statistics = Perf_counters::getInstance();
       statistiques().dump("Statistiques Resolution", mode_append);
       print_statistics_analyse("Statistiques Resolution", 1);
-      statistics.print_global_TU("Computation time loop statistics",0);
-      statistics.print_performance_to_csv("Computation time loop statistics",0);
+      statistics.print_global_TU("Time loop statistics",0);
+      statistics.print_performance_to_csv("Time loop statistics",0);
     }
   if(p)
     {

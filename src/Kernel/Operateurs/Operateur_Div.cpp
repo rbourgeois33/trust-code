@@ -74,8 +74,9 @@ DoubleTab& Operateur_Div::calculer(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
   Perf_counters& statistics = Perf_counters::getInstance();
+  int l = statistics.get_last_opened_counter_level();
   statistiques().begin_count(divergence_counter_);
-  statistics.begin_count(STD_COUNTERS::divergence);
+  statistics.begin_count(STD_COUNTERS::divergence,l+1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(divergence_counter_);
   statistics.end_count(STD_COUNTERS::divergence);

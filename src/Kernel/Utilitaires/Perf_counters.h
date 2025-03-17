@@ -255,6 +255,8 @@ public:
 
   inline void set_nb_time_steps_elapsed(unsigned int n) {nb_steps_elapsed_ = n;}
 
+  int get_last_opened_counter_level() const ;
+
   std::string get_os() const;
 
   std::string get_cpu() const;

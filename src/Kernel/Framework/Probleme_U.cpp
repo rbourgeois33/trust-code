@@ -387,8 +387,8 @@ bool Probleme_U::run()
 
       statistiques().dump("Statistiques de resolution du probleme", 1);      // Into _csv.TU file
       print_statistics_analyse("Statistiques de resolution du probleme", 1); // Into        .TU file
-      statistics.print_global_TU("Computation time loop statistics", 1);
-      statistics.print_performance_to_csv("Computation time loop statistics", 1);
+      statistics.print_global_TU("Time loop statistics", 1);
+      statistics.print_performance_to_csv("Time loop statistics", 1);
     }
 
   // Reset the CPU counters
