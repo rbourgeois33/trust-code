@@ -95,22 +95,24 @@ protected:
 Counter::Counter(bool to_print_in_global_TU, int counter_level, std::string counter_name, std::string counter_family , bool is_comm)
   :description_(counter_name), family_(counter_family), is_comm_(is_comm)
 {
-  level_ = counter_level;
-  count_ = 0;
-  quantity_ = 0;
-  avg_time_per_step_ = 0.0 ;
-  min_time_per_step_ = 0.0 ;
-  max_time_per_step_ = 0.0 ;
-  sd_time_per_step_ = 0.0 ;
-  open_time_ts_ = std::chrono::time_point<std::chrono::high_resolution_clock>();
-  total_time_ = std::chrono::duration<double>::zero() ;
-  time_alone_ = std::chrono::duration<double>::zero() ;
-  time_ts_ = std::chrono::duration<double>::zero() ;
-  last_open_time_alone_= std::chrono::time_point<std::chrono::high_resolution_clock>();
-  last_open_time_ = std::chrono::time_point<std::chrono::high_resolution_clock>();
-  parent_ = nullptr;
-  to_print_in_global_TU_=to_print_in_global_TU;
-  is_running_ = false;
+  {
+    level_ = counter_level;
+    count_ = 0;
+    quantity_ = 0;
+    avg_time_per_step_ = 0.0 ;
+    min_time_per_step_ = 0.0 ;
+    max_time_per_step_ = 0.0 ;
+    sd_time_per_step_ = 0.0 ;
+    open_time_ts_ = std::chrono::time_point<std::chrono::high_resolution_clock>();
+    total_time_ = std::chrono::duration<double>::zero() ;
+    time_alone_ = std::chrono::duration<double>::zero() ;
+    time_ts_ = std::chrono::duration<double>::zero() ;
+    last_open_time_alone_= std::chrono::time_point<std::chrono::high_resolution_clock>();
+    last_open_time_ = std::chrono::time_point<std::chrono::high_resolution_clock>();
+    parent_ = nullptr;
+    to_print_in_global_TU_=to_print_in_global_TU;
+    is_running_ = false;
+  }
 }
 
 void Counter::begin_count_(int counter_level, std::chrono::time_point<std::chrono::high_resolution_clock> t)
@@ -214,7 +216,7 @@ void Counter::reset()
  */
 
 Perf_counters::Perf_counters()
-  : std_counters_
+  :  std_counters_
 {
   // Macro counters
   new Counter(false,-1, "Total time"),
@@ -269,63 +271,6 @@ Perf_counters::Perf_counters()
   new Counter(true, 2, "Scatter::read_domaine"),
 }
 {
-  /*
-  // Macro counters
-  std_counters_[static_cast<int>(STD_COUNTERS::total_execution_time)]= new Counter(false,-1, "Total time");
-  std_counters_[static_cast<int>(STD_COUNTERS::computation_start_up)] = new Counter(true,0, "Prepare computation");
-  std_counters_[static_cast<int>(STD_COUNTERS::timeloop)] = new Counter(false,0, "Time loop");
-  std_counters_[static_cast<int>(STD_COUNTERS::system_solver)] =new Counter(true,1, "Number of linear system resolutions Ax=B");
-  std_counters_[static_cast<int>(STD_COUNTERS::petsc_solver)] =new Counter(true,1, "Petsc solver");
-  std_counters_[static_cast<int>(STD_COUNTERS::implicit_diffusion)] =new Counter(true,1, "Number of linear system resolutions for implicit diffusion:");
-  std_counters_[static_cast<int>(STD_COUNTERS::compute_dt)] =new Counter(true, 1, "Computation of the time step dt");
-  std_counters_[static_cast<int>(STD_COUNTERS::turbulent_viscosity)] =new Counter(true, 1, "Turbulence model::update");
-  std_counters_[static_cast<int>(STD_COUNTERS::convection)] =new Counter(true, 1, "Convection operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::diffusion)] =new Counter(true, 1, "Diffusion operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::gradient)] =new Counter(true, 1, "Gradient operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::divergence)] =new Counter(true, 1, "Divergence operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::rhs)] =new Counter(true, 1, "Source_terms::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::postreatment)] =new Counter(true, 1, "Post-treatment");
-  std_counters_[static_cast<int>(STD_COUNTERS::backup_file)] =new Counter(true, 1, "Back-up operations");
-  std_counters_[static_cast<int>(STD_COUNTERS::restart)] =new Counter(true, 1,"Read file for restart");
-  std_counters_[static_cast<int>(STD_COUNTERS::matrix_assembly)] =new Counter(true, 1, "Number of matrix assemblies for the implicit scheme:");
-  std_counters_[static_cast<int>(STD_COUNTERS::update_variables)] =new Counter(true, 1, "Update");
-  // MPI communication counters
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_sendrecv)] =new Counter(false, 2, "MPI_send_recv", "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_send)] =new Counter(false, 2, "MPI_send",      "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_recv)] =new Counter(false, 2, "MPI_recv",      "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_bcast)] =new Counter(false, 2, "MPI_broadcast", "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_alltoall)] =new Counter(false, 2, "MPI_alltoall",  "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_allgather)] =new Counter(false, 2, "MPI_allgather", "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_gather)] =new Counter(false, 2, "MPI_gather", "MPI_sendrecv", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_partialsum)]=new Counter(false, 2, "MPI_partialsum","MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_sumdouble)] =new Counter(false, 2, "MPI_sumdouble", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_mindouble)] =new Counter(false, 2, "MPI_mindouble", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_maxdouble)] =new Counter(false, 2, "MPI_maxdouble", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_sumfloat)] =new Counter(false, 2, "MPI_sumfloat", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_minfloat)] =new Counter(false, 2, "MPI_minfloat", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_maxfloat)] =new Counter(false, 2, "MPI_maxfloat", "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_sumint)] =new Counter(false, 2, "MPI_sumint",    "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_minint)] =new Counter(false, 2, "MPI_minint",    "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_maxint)] =new Counter(false, 2, "MPI_maxint",    "MPI_allreduce", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::mpi_barrier)] =new Counter(false, 2, "MPI_barrier",   "MPI_allreduce", true);
-  // GPU
-  std_counters_[static_cast<int>(STD_COUNTERS::gpu_library)] =new Counter(true, 2, "GPU_library",       "GPU_library");
-  std_counters_[static_cast<int>(STD_COUNTERS::gpu_kernel)]   =new Counter(true, 2, "GPU_kernel",        "GPU_kernel");
-  std_counters_[static_cast<int>(STD_COUNTERS::gpu_copytodevice)] =new Counter(true, 2, "GPU_copyToDevice",  "GPU_copy");
-  std_counters_[static_cast<int>(STD_COUNTERS::gpu_copyfromdevice)] =new Counter(true, 2, "GPU_copyFromDevice","GPU_copy");
-  // Count the writing time in EcrireFicPartageXXX (big chunk of data in files XYZ or LATA)
-  // For those two counters, quantity corresponds to the amount of written bytes
-  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageMPIIO)] =new Counter(true, 2, "MPI_File_write_all", "IO"); // Call on each processor
-  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageBin)] =new Counter(true, 2, "write", "IO"); // Call on master
-  // Execution of Scatter::interpreter
-  std_counters_[static_cast<int>(STD_COUNTERS::interprete_scatter)] =new Counter(true, 2, "Scatter_interprete");
-  // Problemes
-  // std_counters_[STD_COUNTERS::fluid_problem_] =new Counter(true, 3, "Fluid problem"));
-  // std_counters_[STD_COUNTERS::fuel_problem_] =new Counter(true, 3, "Fuel problem"));
-  // Appels a DoubleVect::echange_espace_virtuel()
-  std_counters_[static_cast<int>(STD_COUNTERS::virtual_swap)] =new Counter(true, 2, "DoubleVect/IntVect::virtual_swap", "None", true);
-  std_counters_[static_cast<int>(STD_COUNTERS::read_scatter)] =new Counter(true, 2, "Scatter::lire_domaine");
-  */
   nb_steps_elapsed_ = 3;
   end_cache_=false;
   time_loop_=false;
@@ -765,7 +710,8 @@ void Perf_counters::restart_counters()
       while (c !=nullptr )
         {
           c->last_open_time_ = t_restart;
-          c->open_time_ts_ = t_restart;
+          if (time_loop_)
+            c->open_time_ts_ = t_restart;
           c = c->parent_;
         }
     }
@@ -805,7 +751,6 @@ static void build_line_csv(std::stringstream& lines, const std::array<std::strin
 
 void Perf_counters::print_performance_to_csv(const std::string& message,const bool mode_append)
 {
-  stop_counters();
   assert(!message.empty());
   std::stringstream perfs;   ///< Stringstream that contains stats for each processor
   std::stringstream perfs_globales;   ///< Stringstream that contains stats average on the processors : processor number = -1
@@ -1089,8 +1034,6 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
   file << perfs_globales.str();
   file << perfs.str();
   file.syncfile();
-  restart_counters();
-
 }
 
 /*!@brief Function used for computing communication statistics in the global.TU
@@ -1143,7 +1086,6 @@ inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time,
 void Perf_counters::print_global_TU(const std::string& message, const bool mode_append)
 {
   assert(!message.empty());
-  stop_counters();
   std::stringstream perfs_TU;   ///< Stringstream that contains algomerated stats that will be printed in the .TU
   std::stringstream perfs_GPU;   ///< Stringstream that contains algomerated stats that will be printed in the .TU
   std::stringstream perfs_IO;   ///< Stringstream that contains algomerated stats that will be printed in the .TU
@@ -1523,8 +1465,15 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
   file << perfs_GPU.str();
   file << captions.str();
   file.syncfile();
+}
 
-  restart_counters();
+void Perf_counters::print_TU_files(const std::string& message, const bool mode_append)
+{
+  stop_counters();
+  print_global_TU(message, mode_append);
+  print_performance_to_csv(message, mode_append);
+  reset_counters();
+  counters_stop_=false;
 }
 
 

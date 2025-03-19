@@ -187,12 +187,10 @@ bool ProblemTrio::initialize()
     {
       statistiques().dump("Statistiques d'initialisation du calcul", 0);
       print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
-      statistics.print_global_TU("Computation start-up statistics",0);
-      statistics.print_performance_to_csv("Computation start-up statistics",0);
+      statistics.print_TU_files("Computation start-up statistics",0);
     }
   statistiques().reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
-  statistics.reset_counters();
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
@@ -223,8 +221,7 @@ void ProblemTrio::terminate()
       Perf_counters& statistics = Perf_counters::getInstance();
       statistiques().dump("Statistiques Resolution", mode_append);
       print_statistics_analyse("Statistiques Resolution", 1);
-      statistics.print_global_TU("Time loop statistics",0);
-      statistics.print_performance_to_csv("Time loop statistics",0);
+      statistics.print_TU_files("Time loop statistics",0);
     }
   if(p)
     {

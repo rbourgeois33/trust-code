@@ -132,22 +132,6 @@ public:
    */
   void begin_count(const std::string& custom_count_name, int counter_lvl= -100000);
 
-  /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
-   *
-   * @param c counter you try to open
-   * @param counter_lvl
-   * @param t time of opening
-   */
-  void check_begin(Counter* const c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
-
-  /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
-   *
-   * @param c counter you try to close
-   * @param t time of closing
-   */
-  void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
-
-
   /*! @brief End the count of a counter and update the counter values
    *
    * @param c is the counter to end the count
@@ -188,17 +172,10 @@ public:
     nb_steps_elapsed_ = time_step_elapsed;
   }
 
-  /*! @brief Create the csv.TU file.
+  /*! @brief Function that encapsulate the two functions that writes the TU files
    *
-   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
    */
-  void print_performance_to_csv(const std::string& message, const bool mode_append);
-
-  /*! @brief Create the global .Tu file with agglomerated stats
-   *
-   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
-   */
-  void print_global_TU(const std::string& message, const bool mode_append);
+  void print_TU_files(const std::string& message, const bool mode_append);
 
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the standard counter call name
    *
@@ -257,13 +234,7 @@ public:
 
   int get_last_opened_counter_level() const ;
 
-  std::string get_os() const;
 
-  std::string get_cpu() const;
-
-  std::string get_gpu() const;
-
-  std::string get_date() const;
 
 private:
 
@@ -280,6 +251,36 @@ private:
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
   std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
   std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  /*! @brief Create the csv.TU file.
+   *
+   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+   */
+  void print_performance_to_csv(const std::string& message, const bool mode_append);
+
+  /*! @brief Create the global .Tu file with agglomerated stats
+   *
+   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+   */
+  void print_global_TU(const std::string& message, const bool mode_append);
+  std::string get_os() const;
+  std::string get_cpu() const;
+  std::string get_gpu() const;
+  std::string get_date() const;
+  /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
+   *
+   * @param c counter you try to open
+   * @param counter_lvl
+   * @param t time of opening
+   */
+  void check_begin(Counter* const c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+
+  /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
+   *
+   * @param c counter you try to close
+   * @param t time of closing
+   */
+  void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+
 };
 
 #endif

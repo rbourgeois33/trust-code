@@ -265,11 +265,9 @@ bool Probleme_U::run()
 
       statistiques().dump("Statistiques d'initialisation du calcul", 0);
       print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
-      statistics.print_performance_to_csv("Computation start-up statistics", 0);
-      statistics.print_global_TU("Computation start-up statistics", 0);
+      statistics.print_TU_files("Computation start-up statistics", 0);
     }
   statistiques().reset_counters();
-  statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
 
 #ifdef VTRACE
@@ -387,13 +385,11 @@ bool Probleme_U::run()
 
       statistiques().dump("Statistiques de resolution du probleme", 1);      // Into _csv.TU file
       print_statistics_analyse("Statistiques de resolution du probleme", 1); // Into        .TU file
-      statistics.print_global_TU("Time loop statistics", 1);
-      statistics.print_performance_to_csv("Time loop statistics", 1);
+      statistics.print_TU_files("Time loop statistics", 1);
     }
 
   // Reset the CPU counters
   statistiques().reset_counters();
-  statistics.reset_counters();
   statistiques().begin_count(temps_total_execution_counter_);
 
   return ok;
