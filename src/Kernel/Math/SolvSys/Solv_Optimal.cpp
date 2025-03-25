@@ -84,10 +84,10 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
 
       solveur.resoudre_systeme(matrice,secmem,solution);
       statistiques().end_count(solv_sys_counter_l);
-      statistics.end_count("SolveurSys::resoudre_systeme");
+      statistics.end_count("Custom solver");
       Stat_Results stat_resol;
       statistiques().get_stats(solv_sys_counter_l, stat_resol);
-      t = statistics.get_time_since_last_open("SolveurSys::resoudre_systeme");
+      t = statistics.get_time_since_last_open("Custom solver");
       // on recupere un delta time et non un time absolu !!
       double time_resol=stat_resol.time-stat_resol_0.time;
       time_resol=t-t_0;

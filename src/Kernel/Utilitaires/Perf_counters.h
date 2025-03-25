@@ -86,6 +86,14 @@ enum class STD_COUNTERS : unsigned int
 class Perf_counters
 {
 public:
+  using clock = std::chrono::high_resolution_clock;
+  using time_point = std::chrono::time_point<clock>;
+  using duration = std::chrono::duration<double>;
+  inline time_point now()
+  {
+    return clock::now();
+  }
+
 
   /*! @brief The class Perf_counters is based on a singleton pattern. To access to the unique object inside the code, use the getInstance() function
    *
@@ -218,18 +226,6 @@ public:
    */
   void compute_avg_min_max_var_per_step(unsigned int tstep);
 
-  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
-   *
-   * @return the reference of a the counter object associated with STD_COUNTERS::name
-   */
-  inline Counter* access_std_counter(const STD_COUNTERS name) {return std_counters_[static_cast<int>(name)];}
-
-  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
-   *
-   * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
-   */
-  inline Counter* access_custom_counter(const std::string name) {return custom_counter_map_str_to_counter_.at(name);}
-
   inline void set_nb_time_steps_elapsed(unsigned int n) {nb_steps_elapsed_ = n;}
 
   int get_last_opened_counter_level() const ;
@@ -246,11 +242,12 @@ private:
   bool end_cache_; ///< A flag used to know if the two first time steps are over or not
   bool time_loop_; ///< A flag used to know if we are inside the time loop
   bool counters_stop_;  ///< A flag used to know if the counters are paused or not
-  std::chrono::duration<double> computation_time_; ///< Used to compute the total time of the simulation.
-  std::chrono::duration<double> time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
+  duration computation_time_; ///< Used to compute the total time of the simulation.
+  duration time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
   std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
   std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  int max_str_lenght_;
   /*! @brief Create the csv.TU file.
    *
    * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
@@ -280,6 +277,18 @@ private:
    * @param t time of closing
    */
   void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+
+  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+   *
+   * @return the reference of a the counter object associated with STD_COUNTERS::name
+   */
+  inline Counter* get_counter(const STD_COUNTERS name) {return std_counters_[static_cast<int>(name)];}
+
+  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+   *
+   * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
+   */
+  inline Counter* get_counter(const std::string name) {return custom_counter_map_str_to_counter_.at(name);}
 
 };
 

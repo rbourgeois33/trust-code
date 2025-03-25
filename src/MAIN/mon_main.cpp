@@ -478,7 +478,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
 
       statistiques().dump("Statistiques de post resolution", mode_append);
       print_statistics_analyse("Statistiques de post resolution", 1);
-      statistics.print_TU_files("Post-treatment statistics",1);
+      statistics.print_TU_files("Post-resolution statistics",1);
     }
 
   double temps = statistiques().get_total_time();
