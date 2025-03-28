@@ -56,16 +56,13 @@ public:
   }
 
   friend class Perf_counters;
-  Counter(bool to_print_in_global_TU, int counter_level, std::string counter_name, std::string counter_family = "None", bool is_comm = false, bool is_gpu = false);
+  Counter(int counter_level, std::string counter_name, std::string counter_family = "None", bool is_comm = false, bool is_gpu = false);
 
   void begin_count_(int counter_level, time_point t);
 
   void end_count_(int count_increment, int quantity_increment, time_point t_stop);
-  //check std::chrono
 
   inline void set_parent(Counter * parent_counter) { parent_ = parent_counter;}
-
-  inline void set_to_print(bool to_print) {to_print_in_global_TU_ = to_print;}
 
   inline double get_time_() {return total_time_.count();}
 
@@ -97,32 +94,25 @@ protected:
   double min_time_per_step_;
   double max_time_per_step_;
   double sd_time_per_step_;
-  bool to_print_in_global_TU_;
   bool is_running_;
 }
 ;
 
-Counter::Counter(bool to_print_in_global_TU, int counter_level, std::string counter_name, std::string counter_family , bool is_comm, bool is_gpu)
-  :description_(counter_name), family_(counter_family), is_comm_(is_comm), is_gpu_(is_gpu)
+Counter::Counter(int counter_level, std::string counter_name, std::string counter_family , bool is_comm, bool is_gpu)
+  :description_(counter_name), level_(counter_level), family_(counter_family), is_comm_(is_comm), is_gpu_(is_gpu),  count_(0),
+   quantity_( 0), parent_( nullptr),
+   total_time_(duration::zero()),
+   time_alone_(duration::zero()),
+   time_ts_(duration::zero()),
+   open_time_ts_( time_point()),
+   last_open_time_( time_point()),
+   last_open_time_alone_(time_point()),
+   avg_time_per_step_( 0.0 ),
+   min_time_per_step_( 0.0 ),
+   max_time_per_step_( 0.0 ),
+   sd_time_per_step_( 0.0 ),
+   is_running_( false)
 {
-  {
-    level_ = counter_level;
-    count_ = 0;
-    quantity_ = 0;
-    avg_time_per_step_ = 0.0 ;
-    min_time_per_step_ = 0.0 ;
-    max_time_per_step_ = 0.0 ;
-    sd_time_per_step_ = 0.0 ;
-    open_time_ts_ = time_point();
-    total_time_ =duration::zero() ;
-    time_alone_ =duration::zero() ;
-    time_ts_ =duration::zero() ;
-    last_open_time_alone_= time_point();
-    last_open_time_ = time_point();
-    parent_ = nullptr;
-    to_print_in_global_TU_=to_print_in_global_TU;
-    is_running_ = false;
-  }
 }
 
 void Counter::begin_count_(int counter_level, time_point t)
@@ -167,35 +157,27 @@ void Counter::end_count_(int count_increment, int quantity_increment, time_point
 std::array< std::array<double,4> ,4> Counter::compute_min_max_avg_sd_() const
 {
   assert(Process::is_parallel());
-  double min,max,avg,sd ;
+  double qty,cnt,min,max,avg,sd ;
+  qty=static_cast<double>(quantity_);
+  cnt = static_cast<double>(count_);
 
-  min = Process::mp_min(total_time_.count());
-  max = Process::mp_max(total_time_.count());
-  avg = Process::mp_sum(total_time_.count())/Process::nproc();
-  sd = sqrt(Process::mp_sum((total_time_.count()-avg)*(total_time_.count()-avg))/Process::nproc());
+  auto l_compute =[&min, &max,&avg,&sd] (double value)
+  {
+    min = Process::mp_min(value);
+    max = Process::mp_max(value);
+    avg = Process::mp_sum(value)/Process::nproc();
+    sd = sqrt(Process::mp_sum((value-avg)*(value-avg))/Process::nproc());
+    std::array<double,4> result = {min,max,avg,sd};
+    return result;
+  };
 
-  std::array<double,4> min_max_avg_sd_time = {min,max,avg,sd};
+  std::array<double,4> min_max_avg_sd_time = l_compute(total_time_.count());
 
-  min = Process::mp_min(static_cast<double>(quantity_));
-  max = Process::mp_max(static_cast<double>(quantity_));
-  avg = Process::mp_sum(static_cast<double>(quantity_))/Process::nproc();
-  sd = sqrt(Process::mp_sum((static_cast<double>(quantity_)-avg)*(static_cast<double>(quantity_)-avg))/Process::nproc());
+  std::array<double,4> min_max_avg_sd_quantity = l_compute(qty);
 
-  std::array<double,4> min_max_avg_sd_quantity = {min,max,avg,sd};
+  std::array<double,4> min_max_avg_sd_count_ = l_compute(cnt);
 
-  min = Process::mp_min(static_cast<double>(count_));
-  max = Process::mp_max(static_cast<double>(count_));
-  avg = Process::mp_sum(static_cast<double>(count_))/Process::nproc();
-  sd = sqrt(Process::mp_sum((static_cast<double>(count_)-avg)*(count_-avg))/Process::nproc());
-
-  std::array<double,4> min_max_avg_sd_count_ = {min,max,avg,sd};
-
-  min = Process::mp_min(time_alone_.count());
-  max = Process::mp_max(time_alone_.count());
-  avg = Process::mp_sum(time_alone_.count())/Process::nproc();
-  sd = sqrt(Process::mp_sum((time_alone_.count()-avg)*(time_alone_.count()-avg))/Process::nproc());
-
-  std::array<double,4> min_max_avg_sd_time_alone_ = {min,max,avg,sd};
+  std::array<double,4> min_max_avg_sd_time_alone_ = l_compute(time_alone_.count());
 
   return {min_max_avg_sd_time,min_max_avg_sd_quantity,min_max_avg_sd_count_,min_max_avg_sd_time_alone_ };
 }
@@ -229,66 +211,59 @@ Perf_counters::Perf_counters()
   :  std_counters_
 {
   // Macro counters
-  new Counter(false,-1, "Total time"),
-  new Counter(true,0, "Prepare computation"),
-  new Counter(false,0, "Time loop"),
-  new Counter(true,1, "Number of linear system resolutions Ax=B"),
-  new Counter(true,1, "Petsc solver"),
-  new Counter(true,1, "Number of linear system resolutions for implicit diffusion:"),
-  new Counter(true, 1, "Computation of the time step dt"),
-  new Counter(true, 1, "Turbulence model::update"),
-  new Counter(true, 1, "Convection operator::add/compute"),
-  new Counter(true, 1, "Diffusion operator::add/compute"),
-  new Counter(true, 1, "Gradient operator::add/compute"),
-  new Counter(true, 1, "Divergence operator::add/compute"),
-  new Counter(true, 1, "Source_terms::add/compute"),
-  new Counter(true, 1, "Post-treatment"),
-  new Counter(true, 0, "Back-up operations"),
-  new Counter(true, 1,"Read file for restart"),
-  new Counter(true, 1, "Number of matrix assemblies for the implicit scheme:"),
-  new Counter(true, 1, "Update"),
+  new Counter(-1, "Total time"),
+  new Counter(0, "Prepare computation"),
+  new Counter(0, "Time loop"),
+  new Counter(1, "Number of linear system resolutions Ax=B"),
+  new Counter(1, "Petsc solver"),
+  new Counter(1, "Number of linear system resolutions for implicit diffusion:"),
+  new Counter(1, "Computation of the time step dt"),
+  new Counter(1, "Turbulence model::update"),
+  new Counter(1, "Convection operator::add/compute"),
+  new Counter(1, "Diffusion operator::add/compute"),
+  new Counter(1, "Gradient operator::add/compute"),
+  new Counter(1, "Divergence operator::add/compute"),
+  new Counter(1, "Source_terms::add/compute"),
+  new Counter(1, "Post-processing"),
+  new Counter(0, "Back-up operations"),
+  new Counter(1,"Read file for restart"),
+  new Counter(1, "Number of matrix assemblies for the implicit scheme:"),
+  new Counter(1, "Update ::mettre_a_jour"),
   // MPI communication counters
-  new Counter(false, 2, "MPI_send_recv", "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_send",      "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_recv",      "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_broadcast", "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_alltoall",  "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_allgather", "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_gather", "MPI_sendrecv", true),
-  new Counter(false, 2, "MPI_partialsum","MPI_allreduce", true),
-  new Counter(false, 2, "MPI_sumdouble", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_mindouble", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_maxdouble", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_sumfloat", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_minfloat", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_maxfloat", "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_sumint",    "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_minint",    "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_maxint",    "MPI_allreduce", true),
-  new Counter(false, 2, "MPI_barrier",   "MPI_allreduce", true),
+  new Counter(2, "MPI_send_recv", "MPI_sendrecv", true),
+  new Counter(2, "MPI_send",      "MPI_sendrecv", true),
+  new Counter(2, "MPI_recv",      "MPI_sendrecv", true),
+  new Counter(2, "MPI_broadcast", "MPI_sendrecv", true),
+  new Counter(2, "MPI_alltoall",  "MPI_sendrecv", true),
+  new Counter(2, "MPI_allgather", "MPI_sendrecv", true),
+  new Counter(2, "MPI_gather", "MPI_sendrecv", true),
+  new Counter(2, "MPI_partialsum","MPI_allreduce", true),
+  new Counter(2, "MPI_sumdouble", "MPI_allreduce", true),
+  new Counter(2, "MPI_mindouble", "MPI_allreduce", true),
+  new Counter(2, "MPI_maxdouble", "MPI_allreduce", true),
+  new Counter(2, "MPI_sumfloat", "MPI_allreduce", true),
+  new Counter(2, "MPI_minfloat", "MPI_allreduce", true),
+  new Counter(2, "MPI_maxfloat", "MPI_allreduce", true),
+  new Counter(2, "MPI_sumint",    "MPI_allreduce", true),
+  new Counter(2, "MPI_minint",    "MPI_allreduce", true),
+  new Counter(2, "MPI_maxint",    "MPI_allreduce", true),
+  new Counter(2, "MPI_barrier",   "MPI_allreduce", true),
   // GPU
-  new Counter(true, 2, "GPU_library",       "GPU_library",false, true),
-  new Counter(true, 2, "GPU_kernel",        "GPU_kernel",false, true),
-  new Counter(true, 2, "GPU_copyToDevice",  "GPU_copy",false, true),
-  new Counter(true, 2, "GPU_copyFromDevice","GPU_copy",false, true),
+  new Counter(2, "GPU_library",       "GPU_library",false, true),
+  new Counter(2, "GPU_kernel",        "GPU_kernel",false, true),
+  new Counter(2, "GPU_copyToDevice",  "GPU_copy",false, true),
+  new Counter(2, "GPU_copyFromDevice","GPU_copy",false, true),
   // Count the writing time in EcrireFicPartageXXX (big chunk of data in files XYZ or LATA)
   // For those two counters, quantity corresponds to the amount of written bytes
-  new Counter(true, 1, "MPI_File_write_all", "IO"), // Call on each processor
-  new Counter(true, 1, "write", "IO"), // Call on master
+  new Counter(1, "MPI_File_write_all", "IO"), // Call on each processor
+  new Counter(1, "write", "IO"), // Call on master
   // Execution of Scatter::interpreter
-  new Counter(true, 2, "Scatter_interprete"),
-  new Counter(true, 2, "DoubleVect/IntVect::virtual_swap", "None", true),
-  new Counter(true, 2, "Scatter::read_domaine"),
-}
+  new Counter(2, "Scatter_interprete"),
+  new Counter(2, "DoubleVect/IntVect::virtual_swap", "None", true),
+  new Counter(2, "Scatter::read_domaine"),
+},  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()),
+max_str_lenght_(150), last_opened_counter_(nullptr)
 {
-  nb_steps_elapsed_ = 3;
-  end_cache_=false;
-  time_loop_=false;
-  counters_stop_=false;
-  time_cache_ =duration::zero();
-  computation_time_ =duration::zero();
-  last_opened_counter_ = nullptr;
-  max_str_lenght_=150;
 }
 
 Perf_counters::~Perf_counters()
@@ -298,28 +273,16 @@ Perf_counters::~Perf_counters()
   for (auto it = custom_counter_map_str_to_counter_.begin(); it != custom_counter_map_str_to_counter_.end(); ++it)
     delete it->second;
 }
-void Perf_counters::create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family , bool is_comm,  bool to_print_in_global_TU)
+void Perf_counters::create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family , bool is_comm)
 {
   if (counter_level <=0)
     Process::exit("Custom counters should not be set with a zero or negative level value");
   if (custom_counter_map_str_to_counter_.count(counter_description)==0)
     {
-      auto result =custom_counter_map_str_to_counter_.emplace(counter_description, new Counter(to_print_in_global_TU,counter_level, counter_description, counter_family ,is_comm));
+      auto result =custom_counter_map_str_to_counter_.emplace(counter_description, new Counter(counter_level, counter_description, counter_family ,is_comm));
       if (!result.second)
         Process::exit("Failed to insert the new custom counter in the custom counter map");
     }
-}
-
-void Perf_counters::print_in_global_TU(const STD_COUNTERS& name, bool to_print_or_not_to_print)
-{
-  Counter* c = get_counter(name);
-  c->set_to_print(to_print_or_not_to_print);
-}
-
-void Perf_counters::print_in_global_TU(const std::string& name, bool to_print_or_not_to_print)
-{
-  Counter* c = get_counter(name);
-  c->set_to_print(to_print_or_not_to_print);
 }
 
 int Perf_counters::get_last_opened_counter_level() const
@@ -379,12 +342,10 @@ void Perf_counters::begin_count(const STD_COUNTERS& std_cnt, int counter_lvl)
   Counter* c = get_counter(std_cnt);
   if (counter_lvl == -100000)
     counter_lvl = c->level_;
-  if (!time_loop_ || end_cache_ || c->level_ <= 0)
-    {
-      time_point t = now();
-      check_begin(c, counter_lvl,t);
-      c->begin_count_(counter_lvl,t);
-    }
+  time_point t = now();
+  check_begin(c, counter_lvl,t);
+  c->begin_count_(counter_lvl,t);
+
 }
 
 /*!
@@ -399,12 +360,11 @@ void Perf_counters::begin_count(const std::string& custom_count_name, int counte
     Process::exit("You are trying to access a counter that does not exist nullptr");
   if (counter_lvl == -100000)
     counter_lvl = c->level_;
-  if (!time_loop_ || end_cache_ )
-    {
-      time_point t = now();
-      check_begin(c, counter_lvl,t);
-      c->begin_count_(counter_lvl,t);
-    }
+
+  time_point t = now();
+  check_begin(c, counter_lvl,t);
+  c->begin_count_(counter_lvl,t);
+
 }
 
 /*! @brief End the count of a counter and update the counter values
@@ -416,14 +376,11 @@ void Perf_counters::begin_count(const std::string& custom_count_name, int counte
 void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, int quantity_increment)
 {
   Counter* c = get_counter(std_cnt);
-  if (!time_loop_ || end_cache_ || c->level_ <= 0)
-    {
-      time_point t = now();
-      check_end(c, t);
-      c->end_count_(count_increment, quantity_increment,t);
-      if (c->level_ == -1)
-        computation_time_ += c->total_time_;
-    }
+  time_point t = now();
+  check_end(c, t);
+  c->end_count_(count_increment, quantity_increment,t);
+  if (c->level_ == -1)
+    computation_time_ += c->total_time_;
 }
 
 
@@ -436,13 +393,11 @@ void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, 
 void Perf_counters::end_count(const std::string& custom_count_name, int count_increment, int quantity_increment)
 {
   Counter* c = get_counter(custom_count_name);
-  if (!time_loop_ || end_cache_ || c->level_ <= 0)
-    {
-      time_point t = now();
-      assert(custom_counter_map_str_to_counter_.count(custom_count_name) > 0);
-      check_end(c, t);
-      c->end_count_(count_increment, quantity_increment,t);
-    }
+  time_point t = now();
+  assert(custom_counter_map_str_to_counter_.count(custom_count_name) > 0);
+  check_end(c, t);
+  c->end_count_(count_increment, quantity_increment,t);
+
 }
 
 void Perf_counters::start_timeloop()
@@ -465,30 +420,25 @@ void Perf_counters::start_time_step()
   time_point t = now();
   if (last_opened_counter_ == nullptr)
     Process::exit("You are trying to start a time step outside the time loop");
+  for (Counter* c_std :std_counters_)
+    c_std->time_ts_=duration::zero();
+  for (auto & pair : custom_counter_map_str_to_counter_)
+    pair.second->time_ts_=duration::zero();
   Counter* c = last_opened_counter_;
   while (c->parent_ != nullptr && c->level_>=0)
     {
       c->open_time_ts_ = t;
       c = c->parent_;
     }
-  for (Counter* c_std :std_counters_)
-    c_std->time_ts_=duration::zero();
-  for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
-    map_it->second->time_ts_=duration::zero();
 }
 
 double Perf_counters::get_time_since_last_open(const STD_COUNTERS& name)
 {
   Counter* c = get_counter(name);
   duration t =duration::zero();
-  if (!time_loop_ || end_cache_)
-    {
-      if (!c->is_running_)
-        Process::exit("The counter is not running: " + c->description_);
-      t = now() - c->last_open_time_;
-    }
-  else
-    Cerr << "Time of this step is set to zero if you are during the cache" << std::endl;
+  if (!c->is_running_)
+    Process::exit("The counter is not running: " + c->description_);
+  t = now() - c->last_open_time_;
   return (t.count());
 }
 
@@ -496,14 +446,9 @@ double Perf_counters::get_time_since_last_open(const std::string& name)
 {
   Counter* c = get_counter(name);
   duration t = duration::zero();
-  if (!time_loop_ || end_cache_)
-    {
-      if (!c->is_running_)
-        Process::exit("The counter is not running: " + c->description_);
-      t = now() - c->last_open_time_;
-    }
-  else
-    Cerr << "Time of this step is set to zero if you are during the cache" << std::endl;
+  if (!c->is_running_)
+    Process::exit("The counter is not running: " + c->description_);
+  t = now() - c->last_open_time_;
   return (t.count());
 }
 
@@ -532,23 +477,14 @@ double Perf_counters::get_total_time(const std::string& name)
  *
  * Nota : if the counter is called before the time step loop, it is not accounted for in the computation.
  */
-void Perf_counters::compute_avg_min_max_var_per_step(unsigned int tstep)
+void Perf_counters::end_time_step(unsigned int tstep)
 {
-  Perf_counters::stop_counters(); ///< stop_counters already updated c->tim_ts_
+  stop_counters(); ///< stop_counters already updated c->tim_ts_
   if (last_opened_counter_ == nullptr)
     Process::exit("You are trying to compute the statistics of a time steps but have not open any counter");
   Counter* c_r=get_counter(STD_COUNTERS::total_execution_time);
   if (!time_loop_)
     Process::exit("You are trying to compute time loop statistics outside of the time loop");
-  if (!end_cache_)
-    {
-      end_cache_ = tstep > nb_steps_elapsed_;
-      if (end_cache_)
-        {
-          Process::barrier();
-          time_cache_ = now() - c_r->last_open_time_;
-        }
-    }
   int step = tstep - nb_steps_elapsed_;
   auto compute = [&](Counter* c)
   {
@@ -570,11 +506,21 @@ void Perf_counters::compute_avg_min_max_var_per_step(unsigned int tstep)
         compute(c);
       if (!custom_counter_map_str_to_counter_.empty())
         {
-          for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
-            compute(map_it->second);
+          for (auto & pair : custom_counter_map_str_to_counter_)
+            compute(pair.second);
         }
     }
-  Perf_counters::restart_counters();
+  if (!end_cache_)
+    {
+      end_cache_ = tstep >= nb_steps_elapsed_;
+      if (end_cache_)
+        {
+          time_skipped_ts_ = now() - c_r->last_open_time_;
+          reset_counters();
+        }
+    }
+  restart_counters();
+
 }
 
 
@@ -729,8 +675,7 @@ void Perf_counters::stop_counters()
           c = c->parent_;
         }
     }
-  Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
-  computation_time_ += c_time->total_time_;
+
   counters_stop_=true;
 }
 
@@ -764,11 +709,10 @@ void Perf_counters::reset_counters()
       if (c!=nullptr)
         c->reset();
     }
-  for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
+  for (auto & pair : custom_counter_map_str_to_counter_)
     {
-      Counter* c_custom = map_it->second;
-      if (c_custom!=nullptr)
-        c_custom->reset();
+      if (pair.second!=nullptr)
+        pair.second->reset();
     }
 }
 
@@ -1056,11 +1000,10 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
         extract_stats(c_std);
     }
 
-  for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
+  for (auto & pair : custom_counter_map_str_to_counter_)
     {
-      Counter* c_custom = map_it->second;
-      if (c_custom!=nullptr && c_custom->count_>0)
-        extract_stats(c_custom);
+      if (pair.second!=nullptr && pair.second->count_>0)
+        extract_stats(pair.second);
     }
 
   Nom CSV(Objet_U::nom_du_cas());
@@ -1090,34 +1033,33 @@ inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time,
   double qty,cnt,min,max,avg,sd ;
   qty=static_cast<double>(quantity);
   cnt = static_cast<double>(count);
-  min = Process::mp_min(time);
-  max = Process::mp_max(time);
-  avg = Process::mp_sum(time)/Process::nproc();
-  sd = sqrt(Process::mp_sum((time-avg)*(time-avg))/Process::nproc());
+
+  auto l_compute =[&min, &max,&avg,&sd] (double value)
+  {
+    min = Process::mp_min(value);
+    max = Process::mp_max(value);
+    avg = Process::mp_sum(value)/Process::nproc();
+    sd = sqrt(Process::mp_sum((value-avg)*(value-avg))/Process::nproc());
+    std::array<double,4> result = {min,max,avg,sd};
+    return result;
+  };
+
+  std::array<double,4> min_max_avg_sd_time = l_compute(time);
   time =avg;
 
-  std::array<double,4> min_max_avg_sd_time = {min,max,avg,sd};
+  std::array<double,4> min_max_avg_sd_quantity = l_compute(qty);
 
-  min = Process::mp_min(qty);
-  max = Process::mp_max(qty);
-  avg = Process::mp_sum(qty)/Process::nproc();
-  sd = sqrt(Process::mp_sum((qty-avg)*(qty-avg))/Process::nproc());
-  quantity = static_cast<int>(std::floor (avg));
-
-  std::array<double,4> min_max_avg_sd_quantity = {min,max,avg,sd};
-
-  min = 1.0*Process::mp_min(cnt);
-  max = 1.0*Process::mp_max(cnt);
-  avg = 1.0*Process::mp_sum(cnt)/Process::nproc();
-  sd = sqrt(Process::mp_sum((cnt-avg)*(cnt-avg))/Process::nproc());
+  std::array<double,4> min_max_avg_sd_count = l_compute(cnt);
   count = static_cast<int>(std::floor (avg));
-
-  std::array<double,4> min_max_avg_sd_count = {min,max,avg,sd};
 
   return {min_max_avg_sd_time,min_max_avg_sd_quantity,min_max_avg_sd_count};
 }
-
-
+/*
+void printing_format (std::ios_base::fmtflags align, int width, std::stringstream & strst)
+{
+	  strst << std::setiosflags(align) << << std::setw(width) ;
+};
+*/
 /*!
  *
  * @param message
@@ -1215,27 +1157,25 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
                 }
             }
         }
-      Counter* c_com = nullptr;
-      for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
+      for (auto & pair : custom_counter_map_str_to_counter_)
         {
-          c_com = map_it->second;
-          if (c_com!=nullptr)
+          if (pair.second!=nullptr)
             {
-              if (c_com->is_comm_)
+              if (pair.second->is_comm_)
                 {
-                  if (c_com->family_=="MPI_allreduce")
+                  if (pair.second->family_=="MPI_allreduce")
                     {
-                      comm_allreduce_q += c_com->quantity_;
-                      comm_allreduce_t += c_com->total_time_.count();
-                      comm_allreduce_c += c_com->count_;
+                      comm_allreduce_q += pair.second->quantity_;
+                      comm_allreduce_t += pair.second->total_time_.count();
+                      comm_allreduce_c += pair.second->count_;
                     }
-                  if (c_com->family_=="MPI_sendrecv")
+                  if (pair.second->family_=="MPI_sendrecv")
                     {
-                      comm_sendrecv_q += c_com->quantity_;
-                      comm_sendrecv_t += c_com->total_time_.count();
-                      comm_sendrecv_c += c_com->count_;
+                      comm_sendrecv_q += pair.second->quantity_;
+                      comm_sendrecv_t += pair.second->total_time_.count();
+                      comm_sendrecv_c += pair.second->count_;
                     }
-                  total_comm_time += c_com->time_alone_.count();
+                  total_comm_time += pair.second->time_alone_.count();
                 }
             }
         }
@@ -1252,6 +1192,10 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
         {
           file_header << std::right << std::setw(cpu_line_width/2 +27) <<"# Global performance file #"<< std::endl;
           file_header <<  std::endl;
+          file_header << "This is the global file for tracking performance in TRUST. It stores aggregated quantities." <<std::endl;
+          file_header << "More detailed statistics can be found in the "<< Objet_U::nom_du_cas() <<"_csv.TU file" <<std::endl;
+          file_header << "A jupyter notebook giving detailed information about performance measurement can be found in the How_To folder of TRUST src" <<std::endl;
+          file_header <<"Time is given in seconds"<< std::endl <<std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::right << std::setw(cpu_line_width/2 +26) <<"Context of the computation"<< std::endl;
           file_header << line_sep_cpu << std::endl;
@@ -1260,7 +1204,6 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header << std::left << std::setw(header_txt_width) << "CPU:     " << get_cpu() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "GPU:     " << get_gpu() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "Number of processor used = " << nb_procs << std::endl << std::endl;
-          file_header << " Time is given in seconds"<< std::endl <<std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header  << std::right << std::setw(cpu_line_width/2 + message_width)<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
@@ -1280,11 +1223,10 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           c = get_counter(STD_COUNTERS::total_execution_time);
           file_header <<  std::left <<std::setw(text_width)<< "Total time: "<<  std::left <<std::setw(number_width) << c->total_time_.count() << std::endl;
           c = get_counter(STD_COUNTERS::timeloop);
-          file_header <<  std::left <<std::setw(text_width) << "Total time of time loop: " <<  std::left <<std::setw(number_width) << c->total_time_.count() << std::endl;
           file_header <<  std::left <<std::setw(text_width) <<  "Number of time steps: " <<  std::left <<std::setw(number_width) << nb_ts << std::endl;
           file_header <<  std::left <<std::setw(text_width) << "Average time per time step: " <<  std::left <<std::setw(number_width) << c->time_ts_.count() << endl;
           file_header <<  std::left <<std::setw(text_width) << "Standard deviation between time steps: " <<  std::left <<std::setw(number_width) << c->sd_time_per_step_ << std::endl;
-          file_header <<  std::left <<std::setw(text_width) << "Time of cache :" <<  std::left <<std::setw(number_width) << time_cache_.count() <<std::endl << std::endl;
+          file_header <<  std::left <<std::setw(text_width) << "Time elapsed in the skipped time steps: " <<  std::left <<std::setw(number_width) << time_skipped_ts_.count() <<std::endl << std::endl;
           if (Process::is_parallel())
             file_header <<  std::left <<std::setw(text_width) << "Percent of total time tracked by communication counters:" <<  std::left <<std::setw(number_width) << 100* total_comm_time / total_time << std::endl;
 
@@ -1296,8 +1238,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header << line_sep_cpu << std::endl;
           c = get_counter(STD_COUNTERS::total_execution_time);
           file_header <<  std::left <<std::setw(text_width) << "Time of the post-resolution: " <<  std::left <<std::setw(number_width) <<  c->total_time_.count() << std::endl;
-          file_header <<  std::left <<std::setw(text_width) << "Percent of untracked time during post-resolution: " <<  std::left <<std::setw(number_width) << total_untracked_time << std::endl<< std::endl;
           captions <<  std::endl;
+          captions << std::left << std::setw(text_width) << "Total time for the whole computation" << std::left <<std::setw(number_width) << computation_time_.count()<< std::endl<< std::endl;
           if (Process::is_parallel())
             {
               captions << "Max waiting time big    => probably due to a bad partitioning" << std::endl;
@@ -1317,16 +1259,14 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           total_time = Process::mp_max(c->total_time_.count());
           for (Counter *c_ptr :std_counters_)
             {
-              if (c_ptr!=nullptr && c_ptr->to_print_in_global_TU_)
+              if (c_ptr!=nullptr && c_ptr->level_==1)
                 write_globalTU_line(c_ptr,perfs_TU);
             }
           // Loop on the custom counters
-          Counter * c_custom_ptr;
-          for (auto map_it = custom_counter_map_str_to_counter_.begin(); map_it != custom_counter_map_str_to_counter_.end(); ++map_it)
+          for (auto & pair : custom_counter_map_str_to_counter_)
             {
-              c_custom_ptr = map_it->second;
-              if (c_custom_ptr->count_ > 0 && c_custom_ptr->to_print_in_global_TU_)
-                write_globalTU_line(c_custom_ptr, perfs_TU);
+              if (pair.second->count_ > 0 && pair.second->level_==1)
+                write_globalTU_line(pair.second, perfs_TU);
             }
           c = get_counter(STD_COUNTERS::total_execution_time);
           total_time = Process::mp_max(c->total_time_.count());
@@ -1361,9 +1301,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
               double avg_time = Process::mp_max(c->total_time_.count()) / tmp;
               perfs_TU <<  std::left <<std::setw(text_width) << "Average time of the resolution of the linear problem per call: " <<  std::left <<std::setw(number_width) << avg_time << std::endl;
             }
-          perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time outside of the time loop: " <<  std::left <<std::setw(number_width) << total_untracked_time/total_time << std::endl;
           if ((message=="Time loop statistics"))
-            perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time inside the time loop: "<<  std::left <<std::setw(number_width)  << total_untracked_time_ts/time_tl << std::endl << std::endl;
+            perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time: "<<  std::left <<std::setw(number_width)  << total_untracked_time_ts/time_tl + total_untracked_time/total_time << std::endl << std::endl;
           perfs_TU <<  std::left <<std::setw(text_width) << "Average number of iteration of the linear solver per call: " <<  std::left <<std::setw(number_width) <<  Process::mp_max(c->quantity_) / tmp << std::endl <<std::endl;
         }
 
@@ -1373,8 +1312,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       tmp = Process::mp_max(c->count_);
       if (tmp>0)
         {
-          perfs_TU <<  std::left <<std::setw(text_width) << "Number of back-up: " <<  std::left <<std::setw(number_width) << tmp << std::endl;
-          perfs_TU <<  std::left <<std::setw(text_width) << "Average amount of data per back-up (Mo): " <<  std::left <<std::setw(number_width) << total_quantity / (tmp *1024*1024) << std::endl;
+          perfs_IO <<  std::left <<std::setw(text_width) << "Number of back-up: " <<  std::left <<std::setw(number_width) << tmp << std::endl;
+          perfs_IO <<  std::left <<std::setw(text_width) << "Average amount of data per back-up (Mo): " <<  std::left <<std::setw(number_width) << total_quantity / (tmp *1024*1024) << std::endl;
         }
       // GPU part of the TU :
       auto compute_percent_and_write_tabular_line = [&] (const std::string str)
@@ -1545,6 +1484,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
 void Perf_counters::print_TU_files(const std::string& message, const bool mode_append)
 {
   stop_counters();
+  Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
+  computation_time_ += c_time->total_time_;
   print_global_TU(message, mode_append);
   print_performance_to_csv(message, mode_append);
   reset_counters();

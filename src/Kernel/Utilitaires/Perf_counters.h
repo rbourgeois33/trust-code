@@ -114,7 +114,7 @@ public:
    * @param is_comm
    * @return create a new counter
    */
-  void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false,  bool to_print_in_global_TU =true);
+  void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false);
 
   /*! @brief Start the count of a counter
    *
@@ -224,7 +224,7 @@ public:
    *
    * @param tstep is the current time step number
    */
-  void compute_avg_min_max_var_per_step(unsigned int tstep);
+  void end_time_step(unsigned int tstep);
 
   inline void set_nb_time_steps_elapsed(unsigned int n) {nb_steps_elapsed_ = n;}
 
@@ -238,16 +238,16 @@ private:
   ~Perf_counters();
   Perf_counters(const Perf_counters&) = delete;
   Perf_counters& operator=(const Perf_counters&) = delete;
+  std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
   unsigned int nb_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
   bool end_cache_; ///< A flag used to know if the two first time steps are over or not
   bool time_loop_; ///< A flag used to know if we are inside the time loop
   bool counters_stop_;  ///< A flag used to know if the counters are paused or not
   duration computation_time_; ///< Used to compute the total time of the simulation.
-  duration time_cache_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
-  Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+  duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   int max_str_lenght_;
+  Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
+  std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
   /*! @brief Create the csv.TU file.
    *
    * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file

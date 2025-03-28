@@ -362,7 +362,7 @@ bool Probleme_U::run()
       else
         {
           statistiques().compute_avg_min_max_var_per_step(tstep);
-          statistics.compute_avg_min_max_var_per_step(tstep);
+          statistics.end_time_step(tstep);
         }
       statistics.end_count(STD_COUNTERS::timeloop);
       tstep++;
