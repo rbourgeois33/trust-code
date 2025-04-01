@@ -63,7 +63,6 @@ void Solv_AMGX::initialize()
 // Creation des objets
 void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   initialize();
   if (read_matrix())
     {
@@ -79,7 +78,7 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
   Cout << "[AmgX] Time to create CSR pointers: " << t.count() << finl;
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
   // Use device pointer to enable device consolidation in AmgXWrapper:
   double* values_device;
   cudaMalloc((void**)&values_device, nNz * sizeof(double));
@@ -88,8 +87,8 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   SolveurAmgX_.setA(nRowsGlobal, nRowsLocal, nNz, rowOffsets, colIndices, values_device, nullptr);
   //cudaFree(values_device);delete[] hostArray;
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz));
-  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl;// Attention balise lue par fiche de validation
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz);
+  Cout << "[AmgX] Time to set matrix (copy+setup) on GPU: " << statistics().get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl;// Attention balise lue par fiche de validation
+  statistics().end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int) * (nRowsLocal + nNz) + sizeof(double) * nNz);
 }
 
 void Solv_AMGX::Create_vectors(const DoubleVect& b)
@@ -164,14 +163,13 @@ PetscErrorCode Solv_AMGX::petscToCSR(Mat& A, Vec& lhs_petsc, Vec& rhs_petsc)
 
 void Solv_AMGX::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   // La matrice CSR de PETSc a ete mise a jour dans check_stencil
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
   SolveurAmgX_.updateA(nRowsLocal, nNz, values);  // ToDo erreur valgrind au premier appel de updateA...
   statistiques().end_count(gpu_copytodevice_counter_, (int)sizeof(double)*nNz);
-  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics.get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl; // Attention balise lue par fiche de validation
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1 , (double)sizeof(double)*(double)nNz);
+  Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics().get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl; // Attention balise lue par fiche de validation
+  statistics().end_count(STD_COUNTERS::gpu_copytodevice,1 , (double)sizeof(double)*(double)nNz);
 }
 
 // Check and return true if new stencil
@@ -247,16 +245,15 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
 // Resolution
 int Solv_AMGX::solve(ArrOfDouble& residu)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   mapToDevice(rhs_);
   computeOnTheDevice(lhs_);
   statistiques().begin_count(gpu_library_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_library_);
+  statistics().begin_count(STD_COUNTERS::gpu_library);
   // Offer device pointers to AmgX:
   SolveurAmgX_.solve(addrOnDevice(lhs_), addrOnDevice(rhs_), nRowsLocal, seuil_);
   statistiques().end_count(gpu_library_counter_);
-  statistics.end_count(STD_COUNTERS::gpu_library_);
-  Cout << "[AmgX] Time to solve system on GPU: " << statistics.get_total_time(STD_COUNTERS::gpu_library_) << finl;
+  statistics().end_count(STD_COUNTERS::gpu_library);
+  Cout << "[AmgX] Time to solve system on GPU: " << statistics().get_total_time(STD_COUNTERS::gpu_library) << finl;
   return nbiter(residu);
 }
 

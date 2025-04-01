@@ -97,7 +97,6 @@ void Pb_Dilatable_base::mettre_a_jour(double temps)
 
 bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   Debog::set_nom_pb_actuel(le_nom());
   Schema_Temps_base& sch=schema_temps();
   double temps_present=sch.temps_courant();
@@ -108,15 +107,15 @@ bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
     {
       sch.faire_un_pas_de_temps_eqn_base(equation(i));
       statistiques().begin_count(mettre_a_jour_counter_);
-      statistics.begin_count(STD_COUNTERS::update_variables);
+      statistics().begin_count(STD_COUNTERS::update_variables);
       equation(i).milieu().mettre_a_jour(temps_futur);;
       equation(i).inconnue().mettre_a_jour(temps_futur);
       statistiques().end_count(mettre_a_jour_counter_);
-      statistics.end_count(STD_COUNTERS::update_variables);
+      statistics().end_count(STD_COUNTERS::update_variables);
     }
 
   statistiques().begin_count(mettre_a_jour_counter_);
-  statistics.begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables);
 
   //2. Compute temperature-dependent coefficients
   le_fluide_->calculer_coeff_T();
@@ -130,15 +129,15 @@ bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
   //5. Compute volumic mass
   le_fluide_->calculer_masse_volumique();
   statistiques().end_count(mettre_a_jour_counter_);
-  statistics.end_count(STD_COUNTERS::update_variables);
+  statistics().end_count(STD_COUNTERS::update_variables);
   //6. Solve Navier Stokes equation
   sch.faire_un_pas_de_temps_eqn_base(equation(0));
   statistiques().begin_count(mettre_a_jour_counter_);
-  statistics.begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables);
   equation(0).milieu().mettre_a_jour(temps_futur);
   equation(0).inconnue().mettre_a_jour(temps_futur);
   statistiques().end_count(mettre_a_jour_counter_);
-  statistics.end_count(STD_COUNTERS::update_variables);
+  statistics().end_count(STD_COUNTERS::update_variables);
   // Update pressure fields (total/thermo/hydro) if necessary
   update_pressure_fields(temps_futur);
 

@@ -358,7 +358,6 @@ void Convection_Diffusion_Fluide_Dilatable_Proto::assembler_impl
 
 void Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(Convection_Diffusion_Fluide_Dilatable_base& eqn,matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   const std::string& nom_inco = eqn.inconnue().le_nom().getString();
   Matrice_Morse *mat = matrices.count(nom_inco)?matrices.at(nom_inco):nullptr;
 
@@ -370,17 +369,17 @@ void Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(Convection_Dif
   DoubleTab secmem_tmp(secmem);
   eqn.operateur(0).l_op_base().ajouter_blocs({{nom_inco, &mat_diff}}, secmem_tmp, semi_impl);
   statistiques().end_count(assemblage_sys_counter_);
-  statistics.end_count(STD_COUNTERS::matrix_assembly);
+  statistics().end_count(STD_COUNTERS::matrix_assembly);
 
   statistiques().begin_count(source_counter_);
-  statistics.begin_count(STD_COUNTERS::rhs);
+  statistics().begin_count(STD_COUNTERS::rhs);
   for (int i = 0; i < eqn.sources().size(); i++)
     eqn.sources()(i)->ajouter_blocs({{nom_inco, &mat_diff}}, secmem_tmp, semi_impl);
   statistiques().end_count(source_counter_);
-  statistics.end_count(STD_COUNTERS::rhs);
+  statistics().end_count(STD_COUNTERS::rhs);
 
   statistiques().begin_count(assemblage_sys_counter_);
-  statistics.begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly);
   DoubleVect& coeff_diffusif=mat_diff.get_set_coeff();
 
   const IntVect& tab1= mat->get_tab1();

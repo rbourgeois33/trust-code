@@ -194,9 +194,8 @@ int Schema_Temps_base::limpr() const
 
 void Schema_Temps_base::validateTimeStep()
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mettre_a_jour_counter_);
-  statistics.begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables);
   // Update the problem:
   Probleme_base& problem=pb_base();
   problem.mettre_a_jour(temps_courant_+dt_);
@@ -209,7 +208,7 @@ void Schema_Temps_base::validateTimeStep()
   // Update time scheme:
   mettre_a_jour();
   statistiques().end_count(mettre_a_jour_counter_);
-  statistics.end_count(STD_COUNTERS::update_variables);
+  statistics().end_count(STD_COUNTERS::update_variables);
   dt_failed_ = DBL_MAX;
 }
 void Schema_Temps_base::terminate()
@@ -555,16 +554,15 @@ extern "C" {
  */
 int Schema_Temps_base::mettre_a_jour()
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   temps_precedent_ = temps_courant_;
   temps_courant_ += dt_;
   nb_pas_dt_++;
   // Compute next time step stability:
   statistiques().end_count(mettre_a_jour_counter_,0,0);
-  statistics.end_count(STD_COUNTERS::update_variables);
+  statistics().end_count(STD_COUNTERS::update_variables);
   mettre_a_jour_dt_stab();
   statistiques().begin_count(mettre_a_jour_counter_);
-  statistics.begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables);
   assert_parallel(dt_stab_);
   assert_parallel(temps_courant_);
   if (!ind_tps_final_atteint)
@@ -591,7 +589,7 @@ int Schema_Temps_base::mettre_a_jour()
   if (je_suis_maitre())
     {
       //temps_cpu_ecoule_ = statistiques().last_time(temps_total_execution_counter_);
-      temps_cpu_ecoule_ = statistics.get_time_since_last_open(STD_COUNTERS::total_execution_time);
+      temps_cpu_ecoule_ = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time);
     }
 
   envoyer_broadcast(temps_cpu_ecoule_,0);
@@ -981,7 +979,6 @@ void Schema_Temps_base::imprimer_temps_courant(SFichier& os) const
  */
 void Schema_Temps_base::write_progress(bool init)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   if (je_suis_maitre() && !disable_progress())
     {
       if (init)
@@ -1025,7 +1022,7 @@ void Schema_Temps_base::write_progress(bool init)
               if (limpr())
                 {
                   double seconds_to_finish = statistiques().last_time(temps_total_execution_counter_) * (1. - dpercent) / dpercent;
-                  seconds_to_finish = statistics.get_time_since_last_open(STD_COUNTERS::total_execution_time) * (1. - dpercent) / dpercent;
+                  seconds_to_finish = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time) * (1. - dpercent) / dpercent;
                   int integer_limit = (int) (pow(2.0, (double) ((sizeof(True_int) * 8) - 1)) - 1);
                   if (seconds_to_finish < integer_limit)
                     {

@@ -36,7 +36,6 @@ void Op_Grad_P0_to_Face::dimensionner_blocs(matrices_t matrices, const tabs_t& s
 
 void Op_Grad_P0_to_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  //Perf_counters& statistics = Perf_counters::getInstance();
   /*  if (sub_type(Pb_Multiphase, equation().probleme()))
    {
    Cerr << "Op_Grad_P0_to_Face::" << __func__ << " is not yet compatible with Pb_Multiphase !" << finl;
@@ -45,7 +44,6 @@ void Op_Grad_P0_to_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, c
    }
    */
   statistiques().begin_count(gradient_counter_);
-  //statistics.begin_count(STD_COUNTERS::gradient_,1);
   const DoubleTab& inco = semi_impl.count("pression") ? semi_impl.at("pression") : equation().inconnue().valeurs();
   assert_espace_virtuel_vect(inco);
   const Domaine_VDF& zvdf = le_dom_vdf.valeur();
@@ -154,5 +152,4 @@ void Op_Grad_P0_to_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, c
 
   secmem.echange_espace_virtuel();
   statistiques().end_count(gradient_counter_);
-  //statistics.end_count(STD_COUNTERS::gradient_);
 }

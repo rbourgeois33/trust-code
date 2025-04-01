@@ -49,7 +49,6 @@ Sortie& Champ_Fonc_reprise::printOn(Sortie& s) const
 
 Entree& Champ_Fonc_reprise::readOn(Entree& s)
 {
-  Perf_counters & statistics = Perf_counters::getInstance();
   Cerr<<"Usage : Champ_Fonc_reprise [xyz|formatte|binaire|single_hdf|pdi] fichier.xyz nom_pb nom_inco [fonction n f1(val) f2(val) ... fn(val)] [temps|last_time]"<<finl;
   Nom nom_fic,nom_pb,nom_champ;
   Motcle format_rep("xyz");
@@ -157,7 +156,7 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
   Nom nom_champ_pdi = Motcle(pb.le_nom()) + "_" + Motcle(nom_champ);
 
   statistiques().begin_count(temporary_counter_);
-  statistics.begin_count(STD_COUNTERS::restart_);
+  statistics().begin_count(STD_COUNTERS::restart);
 
   // Opening file + get file format
   int mode_lec_sa= EcritureLectureSpecial::mode_lec;
@@ -321,8 +320,8 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
 
   EcritureLectureSpecial::mode_lec=mode_lec_sa;
   statistiques().end_count(temporary_counter_);
-  Cerr << "End of resuming the file " << nom_fic << " after " << statistics.get_time_since_last_open(STD_COUNTERS::restart) << " s" << finl;
-  statistics.end_count(STD_COUNTERS::restart);
+  Cerr << "End of resuming the file " << nom_fic << " after " << statistics().get_time_since_last_open(STD_COUNTERS::restart) << " s" << finl;
+  statistics().end_count(STD_COUNTERS::restart);
 
   ////////////////////////////////////////
   // Transformation eventuelle du champ lu

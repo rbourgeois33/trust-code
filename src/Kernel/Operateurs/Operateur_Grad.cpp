@@ -60,12 +60,11 @@ void Operateur_Grad::typer_direct(const Nom& un_type)
 DoubleTab& Operateur_Grad::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
-  statistics.begin_count(STD_COUNTERS::gradient);
+  statistics().begin_count(STD_COUNTERS::gradient);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistiques().end_count(gradient_counter_);
-  statistics.end_count(STD_COUNTERS::gradient);
+  statistics().end_count(STD_COUNTERS::gradient);
   return tmp;
 }
 
@@ -79,11 +78,10 @@ DoubleTab& Operateur_Grad::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Grad::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(gradient_counter_);
-  statistics.begin_count(STD_COUNTERS::gradient);
+  statistics().begin_count(STD_COUNTERS::gradient);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistiques().end_count(gradient_counter_);
-  statistics.end_count(STD_COUNTERS::gradient);
+  statistics().end_count(STD_COUNTERS::gradient);
   return tmp;
 }

@@ -215,7 +215,7 @@ Perf_counters::Perf_counters()
   new Counter(0, "Prepare computation"),
   new Counter(0, "Time loop"),
   new Counter(1, "Number of linear system resolutions Ax=B"),
-  new Counter(1, "Petsc solver"),
+  new Counter(2, "Petsc solver"),
   new Counter(1, "Number of linear system resolutions for implicit diffusion:"),
   new Counter(1, "Computation of the time step dt"),
   new Counter(1, "Turbulence model::update"),
@@ -261,7 +261,7 @@ Perf_counters::Perf_counters()
   new Counter(2, "Scatter_interprete"),
   new Counter(2, "DoubleVect/IntVect::virtual_swap", "None", true),
   new Counter(2, "Scatter::read_domaine"),
-},  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()),
+},  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false), counter_lvl_to_print_(1),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()),
 max_str_lenght_(150), last_opened_counter_(nullptr)
 {
 }
@@ -339,13 +339,15 @@ void Perf_counters::check_end(Counter* const c, time_point t)
  */
 void Perf_counters::begin_count(const STD_COUNTERS& std_cnt, int counter_lvl)
 {
-  Counter* c = get_counter(std_cnt);
-  if (counter_lvl == -100000)
-    counter_lvl = c->level_;
-  time_point t = now();
-  check_begin(c, counter_lvl,t);
-  c->begin_count_(counter_lvl,t);
-
+  if (!counters_stop_)
+    {
+      Counter* c = get_counter(std_cnt);
+      if (counter_lvl == -100000)
+        counter_lvl = c->level_;
+      time_point t = now();
+      check_begin(c, counter_lvl,t);
+      c->begin_count_(counter_lvl,t);
+    }
 }
 
 /*!
@@ -355,15 +357,18 @@ void Perf_counters::begin_count(const STD_COUNTERS& std_cnt, int counter_lvl)
  */
 void Perf_counters::begin_count(const std::string& custom_count_name, int counter_lvl)
 {
-  Counter* c = get_counter(custom_count_name);
-  if (c==nullptr)
-    Process::exit("You are trying to access a counter that does not exist nullptr");
-  if (counter_lvl == -100000)
-    counter_lvl = c->level_;
+  if (!counters_stop_)
+    {
+      Counter* c = get_counter(custom_count_name);
+      if (c==nullptr)
+        Process::exit("You are trying to access a counter that does not exist nullptr");
+      if (counter_lvl == -100000)
+        counter_lvl = c->level_;
 
-  time_point t = now();
-  check_begin(c, counter_lvl,t);
-  c->begin_count_(counter_lvl,t);
+      time_point t = now();
+      check_begin(c, counter_lvl,t);
+      c->begin_count_(counter_lvl,t);
+    }
 
 }
 
@@ -375,12 +380,15 @@ void Perf_counters::begin_count(const std::string& custom_count_name, int counte
  */
 void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, int quantity_increment)
 {
-  Counter* c = get_counter(std_cnt);
-  time_point t = now();
-  check_end(c, t);
-  c->end_count_(count_increment, quantity_increment,t);
-  if (c->level_ == -1)
-    computation_time_ += c->total_time_;
+  if (!counters_stop_)
+    {
+      Counter* c = get_counter(std_cnt);
+      time_point t = now();
+      check_end(c, t);
+      c->end_count_(count_increment, quantity_increment,t);
+      if (c->level_ == -1)
+        computation_time_ += c->total_time_;
+    }
 }
 
 
@@ -392,12 +400,14 @@ void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, 
  */
 void Perf_counters::end_count(const std::string& custom_count_name, int count_increment, int quantity_increment)
 {
-  Counter* c = get_counter(custom_count_name);
-  time_point t = now();
-  assert(custom_counter_map_str_to_counter_.count(custom_count_name) > 0);
-  check_end(c, t);
-  c->end_count_(count_increment, quantity_increment,t);
-
+  if (!counters_stop_)
+    {
+      Counter* c = get_counter(custom_count_name);
+      time_point t = now();
+      assert(custom_counter_map_str_to_counter_.count(custom_count_name) > 0);
+      check_end(c, t);
+      c->end_count_(count_increment, quantity_increment,t);
+    }
 }
 
 void Perf_counters::start_timeloop()
@@ -477,7 +487,7 @@ double Perf_counters::get_total_time(const std::string& name)
  *
  * Nota : if the counter is called before the time step loop, it is not accounted for in the computation.
  */
-void Perf_counters::end_time_step(unsigned int tstep)
+void Perf_counters::end_time_step(int tstep)
 {
   stop_counters(); ///< stop_counters already updated c->tim_ts_
   if (last_opened_counter_ == nullptr)
@@ -1259,13 +1269,13 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           total_time = Process::mp_max(c->total_time_.count());
           for (Counter *c_ptr :std_counters_)
             {
-              if (c_ptr!=nullptr && c_ptr->level_==1)
+              if (c_ptr!=nullptr && c_ptr->level_==counter_lvl_to_print_)
                 write_globalTU_line(c_ptr,perfs_TU);
             }
           // Loop on the custom counters
           for (auto & pair : custom_counter_map_str_to_counter_)
             {
-              if (pair.second->count_ > 0 && pair.second->level_==1)
+              if (pair.second->count_ > 0 && pair.second->level_==counter_lvl_to_print_)
                 write_globalTU_line(pair.second, perfs_TU);
             }
           c = get_counter(STD_COUNTERS::total_execution_time);
@@ -1489,6 +1499,7 @@ void Perf_counters::print_TU_files(const std::string& message, const bool mode_a
   print_global_TU(message, mode_append);
   print_performance_to_csv(message, mode_append);
   reset_counters();
+  Process::barrier();
   counters_stop_=false;
 }
 

@@ -1982,8 +1982,10 @@ PetscErrorCode MyKSPMonitor(KSP SolveurPetsc, PetscInt it, PetscReal residu, voi
 // Solve system
 int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
+
 #ifdef PETSCKSP_H
   Perf_counters & statistics = Perf_counters::getInstance();
+
   // Create solver now just before solve if not created:
   if (SolveurPetsc_==nullptr) create_solver();
   std::fenv_t fenv;
@@ -1991,8 +1993,8 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
   // Si on utilise un solver petsc on le signale pour les stats finales
   statistiques().begin_count(solv_sys_petsc_counter_);
   statistiques().end_count(solv_sys_petsc_counter_,1,1);
-  statistics.begin_count(STD_COUNTERS::petsc_solver);
-  statistics.end_count(STD_COUNTERS::petsc_solver);
+  statistics().begin_count(STD_COUNTERS::petsc_solver);
+  statistics().end_count(STD_COUNTERS::petsc_solver);
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   // Attention, bug apres PETSc 3.14 le logging avec PetscLogStage est tres cher pour MatSetValues (appel MPI meme en sequentiel!). Vu sur Flica5 avec appel frequents a Update_matrix
   bool log_Create_Stage = false; // ToDO mettre un test plus intelligent selon taille du cas ou si parallele ?
@@ -2197,7 +2199,6 @@ void setupSignalHandlers(bool on)
 
 int Solv_Petsc::solve(ArrOfDouble& residu)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   PetscLogStagePush(KSPSolve_Stage_);
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   // Affichage par MyKSPMonitor
@@ -2243,13 +2244,13 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
   if (gpu_)
     {
       statistiques().begin_count(gpu_library_counter_);
-      statistics.begin_count(STD_COUNTERS::gpu_library);
+      statistics().begin_count(STD_COUNTERS::gpu_library);
     }
   KSPSolve(SolveurPetsc_, SecondMembrePetsc_, SolutionPetsc_);
   if (gpu_)
     {
       statistiques().end_count(gpu_library_counter_);
-      statistics.end_count(STD_COUNTERS::gpu_library);
+      statistics().end_count(STD_COUNTERS::gpu_library);
     }
   setupSignalHandlers(false);
   // Analyse de la convergence par Petsc
@@ -2320,7 +2321,6 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
 #ifdef PETSCKSP_H
 void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   // Assemblage du second membre et de la solution
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
   bool DataOnDevice = solution.checkDataOnDevice(secmem);
@@ -2358,7 +2358,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       if (gpu_)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+          statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
         }
       VecSetOption(SecondMembrePetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
       VecSetValues(SecondMembrePetsc_, size, ix.addr(), secmem.addr(), INSERT_VALUES);
@@ -2371,7 +2371,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       if (gpu_)
         {
           statistiques().end_count(gpu_copytodevice_counter_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice);
+          statistics().end_count(STD_COUNTERS::gpu_copytodevice);
         }
       if (reorder_matrix_)
         {
@@ -2397,7 +2397,6 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
 {
   // Recuperation de la solution
   std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-  Perf_counters& statistics = Perf_counters::getInstance();
   bool DataOnDevice = solution.checkDataOnDevice();
   if (gpu_ && DataOnDevice && !isViennaCLVector()) // solution is on the device to SolutionPetsc_ -> solution update without copy
     {
@@ -2448,13 +2447,13 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
           if (gpu_)
             {
               statistiques().begin_count(gpu_copyfromdevice_counter_);
-              statistics.begin_count(STD_COUNTERS::gpu_copyfromdevice);
+              statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
             }
           VecGetValues(SolutionPetsc_, size, ix.addr(), solution.addr());
           if (gpu_)
             {
               statistiques().end_count(gpu_copyfromdevice_counter_);
-              statistics.end_count(STD_COUNTERS::gpu_copyfromdevice);
+              statistics().end_count(STD_COUNTERS::gpu_copyfromdevice);
             }
         }
     }

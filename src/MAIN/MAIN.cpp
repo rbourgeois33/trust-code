@@ -71,7 +71,6 @@ void usage()
 
 int main_TRUST(int argc, char** argv,mon_main*& main_process,bool force_mpi, bool ieee)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
 #ifdef VTRACE
   //VT_USER_END("Initialization");
 #endif
@@ -274,7 +273,7 @@ int main_TRUST(int argc, char** argv,mon_main*& main_process,bool force_mpi, boo
     // .. et demarrage du journal
     // (tout ce qu'on veut faire en commun avec l'interface python doit etre
     //  mis dans mon_main)
-        statistics.begin_count(STD_COUNTERS::total_execution_time);
+    statistics().begin_count(STD_COUNTERS::total_execution_time);
     main_process=new  mon_main(verbose_level, journal_master, log_directory, apply_verification, disable_stop);
     main_process->init_parallel(argc, argv, with_mpi, check_enabled, with_petsc);
 
@@ -419,7 +418,7 @@ int main_TRUST(int argc, char** argv,mon_main*& main_process,bool force_mpi, boo
 
   //  pour detruire les derniers octets
   desalloue_pwd();
-  statistics.end_count(STD_COUNTERS::total_execution_time);
+  statistics().end_count(STD_COUNTERS::total_execution_time);
   return (0);
 }
 

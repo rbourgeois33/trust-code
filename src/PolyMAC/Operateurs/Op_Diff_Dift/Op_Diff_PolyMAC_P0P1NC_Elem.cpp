@@ -225,9 +225,8 @@ void Op_Diff_PolyMAC_P0P1NC_Elem::dimensionner_blocs_ext(int aux_only, matrices_
 
 void Op_Diff_PolyMAC_P0P1NC_Elem::ajouter_blocs_ext(int aux_only, matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(diffusion_counter_);
-  statistics.begin_count(STD_COUNTERS::diffusion);
+  statistics().begin_count(STD_COUNTERS::diffusion);
   init_op_ext();
   const std::string& nom_inco = (le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().inconnue()).le_nom().getString();
   int i, j, k1, k2, e, f, fb, n, M, n_ext = (int) op_ext.size(), semi = (int) semi_impl.count(nom_inco), d, D = dimension;
@@ -463,5 +462,5 @@ void Op_Diff_PolyMAC_P0P1NC_Elem::ajouter_blocs_ext(int aux_only, matrices_t mat
             (*mat[0])(N[0] * (ne_tot[0] + f) + n, N[0] * e + n) += h * fs[0](f);
         }
   statistiques().end_count(diffusion_counter_);
-  statistics.end_count(STD_COUNTERS::diffusion);
+  statistics().end_count(STD_COUNTERS::diffusion);
 }

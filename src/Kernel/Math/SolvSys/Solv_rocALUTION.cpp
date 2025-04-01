@@ -516,21 +516,19 @@ double residual(const Matrice_Base& a, const DoubleVect& b, const DoubleVect& x)
 }
 double residual_device(const GlobalMatrix<double>& a, const GlobalVector<double>& b, const GlobalVector<double>& x, GlobalVector<double>& e)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(gpu_library_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_library);
+  statistics().begin_count(STD_COUNTERS::gpu_library);
   a.Apply(x, &e);
   e.ScaleAdd(-1.0, b);
   double norm = e.Norm();
   statistiques().end_count(gpu_library_counter_);
-  statistics.end_count(STD_COUNTERS::gpu_library);
+  statistics().end_count(STD_COUNTERS::gpu_library);
   return norm;
 }
 #endif
 
 int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b, DoubleVect& x)
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
 #ifdef ROCALUTION_ROCALUTION_HPP_
   if (write_system_) save++;
   double tick;
@@ -623,7 +621,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+          statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
         }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
@@ -631,7 +629,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3 * (int)sizeof(double) * nb_rows_);
+          statistics().end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3 * (int)sizeof(double) * nb_rows_);
         }
       sol.GetInterior().CopyFromData(addrOnDevice(lhs_));
       rhs.GetInterior().CopyFromData(addrOnDevice(rhs_));
@@ -645,7 +643,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+          statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
         }
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
@@ -653,7 +651,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().end_count(gpu_copytodevice_counter_, 3 * (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3* (int)sizeof(double) * nb_rows_);
+          statistics().end_count(STD_COUNTERS::gpu_copytodevice, 1 ,  3* (int)sizeof(double) * nb_rows_);
         }
     }
 
@@ -708,13 +706,13 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
   if (gpu)
     {
       statistiques().begin_count(gpu_library_counter_);
-      statistics.begin_count(STD_COUNTERS::gpu_library);
+      statistics().begin_count(STD_COUNTERS::gpu_library);
     }
   ls->Solve(rhs, &sol);
   if (gpu)
     {
       statistiques().end_count(gpu_library_counter_);
-      statistics.end_count(STD_COUNTERS::gpu_library);
+      statistics().end_count(STD_COUNTERS::gpu_library);
     }
   if (ls->GetSolverStatus()==3) Process::exit("Divergence for solver.");
   if (ls->GetSolverStatus()==4)
@@ -742,13 +740,13 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       if (gpu)
         {
           statistiques().begin_count(gpu_copyfromdevice_counter_);
-          statistics.begin_count(STD_COUNTERS::gpu_copyfromdevice);
+          statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
         }
       sol.MoveToHost();
       if (gpu)
         {
           statistiques().end_count(gpu_copyfromdevice_counter_, (int)sizeof(double) * nb_rows_);
-          statistics.end_count(STD_COUNTERS::gpu_copyfromdevice,1,(int)sizeof(double) * nb_rows_);
+          statistics().end_count(STD_COUNTERS::gpu_copyfromdevice,1,(int)sizeof(double) * nb_rows_);
         }
       sol.GetInterior().CopyToData(lhs_.addr());
       Update_solution<Kokkos::DefaultHostExecutionSpace>(x);
@@ -794,7 +792,6 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
 void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 {
 #ifdef ROCALUTION_ROCALUTION_HPP_
-  Perf_counters& statistics = Perf_counters::getInstance();
   double tick = rocalution_time();
   const ArrOfInt& tab1 = csr.get_tab1();
   const ArrOfInt& tab2 = csr.get_tab2();
@@ -1002,10 +999,10 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
 #endif
   tick = rocalution_time();
   statistiques().begin_count(gpu_copytodevice_counter_);
-  statistics.begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
   mat.MoveToAccelerator(); // Important: move mat to device so after ls is built on device (best for performance)
   statistiques().end_count(gpu_copytodevice_counter_, (int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
-  statistics.end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
+  statistics().end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
   Cout << "[rocALUTION] Time to copy matrix on device: " << (rocalution_time() - tick) / 1e6 << finl;
 
   tick = rocalution_time();

@@ -162,7 +162,6 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
                                                const Stat_Counter_Id& cnt_min_id,
                                                const Stat_Counter_Id& cnt_max_id) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   static_assert(TYP_IDX >= 1 && TYP_IDX <= 4, "Invalid type index!");
   MPI_Datatype mpi_typ = TYP_IDX==1 ? MPI_INT : (TYP_IDX==2 ? MPI_LONG : (TYP_IDX==3 ? MPI_DOUBLE : MPI_FLOAT));
   if (n <= 0) return;
@@ -170,24 +169,24 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
     {
     case Comm_Group::COLL_SUM:
       statistiques().begin_count(cnt_sum_id);
-      statistics.begin_count(STD_COUNTERS::mpi_sumdouble);
+      statistics().begin_count(STD_COUNTERS::mpi_sumdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_SUM, mpi_comm_));
       statistiques().end_count(cnt_sum_id);
-      statistics.end_count(STD_COUNTERS::mpi_sumdouble);
+      statistics().end_count(STD_COUNTERS::mpi_sumdouble);
       break;
     case Comm_Group::COLL_MIN:
       statistiques().begin_count(cnt_min_id);
-      statistics.begin_count(STD_COUNTERS::mpi_mindouble);
+      statistics().begin_count(STD_COUNTERS::mpi_mindouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MIN, mpi_comm_));
       statistiques().end_count(cnt_min_id);
-      statistics.end_count(STD_COUNTERS::mpi_mindouble);
+      statistics().end_count(STD_COUNTERS::mpi_mindouble);
       break;
     case Comm_Group::COLL_MAX:
       statistiques().begin_count(cnt_max_id);
-      statistics.begin_count(STD_COUNTERS::mpi_maxdouble);
+      statistics().begin_count(STD_COUNTERS::mpi_maxdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MAX, mpi_comm_));
       statistiques().end_count(cnt_max_id);
-      statistics.end_count(STD_COUNTERS::mpi_maxdouble);
+      statistics().end_count(STD_COUNTERS::mpi_maxdouble);
       break;
     case Comm_Group::COLL_PARTIAL_SUM:
       internal_collective(x, resu, n, &op, -1 /* only one operation */, 0 /* recursion level */);
@@ -276,10 +275,9 @@ void Comm_Group_MPI::mp_collective_op(const trustIdType *x, trustIdType *resu, c
 void Comm_Group_MPI::barrier(int tag) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   static const int max_tag = 32;
   statistiques().begin_count(mpi_barrier_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_barrier);
+  statistics().begin_count(STD_COUNTERS::mpi_barrier);
   assert(tag >= 0 && tag < max_tag);
   if (check_enabled())
     {
@@ -306,7 +304,7 @@ void Comm_Group_MPI::barrier(int tag) const
       mpi_error(MPI_Barrier(mpi_comm_));
     }
   statistiques().end_count(mpi_barrier_counter_);
-  statistics.end_count(STD_COUNTERS::mpi_barrier);
+  statistics().end_count(STD_COUNTERS::mpi_barrier);
 #endif
 }
 
@@ -331,9 +329,8 @@ void Comm_Group_MPI::send_recv_start(const ArrOfInt& send_list,
                                      TypeHint typehint) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_sendrecv_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_sendrecv);
+  statistics().begin_count(STD_COUNTERS::mpi_sendrecv);
   assert(mpi_nrequests_ < 0);
 
   const int tag = get_new_tag();
@@ -409,11 +406,10 @@ void Comm_Group_MPI::send_recv_start(const ArrOfInt& send_list,
 void Comm_Group_MPI::send_recv_finish() const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   assert(mpi_nrequests_ >= 0);
   mpi_error(MPI_Waitall(mpi_nrequests_, mpi_requests_, mpi_status_));
   statistiques().end_count(mpi_sendrecv_counter_, current_msg_size_, mpi_nrequests_);
-  statistics.end_count(STD_COUNTERS::mpi_sendrecv,mpi_nrequests_,current_msg_size_);
+  statistics().end_count(STD_COUNTERS::mpi_sendrecv,mpi_nrequests_,current_msg_size_);
   /*
   for (int r=0;r<mpi_nrequests_;r++)
     {
@@ -440,9 +436,8 @@ void Comm_Group_MPI::send_recv_finish() const
 void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_send_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_send);
+  statistics().begin_count(STD_COUNTERS::mpi_send);
   assert(mpi_nrequests_ < 0);
   int dest = pe;
   assert(dest >= 0 && dest < nproc());
@@ -453,7 +448,7 @@ void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
   else
     mpi_error(MPI_Send ((void*)buffer, size, MPI_CHAR, dest, tag, mpi_comm_));
   statistiques().end_count(mpi_send_counter_, size);
-  statistics.end_count(STD_COUNTERS::mpi_send,1,size);
+  statistics().end_count(STD_COUNTERS::mpi_send,1,size);
 #endif
 }
 
@@ -463,82 +458,76 @@ void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
 void Comm_Group_MPI::recv(int pe, void *buffer, int size, int tag) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_recv_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_recv);
+  statistics().begin_count(STD_COUNTERS::mpi_recv);
   assert(mpi_nrequests_ < 0);
   MPI_Status status;
   int source = pe;
   assert(source >= 0 && source < nproc());
   mpi_error(MPI_Recv (buffer, size, MPI_CHAR, source, tag, mpi_comm_, & status));
   statistiques().end_count(mpi_recv_counter_, size);
-  statistics.end_count(STD_COUNTERS::mpi_recv,1,size);
+  statistics().end_count(STD_COUNTERS::mpi_recv,1,size);
 #endif
 }
 
 void Comm_Group_MPI::broadcast(void *buffer, int size, int pe_source) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_bcast_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_bcast);
+  statistics().begin_count(STD_COUNTERS::mpi_bcast);
   assert(mpi_nrequests_ < 0);
   mpi_error(MPI_Bcast (buffer, size, MPI_CHAR, pe_source, mpi_comm_));
   statistiques().end_count(mpi_bcast_counter_, size);
-  statistics.end_count(STD_COUNTERS::mpi_bcast,1,size);
+  statistics().end_count(STD_COUNTERS::mpi_bcast,1,size);
 #endif
 }
 
 void Comm_Group_MPI::all_to_all(const void *src_buffer, void *dest_buffer, int data_size) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_alltoall_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_alltoall);
+  statistics().begin_count(STD_COUNTERS::mpi_alltoall);
   assert(src_buffer != dest_buffer);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Alltoall(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, mpi_comm_));
   statistiques().end_count(mpi_alltoall_counter_, data_size);
-  statistics.end_count(STD_COUNTERS::mpi_alltoall,1,data_size);
+  statistics().end_count(STD_COUNTERS::mpi_alltoall,1,data_size);
 #endif
 }
 
 void Comm_Group_MPI::gather(const void *src_buffer, void *dest_buffer, int data_size, int root) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_gather_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_gather);
+  statistics().begin_count(STD_COUNTERS::mpi_gather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Gather(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, root, mpi_comm_));
   statistiques().end_count(mpi_gather_counter_, data_size);
-  statistics.end_count(STD_COUNTERS::mpi_gather,1,data_size);
+  statistics().end_count(STD_COUNTERS::mpi_gather,1,data_size);
 #endif
 }
 
 void Comm_Group_MPI::all_gather(const void *src_buffer, void *dest_buffer, int data_size) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_allgather_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_allgather);
+  statistics().begin_count(STD_COUNTERS::mpi_allgather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Allgather(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, mpi_comm_));
   statistiques().end_count(mpi_allgather_counter_, data_size);
-  statistics.end_count(STD_COUNTERS::mpi_allgather,1,data_size);
+  statistics().end_count(STD_COUNTERS::mpi_allgather,1,data_size);
 #endif
 }
 
 void Comm_Group_MPI::all_gatherv(const void *src_buffer, void *dest_buffer, int send_size, const True_int* recv_size, const True_int* displs) const
 {
 #ifdef MPI_
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_allgather_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_allgather);
+  statistics().begin_count(STD_COUNTERS::mpi_allgather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Allgatherv(ptr, send_size, MPI_CHAR, dest_buffer, recv_size, displs, MPI_CHAR, mpi_comm_));
   statistiques().end_count(mpi_allgather_counter_, send_size);
-  statistics.end_count(STD_COUNTERS::mpi_allgather,1,send_size);
+  statistics().end_count(STD_COUNTERS::mpi_allgather,1,send_size);
 #endif
 }
 
@@ -647,9 +636,8 @@ void Comm_Group_MPI::free_all()
 void Comm_Group_MPI::all_to_allv(const void *src_buffer, int *send_data_size, int *send_data_offset,
                                  void *dest_buffer, int *recv_data_size, int *recv_data_offset) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_alltoall_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_alltoall);
+  statistics().begin_count(STD_COUNTERS::mpi_alltoall);
   assert(src_buffer != dest_buffer);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
 
@@ -678,7 +666,7 @@ void Comm_Group_MPI::all_to_allv(const void *src_buffer, int *send_data_size, in
 
 #endif
   statistiques().end_count(mpi_alltoall_counter_, size);
-  statistics.end_count(STD_COUNTERS::mpi_alltoall,1,size);
+  statistics().end_count(STD_COUNTERS::mpi_alltoall,1,size);
 }
 
 /*! @brief pour que trio_u n'utilise qu'une partie des processeurs de MPI_COMM_WORLD, il faut donner un communicateur a utiliser avant
@@ -721,9 +709,8 @@ void Comm_Group_MPI::set_must_mpi_initialize(bool flag)
 void Comm_Group_MPI::ptop_send_recv(const void * send_buf, int send_buf_size, int send_proc,
                                     void * recv_buf, int recv_buf_size, int recv_proc) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_sendrecv_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_sendrecv);
+  statistics().begin_count(STD_COUNTERS::mpi_sendrecv);
   assert(mpi_nrequests_ < 0);
   int dest = send_proc;
   int src = recv_proc;
@@ -752,7 +739,7 @@ void Comm_Group_MPI::ptop_send_recv(const void * send_buf, int send_buf_size, in
                              &status));
     }
   statistiques().end_count(mpi_sendrecv_counter_, send_buf_size + recv_buf_size);
-  statistics.end_count(STD_COUNTERS::mpi_sendrecv, 1, send_buf_size + recv_buf_size);
+  statistics().end_count(STD_COUNTERS::mpi_sendrecv, 1, send_buf_size + recv_buf_size);
 }
 
 /*! @brief Construction du groupe de processeurs a partir de la liste.
@@ -949,9 +936,8 @@ void Comm_Group_MPI::internal_collective(const float *x, float *resu, int nx, co
  */
 trustIdType Comm_Group_MPI::mppartial_sum_impl(trustIdType x) const
 {
-  Perf_counters& statistics = Perf_counters::getInstance();
   statistiques().begin_count(mpi_partialsum_counter_);
-  statistics.begin_count(STD_COUNTERS::mpi_partialsum);
+  statistics().begin_count(STD_COUNTERS::mpi_partialsum);
   trustIdType somme = 0;
   MPI_Status status;
   int tag = get_new_tag();
@@ -978,7 +964,7 @@ trustIdType Comm_Group_MPI::mppartial_sum_impl(trustIdType x) const
 #endif
     }
   statistiques().end_count(mpi_partialsum_counter_);
-  statistics.end_count(STD_COUNTERS::mpi_partialsum);
+  statistics().end_count(STD_COUNTERS::mpi_partialsum);
   return somme;
 }
 
