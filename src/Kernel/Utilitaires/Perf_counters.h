@@ -245,9 +245,11 @@ private:
   bool time_loop_; ///< A flag used to know if we are inside the time loop
   bool counters_stop_;  ///< A flag used to know if the counters are paused or not
   int counter_lvl_to_print_;   ///< Counter level that you want to be printed in the global_TU
+  int total_nb_backup_=0;
+  double total_data_exchange_per_backup_=0.;
   duration computation_time_; ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
-  int max_str_lenght_;
+  int max_str_lenght_=128;
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
   std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
   /*! @brief Create the csv.TU file.

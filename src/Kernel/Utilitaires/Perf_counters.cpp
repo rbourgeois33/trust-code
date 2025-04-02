@@ -261,8 +261,7 @@ Perf_counters::Perf_counters()
   new Counter(2, "Scatter_interprete"),
   new Counter(2, "DoubleVect/IntVect::virtual_swap", "None", true),
   new Counter(2, "Scatter::read_domaine"),
-},  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false), counter_lvl_to_print_(1),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()),
-max_str_lenght_(150), last_opened_counter_(nullptr)
+},  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false), counter_lvl_to_print_(1),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()), last_opened_counter_(nullptr)
 {
 }
 
@@ -1092,7 +1091,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
   const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width;
   const int number_width=25;
   const int text_width =cpu_line_width-count_per_ts_width;
-  const int header_txt_width = 30;
+  const int header_txt_width = 12;
   const int message_width = static_cast<int>(message.length());
   const std::string separator = " | ";
   const std::string line_sep_cpu(max_str_lenght_,'~');
@@ -1210,10 +1209,10 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header << std::right << std::setw(cpu_line_width/2 +26) <<"Context of the computation"<< std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::left << std::setw(header_txt_width)<< "Date:" << get_date() << std::endl;
-          file_header << std::left << std::setw(header_txt_width)<< "OS:     " << get_os() << std::endl;
-          file_header << std::left << std::setw(header_txt_width) << "CPU:     " << get_cpu() << std::endl;
-          file_header << std::left << std::setw(header_txt_width) << "GPU:     " << get_gpu() << std::endl;
-          file_header << std::left << std::setw(header_txt_width) << "Number of processor used = " << nb_procs << std::endl << std::endl;
+          file_header << std::left << std::setw(header_txt_width)<< "OS:" << get_os() << std::endl;
+          file_header << std::left << std::setw(header_txt_width) << "CPU:" << get_cpu() << std::endl;
+          file_header << std::left << std::setw(header_txt_width) << "GPU:" << get_gpu() << std::endl;
+          file_header << std::left << std::setw(header_txt_width) << "Nb procs = " << nb_procs << std::endl << std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header  << std::right << std::setw(cpu_line_width/2 + message_width)<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
@@ -1279,7 +1278,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
                 write_globalTU_line(pair.second, perfs_TU);
             }
           c = get_counter(STD_COUNTERS::total_execution_time);
-          total_time = Process::mp_max(c->total_time_.count());
+          total_time = c->total_time_.count();
+          perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
         }
       c = get_counter(STD_COUNTERS::virtual_swap);
       if (Process::mp_max(c->count_)>0)
@@ -1311,8 +1311,6 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
               double avg_time = Process::mp_max(c->total_time_.count()) / tmp;
               perfs_TU <<  std::left <<std::setw(text_width) << "Average time of the resolution of the linear problem per call: " <<  std::left <<std::setw(number_width) << avg_time << std::endl;
             }
-          if ((message=="Time loop statistics"))
-        	  perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time: "<<  std::left <<std::setw(number_width)  << total_untracked_time_ts/time_tl + total_untracked_time/total_time << std::endl << std::endl;
           perfs_TU <<  std::left <<std::setw(text_width) << "Average number of iteration of the linear solver per call: " <<  std::left <<std::setw(number_width) <<  Process::mp_max(c->quantity_) / tmp << std::endl <<std::endl;
         }
 
@@ -1322,8 +1320,8 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       tmp = Process::mp_max(c->count_);
       if (tmp>0)
         {
-          perfs_IO <<  std::left <<std::setw(text_width) << "Number of back-up: " <<  std::left <<std::setw(number_width) << tmp << std::endl;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Average amount of data per back-up (Mo): " <<  std::left <<std::setw(number_width) << total_quantity / (tmp *1024*1024) << std::endl;
+          total_nb_backup_ += c->count_;
+          total_data_exchange_per_backup_ += total_quantity / (c->count_ *1024*1024);
         }
       // GPU part of the TU :
       auto compute_percent_and_write_tabular_line = [&] (const std::string str)
@@ -1440,6 +1438,11 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
         perfs_IO << std::left <<std::setw(text_width) << "Output write sequential (Mo/s) : " <<  std::left <<std::setw(number_width) << debit_seq << std::endl;
       if (debit_par>0)
         perfs_IO <<  std::left <<std::setw(text_width) << "Output write parallel (Mo/s) : " <<  std::left <<std::setw(number_width) << debit_par << std::endl;
+      if (total_nb_backup_>0)
+        {
+          perfs_IO <<  std::left <<std::setw(text_width) << "Total number of back-up: " <<  std::left <<std::setw(number_width) << total_nb_backup_ << std::endl;
+          perfs_IO <<  std::left <<std::setw(text_width) << "Total amount of data per back-up (Mo): " <<  std::left <<std::setw(number_width) << total_data_exchange_per_backup_ << std::endl;
+        }
       if(min_max_avg_sd_t_q_c_sendrecv_comm[2][1] > 0)
         {
           c=get_counter(STD_COUNTERS::petsc_solver);
