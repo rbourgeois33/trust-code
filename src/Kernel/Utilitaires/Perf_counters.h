@@ -223,9 +223,9 @@ public:
    *
    * @param tstep is the current time step number
    */
-  void end_time_step(int tstep);
+  void end_time_step(unsigned int tstep);
 
-  inline void set_nb_time_steps_elapsed(int n) {if (n>0)nb_steps_elapsed_ = n;}
+  inline void set_nb_time_steps_elapsed(unsigned int n) {if (n>0)nb_steps_elapsed_ = n;}
 
   inline void set_counter_lvl_to_print_global_TU(int l) { if (l>0)  counter_lvl_to_print_ = l;}
 
@@ -240,7 +240,7 @@ private:
   Perf_counters(const Perf_counters&) = delete;
   Perf_counters& operator=(const Perf_counters&) = delete;
   std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  int nb_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
+  unsigned int nb_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
   bool end_cache_; ///< A flag used to know if the two first time steps are over or not
   bool time_loop_; ///< A flag used to know if we are inside the time loop
   bool counters_stop_;  ///< A flag used to know if the counters are paused or not

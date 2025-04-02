@@ -276,7 +276,7 @@ bool Probleme_U::run()
   VT_USER_START("Resolution");
 #endif
   // Time step loop
-  int tstep = 0;
+  unsigned int tstep = 0;
   statistics().start_timeloop();
   while(!stop)
     {

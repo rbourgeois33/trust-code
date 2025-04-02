@@ -487,7 +487,7 @@ double Perf_counters::get_total_time(const std::string& name)
  *
  * Nota : if the counter is called before the time step loop, it is not accounted for in the computation.
  */
-void Perf_counters::end_time_step(int tstep)
+void Perf_counters::end_time_step(unsigned int tstep)
 {
   stop_counters(); ///< stop_counters already updated c->tim_ts_
   if (last_opened_counter_ == nullptr)
@@ -1219,7 +1219,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header << line_sep_cpu << std::endl;
           c = get_counter(STD_COUNTERS::total_execution_time);
           file_header << std::left << std::setw(text_width)<<"Total time of the start-up: " <<  std::left <<std::setw(number_width) << c->total_time_.count() << std::endl;
-          file_header << std::left << std::setw(text_width)<< "Percent of untracked time during computation start-up: "<<  std::left <<std::setw(number_width) << Process::mp_sum(total_untracked_time)/Process::mp_sum(total_time) << std::endl;
+          file_header << std::left << std::setw(text_width)<< "Percent of untracked time during computation start-up: "<<  std::left <<std::setw(number_width) << total_untracked_time/total_time << std::endl;
         }
       else if (message == "Time loop statistics")
         {
@@ -1312,7 +1312,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
               perfs_TU <<  std::left <<std::setw(text_width) << "Average time of the resolution of the linear problem per call: " <<  std::left <<std::setw(number_width) << avg_time << std::endl;
             }
           if ((message=="Time loop statistics"))
-            perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time: "<<  std::left <<std::setw(number_width)  << total_untracked_time_ts/time_tl + total_untracked_time/total_time << std::endl << std::endl;
+        	  perfs_TU <<  std::left <<std::setw(text_width) << "Percent of untracked time: "<<  std::left <<std::setw(number_width)  << total_untracked_time_ts/time_tl + total_untracked_time/total_time << std::endl << std::endl;
           perfs_TU <<  std::left <<std::setw(text_width) << "Average number of iteration of the linear solver per call: " <<  std::left <<std::setw(number_width) <<  Process::mp_max(c->quantity_) / tmp << std::endl <<std::endl;
         }
 
