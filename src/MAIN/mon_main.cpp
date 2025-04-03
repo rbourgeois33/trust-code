@@ -481,7 +481,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
     }
 
   double temps = statistiques().get_total_time();
-  temps = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time);
+  temps = statistics().get_computation_time();
   Cout << finl;
   Cout << "--------------------------------------------" << finl;
   Cout << "clock: Total execution: " << temps << " s" << finl;

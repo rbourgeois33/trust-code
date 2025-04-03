@@ -478,6 +478,21 @@ double Perf_counters::get_total_time(const std::string& name)
     t += now() - c->last_open_time_;
   return (t.count());
 }
+double Perf_counters::get_computation_time()
+{
+  if (counters_stop_)
+    Process::exit("The counters are stop, you can't access the total time");
+  Counter* c = get_counter(STD_COUNTERS::total_execution_time);
+  if (c->is_running_)
+    computation_time_+= now() - c->last_open_time_;
+  return (computation_time_.count());
+}
+
+double Perf_counters::compute_time(time_point start)
+{
+  duration d= now() - start;
+  {return d.count();}
+}
 
 /*! @brief Compute for each counter open during a time step avg_time_per_step_, min_time_per_step_, max_time_per_step_ and sd_time_per_step_
  *
@@ -1496,13 +1511,13 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
 
 void Perf_counters::print_TU_files(const std::string& message, const bool mode_append)
 {
+  Process::barrier();
   stop_counters();
   Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
   computation_time_ += c_time->total_time_;
   print_global_TU(message, mode_append);
   print_performance_to_csv(message, mode_append);
   reset_counters();
-  Process::barrier();
   counters_stop_=false;
 }
 

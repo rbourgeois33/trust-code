@@ -345,7 +345,6 @@ bool Probleme_U::run()
       if (limpr())
         {
           double temps = statistiques().last_time(timestep_counter_);
-          Cout << finl << "clock: Total time step: " << temps << " s" << finl << finl;
           temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }

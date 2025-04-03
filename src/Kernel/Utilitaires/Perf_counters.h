@@ -94,6 +94,12 @@ public:
     return clock::now();
   }
 
+////// Time wrapper /////
+
+  inline time_point start_clock() {return now();}
+
+  double compute_time(time_point start);
+
   /*! @brief The class Perf_counters is based on a singleton pattern. To access to the unique object inside the code, use the getInstance() function
    *
    * @return the unique Perf_counters object
@@ -183,6 +189,12 @@ public:
    *
    */
   void print_TU_files(const std::string& message, const bool mode_append);
+
+
+  /*!@brief Update computation_time_ and return its value as a double
+   *
+   */
+  double get_computation_time();
 
   /*!@brief Give as a double the total time (in second) elapsed in the operation tracked by the standard counter call name
    *

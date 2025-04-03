@@ -52,10 +52,9 @@ void Solv_AMGX::initialize()
   4. (uppercase) letter: whether the index type is 32-bit int (I) or else (not currently supported).
   typedef enum { AMGX_mode_hDDI, AMGX_mode_hDFI, AMGX_mode_hFFI, AMGX_mode_dDDI, AMGX_mode_dDFI, AMGX_mode_dFFI } AMGX_Mode; */
   Cerr << "Initializing Amgx and reading the " << config() << " file." << finl;
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   SolveurAmgX_.initialize(PETSC_COMM_WORLD, AmgXmode.getString(), config().getString());
-  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
-  Cout << "[AmgX] Time to initialize: " << t.count() << finl;
+  Cout << "[AmgX] Time to initialize: " << statistics().computation_time_(start) << finl;
   amgx_initialized_ = true;
   // MPI_Barrier(PETSC_COMM_WORLD); Voir dans https://github.com/barbagroup/AmgXWrapper/pull/30/commits/1554808a3689f51fa43ab81a35c47a9a1525939a
 }
@@ -73,10 +72,9 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   if (MatricePetsc_ != nullptr) MatDestroy(&MatricePetsc_);
 
   Create_MatricePetsc(MatricePetsc_, mataij_, mat_morse);
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   petscToCSR(MatricePetsc_, SolutionPetsc_, SecondMembrePetsc_);
-  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
-  Cout << "[AmgX] Time to create CSR pointers: " << t.count() << finl;
+  Cout << "[AmgX] Time to create CSR pointers: " << statistics().computation_time_(start) << finl;
   statistiques().begin_count(gpu_copytodevice_counter_);
   statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
   // Use device pointer to enable device consolidation in AmgXWrapper:
@@ -183,7 +181,7 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
       Cout << "[AmgX] In Solv_AMGX::check_stencil same_stencil=true cause bug in SolveurAmgX_::updateA on multi-GPU (ToDo: fix by switching to CSR interface)!" << finl;
       return true;
     }
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   // Parcours de la matrice_morse (qui peut contenir des 0 et qui n'est pas triee par colonnes croissantes)
   // si matrice sur le GPU deja construite (qui est sans 0 et qui est triee par colonnes croissantes):
   const ArrOfInt& tab1 = mat_morse.get_tab1();
@@ -237,8 +235,8 @@ bool Solv_AMGX::detect_new_stencil(const Matrice_Morse& mat_morse)
         }
     }
   new_stencil = mp_max(new_stencil);
-  std::chrono::duration<double> t = std::chrono::high_resolution_clock::now() - start;
-  Cout << "[AmgX] Time to check stencil: " << t.count() << finl;
+  Perf_counters::time_point start = statistics().start_clock();
+  Cout << "[AmgX] Time to check stencil: " << statistics().compute_time(start) << finl;
   return new_stencil;
 }
 
