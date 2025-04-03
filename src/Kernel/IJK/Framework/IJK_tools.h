@@ -23,9 +23,7 @@
 
 #define select_dir(a,x,y,z) ((a==0)?(x):((a==1)?(y):(z)))
 
-void build_extended_splitting(const Domaine_IJK& split, Domaine_IJK& split_ext, int n_cells);
-
-Probleme_base& creer_domaine_vdf(const Domaine_IJK& splitting, const Nom& nom_domaine);
+Probleme_base& creer_domaine_ijk(const Domaine_IJK& domain, const Nom& domain_name);
 
 void ijk_interpolate(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result);
 void ijk_interpolate_skip_unknown_points(const IJK_Field_double& field, const DoubleTab& coordinates, ArrOfDouble& result, const double value_for_bad_points);
@@ -61,6 +59,7 @@ void squared_3x3(double& a11, double& a12, double& a13,
 double maxValue(IJK_Field_double& indic);
 
 void interpolate_to_center(IJK_Field_vector3_double& cell_center_field, const IJK_Field_vector3_double& face_field);
+void interpolate_to_center_compo(IJK_Field_double& cell_center_field_compo, const IJK_Field_double& face_field_compo);
 
 
 #endif /* IJK_tools_included */
