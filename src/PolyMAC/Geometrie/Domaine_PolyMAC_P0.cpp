@@ -229,6 +229,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
 
   double x, eps_g = 1e-6, eps = 1e-10, i3[3][3] = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 }}, fac[3], vol_s;
 
+  statistics().create_custom_counter("f_grad",2);
   init_stencils();
   phif_e.resize(0);
   phif_c.resize(fsten_eb.dimension(0), N);
@@ -243,6 +244,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
   for (i = 0; first_fgrad_ && i < 3; i++) domaine().creer_tableau_sommets(ctr[i]);
 
   /* contributions aux sommets : en evitant ceux de som_ext */
+  statistics().begin_count("f_grad",statistics().get_last_opened_counter_level()+1);
   for (i_s = 0; i_s <= (som_ext ? som_ext->size() : 0); i_s++)
     for (s = (som_ext && i_s ? (*som_ext)(i_s - 1) + 1 : 0); s < (som_ext && i_s < som_ext->size() ? (*som_ext)(i_s) : (virt ? nb_som_tot() : nb_som())); s++)
       {
@@ -397,6 +399,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
 
 
   /* simplification du stencil */
+
   int skip;
   DoubleTrav scale(N);
   for (phif_d.resize(1), phif_d = 0, phif_e.resize(0), f = 0, i = 0; f < nb_faces_tot(); f++, phif_d.append_line(i))
@@ -412,6 +415,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
           }
       }
   /* comptage */
+  statistics().end_count("f_grad");
   if (!first_fgrad_) return;
   double count[3] = { mp_somme_vect_as_double(ctr[0]), mp_somme_vect_as_double(ctr[1]), mp_somme_vect_as_double(ctr[2]) }, tot = count[0] + count[1] + count[2];
   if (tot > 1.0e-4)

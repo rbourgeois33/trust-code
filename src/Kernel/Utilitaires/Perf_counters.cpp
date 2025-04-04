@@ -363,10 +363,9 @@ void Perf_counters::begin_count(const std::string& custom_count_name, int counte
     {
       Counter* c = get_counter(custom_count_name);
       if (c==nullptr)
-        Process::exit("You are trying to access a counter that does not exist nullptr");
+        Process::exit("You are trying to access a counter that does not exist");
       if (counter_lvl == -100000)
         counter_lvl = c->level_;
-
       time_point t = now();
       check_begin(c, counter_lvl,t);
       c->begin_count_(counter_lvl,t);
@@ -536,12 +535,12 @@ void Perf_counters::end_time_step(unsigned int tstep)
   int step = tstep - nb_steps_elapsed_;
   auto compute = [&](Counter* c)
   {
-    if (c!=nullptr && time_loop_ && c->level_>0 && step>0 )
+    if (c!=nullptr && time_loop_ && c->level_>=0 && step>0 && c->count_>0)
       {
         c->min_time_per_step_ = (c->min_time_per_step_ < (c->time_ts_).count()) ? c->min_time_per_step_ : (c->time_ts_).count();
         c->max_time_per_step_ = (c->min_time_per_step_ > (c->time_ts_).count()) ? c->min_time_per_step_ : (c->time_ts_).count();
         c->avg_time_per_step_ = ((step-1)*c->avg_time_per_step_ + (c->time_ts_).count())/step;
-        c->sd_time_per_step_ += ((c->time_ts_).count()* (c->time_ts_).count() - 2*((c->time_ts_).count())* c->avg_time_per_step_ +  c->avg_time_per_step_ *  c->avg_time_per_step_)/step;
+        c->sd_time_per_step_ += ((c->time_ts_).count()* (c->time_ts_).count() - 2*((c->time_ts_).count())* c->avg_time_per_step_ +  c->avg_time_per_step_ *  c->avg_time_per_step_)/static_cast<double>(step);
         c->sd_time_per_step_ = sqrt(c->sd_time_per_step_);
         if (c->sd_time_per_step_ < 0)
           c->sd_time_per_step_ = 0;
@@ -804,7 +803,7 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
 
   if ( (Process::je_suis_maitre()) && (message == "Computation start-up statistics") )
     {
-      file_header << "# Detailed performance log file. See the associated validation form for an example of data analysis"<< std::endl;
+      file_header << "# Detailed performance log file for case: " << Objet_U::nom_du_cas()<<". See the associated validation form for an example of data analysis"<< std::endl;
       file_header << "# Date of the computation:     " << get_date() << std::endl;
       file_header << "# OS used:     " << get_os() << std::endl;
       file_header << "# CPU info:     " << get_cpu() << std::endl;
@@ -993,64 +992,61 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
 
   auto extract_stats = [&](const Counter * c_lambda)
   {
-    if (c_lambda->count_ > 0)
+    level = c_lambda->level_; ///< Level of details of the counter
+    is_comm = c_lambda->is_comm_; ///< Equal to 1 if the counter is a communication counter, 0 otherwise
+    time = c_lambda->total_time_.count();
+    time_alone = c_lambda->time_alone_.count();
+    count = c_lambda->count_;
+    quantity = c_lambda->quantity_;
+    avg_time_per_step = c_lambda->avg_time_per_step_;
+    min_time_per_step = c_lambda->min_time_per_step_;
+    max_time_per_step = c_lambda->max_time_per_step_;
+    sd_time_per_step = c_lambda->sd_time_per_step_;
+    min_time = 0.;
+    max_time = 0.;
+    SD_time = 0.;
+    min_quantity = 0.;
+    max_quantity = 0.;
+    SD_quantity = 0.;
+    min_time_alone = 0.;
+    max_time_alone = 0.;
+    SD_time_alone = 0.;
+    if (Objet_U::stat_per_proc_perf_log || !Process::is_parallel())
       {
-        level = c_lambda->level_; ///< Level of details of the counter
-        is_comm = c_lambda->is_comm_; ///< Equal to 1 if the counter is a communication counter, 0 otherwise
-        time = c_lambda->total_time_.count();
-        time_alone = c_lambda->time_alone_.count();
-        count = c_lambda->count_;
-        quantity = c_lambda->quantity_;
-        avg_time_per_step = c_lambda->avg_time_per_step_;
-        min_time_per_step = c_lambda->min_time_per_step_;
-        max_time_per_step = c_lambda->max_time_per_step_;
-        sd_time_per_step = c_lambda->sd_time_per_step_;
-        min_time = 0.;
-        max_time = 0.;
-        SD_time = 0.;
-        min_quantity = 0.;
-        max_quantity = 0.;
-        SD_quantity = 0.;
-        min_time_alone = 0.;
-        max_time_alone = 0.;
-        SD_time_alone = 0.;
-        if (Objet_U::stat_per_proc_perf_log || !Process::is_parallel())
+        fill_items(Process::me(),c_lambda->description_, c_lambda->family_);
+        build_line_csv(perfs,line_items,item_size);  ///< Build the line of the stats associated on the counter i for a single proc
+      }
+    if (Process::je_suis_maitre()&& Process::is_parallel())
+      {
+        std::array< std::array<double,4> ,4> table = c_lambda->compute_min_max_avg_sd_();
+        time = table[0][2];
+        min_time = table[0][0];
+        max_time = table[0][1];
+        SD_time = table[0][3];
+        quantity = static_cast <int>(std::floor(table[1][2]));
+        min_quantity = static_cast <int>(std::floor(table[1][0]));
+        max_quantity = static_cast <int>(std::floor(table[1][1]));
+        SD_quantity = table[1][3];
+        time_alone = table[3][2];
+        min_time_alone = table[3][0];
+        max_time_alone = table[3][1];
+        SD_time_alone = table[3][3];
+        if (! skip_globals )
           {
-            fill_items(Process::me(),c_lambda->description_, c_lambda->family_);
-            build_line_csv(perfs,line_items,item_size);  ///< Build the line of the stats associated on the counter i for a single proc
-          }
-        if (Process::je_suis_maitre()&& Process::is_parallel())
-          {
-            std::array< std::array<double,4> ,4> table = c_lambda->compute_min_max_avg_sd_();
-            time = table[0][2];
-            min_time = table[0][0];
-            max_time = table[0][1];
-            SD_time = table[0][3];
-            quantity = static_cast <int>(std::floor(table[1][2]));
-            min_quantity = static_cast <int>(std::floor(table[1][0]));
-            max_quantity = static_cast <int>(std::floor(table[1][1]));
-            SD_quantity = table[1][3];
-            time_alone = table[3][2];
-            min_time_alone = table[3][0];
-            max_time_alone = table[3][1];
-            SD_time_alone = table[3][3];
-            if (! skip_globals )
-              {
-                fill_items(-1,c_lambda->description_,c_lambda->family_);
-                build_line_csv(perfs_globales,line_items,item_size);
-              }
+            fill_items(-1,c_lambda->description_,c_lambda->family_);
+            build_line_csv(perfs_globales,line_items,item_size);
           }
       }
   };
   for (Counter* c_std : std_counters_)
     {
-      if (c_std!=nullptr && c_std->count_>0)
+      if (c_std!=nullptr)
         extract_stats(c_std);
     }
 
   for (auto & pair : custom_counter_map_str_to_counter_)
     {
-      if (pair.second!=nullptr && pair.second->count_>0)
+      if (pair.second!=nullptr)
         extract_stats(pair.second);
     }
 
