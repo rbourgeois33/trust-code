@@ -29,6 +29,7 @@
 #include <Comm_Group_MPI.h>
 #endif
 
+/*
 bool init_device_ = false;
 bool clock_on = false;
 bool fence = true;
@@ -39,6 +40,7 @@ bool timer = true;
 #else
 bool timer = false;
 #endif
+*/
 
 std::string ptrToString(const void* adr)
 {
@@ -69,9 +71,9 @@ int AmgXWrapperScheduling(int rank, int nRanks, int nDevs)
 #ifdef TRUST_USE_GPU
 void init_device()
 {
-  if (init_device_) return;
-  init_device_ = true;
-  if (getenv("TRUST_CLOCK_ON")!=nullptr) clock_on = true;
+  if (statistics().get_init_device()) return;
+  statistics().set_init_device(true);
+  if (getenv("TRUST_CLOCK_ON")!= nullptr) statistics().set_gpu_clock(true);
   if (getenv("TRUST_DISABLE_FENCE")!=nullptr) fence = false;
   Process::imprimer_ram_totale(); // Impression avant copie des donnees sur GPU
 }
@@ -213,7 +215,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   end_gpu_timer(__KERNEL_NAME__);
 #endif
   statistiques().end_count(gpu_mallocfree_counter_);
-  if (clock_on && Process::je_suis_maitre())
+  if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
     {
       std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
       double ms = 1000 * (Statistiques::get_time_now() - clock_start);
@@ -229,7 +231,7 @@ void deleteOnDevice(TRUSTArray<_TYPE_,_SIZE_>& tab)
 {
 #ifdef TRUST_USE_GPU
   _TYPE_ *tab_addr = tab.data();
-  if (init_device_ && tab_addr && isAllocatedOnDevice(tab))
+  if (statistics().get_init_device() && tab_addr && isAllocatedOnDevice(tab))
     {
       deleteOnDevice(tab_addr, tab.size_mem());
       tab.set_data_location(DataLocation::HostOnly);
@@ -247,7 +249,7 @@ void deleteOnDevice(_TYPE_* ptr, _SIZE_ size)
   else
     clock = "[clock]  ";
   _SIZE_ bytes = sizeof(_TYPE_) * size;
-  if (clock_on && Process::je_suis_maitre())
+  if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
     cout << clock << "            [Data]   Delete on device array [" << ptrToString(ptr).c_str() << "] of " << bytes << " Bytes. It remains " << DeviceMemory::getMemoryMap().size()-1 << " arrays." << endl << flush;
   Kokkos::kokkos_free(addrOnDevice(ptr));
   DeviceMemory::del(ptr);
@@ -359,7 +361,7 @@ void copyFromDevice(_TYPE_* ptr, _SIZE_ size)
       std::stringstream message;
       message << "Copy from device [" << ptrToString(ptr) << "] " << size << " items ";
       end_gpu_timer(message.str(), 0, bytes);
-      //if (clock_on) printf("\n");
+      //if (statistics().is_gpu_clock_on()) printf("\n");
       if (DeviceMemory::warning(size)) // Warning for large array only:
         ToDo_Kokkos("D2H update of large array! Add a breakpoint to find the reason if not IO.");
     }
@@ -502,16 +504,17 @@ template void copyFromDevice<double, trustIdType>(const TRUSTArray<double,trustI
 std::string start_gpu_timer(std::string str, int bytes)
 {
 #ifdef TRUST_USE_GPU
-  if (init_device_)
+  if (statistics().get_init_device())
     {
-      timer_counter++;
+      statistics().add_to_gpu_timer_counter(1);
 #ifndef NDEBUG
-      if (timer_counter>1)
-        Cerr << "[Kokkos] timer_counter=" << timer_counter << " : start_gpu_timer() not closed by end_gpu_timer() !" << finl;
+      if (statistics().get_gpu_timer_counter()>1)
+        Cerr << "[Kokkos] timer_counter=" << statistics().get_gpu_timer_counter() << " : start_gpu_timer() not closed by end_gpu_timer() !" << finl;
       //Process::exit("Error, start_gpu_timer() not closed by end_gpu_timer() !");
 #endif
-      if (clock_on) clock_start = Statistiques::get_time_now();
-      if (bytes == -1) statistiques().begin_count(gpu_kernel_counter_, false);
+      if (statistics().is_gpu_clock_on()) statistics().start_gpu_clock();
+      if (bytes == -1) statistics().begin_count(STD_COUNTERS::gpu_kernel);
+
 #ifdef TRUST_USE_CUDA
       if (!str.empty()) nvtxRangePush(str.c_str());
 #endif
@@ -523,12 +526,12 @@ std::string start_gpu_timer(std::string str, int bytes)
 void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in [ms]
 {
 #ifdef TRUST_USE_GPU
-  if (init_device_)
+  if (statistics().get_init_device())
     {
-      timer_counter--;
+      statistics().add_to_gpu_timer_counter(-1);
 #ifndef NDEBUG
-      if (timer_counter!=0)
-        Cerr << "[Kokkos] timer_counter=" << timer_counter << " : end_gpu_timer() not opened by start_gpu_timer() !" << finl;
+      if (statistics().get_gpu_timer_counter()!=0)
+        Cerr << "[Kokkos] timer_counter=" << statistics().get_gpu_timer_counter() << " : end_gpu_timer() not opened by start_gpu_timer() !" << finl;
       //Process::exit("Error, start_gpu_timer() not closed by end_gpu_timer() !");
 #endif
       if (onDevice)
@@ -540,11 +543,11 @@ void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in
           if (fence) Kokkos::fence();  // Barrier for real time
 #endif
         }
-      if (bytes == -1) statistiques().end_count(gpu_kernel_counter_, 0, onDevice, false);
-      if (clock_on && Process::je_suis_maitre()) // Affichage
+      if (bytes == -1) statistics().end_count(STD_COUNTERS::gpu_kernel,onDevice);
+      if (statistics().is_gpu_clock_on() && Process::je_suis_maitre()) // Affichage
         {
           std::string clock(Process::is_parallel() ? "[clock]#" + std::to_string(Process::me()) : "[clock]  ");
-          double ms = 1000 * (Statistiques::get_time_now() - clock_start);
+          double ms = 1000 * statistics().compute_gpu_time();
           if (bytes == -1)
             {
               if (!str.empty())
@@ -568,5 +571,6 @@ void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in
     }
 #endif
 }
+
 #endif
 

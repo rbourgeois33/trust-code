@@ -263,6 +263,9 @@ Perf_counters::Perf_counters()
   new Counter(2, "Scatter::read_domaine"),
 },  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false), counter_lvl_to_print_(1),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()), last_opened_counter_(nullptr)
 {
+#ifdef TRUST_USE_GPU
+  gpu_timer_ = true;
+#endif
 }
 
 Perf_counters::~Perf_counters()
@@ -492,6 +495,27 @@ double Perf_counters::compute_time(time_point start)
 {
   duration d= now() - start;
   {return d.count();}
+}
+
+void Perf_counters::start_gpu_clock()
+{
+  if (gpu_clock_on_)
+    Process::exit("You try to start the gpu clock and it is already running");
+  gpu_clock_start_=now();
+  gpu_clock_on_ = true;
+}
+
+void Perf_counters::stop_gpu_clock()
+{
+  if(!gpu_clock_on_)
+    Process::exit("You try to stop the GPU clock, but it has not been started yet");
+  gpu_clock_on_=false;
+}
+
+double Perf_counters::compute_gpu_time()
+{
+  stop_gpu_clock();
+  return compute_time(gpu_clock_start_);
 }
 
 /*! @brief Compute for each counter open during a time step avg_time_per_step_, min_time_per_step_, max_time_per_step_ and sd_time_per_step_

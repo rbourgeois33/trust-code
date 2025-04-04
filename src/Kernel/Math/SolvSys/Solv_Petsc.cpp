@@ -1665,7 +1665,7 @@ void sortie_maple(Sortie& s, const Matrice_Morse& M)
 // Save Matrix and RHS in a .petsc or .mtx (matrix market) file:
 void Solv_Petsc::SaveObjectsToFile(const DoubleVect& secmem, DoubleVect& solution)
 {
-  std::chrono::time_point<std::chrono::high_resolution_clock> start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   if (save_matrix()==2)
     {
       MatInfo Info;
@@ -1779,8 +1779,7 @@ void Solv_Petsc::SaveObjectsToFile(const DoubleVect& secmem, DoubleVect& solutio
           PetscViewerDestroy(&viewer);
         }
     }
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now()-start;
-  if (verbose) Cout << "[Petsc] Time to write matrix: \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << "[Petsc] Time to write matrix: \t" << statistics().compute_time(start) << finl;
 }
 
 // Read a PETSc matrix in a file and
@@ -1995,7 +1994,7 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
   statistiques().end_count(solv_sys_petsc_counter_,1,1);
   statistics().begin_count(STD_COUNTERS::petsc_solver);
   statistics().end_count(STD_COUNTERS::petsc_solver);
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   // Attention, bug apres PETSc 3.14 le logging avec PetscLogStage est tres cher pour MatSetValues (appel MPI meme en sequentiel!). Vu sur Flica5 avec appel frequents a Update_matrix
   bool log_Create_Stage = false; // ToDO mettre un test plus intelligent selon taille du cas ou si parallele ?
   if (log_Create_Stage) PetscLogStagePush(Create_Stage_);
@@ -2047,8 +2046,7 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
         }
       else
         construit_matrice_morse_intermediaire(la_matrice, matrice_morse_intermediaire);
-      std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now() - start;
-      if (verbose) Cout << "[Petsc] Time to convert matrix: \t" << elapsed_time.count() << finl;
+      if (verbose) Cout << "[Petsc] Time to convert matrix: \t" << statistics().compute_time(start) << finl;
 
       // Verification stockage de la matrice
       check_aij(matrice_morse_intermediaire);
@@ -2200,7 +2198,7 @@ void setupSignalHandlers(bool on)
 int Solv_Petsc::solve(ArrOfDouble& residu)
 {
   PetscLogStagePush(KSPSolve_Stage_);
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   // Affichage par MyKSPMonitor
   if (!solveur_direct_)
     {
@@ -2311,8 +2309,7 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
           VecNorm(SecondMembrePetsc_, NORM_2, &residu[nbit]);
         }
     }
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now() - start;
-  if (verbose) Cout << finl << "[Petsc] Time to solve system:    \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << finl << "[Petsc] Time to solve system:    \t" << statistics().compute_time(start) << finl;
   PetscLogStagePop();
   return Reason < 0 ? (int)Reason : nbit;
 }
@@ -2322,7 +2319,7 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
 void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
 {
   // Assemblage du second membre et de la solution
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   bool DataOnDevice = solution.checkDataOnDevice(secmem);
   if (gpu_ && DataOnDevice && !isViennaCLVector()) // The 2 arrays are up to date on the device and the solver is a GPU one (fastest strategy)
     {
@@ -2379,8 +2376,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
           VecPermute(SolutionPetsc_, colperm, PETSC_FALSE);
         }
     }
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now() - start;
-  if (verbose) Cout << finl << "[Petsc] Time to update vectors:    \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << finl << "[Petsc] Time to update vectors:    \t" << statistics().compute_time(start) << finl;
 
   //  VecView(SecondMembrePetsc_,PETSC_VIEWER_STDOUT_WORLD);
   //  VecView(SolutionPetsc_,PETSC_VIEWER_STDOUT_WORLD);
@@ -2396,7 +2392,7 @@ bool Solv_Petsc::isViennaCLVector()
 void Solv_Petsc::Update_solution(DoubleVect& solution)
 {
   // Recuperation de la solution
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   bool DataOnDevice = solution.checkDataOnDevice();
   if (gpu_ && DataOnDevice && !isViennaCLVector()) // solution is on the device to SolutionPetsc_ -> solution update without copy
     {
@@ -2457,8 +2453,7 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
             }
         }
     }
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now() - start;
-  if (verbose) Cout << finl << "[Petsc] Time to update solution: \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << finl << "[Petsc] Time to update solution: \t" << statistics().compute_time(start) << finl;
 }
 
 void Solv_Petsc::check_aij(const Matrice_Morse& matrice)
@@ -2816,10 +2811,9 @@ void Solv_Petsc::Create_objects(const Matrice_Morse& mat, int blocksize)
   /*************************************/
   /* Mise en place du preconditionneur */
   /*************************************/
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   KSPSetUp(SolveurPetsc_);
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now()-start;
-  if (verbose) Cout << "[Petsc] Time to setup solver:    \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << "[Petsc] Time to setup solver:    \t" << statistics().compute_time(start) << finl;
 }
 
 void Solv_Petsc::Create_vectors(const DoubleVect& b)
@@ -2983,7 +2977,7 @@ PetscInt Solv_Petsc::compute_nb_rows_petsc(PetscInt nb_rows_tot)
 // Creation d'une matrice Petsc depuis une matrice Matrice_Morse
 void Solv_Petsc::Create_MatricePetsc(Mat& MatricePetsc, int mataij, const Matrice_Morse& mat_morse)
 {
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   // Recuperation des donnees
   bool journal = nb_rows_tot_ < 20 ? true : false;
   journal = false;
@@ -3210,8 +3204,7 @@ void Solv_Petsc::Create_MatricePetsc(Mat& MatricePetsc, int mataij, const Matric
   // Hash table (Faster MatAssembly after the first one)
   if (ignore_new_nonzero_)
     MatSetOption(MatricePetsc, MAT_USE_HASH_TABLE, PETSC_TRUE);
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now()-start;
-  if (verbose) Cout << "[Petsc] Time to create the matrix: \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << "[Petsc] Time to create the matrix: \t" << statistics().compute_time(start) << finl;
 
   // Fill the matrix
   Solv_Petsc::Update_matrix(MatricePetsc, mat_morse);
@@ -3230,7 +3223,7 @@ void Solv_Petsc::Create_MatricePetsc(Mat& MatricePetsc, int mataij, const Matric
 
 void Solv_Petsc::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
 {
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   bool journal = nb_rows_tot_ < 20 ? true : false;
   journal = false;
 
@@ -3349,8 +3342,7 @@ void Solv_Petsc::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse
       MatGetInfo(MatricePetsc,MAT_GLOBAL_MAX,&info);
       Cerr << "Max memory used by matrix on a MPI rank: " << (int)(info.memory/1024/1024) << " MB" << finl;
     }*/
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now()-start;
-  if (verbose) Cout << "[Petsc] Time to fill the matrix: \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << "[Petsc] Time to fill the matrix: \t" << statistics().compute_time(start) << finl;
 }
 
 bool Solv_Petsc::detect_new_stencil(const Matrice_Morse& mat_morse)
@@ -3360,7 +3352,7 @@ bool Solv_Petsc::detect_new_stencil(const Matrice_Morse& mat_morse)
     return false;
 
   // Est ce un nouveau stencil ?
-  std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+  Perf_counters::time_point start = statistics().start_clock();
   int new_stencil=0;
   if (!mataij_)
     new_stencil = 1; // Don't how to check the stencil with symmetric ?
@@ -3444,8 +3436,7 @@ bool Solv_Petsc::detect_new_stencil(const Matrice_Morse& mat_morse)
       if (Process::is_parallel()) MatDestroy(&localA);
       new_stencil = mp_max(new_stencil);
     }
-  std::chrono::duration<double> elapsed_time = std::chrono::high_resolution_clock::now()-start;
-  if (verbose) Cout << "[Petsc] Time to check stencil: \t" << elapsed_time.count() << finl;
+  if (verbose) Cout << "[Petsc] Time to check stencil: \t" << statistics().compute_time(start) << finl;
   return new_stencil;
 }
 #endif

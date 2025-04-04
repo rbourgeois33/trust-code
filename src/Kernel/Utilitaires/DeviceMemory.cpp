@@ -101,7 +101,7 @@ void DeviceMemory::add(void * ptr, void * device_ptr, trustIdType bytes)
 {
   if (ptr==nullptr) return;
   DeviceMemory::getMemoryMap()[ptr] = {bytes, device_ptr};
-  if (clock_on)
+  if (statistics().is_gpu_clock_on())
     {
       Process::Journal() << "Adding Host ptr: " << ptrToString(ptr) << " Device ptr: " << ptrToString(device_ptr)
                          << " bytes: " << bytes << finl;
@@ -115,7 +115,7 @@ void DeviceMemory::add(void * ptr, void * device_ptr, trustIdType bytes)
 void DeviceMemory::del(void * ptr)
 {
   DeviceMemory::getMemoryMap().erase(ptr);
-  if (clock_on)
+  if (statistics().is_gpu_clock_on())
     {
       Process::Journal() << "Deleting Host ptr: " << ptrToString(ptr) << finl;
       DeviceMemory::printMemoryMap();
@@ -141,6 +141,6 @@ void DeviceMemory::printMemoryMap()
 
 bool DeviceMemory::warning(trustIdType nb_items)
 {
-  return clock_on && nb_pas_dt_>1 && nb_items>=internal_items_size_;
+  return statistics().is_gpu_clock_on() && nb_pas_dt_>1 && nb_items>=internal_items_size_;
 }
 #endif

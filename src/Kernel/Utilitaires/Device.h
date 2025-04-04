@@ -20,7 +20,6 @@
 #include <Nom.h>
 #include <stat_counters.h>
 #include <Perf_counters.h>
-#include <chrono>
 #include <kokkos++.h>
 
 #ifdef TRUST_USE_CUDA
@@ -29,10 +28,11 @@
 #include <nvtx3/nvToolsExt.h>
 #endif
 
-// TODO - scope all this, global vars are bad.
+/*
 extern bool init_device_, clock_on, timer;
 extern double clock_start;
 extern int timer_counter;
+*/
 
 void self_test();
 void init_device();

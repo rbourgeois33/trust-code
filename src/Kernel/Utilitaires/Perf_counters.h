@@ -243,6 +243,30 @@ public:
 
   int get_last_opened_counter_level() const ;
 
+  /////// GPU features for a cleaner Device class
+
+  void start_gpu_clock();
+
+  void stop_gpu_clock();
+
+  inline bool is_gpu_clock_on() const {return gpu_clock_on_;}
+  inline void set_gpu_clock(bool on) {gpu_clock_on_=on;}
+
+  inline bool get_init_device() const {return init_device_;}
+
+  inline void set_init_device(bool init) {init_device_=init;}
+
+  inline bool get_gpu_timer() const {return gpu_timer_;}
+
+  inline void set_gpu_timer(bool timer) {gpu_timer_=timer;}
+
+  inline void add_to_gpu_timer_counter(int to_add) {gpu_timer_counter_+=to_add;}
+
+  inline int get_gpu_timer_counter() const {return gpu_timer_counter_;}
+
+  double compute_gpu_time() ;
+
+//// end of GPU features
 
 
 private:
@@ -259,6 +283,11 @@ private:
   int counter_lvl_to_print_;   ///< Counter level that you want to be printed in the global_TU
   int total_nb_backup_=0;
   double total_data_exchange_per_backup_=0.;
+  bool gpu_clock_on_ =false;
+  bool init_device_ = false;
+  bool gpu_timer_ = false;
+  time_point gpu_clock_start_;
+  int gpu_timer_counter_=0;
   duration computation_time_; ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   int max_str_lenght_=128;
