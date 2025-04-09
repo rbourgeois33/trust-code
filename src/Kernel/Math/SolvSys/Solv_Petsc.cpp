@@ -1990,8 +1990,6 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
   std::fenv_t fenv;
   std::feholdexcept(&fenv);
   // Si on utilise un solver petsc on le signale pour les stats finales
-  statistiques().begin_count(solv_sys_petsc_counter_);
-  statistiques().end_count(solv_sys_petsc_counter_,1,1);
   statistics().begin_count(STD_COUNTERS::petsc_solver,statistics().get_last_opened_counter_level()+1);
   statistics().end_count(STD_COUNTERS::petsc_solver);
   Perf_counters::time_point start = statistics().start_clock();
@@ -2240,16 +2238,10 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
   // Solve
   setupSignalHandlers(true);
   if (gpu_)
-    {
-      statistiques().begin_count(gpu_library_counter_);
-      statistics().begin_count(STD_COUNTERS::gpu_library);
-    }
+    statistics().begin_count(STD_COUNTERS::gpu_library);
   KSPSolve(SolveurPetsc_, SecondMembrePetsc_, SolutionPetsc_);
   if (gpu_)
-    {
-      statistiques().end_count(gpu_library_counter_);
-      statistics().end_count(STD_COUNTERS::gpu_library);
-    }
+    statistics().end_count(STD_COUNTERS::gpu_library);
   setupSignalHandlers(false);
   // Analyse de la convergence par Petsc
   KSPConvergedReason Reason;
@@ -2353,10 +2345,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       solution.ensureDataOnHost();
       PetscInt size=ix.size_array();
       if (gpu_)
-        {
-          statistiques().begin_count(gpu_copytodevice_counter_);
-          statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
-        }
+        statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
       VecSetOption(SecondMembrePetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
       VecSetValues(SecondMembrePetsc_, size, ix.addr(), secmem.addr(), INSERT_VALUES);
       VecSetOption(SolutionPetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
@@ -2366,10 +2355,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       VecAssemblyBegin(SolutionPetsc_);
       VecAssemblyEnd(SolutionPetsc_);
       if (gpu_)
-        {
-          statistiques().end_count(gpu_copytodevice_counter_);
-          statistics().end_count(STD_COUNTERS::gpu_copytodevice);
-        }
+        statistics().end_count(STD_COUNTERS::gpu_copytodevice);
       if (reorder_matrix_)
         {
           VecPermute(SecondMembrePetsc_, colperm, PETSC_FALSE);
@@ -2441,16 +2427,10 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
         {
           // TRUST and PETSc has same partition, local solution can be accessed from the global vector:
           if (gpu_)
-            {
-              statistiques().begin_count(gpu_copyfromdevice_counter_);
-              statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
-            }
+            statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
           VecGetValues(SolutionPetsc_, size, ix.addr(), solution.addr());
           if (gpu_)
-            {
-              statistiques().end_count(gpu_copyfromdevice_counter_);
-              statistics().end_count(STD_COUNTERS::gpu_copyfromdevice);
-            }
+            statistics().end_count(STD_COUNTERS::gpu_copyfromdevice);
         }
     }
   if (verbose) Cout << finl << "[Petsc] Time to update solution: \t" << statistics().compute_time(start) << finl;

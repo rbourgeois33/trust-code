@@ -32,7 +32,7 @@
 #include <functional>
 #include <cmath>
 
-extern Stat_Counter_Id diffusion_counter_;
+//extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_instanciable_sans_constructeur(Op_Diff_PolyMAC_P0_Elem, "Op_Diff_PolyMAC_P0_Elem|Op_Diff_PolyMAC_P0_var_Elem", Op_Diff_PolyMAC_P0_base);
 Implemente_instanciable(Op_Dift_PolyMAC_P0_Elem, "Op_Dift_PolyMAC_P0_Elem_PolyMAC_P0|Op_Dift_PolyMAC_P0_var_Elem_PolyMAC_P0", Op_Diff_PolyMAC_P0_Elem);
@@ -270,15 +270,18 @@ void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
  */
 void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(diffusion_counter_);
-
+#ifdef _COMPILE_AVEC_PGCC_AVANT_22_7
+  Cerr << "Internal error with nvc++: Internal error: read_memory_region: not all expected entries were read." << finl;
+  Process::exit();
+#else
+  statistics().begin_count(STD_COUNTERS::diffusion);
   init_op_ext();
   update_phif();
 
   if (is_pb_coupl_ || has_flux_par_)
     {
       couplage_parietal_helper_.ajouter_blocs(matrices, secmem, semi_impl);
-      statistiques().end_count(diffusion_counter_);
+      statistics().end_count(STD_COUNTERS::diffusion);
       return;
     }
 
@@ -361,6 +364,7 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
           flux_bords_(f, n) = flux(n); //flux aux bords
     }
 
-  statistiques().end_count(diffusion_counter_);
+  statistics().end_count(STD_COUNTERS::diffusion);
+#endif
 }
 

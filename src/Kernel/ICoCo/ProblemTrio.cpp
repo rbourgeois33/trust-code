@@ -182,14 +182,7 @@ bool ProblemTrio::initialize()
     }
 
   // Print the initialization CPU statistics
-  if (!Objet_U::disable_TU)
-    {
-      statistiques().dump("Statistiques d'initialisation du calcul", 0);
-      print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
-      statistics().print_TU_files("Computation start-up statistics",0);
-    }
-  statistiques().reset_counters();
-  statistiques().begin_count(temps_total_execution_counter_);
+  statistics().print_TU_files("Computation start-up statistics",0);
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
@@ -214,12 +207,14 @@ void ProblemTrio::terminate()
       pb->postraiter(1);
       pb->terminate();
     }
-  int mode_append=1;
   if (!Objet_U::disable_TU)
     {
-      statistiques().dump("Statistiques Resolution", mode_append);
-      print_statistics_analyse("Statistiques Resolution", 1);
-      statistics().print_TU_files("Time loop statistics",0);
+  statistics().print_TU_files("Time loop statistics",false);
+  if(p)
+    {
+      delete p;
+      p=0;
+      // fait dans mon_main maintenant // PE_Groups::finalize();
     }
   if(p)
     {
@@ -290,7 +285,6 @@ bool ProblemTrio::initTimeStep(double dt)
  */
 bool ProblemTrio::solveTimeStep()
 {
-  statistiques().begin_count(timestep_counter_);
   statistics().begin_count(STD_COUNTERS::timeloop);
   if (pb->lsauv())
     pb->sauver();
@@ -322,7 +316,6 @@ void ProblemTrio::validateTimeStep()
       // If *pb is a coupled problem, we may get the last line duplicated in post-processing files.
       pb->postraiter(0);
     }
-  statistiques().end_count(timestep_counter_);
   statistics().end_count(STD_COUNTERS::timeloop);
 }
 

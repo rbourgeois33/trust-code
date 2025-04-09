@@ -693,7 +693,6 @@ double Op_Conv_Muscl_New_VEF_Face::calculer_dt_stab() const
       DoubleTab vitesse_face_;
       const DoubleTab& velocity=modif_par_porosite_si_flag(vitesse_2,vitesse_face_,marq,porosite_face);
 
-      //statistiques().begin_count(m1);
       DoubleTab Kij(nb_elem_tot,nb_faces_elem,nb_faces_elem);
       DoubleTab Cij(nb_elem_tot,nfa7);
       DoubleTab Sij(nb_elem_tot,nfa7);

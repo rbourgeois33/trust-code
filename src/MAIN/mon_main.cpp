@@ -38,8 +38,8 @@
 // Initialisation des compteurs, dans stat_counters.cpp
 extern void declare_stat_counters();
 extern void end_stat_counters();
-extern Stat_Counter_Id temps_total_execution_counter_;
-extern Stat_Counter_Id initialisation_calcul_counter_;
+//extern Stat_Counter_Id temps_total_execution_counter_;
+//extern Stat_Counter_Id initialisation_calcul_counter_;
 
 mon_main::mon_main(int verbose_level, bool journal_master, Nom log_directory, bool apply_verification, bool disable_stop)
 {
@@ -315,9 +315,6 @@ void mon_main::dowork(const Nom& nom_du_cas)
     {
       declare_stat_counters();
     }
-  statistiques().begin_count(temps_total_execution_counter_);
-  // Ce compteur est arrete dans Resoudre*
-  statistiques().begin_count(initialisation_calcul_counter_);
   statistics().begin_count(STD_COUNTERS::computation_start_up);
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
@@ -468,20 +465,9 @@ void mon_main::dowork(const Nom& nom_du_cas)
   Cerr << "MAIN: End of data file" << finl;
   Process::imprimer_ram_totale(1);
 
-  // pour les cas ou on ne fait pas de resolution
-  int mode_append=1;
-  if (!Objet_U::disable_TU)
-    {
-      if(GET_COMM_DETAILS)
-        statistiques().print_communciation_tracking_details("Statistiques de post resolution", 1);               // Into _csv.TU file
+  statistics().print_TU_files("Post-resolution statistics",true);
 
-      statistiques().dump("Statistiques de post resolution", mode_append);
-      print_statistics_analyse("Statistiques de post resolution", 1);
-      statistics().print_TU_files("Post-resolution statistics",1);
-    }
-
-  double temps = statistiques().get_total_time();
-  temps = statistics().get_computation_time();
+  double temps = statistics().get_computation_time();
   Cout << finl;
   Cout << "--------------------------------------------" << finl;
   Cout << "clock: Total execution: " << temps << " s" << finl;

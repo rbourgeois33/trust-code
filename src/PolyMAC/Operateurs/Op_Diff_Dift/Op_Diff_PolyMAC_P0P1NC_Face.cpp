@@ -231,7 +231,6 @@ void Op_Diff_PolyMAC_P0P1NC_Face::dimensionner_blocs_ext(int aux_only, matrices_
 // renvoie resu
 void Op_Diff_PolyMAC_P0P1NC_Face::ajouter_blocs_ext(int aux_only, matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(diffusion_counter_);
   statistics().begin_count(STD_COUNTERS::diffusion);
   const Champ_Face_PolyMAC_P0P1NC& ch = ref_cast(Champ_Face_PolyMAC_P0P1NC, le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().inconnue());
   const Conds_lim& cls = ch.domaine_Cl_dis().les_conditions_limites();
@@ -454,7 +453,6 @@ void Op_Diff_PolyMAC_P0P1NC_Face::ajouter_blocs_ext(int aux_only, matrices_t mat
             }
       }
 
-  statistiques().end_count(diffusion_counter_);
   statistics().end_count(STD_COUNTERS::diffusion);
 }
 

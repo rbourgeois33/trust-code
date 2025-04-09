@@ -159,7 +159,6 @@ DoubleTab& Op_Conv_VEF_Face::ajouter(const DoubleTab& transporte,
                                      DoubleTab& resu) const
 {
 
-  //statistiques().begin_count(m1);
   assert((type_op==amont) || (type_op==muscl) || (type_op==centre));
   const Domaine_Cl_VEF& domaine_Cl_VEF = la_zcl_vef.valeur();
   const Domaine_VEF& domaine_VEF = ref_cast(Domaine_VEF, le_dom_vef.valeur());

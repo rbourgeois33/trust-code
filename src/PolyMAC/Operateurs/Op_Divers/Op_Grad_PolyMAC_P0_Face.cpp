@@ -218,7 +218,6 @@ void Op_Grad_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs
 
 void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(gradient_counter_);
   const Domaine_PolyMAC_P0& domaine = ref_cast(Domaine_PolyMAC_P0, ref_domaine.valeur());
   const Champ_Face_PolyMAC_P0& ch = ref_cast(Champ_Face_PolyMAC_P0, equation().inconnue());
   const Conds_lim& cls = ref_dcl->les_conditions_limites();
@@ -369,6 +368,4 @@ void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secm
           for (auto &k_d : dgb_v_.at(j_c.first))
             (*mat_v)(i_jc.first, k_d.first) += j_c.second * k_d.second;
 
-  statistiques().end_count(gradient_counter_);
-// statistics.end_count(STD_COUNTERS::gradient_);
 }

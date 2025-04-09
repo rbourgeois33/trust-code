@@ -231,10 +231,8 @@ Sortie& EcrFicPartage::syncfile()
               if (bin_)
                 {
                   // Ecriture binaire sans conversion :
-                  statistiques().begin_count(IO_EcrireFicPartageBin_counter_);
                   statistics().begin_count(STD_COUNTERS::IO_EcrireFicPartageBin);
                   os.write(buffer_data, buf_size);
-                  statistiques().end_count(IO_EcrireFicPartageBin_counter_, buf_size);
                   statistics().end_count(STD_COUNTERS::IO_EcrireFicPartageBin,1,buf_size);
                 }
               else

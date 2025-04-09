@@ -376,10 +376,8 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
           // On calcule somme(residu) par contribuer_au_second_membre (typiquement CL non implicitees)
           // Cette approche necessite de coder 3 methodes (contribuer_a_avec, contribuer_au_second_membre et ajouter pour l'explicite)
           sources().contribuer_a_avec(inco,matrice);
-          statistiques().end_count(assemblage_sys_counter_,0,0);
           statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
           sources().ajouter(resu);
-          statistiques().begin_count(assemblage_sys_counter_);
           statistics().begin_count(STD_COUNTERS::matrix_assembly);
           matrice.ajouter_multvect(inco, resu); // Add source residual first
           for (int op = 0; op < nombre_d_operateurs(); op++)
@@ -397,9 +395,7 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
       // // On calcule somme(residu) par contribuer_au_second_membre (typiquement CL non implicitees)
       // // Cette approche necessite de coder 3 methodes (contribuer_a_avec, contribuer_au_second_membre et ajouter pour l'explicite)
       // sources().contribuer_a_avec(inco,matrice);
-      // statistiques().end_count(assemblage_sys_counter_,0,0);
       // sources().ajouter(resu);
-      // statistiques().begin_count(assemblage_sys_counter_);
       // matrice.ajouter_multvect(inco, resu); // Add source residual first
       // for (int op = 0; op < nombre_d_operateurs(); op++)
       //   {
@@ -419,7 +415,6 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
           operateur(op).l_op_base().contribuer_a_avec(inco, mat);
           if (op == 1) mat *= rhoCp; // la derivee est multipliee par rhoCp pour la convection
           matrice += mat;
-          statistiques().end_count(assemblage_sys_counter_, 0, 0);
           statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
           {
             DoubleTab resu_tmp(resu);
@@ -428,15 +423,12 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
             if (op == 1) resu_tmp *= rhoCp;
             resu += resu_tmp;
           }
-          statistiques().begin_count(assemblage_sys_counter_);
           statistics().begin_count(STD_COUNTERS::matrix_assembly);
         }
 
       sources().contribuer_a_avec(inco,matrice);
-      statistiques().end_count(assemblage_sys_counter_,0,0);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistiques().begin_count(assemblage_sys_counter_);
       statistics().begin_count(STD_COUNTERS::matrix_assembly);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
@@ -489,17 +481,13 @@ void Convection_Diffusion_Temperature::assembler_blocs(matrices_t matrices, Doub
       secmem += secmem_tmp;
 
     }
-  statistiques().end_count(assemblage_sys_counter_, 0, 0);
   statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
 
-  statistiques().begin_count(source_counter_);
   statistics().begin_count(STD_COUNTERS::rhs);
   for (int i = 0; i < les_sources.size(); i++)
     les_sources(i)->ajouter_blocs(matrices, secmem, semi_impl);
-  statistiques().end_count(source_counter_);
   statistics().end_count(STD_COUNTERS::rhs);
 
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
 
   const std::string& nom_inco = inconnue().le_nom().getString();

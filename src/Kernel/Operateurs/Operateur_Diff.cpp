@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -96,9 +96,9 @@ const Operateur_base& Operateur_Diff::l_op_base() const
 DoubleTab& Operateur_Diff::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  statistiques().begin_count(diffusion_counter_);
+  statistics().begin_count(STD_COUNTERS::diffusion);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
-  statistiques().end_count(diffusion_counter_);
+  statistics().end_count(STD_COUNTERS::diffusion);
   return tmp;
 }
 
@@ -114,9 +114,9 @@ DoubleTab& Operateur_Diff::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Diff::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
-  statistiques().begin_count(diffusion_counter_);
+  statistics().begin_count(STD_COUNTERS::diffusion);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
-  statistiques().end_count(diffusion_counter_);
+  statistics().end_count(STD_COUNTERS::diffusion);
   return tmp;
 }
 

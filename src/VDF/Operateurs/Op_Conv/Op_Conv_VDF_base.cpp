@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -176,9 +176,7 @@ void Op_Conv_VDF_base::dimensionner_blocs_face(matrices_t matrices, const tabs_t
 
 void Op_Conv_VDF_base::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(convection_counter_);
   iter_->ajouter_blocs(mats, secmem, semi_impl);
-  statistiques().end_count(convection_counter_);
 }
 
 double Op_Conv_VDF_base::calculer_dt_stab() const

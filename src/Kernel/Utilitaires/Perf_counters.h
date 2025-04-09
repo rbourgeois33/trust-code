@@ -70,6 +70,7 @@ enum class STD_COUNTERS : unsigned int
   gpu_kernel ,
   gpu_copytodevice ,
   gpu_copyfromdevice ,
+  gpu_malloc_free,
   IO_EcrireFicPartageMPIIO ,
   IO_EcrireFicPartageBin ,
   interprete_scatter,
@@ -286,7 +287,7 @@ private:
   int gpu_timer_counter_=0;
   duration computation_time_; ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
-  int max_str_lenght_=128;
+  int max_str_lenght_=121;
   Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
   std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
   /*! @brief Create the csv.TU file.

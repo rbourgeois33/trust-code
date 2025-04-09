@@ -57,7 +57,6 @@ int Assembleur_P_PolyMAC::assembler_mat(Matrice& la_matrice, const DoubleVect& d
   set_resoudre_increment_pression(incr_pression);
   set_resoudre_en_u(resoudre_en_u);
   Cerr << "Assemblage de la matrice de pression ... ";
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
   la_matrice.typer("Matrice_Morse");
   Matrice_Morse& mat = ref_cast(Matrice_Morse, la_matrice.valeur());
@@ -184,8 +183,6 @@ int Assembleur_P_PolyMAC::assembler_mat(Matrice& la_matrice, const DoubleVect& d
   //   double coeff = mat(0, 0) / ne;
   //   for (e = 0; e < ne; e++) mat(0, e) += coeff;
   // }
-
-  statistiques().end_count(assemblage_sys_counter_);
   Cerr << statistics().get_time_since_last_open(STD_COUNTERS::matrix_assembly) << " s" << finl;
   statistics().end_count(STD_COUNTERS::matrix_assembly);
   return 1;

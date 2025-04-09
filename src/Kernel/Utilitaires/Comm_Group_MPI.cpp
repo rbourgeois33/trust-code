@@ -168,24 +168,18 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
   switch(op)
     {
     case Comm_Group::COLL_SUM:
-      statistiques().begin_count(cnt_sum_id);
       statistics().begin_count(STD_COUNTERS::mpi_sumdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_SUM, mpi_comm_));
-      statistiques().end_count(cnt_sum_id);
       statistics().end_count(STD_COUNTERS::mpi_sumdouble);
       break;
     case Comm_Group::COLL_MIN:
-      statistiques().begin_count(cnt_min_id);
       statistics().begin_count(STD_COUNTERS::mpi_mindouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MIN, mpi_comm_));
-      statistiques().end_count(cnt_min_id);
       statistics().end_count(STD_COUNTERS::mpi_mindouble);
       break;
     case Comm_Group::COLL_MAX:
-      statistiques().begin_count(cnt_max_id);
       statistics().begin_count(STD_COUNTERS::mpi_maxdouble);
       mpi_error(MPI_Allreduce(x, resu, n, mpi_typ, MPI_MAX, mpi_comm_));
-      statistiques().end_count(cnt_max_id);
       statistics().end_count(STD_COUNTERS::mpi_maxdouble);
       break;
     case Comm_Group::COLL_PARTIAL_SUM:
@@ -276,7 +270,6 @@ void Comm_Group_MPI::barrier(int tag) const
 {
 #ifdef MPI_
   static const int max_tag = 32;
-  statistiques().begin_count(mpi_barrier_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_barrier);
   assert(tag >= 0 && tag < max_tag);
   if (check_enabled())
@@ -303,7 +296,6 @@ void Comm_Group_MPI::barrier(int tag) const
       // Barriere simple sans le tag :
       mpi_error(MPI_Barrier(mpi_comm_));
     }
-  statistiques().end_count(mpi_barrier_counter_);
   statistics().end_count(STD_COUNTERS::mpi_barrier);
 #endif
 }
@@ -329,7 +321,6 @@ void Comm_Group_MPI::send_recv_start(const ArrOfInt& send_list,
                                      TypeHint typehint) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_sendrecv_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_sendrecv);
   assert(mpi_nrequests_ < 0);
 
@@ -408,7 +399,6 @@ void Comm_Group_MPI::send_recv_finish() const
 #ifdef MPI_
   assert(mpi_nrequests_ >= 0);
   mpi_error(MPI_Waitall(mpi_nrequests_, mpi_requests_, mpi_status_));
-  statistiques().end_count(mpi_sendrecv_counter_, current_msg_size_, mpi_nrequests_);
   statistics().end_count(STD_COUNTERS::mpi_sendrecv,mpi_nrequests_,current_msg_size_);
   /*
   for (int r=0;r<mpi_nrequests_;r++)
@@ -436,7 +426,6 @@ void Comm_Group_MPI::send_recv_finish() const
 void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_send_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_send);
   assert(mpi_nrequests_ < 0);
   int dest = pe;
@@ -447,7 +436,6 @@ void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
     mpi_error(MPI_Ssend ((void*)buffer, size, MPI_CHAR, dest, tag, mpi_comm_));
   else
     mpi_error(MPI_Send ((void*)buffer, size, MPI_CHAR, dest, tag, mpi_comm_));
-  statistiques().end_count(mpi_send_counter_, size);
   statistics().end_count(STD_COUNTERS::mpi_send,1,size);
 #endif
 }
@@ -458,14 +446,12 @@ void Comm_Group_MPI::send(int pe, const void *buffer, int size, int tag) const
 void Comm_Group_MPI::recv(int pe, void *buffer, int size, int tag) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_recv_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_recv);
   assert(mpi_nrequests_ < 0);
   MPI_Status status;
   int source = pe;
   assert(source >= 0 && source < nproc());
   mpi_error(MPI_Recv (buffer, size, MPI_CHAR, source, tag, mpi_comm_, & status));
-  statistiques().end_count(mpi_recv_counter_, size);
   statistics().end_count(STD_COUNTERS::mpi_recv,1,size);
 #endif
 }
@@ -473,11 +459,9 @@ void Comm_Group_MPI::recv(int pe, void *buffer, int size, int tag) const
 void Comm_Group_MPI::broadcast(void *buffer, int size, int pe_source) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_bcast_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_bcast);
   assert(mpi_nrequests_ < 0);
   mpi_error(MPI_Bcast (buffer, size, MPI_CHAR, pe_source, mpi_comm_));
-  statistiques().end_count(mpi_bcast_counter_, size);
   statistics().end_count(STD_COUNTERS::mpi_bcast,1,size);
 #endif
 }
@@ -485,12 +469,10 @@ void Comm_Group_MPI::broadcast(void *buffer, int size, int pe_source) const
 void Comm_Group_MPI::all_to_all(const void *src_buffer, void *dest_buffer, int data_size) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_alltoall_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_alltoall);
   assert(src_buffer != dest_buffer);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Alltoall(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, mpi_comm_));
-  statistiques().end_count(mpi_alltoall_counter_, data_size);
   statistics().end_count(STD_COUNTERS::mpi_alltoall,1,data_size);
 #endif
 }
@@ -498,11 +480,9 @@ void Comm_Group_MPI::all_to_all(const void *src_buffer, void *dest_buffer, int d
 void Comm_Group_MPI::gather(const void *src_buffer, void *dest_buffer, int data_size, int root) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_gather_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_gather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Gather(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, root, mpi_comm_));
-  statistiques().end_count(mpi_gather_counter_, data_size);
   statistics().end_count(STD_COUNTERS::mpi_gather,1,data_size);
 #endif
 }
@@ -510,11 +490,9 @@ void Comm_Group_MPI::gather(const void *src_buffer, void *dest_buffer, int data_
 void Comm_Group_MPI::all_gather(const void *src_buffer, void *dest_buffer, int data_size) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_allgather_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_allgather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Allgather(ptr, data_size, MPI_CHAR, dest_buffer, data_size, MPI_CHAR, mpi_comm_));
-  statistiques().end_count(mpi_allgather_counter_, data_size);
   statistics().end_count(STD_COUNTERS::mpi_allgather,1,data_size);
 #endif
 }
@@ -522,11 +500,9 @@ void Comm_Group_MPI::all_gather(const void *src_buffer, void *dest_buffer, int d
 void Comm_Group_MPI::all_gatherv(const void *src_buffer, void *dest_buffer, int send_size, const True_int* recv_size, const True_int* displs) const
 {
 #ifdef MPI_
-  statistiques().begin_count(mpi_allgather_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_allgather);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
   mpi_error(MPI_Allgatherv(ptr, send_size, MPI_CHAR, dest_buffer, recv_size, displs, MPI_CHAR, mpi_comm_));
-  statistiques().end_count(mpi_allgather_counter_, send_size);
   statistics().end_count(STD_COUNTERS::mpi_allgather,1,send_size);
 #endif
 }
@@ -636,7 +612,6 @@ void Comm_Group_MPI::free_all()
 void Comm_Group_MPI::all_to_allv(const void *src_buffer, int *send_data_size, int *send_data_offset,
                                  void *dest_buffer, int *recv_data_size, int *recv_data_offset) const
 {
-  statistiques().begin_count(mpi_alltoall_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_alltoall);
   assert(src_buffer != dest_buffer);
   void * ptr = (void *) src_buffer; // Cast a cause de l'interface de MPI_Alltoall
@@ -665,7 +640,6 @@ void Comm_Group_MPI::all_to_allv(const void *src_buffer, int *send_data_size, in
   size = send_data_offset[n-1] + send_data_size[n-1] + recv_data_size[n-1] + recv_data_offset[n-1];
 
 #endif
-  statistiques().end_count(mpi_alltoall_counter_, size);
   statistics().end_count(STD_COUNTERS::mpi_alltoall,1,size);
 }
 
@@ -709,7 +683,6 @@ void Comm_Group_MPI::set_must_mpi_initialize(bool flag)
 void Comm_Group_MPI::ptop_send_recv(const void * send_buf, int send_buf_size, int send_proc,
                                     void * recv_buf, int recv_buf_size, int recv_proc) const
 {
-  statistiques().begin_count(mpi_sendrecv_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_sendrecv);
   assert(mpi_nrequests_ < 0);
   int dest = send_proc;
@@ -738,7 +711,6 @@ void Comm_Group_MPI::ptop_send_recv(const void * send_buf, int send_buf_size, in
                              recv_buf, recv_buf_size, MPI_CHAR, src, tag, mpi_comm_,
                              &status));
     }
-  statistiques().end_count(mpi_sendrecv_counter_, send_buf_size + recv_buf_size);
   statistics().end_count(STD_COUNTERS::mpi_sendrecv, 1, send_buf_size + recv_buf_size);
 }
 
@@ -936,7 +908,6 @@ void Comm_Group_MPI::internal_collective(const float *x, float *resu, int nx, co
  */
 trustIdType Comm_Group_MPI::mppartial_sum_impl(trustIdType x) const
 {
-  statistiques().begin_count(mpi_partialsum_counter_);
   statistics().begin_count(STD_COUNTERS::mpi_partialsum);
   trustIdType somme = 0;
   MPI_Status status;
@@ -963,7 +934,6 @@ trustIdType Comm_Group_MPI::mppartial_sum_impl(trustIdType x) const
       mpi_error(MPI_Send(& s, 1, MPI_LONG, rang+1, tag, mpi_comm_));
 #endif
     }
-  statistiques().end_count(mpi_partialsum_counter_);
   statistics().end_count(STD_COUNTERS::mpi_partialsum);
   return somme;
 }

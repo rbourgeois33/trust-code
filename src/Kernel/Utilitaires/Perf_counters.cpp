@@ -249,10 +249,11 @@ Perf_counters::Perf_counters()
   new Counter(2, "MPI_maxint",    "MPI_allreduce", true),
   new Counter(2, "MPI_barrier",   "MPI_allreduce", true),
   // GPU
-  new Counter(2, "GPU_library",       "GPU_library",false, true),
-  new Counter(2, "GPU_kernel",        "GPU_kernel",false, true),
+  new Counter(2, "GPU_library","GPU_library",false, true),
+  new Counter(2, "GPU_kernel","GPU_kernel",false, true),
   new Counter(2, "GPU_copyToDevice",  "GPU_copy",false, true),
   new Counter(2, "GPU_copyFromDevice","GPU_copy",false, true),
+  new Counter(2, "GPU_allocations"   ,"GPU_alloc",false,true),
   // Count the writing time in EcrireFicPartageXXX (big chunk of data in files XYZ or LATA)
   // For those two counters, quantity corresponds to the amount of written bytes
   new Counter(1, "MPI_File_write_all", "IO"), // Call on each processor
@@ -303,6 +304,10 @@ void Perf_counters::check_begin(Counter* const c, int counter_lvl, time_point t)
       if (c->is_running_)
         Process::exit("The counter that you are trying to start is already running:" + c->description_);
       int expected_lvl = last_opened_counter_->level_ +1;
+      if (c->is_comm_)
+        {
+          counter_lvl=expected_lvl;
+        }
       if (counter_lvl != expected_lvl)
         {
           std::stringstream error_msg ;
@@ -865,9 +870,7 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
         }
       skip_globals = true; ///< If min_nb_of_counters != max_nb_of_counters, aggregated stats are not printed
     }
-  Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
-  duration total_time = c_time->total_time_;
-  c_time = get_counter(STD_COUNTERS::timeloop);
+  Counter* c_time = get_counter(STD_COUNTERS::timeloop);
   int nb_ts = c_time->count_- nb_steps_elapsed_;
 
   if (time_loop_ && nb_ts <= 0)
@@ -1127,7 +1130,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
   const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width;
   const int number_width=25;
   const int text_width =cpu_line_width-count_per_ts_width;
-  const int header_txt_width = 12;
+  const int header_txt_width = 11;
   const int message_width = static_cast<int>(message.length());
   const std::string separator = " | ";
   const std::string line_sep_cpu(max_str_lenght_,'~');
@@ -1148,7 +1151,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       for (std::array<double,4>& arr: min_max_avg_sd_t_q_c_echange_espace_virtuel)
         for (double & d : arr)
           d=-1;
-      std::array< std::array<double,4> ,4> min_max_avg_sd_t_q_c_sendrecv = min_max_avg_sd_t_q_c_echange_espace_virtuel;
+      //std::array< std::array<double,4> ,4> min_max_avg_sd_t_q_c_sendrecv = min_max_avg_sd_t_q_c_echange_espace_virtuel;
       Counter* c = get_counter(STD_COUNTERS::timeloop);
       int nb_ts = c->count_ - nb_steps_elapsed_;
       nb_ts = std::max(nb_ts,0);
@@ -1229,27 +1232,27 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           min_max_avg_sd_t_q_c_allreduce_comm = compute_min_max_avg_sd(comm_allreduce_t,comm_allreduce_q,comm_allreduce_c);
           min_max_avg_sd_t_q_c_sendrecv_comm =  compute_min_max_avg_sd(comm_sendrecv_t,comm_sendrecv_q,comm_sendrecv_c);
           c = get_counter(STD_COUNTERS::mpi_sendrecv);
-          min_max_avg_sd_t_q_c_sendrecv = c->compute_min_max_avg_sd_();
+          //min_max_avg_sd_t_q_c_sendrecv = c->compute_min_max_avg_sd_();
           c = get_counter(STD_COUNTERS::virtual_swap);
           min_max_avg_sd_t_q_c_echange_espace_virtuel = c->compute_min_max_avg_sd_();
         }
       if (message == "Computation start-up statistics")
         {
-          file_header << std::right << std::setw(cpu_line_width/2 +27) <<"# Global performance file #"<< std::endl;
+          file_header << std::right << std::setw(max_str_lenght_/2 +27) <<"# Global performance file #"<< std::endl;
           file_header <<  std::endl;
           file_header << "This is the global file for tracking performance in TRUST. It stores aggregated quantities." <<std::endl;
           file_header << "More detailed statistics can be found in the "<< Objet_U::nom_du_cas() <<"_csv.TU file" <<std::endl;
-          file_header << "A jupyter notebook giving detailed information about performance measurement can be found in the How_To folder of TRUST src" <<std::endl;
+          file_header << "A jupyter notebook giving detailed information about performance measurement can be found in:" << std::endl << " $TRUST_ROOT/Validation/Rapports_automatiques/Verification/HowTo/" <<std::endl;
           file_header << "For time loop, only level 1 counters statistics are printed in this file by default" << std::endl;
           file_header <<"Time is given in seconds"<< std::endl <<std::endl;
           file_header << line_sep_cpu << std::endl;
-          file_header << std::right << std::setw(cpu_line_width/2 +26) <<"Context of the computation"<< std::endl;
+          file_header << std::right << std::setw(max_str_lenght_/2 +26) <<"Context of the computation"<< std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::left << std::setw(header_txt_width)<< "Date:" << get_date() << std::endl;
           file_header << std::left << std::setw(header_txt_width)<< "OS:" << get_os() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "CPU:" << get_cpu() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "GPU:" << get_gpu() << std::endl;
-          file_header << std::left << std::setw(header_txt_width) << "Nb procs = " << nb_procs << std::endl << std::endl;
+          file_header << std::left << std::setw(header_txt_width) << "Nb procs : " << nb_procs << std::endl << std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header  << std::right << std::setw(cpu_line_width/2 + message_width)<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
@@ -1260,7 +1263,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       else if (message == "Time loop statistics")
         {
           file_header << line_sep_cpu << std::endl;
-          file_header  << std::right << std::setw(cpu_line_width/2 + message_width)<<message << std::endl;
+          file_header  << std::right << std::setw(max_str_lenght_/2 + message_width)<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
           nb_ts = Process::mp_max(nb_ts);
           if (nb_ts <= 0)
@@ -1280,7 +1283,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       else if (message == "Post-resolution statistics")
         {
           file_header << line_sep_cpu << std::endl;
-          file_header  << std::right << std::setw(cpu_line_width/2 + message_width)<<message << std::endl;
+          file_header  << std::right << std::setw(max_str_lenght_/2 + message_width)<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
           c = get_counter(STD_COUNTERS::total_execution_time);
           file_header <<  std::left <<std::setw(text_width) << "Time of the post-resolution: " <<  std::left <<std::setw(number_width) <<  c->total_time_.count() << std::endl;
@@ -1299,7 +1302,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       if(message == "Time loop statistics")
         {
           perfs_TU<<std::endl;
-          perfs_TU << std::left <<std::setw(counter_description_width) << "Counter description" << separator << std::setw(time_per_step_width) << "Time per step" << separator << std::setw(percent_loop_time_width) << "Percent of loop time" << separator << std::setw(count_per_ts_width) << "Call(s) per time step"<<std::endl;
+          perfs_TU << std::left <<std::setw(counter_description_width) << "Counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/time step"<<std::endl;
           perfs_TU << line_sep_tabular << std::endl;
           c = get_counter(STD_COUNTERS::timeloop);
           total_time = Process::mp_max(c->total_time_.count());
@@ -1377,7 +1380,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       if (tmp>0 && nb_ts >0 && message=="Time loop statistics")
         {
           perfs_GPU << std::endl << line_sep_gpu << std::endl;
-          perfs_GPU << std::right <<std::setw(gpu_line_width/2 +14) <<"GPU statistics" << std::endl;
+          perfs_GPU << std::right <<std::setw(max_str_lenght_/2 +14) <<"GPU statistics" << std::endl;
           perfs_GPU << line_sep_gpu<<std::endl;
           perfs_GPU << std::left <<std::setw(counter_description_width) << "Counter description" << separator <<std::setw(time_per_step_width) << "Time per step" <<separator<< std::setw(percent_loop_time_width) << "Percent of loop time" <<separator<< std::setw(count_per_ts_width) << "Calls per time step" <<separator<< std::setw(bandwith_width)<< "Bandwidth"<<std::endl;
           perfs_GPU << line_sep_gpu << std::endl;
@@ -1468,7 +1471,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       if (debit_seq>0 || debit_par>0)
         {
           perfs_IO << std::endl << line_sep_cpu << std::endl;
-          perfs_IO << std::right <<std::setw(cpu_line_width/2 +13) <<"IO statistics" << std::endl;
+          perfs_IO << std::right <<std::setw(max_str_lenght_/2 +13) <<"IO statistics" << std::endl;
           perfs_IO << line_sep_cpu<<std::endl;
         }
       if (debit_seq>0)

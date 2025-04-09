@@ -193,7 +193,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
 #ifdef TRUST_USE_GPU
   assert(!isAllocatedOnDevice(ptr)); // Verifie que la zone n'est pas deja allouee
   statistics().start_gpu_clock();
-  statistiques().begin_count(gpu_mallocfree_counter_);
+  statistics().begin_count(STD_COUNTERS::gpu_malloc_free);
   size_t bytes = sizeof(_TYPE_) * size;
   size_t free_bytes  = DeviceMemory::deviceMemGetInfo(0);
   size_t total_bytes = DeviceMemory::deviceMemGetInfo(1);
@@ -214,7 +214,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   });
   end_gpu_timer(__KERNEL_NAME__);
 #endif
-  statistiques().end_count(gpu_mallocfree_counter_);
+  statistics().end_count(STD_COUNTERS::gpu_malloc_free);
   if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
     {
       std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
@@ -243,7 +243,7 @@ template <typename _TYPE_, typename _SIZE_>
 void deleteOnDevice(_TYPE_* ptr, _SIZE_ size)
 {
 #ifdef TRUST_USE_GPU
-  if (statistiques_enabled()) statistiques().begin_count(gpu_mallocfree_counter_);
+  statistics().begin_count(STD_COUNTERS::gpu_malloc_free);
   std::string clock;
   if (PE_Groups::get_nb_groups()>0 && Process::is_parallel()) clock = "[clock]#"+std::to_string(Process::me());
   else
@@ -253,7 +253,7 @@ void deleteOnDevice(_TYPE_* ptr, _SIZE_ size)
     cout << clock << "            [Data]   Delete on device array [" << ptrToString(ptr).c_str() << "] of " << bytes << " Bytes. It remains " << DeviceMemory::getMemoryMap().size()-1 << " arrays." << endl << flush;
   Kokkos::kokkos_free(addrOnDevice(ptr));
   DeviceMemory::del(ptr);
-  if (statistiques_enabled()) statistiques().end_count(gpu_mallocfree_counter_);
+  statistics().end_count(STD_COUNTERS::gpu_malloc_free);
 #endif
 }
 
@@ -310,11 +310,11 @@ void copyToDevice(_TYPE_* ptr, _SIZE_ size)
       assert(isAllocatedOnDevice(ptr));
       _SIZE_ bytes = sizeof(_TYPE_) * size;
       start_gpu_timer("copyToDevice",bytes);
-      statistiques().begin_count(gpu_copytodevice_counter_);
+      statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
       Kokkos::View<_TYPE_*> host_view(ptr, size);
       Kokkos::View<_TYPE_*> device_view(addrOnDevice(ptr), size);
       Kokkos::deep_copy(device_view, host_view);
-      statistiques().end_count(gpu_copytodevice_counter_, bytes);
+      statistics().end_count(STD_COUNTERS::gpu_copytodevice,1,static_cast<int>(bytes));
       std::stringstream message;
       message << "Copy to device [" << ptrToString(ptr) << "] " << size << " items ";
       end_gpu_timer(message.str(), 0, bytes);
@@ -353,11 +353,11 @@ void copyFromDevice(_TYPE_* ptr, _SIZE_ size)
       assert(isAllocatedOnDevice(ptr));
       _SIZE_ bytes = sizeof(_TYPE_) * size;
       start_gpu_timer("copyFromDevice",bytes);
-      statistiques().begin_count(gpu_copyfromdevice_counter_);
+      statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
       Kokkos::View<_TYPE_*> host_view(ptr, size);
       Kokkos::View<_TYPE_*> device_view(addrOnDevice(ptr), size);
       Kokkos::deep_copy(host_view, device_view);
-      statistiques().end_count(gpu_copyfromdevice_counter_, bytes);
+      statistics().end_count(STD_COUNTERS::gpu_copyfromdevice,1,static_cast<int>(bytes));
       std::stringstream message;
       message << "Copy from device [" << ptrToString(ptr) << "] " << size << " items ";
       end_gpu_timer(message.str(), 0, bytes);

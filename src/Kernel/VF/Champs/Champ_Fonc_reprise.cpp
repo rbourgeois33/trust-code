@@ -155,7 +155,6 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
   // creation des identifiants pdi (necessaire pour l'initialisation de PDI)
   Nom nom_champ_pdi = Motcle(pb.le_nom()) + "_" + Motcle(nom_champ);
 
-  statistiques().begin_count(temporary_counter_);
   statistics().begin_count(STD_COUNTERS::restart);
 
   // Opening file + get file format
@@ -319,7 +318,6 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
     read_field_from_file(s, fic_rep.valeur(), pb, nom_ident, nom_ident_champ_stat, reprend_champ_moyen, nom_ident_champ_keps, reprend_modele_k_eps);
 
   EcritureLectureSpecial::mode_lec=mode_lec_sa;
-  statistiques().end_count(temporary_counter_);
   Cerr << "End of resuming the file " << nom_fic << " after " << statistics().get_time_since_last_open(STD_COUNTERS::restart) << " s" << finl;
   statistics().end_count(STD_COUNTERS::restart);
 

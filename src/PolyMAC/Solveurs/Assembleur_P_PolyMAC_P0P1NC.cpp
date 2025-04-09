@@ -46,7 +46,6 @@ int  Assembleur_P_PolyMAC_P0P1NC::assembler_mat(Matrice& la_matrice,const Double
   set_resoudre_increment_pression(incr_pression);
   set_resoudre_en_u(resoudre_en_u);
   Cerr << "Assemblage de la matrice de pression ... " ;
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
   la_matrice.typer("Matrice_Morse");
   Matrice_Morse& mat = ref_cast(Matrice_Morse, la_matrice.valeur());
@@ -116,8 +115,6 @@ int  Assembleur_P_PolyMAC_P0P1NC::assembler_mat(Matrice& la_matrice,const Double
     if (sub_type(Neumann_sortie_libre, le_dom_Cl_PolyMAC->les_conditions_limites(n_bord).valeur()) )
       has_P_ref=1;
   if (!has_P_ref && !Process::me()) mat(0, 0) *= 2;
-
-  statistiques().end_count(assemblage_sys_counter_);
   Cerr << statistics().get_time_since_last_open(STD_COUNTERS::matrix_assembly) << " s" << finl;
   statistics().end_count(STD_COUNTERS::matrix_assembly);
   return 1;

@@ -63,7 +63,6 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
 {
   DoubleVect solution_ref(solution);
   int n=temps.size_array();
-  Stat_Counter_Id  solv_sys_counter_l= statistiques().new_counter(1, "SolveurSys::resoudre_systeme", 0);
   statistics().create_custom_counter("Custom solver",1);
   for (int i=0; i<n; i++)
     {
@@ -72,20 +71,16 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
       // etape de resolution
       Stat_Results stat_resol_0;
       double t_0,t;
-      statistiques().get_stats(solv_sys_counter_l, stat_resol_0);
       t_0 = statistics().get_total_time("Custom solver");
       Cout<<"------------------------------------"<<finl;
       Cout<<"Try " << i << " of solver " << solveur <<finl;
       //solveur->fixer_limpr(0);
-      statistiques().begin_count(solv_sys_counter_l);
       statistics().begin_count("Custom solver");
       solveur.nommer("test_solver");
 
       solveur.resoudre_systeme(matrice,secmem,solution);
-      statistiques().end_count(solv_sys_counter_l);
       statistics().end_count("Custom solver");
       Stat_Results stat_resol;
-      statistiques().get_stats(solv_sys_counter_l, stat_resol);
       t = statistics().get_time_since_last_open("Custom solver");
       // on recupere un delta time et non un time absolu !!
       double time_resol=stat_resol.time-stat_resol_0.time;
@@ -95,8 +90,6 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
       matrice.ajouter_multvect(solution,test);
       //test-=secmem;
       double norme=mp_norme_vect(test);
-      //statistiques().dump("Statistiques de resolution du probleme");
-      //print_statistics_analyse("Statistiques de resolution du probleme", 1);
 
       Cout<<"CPU= " <<time_resol<<" s , ||Ax -b||= " << norme << finl;
       Process::imprimer_ram_totale();

@@ -214,8 +214,7 @@ void Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem::dimensionner_blocs(matrices_t mats, co
 // renvoie resu
 void Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(convection_counter_);
-
+  statistics().begin_count(STD_COUNTERS::convection);
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Inc_base& cc = le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().champ_convecte();
   const std::string& nom_cc = cc.le_nom().getString();
@@ -316,7 +315,7 @@ void Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem::ajouter_blocs(matrices_t mats, DoubleT
             }
         }
     }
-  statistiques().end_count(convection_counter_);
+  statistics().end_count(STD_COUNTERS::convection);
 }
 
 void Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem::get_noms_champs_postraitables(Noms& nom, Option opt) const

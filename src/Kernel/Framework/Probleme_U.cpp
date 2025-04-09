@@ -254,7 +254,7 @@ bool Probleme_U::run()
 
   statistics().end_count(STD_COUNTERS::computation_start_up);
   // Print the initialization CPU statistics
-      statistics().print_TU_files("Computation start-up statistics", 0);
+  statistics().print_TU_files("Computation start-up statistics", 0);
 #ifdef VTRACE
   //VT_USER_END("Initialization");
   VT_BUFFER_FLUSH();
@@ -327,13 +327,11 @@ bool Probleme_U::run()
       // Stop the CPU measure of the time step and print:
       if (limpr())
         {
-          temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
+          double temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }
-      else
-        {
-          statistics().end_time_step(tstep);
-        }
+
+      statistics().end_time_step(tstep);
       statistics().end_count(STD_COUNTERS::timeloop);
       tstep++;
 #ifdef VTRACE
@@ -346,7 +344,7 @@ bool Probleme_U::run()
   VT_USER_END("Resolution");
   VT_OFF();
 #endif
-      statistics().print_TU_files("Time loop statistics", 1);
+  statistics().print_TU_files("Time loop statistics", 1);
   return ok;
 }
 

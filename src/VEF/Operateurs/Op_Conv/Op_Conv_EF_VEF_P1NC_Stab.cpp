@@ -584,19 +584,13 @@ DoubleTab& Op_Conv_EF_VEF_P1NC_Stab::ajouter(const DoubleTab& transporte_2,
 
   if (!old_)
     {
-      //statistiques().begin_count(m1);
       calculer_coefficients_operateur_centre(Kij,nb_comp,tab_vitesse);
-      //statistiques().end_count(m1);
-      //statistiques().begin_count(m2);
       if (is_compressible_) ajouter_partie_compressible(transporte,resu,tab_vitesse);
 
       ajouter_operateur_centre(Kij,transporte,resu);
 
       ajouter_diffusion(Kij,transporte,resu);
-      //statistiques().end_count(m2);
-      //statistiques().begin_count(m3);
       ajouter_antidiffusion(Kij,transporte,resu);
-      //statistiques().end_count(m3);
       mettre_a_jour_pour_periodicite(resu);
 
     }

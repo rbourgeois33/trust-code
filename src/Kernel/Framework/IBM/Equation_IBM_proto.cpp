@@ -226,9 +226,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
       // // On calcule somme(residu) par contribuer_au_second_membre (typiquement CL non implicitees)
       // // Cette approche necessite de coder 3 methodes (contribuer_a_avec, contribuer_au_second_membre et ajouter pour l'explicite)
       // sources().contribuer_a_avec(inco,matrice);
-      // statistiques().end_count(assemblage_sys_counter_,0,0);
       // sources().ajouter(resu);
-      // statistiques().begin_count(assemblage_sys_counter_);
       // matrice.ajouter_multvect(inco, resu); // Add source residual first
       // for (int op = 0; op < nombre_d_operateurs(); op++)
       //   {

@@ -146,7 +146,6 @@ void Modele_turbulence_hyd_0_eq_base::completer()
 
 void Modele_turbulence_hyd_0_eq_base::mettre_a_jour(double)
 {
-  statistiques().begin_count(nut_counter_);
   statistics().begin_count(STD_COUNTERS::turbulent_viscosity);
   calculer_viscosite_turbulente();
   calculer_energie_cinetique_turb();
@@ -156,7 +155,6 @@ void Modele_turbulence_hyd_0_eq_base::mettre_a_jour(double)
     correction_nut_et_cisaillement_paroi_si_qc(*this);
   energie_cinetique_turb_->valeurs().echange_espace_virtuel();
   la_viscosite_turbulente_->valeurs().echange_espace_virtuel();
-  statistiques().end_count(nut_counter_);
   statistics().end_count(STD_COUNTERS::turbulent_viscosity);
 }
 
