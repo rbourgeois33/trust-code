@@ -192,7 +192,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
 {
 #ifdef TRUST_USE_GPU
   assert(!isAllocatedOnDevice(ptr)); // Verifie que la zone n'est pas deja allouee
-  clock_start = Statistiques::get_time_now();
+  statistics().start_gpu_clock();
   statistiques().begin_count(gpu_mallocfree_counter_);
   size_t bytes = sizeof(_TYPE_) * size;
   size_t free_bytes  = DeviceMemory::deviceMemGetInfo(0);
@@ -218,7 +218,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
     {
       std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
-      double ms = 1000 * (Statistiques::get_time_now() - clock_start);
+      double ms = 1000 * statistics().compute_gpu_time();
       printf("%s %7.3f ms [Data]   Allocate on device [%9s] %6ld Bytes (%ld/%ldGB free) Currently allocated: %6ld\n", clock.c_str(), ms, ptrToString(ptr).c_str(), long(bytes), free_bytes/(1024*1024*1024), total_bytes/(1024*1024*1024), long(DeviceMemory::allocatedBytesOnDevice()));
     }
 #endif

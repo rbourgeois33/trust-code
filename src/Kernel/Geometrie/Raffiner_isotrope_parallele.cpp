@@ -251,17 +251,12 @@ Entree&  Raffiner_isotrope_parallele::interpreter(Entree& is)
   Domaine dom_new(dom_org);
 
   refine_domain(dom_org,dom_new);
-
-
-  static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "Mailler_Parallel", 0 /* Group */);
-
   if (nproc() > 1)
     {
       Scatter::uninit_sequential_domain(dom_new);
       int nb_sommet_avant_completion=dom_new.nb_som();
       Scatter::trier_les_joints(dom_new.faces_joint());
-      statistiques().begin_count(stats);
-
+      statistics().begin_count(STD_COUNTERS::parallel_meshing);
 
       mon_construire_correspondance_sommets_par_coordonnees(dom_new);
 
@@ -290,18 +285,15 @@ Entree&  Raffiner_isotrope_parallele::interpreter(Entree& is)
         Scatter::construire_correspondance_sommets_par_coordonnees(dom_new);
         Scatter::calculer_renum_items_communs(dom_new.faces_joint(), JOINT_ITEM::SOMMET);
 
-        statistiques().end_count(stats);
-        double maxtime = mp_max(statistiques().last_time(stats));
+        double maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
+        statistics().end_count(STD_COUNTERS::parallel_meshing);
         Cerr << "Scatter::construire_correspondance_sommets_par_coordonnees fin, time:"
              << maxtime
              << finl;
-
-        statistiques().begin_count(stats);
-
+        statistics().begin_count(STD_COUNTERS::parallel_meshing);
         Scatter::construire_structures_paralleles(dom_new, liste_bords_periodiques);
-
-        statistiques().end_count(stats);
-        maxtime = mp_max(statistiques().last_time(stats));
+        maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
+        statistics().end_count(STD_COUNTERS::parallel_meshing);
         Cerr << "Scatter::construire_structures_paralleles, time:" << maxtime << finl;
 
 

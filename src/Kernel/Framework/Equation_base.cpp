@@ -1486,8 +1486,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
           Cerr << "solveur_dffusion_implicite can't be used yet with penalization. " << finl;
           Process::exit();
         }
-
-      statistiques().begin_count(assemblage_sys_counter_);
       statistics().begin_count(STD_COUNTERS::matrix_assembly);
       DoubleTrav present(solution); // I(n)
       present = solution;
@@ -1503,16 +1501,13 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       matrice.clean(); // A=0
       // Add diffusion matrix L into matrix
       operateur(0).l_op_base().contribuer_a_avec(present, matrice); // A=L
-      statistiques().end_count(assemblage_sys_counter_);
       statistics().end_count(STD_COUNTERS::matrix_assembly);
       operateur(0).ajouter(present, secmem);
-      statistiques().begin_count(assemblage_sys_counter_);
       statistics().begin_count(STD_COUNTERS::matrix_assembly);
       matrice.ajouter_multvect(present, secmem);
       // Add M/dt into matrix
       schema_temps().ajouter_inertie(matrice,secmem,(*this)); // A=M/dt+L
       modifier_pour_Cl(matrice,secmem);
-      statistiques().end_count(assemblage_sys_counter_,0,0);
       statistics().end_count(STD_COUNTERS::matrix_assembly);
       // Solve to get I(n+1):
       SolveurSys& solveur = ref_cast(Parametre_diffusion_implicite, parametre_equation().valeur()).solveur();
@@ -1531,19 +1526,15 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       }
   else
     {
-
-      statistiques().begin_count(diffusion_implicite_counter_);
       statistics().begin_count(STD_COUNTERS::implicit_diffusion);
       // on retire les sources dependantes de l inco ; on les rajoutera apres
       if (marq_tot)
         {
           DoubleTrav toto(secmem);
-          statistiques().end_count(diffusion_implicite_counter_,0,0);
           statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
           for (int i = 0; i < size_s; i++)
             if (marq[i])
               sources()(i).ajouter(toto);
-          statistiques().begin_count(diffusion_implicite_counter_);
           statistics().begin_count(STD_COUNTERS::implicit_diffusion);
           solv_masse().appliquer(toto);
           secmem.ajoute(-1., toto); // ,VECT_REAL_ITEMS);
@@ -1590,17 +1581,13 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
           if (param.nb_it_max() > 0)
             nmax = param.nb_it_max();
         }
-      statistiques().end_count(diffusion_implicite_counter_,0,0);
-      statistics().end_count(STD_COUNTERS::implicit_diffusion);  ///< We have to verify if it's not a bug to put 0,0
-
-
+      statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
       /////////////////////
       // Preconditionnement
       /////////////////////
       double dt = le_schema_en_temps->pas_de_temps();
       if (precond_diag)
         {
-          statistiques().begin_count(assemblage_sys_counter_);
           statistics().begin_count(STD_COUNTERS::matrix_assembly);
           const int nb_case = inconnue().valeurs().dimension_tot(0);
           const int nb_comp = inconnue().valeurs().line_size();
@@ -1653,7 +1640,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
                 matrice.diag(ca * nb_comp + ncpa) = 1. / (tmp + tempo(ca, ncpa) * aCKN);
             });
             end_gpu_timer(__KERNEL_NAME__);
-            statistiques().end_count(assemblage_sys_counter_);
             statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
           }
         }
@@ -1667,7 +1653,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
             if (marq[i])
               ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(p, moins_phiB);
         }
-      statistiques().begin_count(diffusion_implicite_counter_);
       statistics().begin_count(STD_COUNTERS::implicit_diffusion);
       moins_phiB*=-1;
       // phiB *= aCKN;  // Crank - Nicholson
@@ -1675,7 +1660,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       //solveur_masse->appliquer(secmem);
 
       // Stop the counter because operator diffusion is also counted
-      statistiques().end_count(diffusion_implicite_counter_, 0, 0);
       statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
       operateur(0).ajouter(solution, resu);
       if (marq_tot)
@@ -1684,7 +1668,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
             if (marq[i])
               ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(solution, resu);
         }
-      statistiques().begin_count(diffusion_implicite_counter_);
       statistics().begin_count(STD_COUNTERS::implicit_diffusion);
       solveur_masse->appliquer(resu);
       resu.echange_espace_virtuel();
@@ -1751,7 +1734,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
             p.echange_espace_virtuel();
 
             // Stop the counter during diffusive operator:
-            statistiques().end_count(diffusion_implicite_counter_, 0, 0);
             statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
             operateur(0).ajouter(p, resu);
             if (marq_tot)
@@ -1760,7 +1742,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
                   if (marq[i])
                     ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(p, resu);
               }
-            statistiques().begin_count(diffusion_implicite_counter_);
             statistics().begin_count(STD_COUNTERS::implicit_diffusion);
             solveur_masse->appliquer(resu);
             resu.echange_espace_virtuel();
@@ -1831,7 +1812,6 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       solution.echange_espace_virtuel();
 
       // End the counter
-      statistiques().end_count(diffusion_implicite_counter_);
       statistics().end_count(STD_COUNTERS::implicit_diffusion);
 
       // CHD 230501 : Call to diffusive operator to update flux_bords (boundary fluxes):
@@ -2015,10 +1995,8 @@ void Equation_base::assembler(Matrice_Morse& matrice, const DoubleTab& inco, Dou
       // On calcule somme(residu) par contribuer_au_second_membre (typiquement CL non implicitees)
       // Cette approche necessite de coder 3 methodes (contribuer_a_avec, contribuer_au_second_membre et ajouter pour l'explicite)
       sources().contribuer_a_avec(inco,matrice);
-      statistiques().end_count(assemblage_sys_counter_,0,0);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistiques().begin_count(assemblage_sys_counter_);
       statistics().begin_count(STD_COUNTERS::matrix_assembly);
       matrice.ajouter_multvect(inco, resu); // Add source residual first
       for (int op = 0; op < nombre_d_operateurs(); op++)
@@ -2063,17 +2041,13 @@ void Equation_base::assembler(Matrice_Morse& matrice, const DoubleTab& inco, Dou
       for (int op=0; op<nombre_d_operateurs(); op++)
         {
           operateur(op).l_op_base().contribuer_a_avec(inco, matrice);
-          statistiques().end_count(assemblage_sys_counter_, 0, 0);
           statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
           operateur(op).ajouter(resu);
-          statistiques().begin_count(assemblage_sys_counter_);
           statistics().begin_count(STD_COUNTERS::matrix_assembly);
         }
       sources().contribuer_a_avec(inco,matrice);
-      statistiques().end_count(assemblage_sys_counter_,0,0);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistiques().begin_count(assemblage_sys_counter_);
       statistics().begin_count(STD_COUNTERS::matrix_assembly);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
@@ -2098,12 +2072,10 @@ void Equation_base::modifier_pour_Cl(Matrice_Morse& mat_morse, DoubleTab& secmem
 // assemble, ajoute linertie,et modifie_pour_cl.
 void Equation_base::assembler_avec_inertie( Matrice_Morse& mat_morse,const DoubleTab& present, DoubleTab& secmem)
 {
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
   assembler(mat_morse,present,secmem);
   schema_temps().ajouter_inertie(mat_morse,secmem,(*this));
   modifier_pour_Cl(mat_morse,secmem);
-  statistiques().end_count(assemblage_sys_counter_);
   statistics().end_count(STD_COUNTERS::matrix_assembly);
 }
 
@@ -2137,18 +2109,14 @@ void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, cons
   for (int i = 0; i < nombre_d_operateurs(); i++)
     operateur(i).l_op_base().ajouter_blocs(matrices, secmem, semi_impl);
 
-  statistiques().end_count(assemblage_sys_counter_, 0, 0);
   statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
 
-  statistiques().begin_count(source_counter_);
   statistics().begin_count(STD_COUNTERS::rhs);
   for (int i = 0; i < les_sources.size(); i++)
     les_sources(i)->ajouter_blocs(matrices, secmem, semi_impl);
 
-  statistiques().end_count(source_counter_);
   statistics().end_count(STD_COUNTERS::rhs);
 
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
   if (!(discretisation().is_polymac_family() || probleme().que_suis_je().debute_par("Pb_Multiphase") || que_suis_je().debute_par("Equation_flux")))
     {
@@ -2160,7 +2128,6 @@ void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, cons
 
 void Equation_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  statistiques().begin_count(assemblage_sys_counter_);
   statistics().begin_count(STD_COUNTERS::matrix_assembly);
   assembler_blocs(matrices, secmem, semi_impl);
   solv_masse().set_penalisation_flag(0);
@@ -2172,7 +2139,6 @@ void Equation_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab&
       Matrice_Morse *mat = matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
       modifier_pour_Cl(*mat,secmem);
     }
-  statistiques().end_count(assemblage_sys_counter_);
   statistics().end_count(STD_COUNTERS::matrix_assembly);
 }
 

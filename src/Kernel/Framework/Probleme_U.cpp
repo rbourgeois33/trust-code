@@ -252,23 +252,9 @@ bool Probleme_U::run()
   // Compute the first time step
   double dt=computeTimeStep(stop);
 
-  statistiques().end_count(initialisation_calcul_counter_);
   statistics().end_count(STD_COUNTERS::computation_start_up);
   // Print the initialization CPU statistics
-  if (!disable_TU)
-    {
-      if(GET_COMM_DETAILS)
-        {
-          statistiques().print_communciation_tracking_details("Statistiques d'initialisation du calcul", 0);
-        }// Into _csv.TU file
-
-      statistiques().dump("Statistiques d'initialisation du calcul", 0);
-      print_statistics_analyse("Statistiques d'initialisation du calcul", 0);
       statistics().print_TU_files("Computation start-up statistics", 0);
-    }
-  statistiques().reset_counters();
-  statistiques().begin_count(temps_total_execution_counter_);
-
 #ifdef VTRACE
   //VT_USER_END("Initialization");
   VT_BUFFER_FLUSH();
@@ -282,7 +268,6 @@ bool Probleme_U::run()
     {
       // Begin the CPU measure of the time step
       statistics().start_time_step();
-      statistiques().begin_count(timestep_counter_);
       statistics().begin_count(STD_COUNTERS::timeloop);
       ok=false; // Is the time interval successfully solved ?
 
@@ -340,26 +325,13 @@ bool Probleme_U::run()
         }
 
       // Stop the CPU measure of the time step and print:
-      statistiques().end_count(timestep_counter_);
-
       if (limpr())
         {
-          double temps = statistiques().last_time(timestep_counter_);
           temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }
-
-
-      if(JUMP_3_FIRST_STEPS && tstep < 3)
-        {
-          if(tstep == 2)
-            {
-              statistiques().set_three_first_steps_elapsed(true);
-            }
-        }
       else
         {
-          statistiques().compute_avg_min_max_var_per_step(tstep);
           statistics().end_time_step(tstep);
         }
       statistics().end_count(STD_COUNTERS::timeloop);
@@ -374,22 +346,7 @@ bool Probleme_U::run()
   VT_USER_END("Resolution");
   VT_OFF();
 #endif
-
-  // Print the resolution CPU statistics
-  if (!disable_TU)
-    {
-      if(GET_COMM_DETAILS)
-        statistiques().print_communciation_tracking_details("Statistiques de resolution du probleme", 1);               // Into _csv.TU file
-
-      statistiques().dump("Statistiques de resolution du probleme", 1);      // Into _csv.TU file
-      print_statistics_analyse("Statistiques de resolution du probleme", 1); // Into        .TU file
       statistics().print_TU_files("Time loop statistics", 1);
-    }
-
-  // Reset the CPU counters
-  statistiques().reset_counters();
-  statistiques().begin_count(temps_total_execution_counter_);
-
   return ok;
 }
 
@@ -416,7 +373,6 @@ bool Probleme_U::runUntil(double time)
   while(!stop)
     {
       statistics().start_time_step();
-      statistiques().begin_count(timestep_counter_);
       statistics().begin_count(STD_COUNTERS::timeloop);
       ok=false;
 
@@ -455,12 +411,9 @@ bool Probleme_U::runUntil(double time)
       // Compute the next time step length
       dt=computeTimeStep(stop);
 
-      statistiques().end_count(timestep_counter_);
       if (je_suis_maitre() && limpr())
         {
-          double temps = statistiques().last_time(timestep_counter_);
-          Cout << "clock: Total time step: " << temps << " s" << finl;
-          temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
+          double temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Total time of the time loop: " << temps << " s" << finl << finl;
         }
       statistics().end_count(STD_COUNTERS::timeloop);

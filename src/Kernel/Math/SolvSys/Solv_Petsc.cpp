@@ -1992,7 +1992,7 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
   // Si on utilise un solver petsc on le signale pour les stats finales
   statistiques().begin_count(solv_sys_petsc_counter_);
   statistiques().end_count(solv_sys_petsc_counter_,1,1);
-  statistics().begin_count(STD_COUNTERS::petsc_solver);
+  statistics().begin_count(STD_COUNTERS::petsc_solver,statistics().get_last_opened_counter_level()+1);
   statistics().end_count(STD_COUNTERS::petsc_solver);
   Perf_counters::time_point start = statistics().start_clock();
   // Attention, bug apres PETSc 3.14 le logging avec PetscLogStage est tres cher pour MatSetValues (appel MPI meme en sequentiel!). Vu sur Flica5 avec appel frequents a Update_matrix

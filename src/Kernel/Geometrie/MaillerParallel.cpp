@@ -32,6 +32,7 @@
 #include <Array_tools.h>
 #include <TRUST_Ref.h>
 #include <Joint.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(MaillerParallel, "MaillerParallel", Interprete);
 // XD maillerparallel interprete maillerparallel 1 creates a parallel distributed hexaedral mesh of a parallelipipedic box. It is equivalent to creating a mesh with a single Pave, splitting it with Decouper and reloading it in parallel with Scatter. It only works in 3D at this time. It can also be used for a sequential computation (with all NPARTS=1)}
@@ -642,8 +643,6 @@ Entree& MaillerParallel::interpreter(Entree& is)
 
   const int numproc = Process::me();
 
-  static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "MaillerParallel", 0 /* Group */);
-
   const int dim = Objet_U::dimension;
   if (nb_noeuds.size_array() != dim)
     {
@@ -670,8 +669,7 @@ Entree& MaillerParallel::interpreter(Entree& is)
         exit();
       }
   }
-  statistiques().begin_count(stats);
-
+  statistics().begin_count(STD_COUNTERS::parallel_meshing);
   // Position du bloc correspondant a numproc dans le decoupage i,j,k:
   ArrOfInt i_proc(dim);
   if (mapping.dimension(0) == 0)
@@ -825,31 +823,25 @@ Entree& MaillerParallel::interpreter(Entree& is)
 
   auto_build_joints(domaine, epaisseur_joint);
 
-
-  statistiques().end_count(stats);
-  double maxtime = mp_max(statistiques().last_time(stats));
+  double maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
+  statistics().end_count(STD_COUNTERS::parallel_meshing);
   if (Process::je_suis_maitre())
     Cerr << "Ending of the construction of the domaines, time:" << maxtime << finl;
 
   if (nproc() > 1)
     {
-
-      statistiques().begin_count(stats);
-
+      statistics().begin_count(STD_COUNTERS::parallel_meshing);
       Scatter::construire_correspondance_sommets_par_coordonnees(domaine);
       Scatter::calculer_renum_items_communs(domaine.faces_joint(), JOINT_ITEM::SOMMET);
-
-      statistiques().end_count(stats);
-      maxtime = mp_max(statistiques().last_time(stats));
+      maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
+      statistics().end_count(STD_COUNTERS::parallel_meshing);
       Cerr << "Scatter::construire_correspondance_sommets_par_coordonnees fin, time:"
            << maxtime << finl;
-
-      statistiques().begin_count(stats);
-
+      statistics().begin_count(STD_COUNTERS::parallel_meshing);
       Scatter::construire_structures_paralleles(domaine, liste_bords_perio);
 
-      statistiques().end_count(stats);
-      maxtime = mp_max(statistiques().last_time(stats));
+      maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
+      statistics().end_count(STD_COUNTERS::parallel_meshing);
       Cerr << "Scatter::construire_structures_paralleles, time:" << maxtime << finl;
     }
   else

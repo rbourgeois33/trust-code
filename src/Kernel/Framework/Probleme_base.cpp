@@ -505,7 +505,6 @@ int Probleme_base::sauvegarder(Sortie& os) const
  */
 int Probleme_base::reprendre(Entree& is)
 {
-  statistiques().begin_count(temporary_counter_);
   statistics().begin_count(STD_COUNTERS::restart);
   Debog::set_nom_pb_actuel(le_nom());
   schema_temps().reprendre(is);
@@ -514,7 +513,6 @@ int Probleme_base::reprendre(Entree& is)
     equation(i).reprendre(is);
   les_postraitements_.reprendre(is);
   Cerr << "End of resuming the problem " << le_nom() << " after " << statistics().get_time_since_last_open(STD_COUNTERS::restart) << " s" << finl;
-  statistiques().end_count(temporary_counter_);
   statistics().end_count(STD_COUNTERS::restart);
   return 1;
 }
@@ -1048,7 +1046,6 @@ void Probleme_base::allocation() const
  */
 int Probleme_base::postraiter(int force)
 {
-  statistiques().begin_count(postraitement_counter_);
   statistics().begin_count(STD_COUNTERS::postreatment,1);
   Schema_Temps_base& sch = schema_temps();
   Debog::set_nom_pb_actuel(le_nom());
@@ -1086,7 +1083,6 @@ int Probleme_base::postraiter(int force)
   else
     les_postraitements_.traiter_postraitement();
 
-  statistiques().end_count(postraitement_counter_);
   statistics().end_count(STD_COUNTERS::postreatment);
   //Start specific postraitements for mobile domain (like ALE)
   if(!save_restart_.is_restart_in_progress() && le_domaine_dis_.non_nul())
@@ -1107,13 +1103,11 @@ int Probleme_base::postraiter(int force)
  */
 void Probleme_base::sauver() const
 {
-  statistiques().begin_count(sauvegarde_counter_);
   statistics().begin_count(STD_COUNTERS::backup_file);
   int bytes = save_restart_.sauver();
   Debog::set_nom_pb_actuel(le_nom());
-  statistiques().end_count(sauvegarde_counter_, bytes);
+  Cout << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to write save file." << finl;
   statistics().end_count(STD_COUNTERS::backup_file,1,bytes);
-  Cout << "[IO] " << statistiques().last_time(sauvegarde_counter_) << " s to write save file." << finl;
 }
 
 /*! @brief Finit le postraitement et sauve le probleme dans un fichier.

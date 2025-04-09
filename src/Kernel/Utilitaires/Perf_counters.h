@@ -75,6 +75,7 @@ enum class STD_COUNTERS : unsigned int
   interprete_scatter,
   virtual_swap ,
   read_scatter,
+  parallel_meshing,
   NB_OF_STD_COUNTER
 };
 

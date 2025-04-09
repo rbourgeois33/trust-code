@@ -194,7 +194,6 @@ int Schema_Temps_base::limpr() const
 
 void Schema_Temps_base::validateTimeStep()
 {
-  statistiques().begin_count(mettre_a_jour_counter_);
   statistics().begin_count(STD_COUNTERS::update_variables);
   // Update the problem:
   Probleme_base& problem=pb_base();
@@ -207,7 +206,6 @@ void Schema_Temps_base::validateTimeStep()
 
   // Update time scheme:
   mettre_a_jour();
-  statistiques().end_count(mettre_a_jour_counter_);
   statistics().end_count(STD_COUNTERS::update_variables);
   dt_failed_ = DBL_MAX;
 }
@@ -558,10 +556,8 @@ int Schema_Temps_base::mettre_a_jour()
   temps_courant_ += dt_;
   nb_pas_dt_++;
   // Compute next time step stability:
-  statistiques().end_count(mettre_a_jour_counter_,0,0);
-  statistics().end_count(STD_COUNTERS::update_variables);
+  statistics().end_count(STD_COUNTERS::update_variables,0,0);
   mettre_a_jour_dt_stab();
-  statistiques().begin_count(mettre_a_jour_counter_);
   statistics().begin_count(STD_COUNTERS::update_variables);
   assert_parallel(dt_stab_);
   assert_parallel(temps_courant_);
@@ -588,7 +584,6 @@ int Schema_Temps_base::mettre_a_jour()
 // GF pour etre sur que tous les proc aient le meme temps ecoule
   if (je_suis_maitre())
     {
-      //temps_cpu_ecoule_ = statistiques().last_time(temps_total_execution_counter_);
       temps_cpu_ecoule_ = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time);
     }
 
@@ -998,7 +993,6 @@ void Schema_Temps_base::write_progress(bool init)
             {
               // On calcule le temps CPU moyen par pas de temps, inconvenient il peut varier fortement au cours du temps si divergence du calcul ou au contraire acceleration
               // Mais Statistiques ne permet pas d'avoir le temps CPU du dernier pas de temps (last_time appele ici renverrait le temps CPU depuis le debut du pas de temps)
-              //double cpu_per_timestep           = statistiques().last_time(temps_total_execution_counter_) / nb_pas_dt();
               double nb_pas_selon_tmax = (temps_max() - temps_courant()) / pas_de_temps();
               double nb_pas_selon_nb_pas_dt_max = nb_pas_dt_max() - nb_pas_dt();
               double nb_pas_avant_fin = std::min(nb_pas_selon_tmax, nb_pas_selon_nb_pas_dt_max);
@@ -1021,8 +1015,7 @@ void Schema_Temps_base::write_progress(bool init)
 
               if (limpr())
                 {
-                  double seconds_to_finish = statistiques().last_time(temps_total_execution_counter_) * (1. - dpercent) / dpercent;
-                  seconds_to_finish = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time) * (1. - dpercent) / dpercent;
+                  double seconds_to_finish = statistics().get_time_since_last_open(STD_COUNTERS::total_execution_time) * (1. - dpercent) / dpercent;
                   int integer_limit = (int) (pow(2.0, (double) ((sizeof(True_int) * 8) - 1)) - 1);
                   if (seconds_to_finish < integer_limit)
                     {

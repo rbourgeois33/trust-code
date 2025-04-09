@@ -23,6 +23,7 @@
 #include <Operateur.h>
 #include <Param.h>
 #include <Nom.h>
+#include <Perf_counters.h>
 
 void Equation_IBM_proto::set_param_ibm_proto(Param& param)
 {
@@ -199,7 +200,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
                     }
                 }
             }
-          statistiques().end_count(assemblage_sys_counter_,0,0);
+          statistics().end_count(STD_COUNTERS::matrix_assembly);
           if (!is_IBM())
             eq_IBM_->sources().ajouter(resu);
           else
@@ -208,7 +209,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
                 if (eq_IBM_->sources()(i).valeur().que_suis_je().find("Source_PDF") <= -1)
                   eq_IBM_->sources()(i).ajouter(resu);
             }
-          statistiques().begin_count(assemblage_sys_counter_);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly);
           matrice.ajouter_multvect(inco, resu); // Add source residual first
           for (int op = 0; op < eq_IBM_->nombre_d_operateurs(); op++)
             {
@@ -247,7 +248,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
           eq_IBM_->operateur(op).l_op_base().contribuer_a_avec(inco, mat);
           if (op == 1) mat *= rhoCp; // la derivee est multipliee par rhoCp pour la convection
           matrice += mat;
-          statistiques().end_count(assemblage_sys_counter_, 0, 0);
+          statistics().end_count(STD_COUNTERS::matrix_assembly);
           {
             DoubleTab resu_tmp(resu);
             resu_tmp = 0.;
@@ -255,7 +256,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
             if (op == 1) resu_tmp *= rhoCp;
             resu += resu_tmp;
           }
-          statistiques().begin_count(assemblage_sys_counter_);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly);
         }
       if (! is_IBM() )
         eq_IBM_->sources().contribuer_a_avec(inco,matrice);
@@ -268,8 +269,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
                 src_base.contribuer_a_avec(inco, matrice);
               }
         }
-      statistiques().end_count(assemblage_sys_counter_,0,0);
-
+      statistics().end_count(STD_COUNTERS::matrix_assembly);
       if (!is_IBM())
         eq_IBM_->sources().ajouter(resu);
       else
@@ -278,7 +278,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
             if (eq_IBM_->sources()(i).valeur().que_suis_je().find("Source_PDF") <= -1)
               eq_IBM_->sources()(i).ajouter(resu);
         }
-      statistiques().begin_count(assemblage_sys_counter_);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
       // comme dans le cas VIA_CONTRIBUER_AU_SECOND_MEMBRE mais le cas Canal_perio_3D (keps

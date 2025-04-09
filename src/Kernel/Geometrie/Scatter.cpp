@@ -198,7 +198,6 @@ Entree& Scatter::interpreter(Entree& is)
   if (Process::je_suis_maitre())
     Cerr << "Execution of the Scatter module." << finl;
 
-  statistiques().begin_count(interprete_scatter_counter_);
   statistics().begin_count(STD_COUNTERS::interprete_scatter);
   // On recupere le domaine:
   Nom nomdomaine;
@@ -254,11 +253,9 @@ Entree& Scatter::interpreter(Entree& is)
   Elem_geom_base& elem=dom.type_elem().valeur();
   if (sub_type(Poly_geom_base,elem))
     ref_cast(Poly_geom_base,elem).compute_virtual_index();
-  statistiques().end_count(interprete_scatter_counter_);
   if(Process::me()==0)
     {
-      double temps = statistiques().last_time(interprete_scatter_counter_);
-      temps = statistics().get_time_since_last_open(STD_COUNTERS::interprete_scatter);
+      double temps = statistics().get_time_since_last_open(STD_COUNTERS::interprete_scatter);
       Cerr << "Scatter time : " << temps << finl;
     }
   statistics().end_count(STD_COUNTERS::interprete_scatter);
@@ -494,9 +491,6 @@ void Scatter::lire_domaine(Nom& nomentree, Noms& liste_bords_periodiques)
       Process::exit();
     }
 
-static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "Scatter::lire_domaine", 0 /* Group */);
-
-  statistiques().begin_count(stats);
   statistics().begin_count(STD_COUNTERS::read_scatter);
   ArrOfInt mergedDomaines(Process::nproc());
   mergedDomaines = 0;
@@ -660,8 +654,6 @@ static Stat_Counter_Id stats = statistiques().new_counter(0 /* Level */, "Scatte
           Reordonner_faces_periodiques::reordonner_faces_periodiques(dom, faces, direction_perio, epsilon);
         }
     }
-
-  statistiques().end_count(stats);
   statistics().end_count(STD_COUNTERS::read_scatter);
   barrier();
 }

@@ -261,6 +261,7 @@ Perf_counters::Perf_counters()
   new Counter(2, "Scatter_interprete"),
   new Counter(2, "DoubleVect/IntVect::virtual_swap", "None", true),
   new Counter(2, "Scatter::read_domaine"),
+  new Counter(0, "Parallel meshing")
 },  nb_steps_elapsed_(3), end_cache_(false), time_loop_(false), counters_stop_(false), counter_lvl_to_print_(1),computation_time_ (duration::zero()), time_skipped_ts_ (duration::zero()), last_opened_counter_(nullptr)
 {
 #ifdef TRUST_USE_GPU
