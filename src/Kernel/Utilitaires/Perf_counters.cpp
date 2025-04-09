@@ -849,7 +849,7 @@ void Perf_counters::print_performance_to_csv(const std::string& message,const bo
     }
 
   /// Check if all of the processors see the same number of counter, if not print an error message in perfs_globales
-  bool skip_globals = Objet_U::disable_TU;
+  bool skip_globals = false;
   int total_nb_of_counters = static_cast<int>(std_counters_.size()) + static_cast<int>(custom_counter_map_str_to_counter_.size());
   int min_total_nb_of_counters = Process::mp_min(total_nb_of_counters);
   int max_total_nb_of_counters = Process::mp_max(total_nb_of_counters);
@@ -1239,6 +1239,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header << "This is the global file for tracking performance in TRUST. It stores aggregated quantities." <<std::endl;
           file_header << "More detailed statistics can be found in the "<< Objet_U::nom_du_cas() <<"_csv.TU file" <<std::endl;
           file_header << "A jupyter notebook giving detailed information about performance measurement can be found in the How_To folder of TRUST src" <<std::endl;
+          file_header << "For time loop, only level 1 counters statistics are printed in this file by default" << std::endl;
           file_header <<"Time is given in seconds"<< std::endl <<std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::right << std::setw(cpu_line_width/2 +26) <<"Context of the computation"<< std::endl;
@@ -1303,13 +1304,13 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           total_time = Process::mp_max(c->total_time_.count());
           for (Counter *c_ptr :std_counters_)
             {
-              if (c_ptr!=nullptr && c_ptr->level_==counter_lvl_to_print_)
+              if (c_ptr!=nullptr && (c_ptr->level_==counter_lvl_to_print_ || Objet_U::print_all_counters))
                 write_globalTU_line(c_ptr,perfs_TU);
             }
           // Loop on the custom counters
           for (auto & pair : custom_counter_map_str_to_counter_)
             {
-              if (pair.second->count_ > 0 && pair.second->level_==counter_lvl_to_print_)
+              if (pair.second->count_ > 0 && (pair.second->level_==counter_lvl_to_print_ || Objet_U::print_all_counters))
                 write_globalTU_line(pair.second, perfs_TU);
             }
           c = get_counter(STD_COUNTERS::total_execution_time);
@@ -1531,14 +1532,17 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
 
 void Perf_counters::print_TU_files(const std::string& message, const bool mode_append)
 {
-  Process::barrier();
-  stop_counters();
-  Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
-  computation_time_ += c_time->total_time_;
-  print_global_TU(message, mode_append);
-  print_performance_to_csv(message, mode_append);
-  reset_counters();
-  counters_stop_=false;
+  if(!Objet_U::disable_TU)
+    {
+      Process::barrier();
+      stop_counters();
+      Counter* c_time = get_counter(STD_COUNTERS::total_execution_time);
+      computation_time_ += c_time->total_time_;
+      print_global_TU(message, mode_append);
+      print_performance_to_csv(message, mode_append);
+      reset_counters();
+      counters_stop_=false;
+    }
 }
 
 

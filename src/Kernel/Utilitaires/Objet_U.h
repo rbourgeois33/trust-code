@@ -122,7 +122,7 @@ public:
 
   static bool disable_TU; // Flag to disable the writing of the .TU files
   static bool stat_per_proc_perf_log; // Flag to enable the writing of the statistics detailed per processor in _csv.TU file
-
+  static bool print_all_counters;
 protected:
   Objet_U();
   Objet_U(const Objet_U&);

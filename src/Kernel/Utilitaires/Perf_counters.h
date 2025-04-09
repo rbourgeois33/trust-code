@@ -126,11 +126,6 @@ public:
    */
   //	void begin_count(Counter c);
 
-  void print_in_global_TU(const STD_COUNTERS& name, bool to_print_or_not_to_print);
-
-  void print_in_global_TU(const std::string& name, bool to_print_or_not_to_print);
-
-
   /*! Standard counters, start the tracking of the wanted operation
    *
    * @param std_cnt reference to the standard counter
