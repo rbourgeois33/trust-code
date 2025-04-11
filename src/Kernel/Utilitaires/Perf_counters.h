@@ -121,7 +121,7 @@ public:
    * @param is_comm
    * @return create a new counter
    */
-  void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false);
+  void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false, bool is_gpu=false);
 
   /*! @brief Start the count of a counter
    *

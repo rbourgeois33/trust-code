@@ -270,7 +270,6 @@ bool Probleme_U::run()
       statistics().start_time_step();
       statistics().begin_count(STD_COUNTERS::timeloop);
       ok=false; // Is the time interval successfully solved ?
-
       // Loop on the time interval tries
       while (!ok && !stop)
         {
@@ -367,6 +366,7 @@ bool Probleme_U::runUntil(double time)
   // Compute the first time step length
   double dt=computeTimeStep(stop);
   statistics().start_timeloop();
+
   // Boucle sur les pas de temps
   while(!stop)
     {

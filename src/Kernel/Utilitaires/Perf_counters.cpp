@@ -277,13 +277,13 @@ Perf_counters::~Perf_counters()
   for (auto it = custom_counter_map_str_to_counter_.begin(); it != custom_counter_map_str_to_counter_.end(); ++it)
     delete it->second;
 }
-void Perf_counters::create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family , bool is_comm)
+void Perf_counters::create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family , bool is_comm, bool is_gpu)
 {
   if (counter_level <=0)
     Process::exit("Custom counters should not be set with a zero or negative level value");
   if (custom_counter_map_str_to_counter_.count(counter_description)==0)
     {
-      auto result =custom_counter_map_str_to_counter_.emplace(counter_description, new Counter(counter_level, counter_description, counter_family ,is_comm));
+      auto result =custom_counter_map_str_to_counter_.emplace(counter_description, new Counter(counter_level, counter_description, counter_family ,is_comm, is_gpu));
       if (!result.second)
         Process::exit("Failed to insert the new custom counter in the custom counter map");
     }
@@ -1122,10 +1122,12 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
   std::stringstream captions;
   std::stringstream file_header;      ///< Stringstream that contains the File header
   const int counter_description_width = 45;
-  const int time_per_step_width= 20;
-  const int percent_loop_time_width=25;
-  const int count_per_ts_width=21;
+  const int time_per_step_width= 15;
+  const int percent_loop_time_width=11;
+  const int count_per_ts_width=15;
+  const int level_width=5;
   const int bandwith_width= 10;
+  const int tabular_custom_line_width= counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+level_width;
   const int cpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width;
   const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width;
   const int number_width=25;
@@ -1135,6 +1137,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
   const std::string separator = " | ";
   const std::string line_sep_cpu(max_str_lenght_,'~');
   const std::string line_sep_tabular(cpu_line_width,'-');
+  const std::string line_sep_tabular_custom(tabular_custom_line_width,'-');
   const std::string line_sep_gpu(gpu_line_width,'-');
 
   if (Process::je_suis_maitre())
@@ -1164,7 +1167,7 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
 
       auto write_globalTU_line = [&] (Counter*c_ptr_,std::stringstream & line)
       {
-        if (c_ptr_->count_>0)
+        if (c_ptr_!=nullptr && c_ptr_->count_>0  && (c_ptr_->level_==counter_lvl_to_print_ || Objet_U::print_all_counters))
           {
             double t_c = c_ptr_->total_time_.count();
             int count = c_ptr_->count_;
@@ -1180,6 +1183,27 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
                 line << separator <<std::left << std::setw(count_per_ts_width) << std::round(n) << std::setprecision(7);
               }
             line << std::endl;
+          }
+      };
+
+      auto write_globalTU_line_custom_counters = [&] (Counter*c_ptr_,std::stringstream & line)
+      {
+        if (c_ptr_!=nullptr && c_ptr_->count_>0)
+          {
+            double t_c = c_ptr_->total_time_.count();
+            int count = c_ptr_->count_;
+
+            t_c = Process::mp_max(t_c);
+            count = Process::mp_max(count);
+            line << std::left <<std::setw(counter_description_width) << c_ptr_->description_ <<separator ;
+            double t = nb_ts>0 ? t_c/nb_ts : t_c;
+            line << std::left << std::setw(time_per_step_width) <<t << separator << std::setprecision(3) << std::setw(percent_loop_time_width) << t_c/total_time*100 ;
+            if (nb_ts>0)
+              {
+                double n = static_cast<double>(count)/nb_ts;
+                line << separator <<std::left << std::setw(count_per_ts_width) << std::round(n) << std::setprecision(7);
+              }
+            line << separator <<std::setw(level_width) << c->level_ << std::endl;
           }
       };
 
@@ -1278,7 +1302,6 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
           file_header <<  std::left <<std::setw(text_width) << "Time elapsed in the skipped time steps: " <<  std::left <<std::setw(number_width) << time_skipped_ts_.count() <<std::endl << std::endl;
           if (Process::is_parallel())
             file_header <<  std::left <<std::setw(text_width) << "Percent of total time tracked by communication counters:" <<  std::left <<std::setw(number_width) << 100* total_comm_time / total_time << std::endl;
-
         }
       else if (message == "Post-resolution statistics")
         {
@@ -1302,24 +1325,26 @@ void Perf_counters::print_global_TU(const std::string& message, const bool mode_
       if(message == "Time loop statistics")
         {
           perfs_TU<<std::endl;
-          perfs_TU << std::left <<std::setw(counter_description_width) << "Counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/time step"<<std::endl;
+          perfs_TU << std::left <<std::setw(counter_description_width) << "Standard counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/step"<<std::endl;
           perfs_TU << line_sep_tabular << std::endl;
           c = get_counter(STD_COUNTERS::timeloop);
           total_time = Process::mp_max(c->total_time_.count());
           for (Counter *c_ptr :std_counters_)
-            {
-              if (c_ptr!=nullptr && (c_ptr->level_==counter_lvl_to_print_ || Objet_U::print_all_counters))
-                write_globalTU_line(c_ptr,perfs_TU);
-            }
-          // Loop on the custom counters
-          for (auto & pair : custom_counter_map_str_to_counter_)
-            {
-              if (pair.second->count_ > 0 && (pair.second->level_==counter_lvl_to_print_ || Objet_U::print_all_counters))
-                write_globalTU_line(pair.second, perfs_TU);
-            }
+            write_globalTU_line(c_ptr,perfs_TU);
           c = get_counter(STD_COUNTERS::total_execution_time);
           total_time = c->total_time_.count();
-          perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
+          // Loop on the custom counters
+          if (custom_counter_map_str_to_counter_.empty())
+            perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
+          else
+            {
+              perfs_TU << std::endl;
+              perfs_TU << std::left <<std::setw(counter_description_width) << "Custom counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/step"<< separator <<std::setw(level_width) << "Level" <<std::endl;
+              perfs_TU << line_sep_tabular_custom<<std::endl;
+              for (auto & pair : custom_counter_map_str_to_counter_)
+                write_globalTU_line_custom_counters(pair.second, perfs_TU);
+              perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
+            }
         }
       c = get_counter(STD_COUNTERS::virtual_swap);
       if (Process::mp_max(c->count_)>0)
