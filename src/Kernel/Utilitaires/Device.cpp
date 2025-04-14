@@ -218,7 +218,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
     {
       std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
-      double ms = 1000 * statistics().compute_gpu_time();
+      double ms = 1000 * statistics().stop_gpu_clock_and_compute_gpu_time();
       printf("%s %7.3f ms [Data]   Allocate on device [%9s] %6ld Bytes (%ld/%ldGB free) Currently allocated: %6ld\n", clock.c_str(), ms, ptrToString(ptr).c_str(), long(bytes), free_bytes/(1024*1024*1024), total_bytes/(1024*1024*1024), long(DeviceMemory::allocatedBytesOnDevice()));
     }
 #endif
@@ -547,7 +547,7 @@ void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in
       if (statistics().is_gpu_clock_on() && Process::je_suis_maitre()) // Affichage
         {
           std::string clock(Process::is_parallel() ? "[clock]#" + std::to_string(Process::me()) : "[clock]  ");
-          double ms = 1000 * statistics().compute_gpu_time();
+          double ms = 1000 * statistics().stop_gpu_clock_and_compute_gpu_time();
           if (bytes == -1)
             {
               if (!str.empty())

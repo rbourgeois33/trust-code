@@ -14,19 +14,13 @@
  *****************************************************************************/
 
 #include <string>
-#include <mutex>
-#include <vector>
-#include <map>
-#include <tuple>
-#include <array>
+#include <chrono>
 #include <memory>
 
 #ifndef Perf_counters_included
 #define Perf_counters_included
 
 // This file contains all of the needed for the description of the counter associated with the tracking of performance in the TRUST code.
-// A class Time is introduced in Perf_counters.cpp for extracting the time
-class Counter;
 
 enum class STD_COUNTERS : unsigned int
 {
@@ -177,10 +171,7 @@ public:
    *
    * @param is_the_three_first_time_steps_elapsed == True, then the thre first time steps are discarded
    */
-  inline void set_time_steps_elapsed(int time_step_elapsed)
-  {
-    nb_steps_elapsed_ = time_step_elapsed;
-  }
+  void set_time_steps_elapsed(int time_step_elapsed);
 
   /*! @brief Function that encapsulate the two functions that writes the TU files
    *
@@ -234,9 +225,7 @@ public:
    */
   void end_time_step(unsigned int tstep);
 
-  inline void set_nb_time_steps_elapsed(unsigned int n) {if (n>0)nb_steps_elapsed_ = n;}
-
-  inline void set_counter_lvl_to_print_global_TU(int l) { if (l>0)  counter_lvl_to_print_ = l;}
+  void set_nb_time_steps_elapsed(unsigned int n) ;
 
   int get_last_opened_counter_level() const ;
 
@@ -246,92 +235,94 @@ public:
 
   void stop_gpu_clock();
 
-  inline bool is_gpu_clock_on() const {return gpu_clock_on_;}
-  inline void set_gpu_clock(bool on) {gpu_clock_on_=on;}
+  bool is_gpu_clock_on() const ;
+  void set_gpu_clock(bool on) ;
 
-  inline bool get_init_device() const {return init_device_;}
+  bool get_init_device() const ;
 
-  inline void set_init_device(bool init) {init_device_=init;}
+  void set_init_device(bool init) ;
 
-  inline bool get_gpu_timer() const {return gpu_timer_;}
+  bool get_gpu_timer() const ;
 
-  inline void set_gpu_timer(bool timer) {gpu_timer_=timer;}
+  void set_gpu_timer(bool timer);
 
-  inline void add_to_gpu_timer_counter(int to_add) {gpu_timer_counter_+=to_add;}
+  void add_to_gpu_timer_counter(int to_add) ;
 
-  inline int get_gpu_timer_counter() const {return gpu_timer_counter_;}
+  int get_gpu_timer_counter() const ;
 
-  double compute_gpu_time() ;
+  double stop_gpu_clock_and_compute_gpu_time() ;
 
 //// end of GPU features
 
+  Perf_counters(const Perf_counters&) = delete;
+  Perf_counters& operator=(const Perf_counters&) = delete;
 
 private:
 
   Perf_counters();
   ~Perf_counters();
-  Perf_counters(const Perf_counters&) = delete;
-  Perf_counters& operator=(const Perf_counters&) = delete;
-  std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
-  unsigned int nb_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
-  bool end_cache_; ///< A flag used to know if the two first time steps are over or not
-  bool time_loop_; ///< A flag used to know if we are inside the time loop
-  bool counters_stop_;  ///< A flag used to know if the counters are paused or not
-  int counter_lvl_to_print_;   ///< Counter level that you want to be printed in the global_TU
-  int total_nb_backup_=0;
-  double total_data_exchange_per_backup_=0.;
-  bool gpu_clock_on_ =false;
-  bool init_device_ = false;
-  bool gpu_timer_ = false;
-  time_point gpu_clock_start_;
-  int gpu_timer_counter_=0;
-  duration computation_time_; ///< Used to compute the total time of the simulation.
-  duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
-  int max_str_lenght_=121;
-  Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  std::map <std::string, Counter*> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
-  /*! @brief Create the csv.TU file.
-   *
-   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
-   */
-  void print_performance_to_csv(const std::string& message, const bool mode_append);
-
-  /*! @brief Create the global .Tu file with agglomerated stats
-   *
-   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
-   */
-  void print_global_TU(const std::string& message, const bool mode_append);
-
-  std::string get_os() const;
-  std::string get_cpu() const;
-  std::string get_gpu() const;
-  std::string get_date() const;
-  /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
-   *
-   * @param c counter you try to open
-   * @param counter_lvl
-   * @param t time of opening
-   */
-  void check_begin(Counter* const c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
-
-  /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
-   *
-   * @param c counter you try to close
-   * @param t time of closing
-   */
-  void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
-
-  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
-   *
-   * @return the reference of a the counter object associated with STD_COUNTERS::name
-   */
-  inline Counter* get_counter(const STD_COUNTERS name) {return std_counters_[static_cast<int>(name)];}
-
-  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
-   *
-   * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
-   */
-  inline Counter* get_counter(const std::string name) {return custom_counter_map_str_to_counter_.at(name);}
+  class Impl;
+  std::unique_ptr<Impl> pimpl_;
+//  std::array <Counter * const, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_ ; ///< Array of the pointers to the standard counters of TRUST
+//  unsigned int nb_steps_elapsed_;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
+//  bool end_cache_; ///< A flag used to know if the two first time steps are over or not
+//  bool time_loop_; ///< A flag used to know if we are inside the time loop
+//  bool counters_stop_;  ///< A flag used to know if the counters are paused or not
+//  int counter_lvl_to_print_;   ///< Counter level that you want to be printed in the global_TU
+//  int total_nb_backup_=0;
+//  double total_data_exchange_per_backup_=0.;
+//  bool gpu_clock_on_ =false;
+//  bool init_device_ = false;
+//  bool gpu_timer_ = false;
+//  time_point gpu_clock_start_;
+//  int gpu_timer_counter_=0;
+//  duration computation_time_; ///< Used to compute the total time of the simulation.
+//  duration time_skipped_ts_; ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
+//  int max_str_lenght_=121;
+//  Counter * last_opened_counter_; ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
+//  std::map <std::string, Counter* const> custom_counter_map_str_to_counter_ ; ///< Map that link the descriptions of the custom counters to their pointers
+//  /*! @brief Create the csv.TU file.
+//   *
+//   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+//   */
+//  void print_performance_to_csv(const std::string& message, const bool mode_append);
+//
+//  /*! @brief Create the global .Tu file with agglomerated stats
+//   *
+//   * Some local sub-functions are defined in Perf_counters.cpp for constructing the csv.TU_file
+//   */
+//  void print_global_TU(const std::string& message, const bool mode_append);
+//
+//  std::string get_os() const;
+//  std::string get_cpu() const;
+//  std::string get_gpu() const;
+//  std::string get_date() const;
+//  /*! @brief Ensure that the counter you are trying to open is not open yet and that the level is correct and update last_opened_counter_
+//   *
+//   * @param c counter you try to open
+//   * @param counter_lvl
+//   * @param t time of opening
+//   */
+//  void check_begin(Counter* const c, int counter_lvl, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+//
+//  /*! @brief Used to see if the counter you want to close is indeed the last open and update last_opened_counter_
+//   *
+//   * @param c counter you try to close
+//   * @param t time of closing
+//   */
+//  void check_end(Counter* const c, std::chrono::time_point<std::chrono::high_resolution_clock> t);
+//
+//  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+//   *
+//   * @return the reference of a the counter object associated with STD_COUNTERS::name
+//   */
+//  inline Counter* get_counter(const STD_COUNTERS name) {return std_counters_[static_cast<int>(name)];}
+//
+//  /*! @brief Accessor to the Counter object which pointer is stored in the std_counters_ array
+//   *
+//   * @return the reference of a the counter object associated with custom_counter_map_str_to_counter_[name]
+//   */
+//  inline Counter* get_counter(const std::string name) {return custom_counter_map_str_to_counter_.at(name);}
 
 };
 
