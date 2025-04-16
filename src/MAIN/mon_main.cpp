@@ -315,7 +315,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
     {
       declare_stat_counters();
     }
-  statistics().begin_count(STD_COUNTERS::computation_start_up);
+  //
 
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)
@@ -465,7 +465,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
   Cerr << "MAIN: End of data file" << finl;
   Process::imprimer_ram_totale(1);
 
-  statistics().print_TU_files("Post-resolution statistics",true);
+  statistics().print_TU_files("Post-resolution statistics");
 
   double temps = statistics().get_computation_time();
   Cout << finl;
@@ -476,7 +476,6 @@ void mon_main::dowork(const Nom& nom_du_cas)
       SFichier ficstop ( nomfic);
       ficstop  << "Finished correctly"<<finl;
     }
-  //  end_stat_counters();
 }
 
 mon_main::~mon_main()

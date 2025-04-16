@@ -254,7 +254,7 @@ bool Probleme_U::run()
 
   statistics().end_count(STD_COUNTERS::computation_start_up);
   // Print the initialization CPU statistics
-  statistics().print_TU_files("Computation start-up statistics", 0);
+  statistics().print_TU_files("Computation start-up statistics");
 #ifdef VTRACE
   //VT_USER_END("Initialization");
   VT_BUFFER_FLUSH();
@@ -346,7 +346,7 @@ bool Probleme_U::run()
   VT_USER_END("Resolution");
   VT_OFF();
 #endif
-  statistics().print_TU_files("Time loop statistics", 1);
+  statistics().print_TU_files("Time loop statistics");
   return ok;
 }
 

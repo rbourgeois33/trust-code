@@ -31,8 +31,6 @@
 #include <cmath>
 #include <Perf_counters.h>
 
-extern Stat_Counter_Id convection_counter_;
-
 Implemente_instanciable( Op_Conv_EF_Stab_PolyMAC_P0_Face, "Op_Conv_EF_Stab_PolyMAC_P0_Face", Op_Conv_EF_Stab_PolyMAC_P0P1NC_Face ) ;
 Implemente_instanciable(Op_Conv_Amont_PolyMAC_P0_Face, "Op_Conv_Amont_PolyMAC_P0_Face", Op_Conv_EF_Stab_PolyMAC_P0_Face);
 Implemente_instanciable(Op_Conv_Centre_PolyMAC_P0_Face, "Op_Conv_Centre_PolyMAC_P0_Face", Op_Conv_EF_Stab_PolyMAC_P0_Face);
@@ -233,7 +231,6 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, co
  */
 void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistics().begin_count(STD_COUNTERS::convection);
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Face_PolyMAC_P0& ch = ref_cast(Champ_Face_PolyMAC_P0, equation().inconnue());
   const Conds_lim& cls = la_zcl_poly_->les_conditions_limites();
@@ -396,5 +393,4 @@ void Op_Conv_EF_Stab_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleT
             }
         }
     }
-  statistics().end_count(STD_COUNTERS::convection);
 }

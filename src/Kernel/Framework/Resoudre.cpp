@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -17,6 +17,7 @@
 #include <Probleme_U.h>
 #include <Catch_SIGINIT.h>
 #include <signal.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Resoudre,"Resoudre|Solve",Interprete);
 // XD solve interprete resoudre -2 Interpretor to start calculation with TRUST.
@@ -54,7 +55,7 @@ Entree& Resoudre::interpreter(Entree& is)
   Nom problem_name;
   is >> problem_name;
   Probleme_U& pb=ref_cast(Probleme_U,objet(problem_name));
-
+  statistics().begin_count(STD_COUNTERS::computation_start_up);
   Nom string("=====================================================");
   Cerr << string << finl;
   Cerr << "Initialization of the problem " << pb.le_nom() << " ("<<que_suis_je()<<") in progress ... " << finl;

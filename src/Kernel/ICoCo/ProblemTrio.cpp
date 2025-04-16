@@ -182,7 +182,7 @@ bool ProblemTrio::initialize()
     }
 
   // Print the initialization CPU statistics
-  statistics().print_TU_files("Computation start-up statistics",0);
+  statistics().print_TU_files("Computation start-up statistics");
   return true;
 }
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
@@ -209,7 +209,7 @@ void ProblemTrio::terminate()
     }
   if (!Objet_U::disable_TU)
     {
-  statistics().print_TU_files("Time loop statistics",false);
+  statistics().print_TU_files("Time loop statistics");
   if(p)
     {
       delete p;

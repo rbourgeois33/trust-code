@@ -942,6 +942,7 @@ void Probleme_base::mettre_a_jour(double temps)
   Debog::set_nom_pb_actuel(le_nom());
 
   // Update the equations:
+//statistics().begin_count(STD_COUNTERS::update_variables);
   for(int i=0; i<nombre_d_equations(); i++)
     equation(i).mettre_a_jour(temps);
 
@@ -962,6 +963,7 @@ void Probleme_base::mettre_a_jour(double temps)
     }
   for (auto &corr : correlations_)
     corr.second->mettre_a_jour(temps);
+  //statistics().end_count(STD_COUNTERS::update_variables);
 }
 
 /*! @brief Prepare le calcul: initialise les parametres du milieu et prepare le calcul de chacune des equations.

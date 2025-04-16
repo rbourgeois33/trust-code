@@ -415,10 +415,9 @@ int main_TRUST(int argc, char** argv,mon_main*& main_process,bool force_mpi, boo
     // Clean
     MD_Vector_tools::CleanMyStatics();
   }
-
+  statistics().end_count(STD_COUNTERS::total_execution_time);
   //  pour detruire les derniers octets
   desalloue_pwd();
-  statistics().end_count(STD_COUNTERS::total_execution_time);
   return (0);
 }
 
