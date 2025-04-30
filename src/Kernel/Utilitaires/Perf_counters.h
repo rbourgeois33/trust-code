@@ -94,7 +94,7 @@ public:
 
   inline time_point start_clock() {return now();}
 
-  double compute_time(time_point start);
+  double compute_time(time_point start); ///< return time since start in seconds
 
   /*! @brief The class Perf_counters is based on a singleton pattern. To access to the unique object inside the code, use the getInstance() function
    *

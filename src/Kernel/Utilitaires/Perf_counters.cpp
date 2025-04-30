@@ -282,7 +282,7 @@ private:
   bool gpu_timer_ = false;
   time_point gpu_clock_start_;
   int gpu_timer_counter_=0;
-  int max_str_lenght_=121;
+  int max_str_length_=121;
 };
 Perf_counters::Impl::~Impl()=default;
 
@@ -292,16 +292,16 @@ Perf_counters::Impl::Impl()
   std_counters_[static_cast<int>(STD_COUNTERS::total_execution_time)] = std::make_unique<Counter>(-1, "Total time");
   std_counters_[static_cast<int>(STD_COUNTERS::computation_start_up)] = std::make_unique<Counter>(0, "Computation start-up");
   std_counters_[static_cast<int>(STD_COUNTERS::timeloop)] = std::make_unique<Counter>(0, "Time loop");
-  std_counters_[static_cast<int>(STD_COUNTERS::system_solver)] = std::make_unique<Counter>(1, "Number of linear system resolutions Ax=B");
+  std_counters_[static_cast<int>(STD_COUNTERS::system_solver)] = std::make_unique<Counter>(1, "Linear system resolutions Ax=B");
   std_counters_[static_cast<int>(STD_COUNTERS::petsc_solver)] = std::make_unique<Counter>(2, "Petsc solver");
   std_counters_[static_cast<int>(STD_COUNTERS::implicit_diffusion)] = std::make_unique<Counter>(1, "Number of linear system resolutions for implicit diffusion:");
   std_counters_[static_cast<int>(STD_COUNTERS::compute_dt)] = std::make_unique<Counter>(1, "Computation of the time step dt");
   std_counters_[static_cast<int>(STD_COUNTERS::turbulent_viscosity)] = std::make_unique<Counter>(1, "Turbulence model::update");
-  std_counters_[static_cast<int>(STD_COUNTERS::convection)] = std::make_unique<Counter>(1, "Convection operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::diffusion)] = std::make_unique<Counter>(1, "Diffusion operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::gradient)] = std::make_unique<Counter>(1, "Gradient operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::divergence)] = std::make_unique<Counter>(1, "Divergence operator::add/compute");
-  std_counters_[static_cast<int>(STD_COUNTERS::rhs)] = std::make_unique<Counter>(1, "Source_terms::add/compute");
+  std_counters_[static_cast<int>(STD_COUNTERS::convection)] = std::make_unique<Counter>(1, "Convection operator");
+  std_counters_[static_cast<int>(STD_COUNTERS::diffusion)] = std::make_unique<Counter>(1, "Diffusion operator");
+  std_counters_[static_cast<int>(STD_COUNTERS::gradient)] = std::make_unique<Counter>(1, "Gradient operator");
+  std_counters_[static_cast<int>(STD_COUNTERS::divergence)] = std::make_unique<Counter>(1, "Divergence operator");
+  std_counters_[static_cast<int>(STD_COUNTERS::rhs)] = std::make_unique<Counter>(1, "Source_terms");
   std_counters_[static_cast<int>(STD_COUNTERS::postreatment)] = std::make_unique<Counter>(1, "Post-treatment");
   std_counters_[static_cast<int>(STD_COUNTERS::backup_file)] = std::make_unique<Counter>(0, "Back-up operations");
   std_counters_[static_cast<int>(STD_COUNTERS::restart)] = std::make_unique<Counter>(1, "Read file for restart");
@@ -465,7 +465,7 @@ std::string Perf_counters::Impl::get_os() const
   result += std::string(buffer.release)+ "__";
   result += std::string(buffer.version);
   result = delete_blank_spaces(result);
-  return result.substr(0,max_str_lenght_);
+  return result.substr(0,max_str_length_);
 }
 
 /*!
@@ -498,7 +498,7 @@ std::string Perf_counters::Impl::get_cpu() const
   if (result !=0)
     Cerr << "Bash command in Perf_counters::get_cpu failed"<<std::endl;
   str= delete_blank_spaces(str);
-  return (str.substr(0,max_str_lenght_));
+  return (str.substr(0,max_str_length_));
 }
 /*!
  *
@@ -530,7 +530,7 @@ std::string Perf_counters::Impl::get_gpu() const
   gpu_description = gpu_desc.str();
 #endif
   gpu_description=delete_blank_spaces(gpu_description);
-  return gpu_description.substr(0,max_str_lenght_);
+  return gpu_description.substr(0,max_str_length_);
 }
 
 /*!
@@ -545,7 +545,7 @@ std::string Perf_counters::Impl::get_date() const
   date<< std::put_time(&tstruct, "%d-%m-%Y -- %X");
   std::string result = date.str();
   result = delete_blank_spaces(result);
-  return (result.substr(0,max_str_lenght_));
+  return (result.substr(0,max_str_length_));
 }
 
 static void build_line_csv(std::ostringstream& lines, const std::array<std::string,24>& line_items, const std::array<int,24>& item_size)
@@ -843,7 +843,7 @@ void Perf_counters::Impl::print_performance_to_csv(const std::string& message)
     }
 
   Nom CSV(Objet_U::nom_du_cas());
-  CSV+="_csv_new.TU";
+  CSV+="_csv.TU";
   auto printing_mode = ios::app;
   if (message=="Computation start-up statistics")
     printing_mode= ios::out;
@@ -932,7 +932,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   const int header_txt_width = 11;
   const int message_width = static_cast<int>(message.length());
   const std::string separator = " | ";
-  const std::string line_sep_cpu(max_str_lenght_,'~');
+  const std::string line_sep_cpu(max_str_length_,'~');
   const std::string line_sep_tabular(cpu_line_width,'-');
   const std::string line_sep_tabular_custom(tabular_custom_line_width,'-');
   const std::string line_sep_gpu(gpu_line_width,'-');
@@ -980,9 +980,9 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       total_data_exchange_per_backup_ += total_quantity / (max_nb_backup *1024*1024);
     }
 
-  auto write_globalTU_line = [&] (const Counter& c_to_print_,std::ostringstream & line, bool& print_all)
+  auto write_globalTU_line = [&] (const Counter& c_to_print_,std::ostringstream & line)
   {
-    if (c_to_print_.count_>0  && (c_to_print_.level_==counter_lvl_to_print_ || print_all))
+    if (c_to_print_.count_>0  && c_to_print_.level_==counter_lvl_to_print_)
       {
         double t_c = c_to_print_.total_time_.count();
         int count = c_to_print_.count_;
@@ -1004,7 +1004,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       {
         double t_c = c_to_print_.total_time_.count();
         int count = c_to_print_.count_;
-        line << std::left <<std::setw(counter_description_width) << c_to_print_.description_ <<separator ;
+        line << std::left <<std::setw(counter_description_width) << "Custom_counter::"+c_to_print_.description_ <<separator ;
         double t = nb_ts>0 ? t_c/nb_ts : t_c;
         line << std::left << std::setw(time_per_step_width) <<t << separator << std::setprecision(3) << std::setw(percent_loop_time_width) << t_c/total_time*100 ;
         if (nb_ts>0)
@@ -1118,7 +1118,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       std::string spaces;
       if (message == "Computation start-up statistics")
         {
-          spaces.assign((max_str_lenght_-27)/2,' ');
+          spaces.assign((max_str_length_-27)/2,' ');
           file_header <<  spaces <<"# Global performance file #"<< std::endl;
           file_header <<  std::endl;
           file_header << "This is the global file for tracking performance in TRUST. It stores aggregated quantities." <<std::endl;
@@ -1127,7 +1127,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           file_header << "For time loop, only level 1 counters statistics are printed in this file by default" << std::endl;
           file_header <<"Time is given in seconds"<< std::endl <<std::endl;
           file_header << line_sep_cpu << std::endl;
-          spaces.assign((max_str_lenght_-26)/2,' ');
+          spaces.assign((max_str_length_-26)/2,' ');
           file_header << spaces <<"Context of the computation"<< std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::left << std::setw(header_txt_width)<< "Date:" << get_date() << std::endl;
@@ -1136,7 +1136,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           file_header << std::left << std::setw(header_txt_width) << "GPU:" << get_gpu() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "Nb procs : " << nb_procs << std::endl << std::endl;
           file_header << line_sep_cpu << std::endl;
-          spaces.assign((max_str_lenght_-message_width)/2,' ');
+          spaces.assign((max_str_length_-message_width)/2,' ');
           file_header  << spaces<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header << std::left << std::setw(text_width)<<"Total time of the start-up: " <<  std::left <<std::setw(number_width) << c_total_time.total_time_.count() << std::endl;
@@ -1145,7 +1145,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       else if (message == "Time loop statistics")
         {
           file_header << line_sep_cpu << std::endl;
-          spaces.assign((max_str_lenght_-message_width)/2,' ');
+          spaces.assign((max_str_length_-message_width)/2,' ');
           file_header  << spaces<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
           if (nb_ts <= 0)
@@ -1162,7 +1162,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       else if (message == "Post-resolution statistics")
         {
           file_header << line_sep_cpu << std::endl;
-          spaces.assign((max_str_lenght_-message_width)/2,' ');
+          spaces.assign((max_str_length_-message_width)/2,' ');
           file_header  << spaces<<message << std::endl;
           file_header << line_sep_cpu << std::endl;
           file_header <<  std::left <<std::setw(text_width) << "Time of the post-resolution: " <<  std::left <<std::setw(number_width) <<  c_total_time.total_time_.count() << std::endl;
@@ -1186,12 +1186,12 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           for (int i =0 ; i< static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER); i++)
             {
               Counter& c_to_print = *std_counters_[i];
-              write_globalTU_line(c_to_print,perfs_TU,Objet_U::print_all_counters);
+              write_globalTU_line(c_to_print,perfs_TU);
             }
           total_time = c_total_time.total_time_.count();
           // Loop on the custom counters
           if (custom_counter_map_str_to_counter_.empty())
-            perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
+            perfs_TU <<std::endl  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl <<std::endl;
           else
             {
               perfs_TU << std::endl;
@@ -1199,12 +1199,16 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
               perfs_TU << line_sep_tabular_custom<<std::endl;
               for (const auto & pair : custom_counter_map_str_to_counter_)
                 write_globalTU_line_custom_counters(*pair.second, perfs_TU);
-              perfs_TU  << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl;
+              perfs_TU <<std::endl   << std::left <<std::setw(counter_description_width) << "Untracked time" << separator << std::setw(time_per_step_width) << total_untracked_time_ts + total_untracked_time << separator << std::setprecision(3) <<  std::setw(percent_loop_time_width) << 100* (total_untracked_time_ts/time_tl + total_untracked_time/total_time) << separator <<std::endl <<std::endl ;
             }
         }
       if (max_virtual_swap_c>0)
         {
-          perfs_TU <<  std::left <<std::setw(text_width) << "Maximum number of virtual exchanges :" <<  std::left <<std::setw(number_width) << max_virtual_swap_c << std::endl;
+          if (message=="Time loop statistics")
+            perfs_TU <<  std::left <<std::setw(text_width) << "Total number of virtual exchanges:" <<  std::left <<std::setw(number_width) << max_virtual_swap_c << std::endl;
+          else
+            perfs_TU <<  std::left <<std::setw(text_width) << "Number of virtual exchanges:" <<  std::left <<std::setw(number_width) << max_virtual_swap_c << std::endl;
+
         }
       if (min_max_avg_sd_t_q_c_allreduce_comm[2][1]>0 && nb_ts>0)
         {
@@ -1212,8 +1216,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           perfs_TU <<  std::left <<std::setw(text_width) << "Maximum number of MPI allreduce per time step" <<  std::left <<std::setw(number_width) << allreduce_per_ts << std::endl;
           if (allreduce_per_ts > 30.0)
             {
-              perfs_TU << line_sep_cpu << std::endl;
-              perfs_TU << " Warning: The number of MPI_allreduce calls per time step is high. Contact TRUST if you plan to run massive parallel calculation." << std::endl;
+              perfs_TU << std::endl << line_sep_cpu << std::endl;
+              perfs_TU << " Warning: number of MPI_allreduce calls per time step is high. Contact TRUST team to run massive parallel calculations" << std::endl;
               perfs_TU << line_sep_cpu<< std::endl;
             }
         }
@@ -1246,7 +1250,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       if (copy_to_device_count>0 && nb_ts >0 && message=="Time loop statistics")
         {
           perfs_GPU << std::endl << line_sep_gpu << std::endl;
-          spaces.assign((max_str_lenght_-14)/2,' ');
+          spaces.assign((max_str_length_-14)/2,' ');
           perfs_GPU << spaces <<"GPU statistics" << std::endl;
           perfs_GPU << line_sep_gpu<<std::endl;
           perfs_GPU << std::left <<std::setw(counter_description_width) << "Counter description" << separator <<std::setw(time_per_step_width) << "Time per step" <<separator<< std::setw(percent_loop_time_width) << "Percent of loop time" <<separator<< std::setw(count_per_ts_width) << "Calls per time step" <<separator<< std::setw(bandwith_width)<< "Bandwidth"<<std::endl;
@@ -1269,62 +1273,65 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
               Cerr << "==============================================================================================" << std::endl;
             }
         }
-      if (debit_seq>0 || debit_par>0)
+      if (message=="Time loop statistics")
         {
-          perfs_IO << std::endl << line_sep_cpu << std::endl;
-          spaces.assign((max_str_lenght_-message_width-13)/2,' ');
-          perfs_IO << spaces << message <<": IO statistics" << std::endl;
-          perfs_IO << line_sep_cpu<<std::endl;
-        }
-      if (debit_seq>0)
-        perfs_IO << std::left <<std::setw(text_width) << "Output write sequential (Mo/s) : " <<  std::left <<std::setw(number_width) << debit_seq << std::endl;
-      if (debit_par>0)
-        perfs_IO <<  std::left <<std::setw(text_width) << "Output write parallel (Mo/s) : " <<  std::left <<std::setw(number_width) << debit_par << std::endl;
-      if (total_nb_backup_>0)
-        {
-          perfs_IO <<  std::left <<std::setw(text_width) << "Total number of back-up: " <<  std::left <<std::setw(number_width) << total_nb_backup_ << std::endl;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Total amount of data per back-up (Mo): " <<  std::left <<std::setw(number_width) << total_data_exchange_per_backup_ << std::endl;
-        }
-      if(min_max_avg_sd_t_q_c_sendrecv_comm[2][1] > 0)
-        {
-          if(petcs_count>0)
+          if (debit_seq>0 || debit_par>0)
             {
-              perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl;
-              perfs_IO<< "Warning: One or several PETSc solvers are used and thus the communication time below are under-estimated."<< std::endl;
-              perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl;
+              perfs_IO << std::endl << line_sep_cpu << std::endl;
+              spaces.assign((max_str_length_-message_width-4)/2,' ');
+              perfs_IO << spaces << message <<": IO" << std::endl;
+              perfs_IO << line_sep_cpu<<std::endl;
             }
-          double fraction = 0.0;
-          fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + DMINFLOAT);
-          fraction = 0.1 * floor(fraction * 1000);
-          if (fraction > 100.)
-            fraction = 100.;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Average of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction  << std::endl;
-          fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + DMINFLOAT);
-          fraction = 0.1 * floor(fraction * 1000);
-          if (fraction > 100.)
-            fraction = 100.;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Max of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction  << std::endl;
-          fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + DMINFLOAT);
-          fraction = 0.1 * floor(fraction * 1000);
-          perfs_IO <<  std::left <<std::setw(text_width) << "Min of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction  << std::endl;
-          perfs_IO  <<  std::left <<std::setw(text_width) << "Time of one mpsum measured by an internal bench over 0.1s (network latency): ";
-          if (allreduce_peak_perf == 0.)
-            perfs_IO  << "not measured (total running time too short <10s)" << std::endl;
-          else
-            perfs_IO << allreduce_peak_perf << " s" << std::endl;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Network maximum bandwidth on all processors: "  <<  std::left <<std::setw(number_width) << max_bandwidth * 1.e-6 << " MB/s"  << std::endl ;
-          if (nb_ts>0)
-            perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc() / nb_ts * 1e-6 << " MB / time step"  << std::endl;
-          else
-            perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc()* 1e-6 << " MB"  << std::endl;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Average message size: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q / comm_sendrecv_c* 1e-3 << " kB" << std::endl;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Min waiting time: "  <<  std::left <<std::setw(number_width) << min_wait_fraction << " % of total time"<< std::endl;;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Max waiting time: "  <<  std::left <<std::setw(number_width) << max_wait_fraction<< " % of total time"<< std::endl;;
-          perfs_IO <<  std::left <<std::setw(text_width) << "Avg waiting time: " <<  std::left <<std::setw(number_width) << avg_wait_fraction<< " % of total time"<< std::endl;;
+          if (debit_seq>0)
+            perfs_IO << std::left <<std::setw(text_width) << "Output write sequential: " <<  std::left <<std::setw(number_width) << debit_seq << "MB/s"<< std::endl;
+          if (debit_par>0)
+            perfs_IO <<  std::left <<std::setw(text_width) << "Output write parallel: " <<  std::left <<std::setw(number_width) << debit_par  << "MB/s" << std::endl;
+          if (total_nb_backup_>0)
+            {
+              perfs_IO <<  std::left <<std::setw(text_width) << "Total number of back-up: " <<  std::left <<std::setw(number_width) << total_nb_backup_ << std::endl;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Total amount of data per back-up: " <<  std::left <<std::setw(number_width) << total_data_exchange_per_backup_ << "MB"<< std::endl;
+            }
+          if(min_max_avg_sd_t_q_c_sendrecv_comm[2][1] > 0)
+            {
+              if(petcs_count>0)
+                {
+                  perfs_IO<< std::endl<< "---------------------------------------------------------------------------------------------------------"<< std::endl;
+                  perfs_IO<< "Warning: One or several PETSc solvers are used and thus the communication time below are under-estimated."<< std::endl;
+                  perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl<< std::endl;
+                }
+              double fraction = 0.0;
+              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + DMINFLOAT);
+              fraction = 0.1 * floor(fraction * 1000);
+              if (fraction > 100.)
+                fraction = 100.;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Average of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + DMINFLOAT);
+              fraction = 0.1 * floor(fraction * 1000);
+              if (fraction > 100.)
+                fraction = 100.;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Max of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + DMINFLOAT);
+              fraction = 0.1 * floor(fraction * 1000);
+              perfs_IO <<  std::left <<std::setw(text_width) << "Min of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%"  << std::endl;
+              perfs_IO  <<  std::left <<std::setw(text_width) << "Time of one mpsum measured by an internal bench over 0.1s (network latency): ";
+              if (allreduce_peak_perf == 0.)
+                perfs_IO  << "not measured (total running time too short <10s)" << std::endl;
+              else
+                perfs_IO <<  std::left <<std::setw(number_width) << allreduce_peak_perf << std::endl;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Network maximum bandwidth on all processors: "  <<  std::left <<std::setw(number_width) << max_bandwidth * 1.e-6 << "MB/s"  << std::endl ;
+              if (nb_ts>0)
+                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc() / nb_ts * 1e-6 << "MB / time step"  << std::endl;
+              else
+                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc()* 1e-6 << "MB"  << std::endl;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Average message size: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q / comm_sendrecv_c* 1e-3 << "kB" << std::endl;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Min waiting time: "  <<  std::left <<std::setw(number_width) << min_wait_fraction << "% of total time"<< std::endl;;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Max waiting time: "  <<  std::left <<std::setw(number_width) << max_wait_fraction<< "% of total time"<< std::endl;;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Avg waiting time: " <<  std::left <<std::setw(number_width) << avg_wait_fraction<< "% of total time"<< std::endl;;
+            }
         }
       // Concatenate stringtreams in order to print the .TU file
       Nom globalTU(Objet_U::nom_du_cas());
-      globalTU +="_new.TU";
+      globalTU +=".TU";
       auto printing_mode = ios::app;
       if (message=="Computation start-up statistics")
         printing_mode= ios::out;

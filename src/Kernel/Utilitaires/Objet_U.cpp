@@ -31,7 +31,6 @@ Interprete* Objet_U::l_interprete=0;
 
 bool Objet_U::disable_TU=false; ///< Flag to disable or not the writing of the .TU files
 bool Objet_U::stat_per_proc_perf_log=false; ///< Flag to enable the writing of the statistics detailed per processor in _csv.TU file
-bool Objet_U::print_all_counters=false; ///< Flag that turn to
 Type_info Objet_U::info_obj("Objet_U");
 
 // Permet de debugger en remontant a la creation d'un objet donne:
