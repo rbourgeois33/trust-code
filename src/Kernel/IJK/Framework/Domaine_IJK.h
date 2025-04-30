@@ -132,7 +132,7 @@ public:
    *  @param subregion_name Name of the "son" subregion
    *  @param perio_x, perio_y, perio_z Periodic flag along each axis
    */
-  void init_subregion(int ni, int nj, int nk,
+  void init_subregion(const Domaine_IJK& src, int ni, int nj, int nk,
                       int offset_i, int offset_j, int offset_k,
                       const Nom& subregion,
                       bool perio_x = false, bool perio_y = false, bool perio_z = false);
