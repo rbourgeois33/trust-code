@@ -14,6 +14,7 @@ Developer notes version 1.9.7_beta : Changes since version 1.9.6 :
 -------------------------------------------------------------
 Developer notes version 1.9.6 : Changes since version 1.9.5 :
 -------------------------------------------------------------
+XX/XX/25 (TRUST) Statistics   : Complete redesign of counters in TRUST. Everything is now managed by the Perf_counters class. A new time wrapper include in Perf_counters. Custom counters can be now added more easily 
 29/04/25 (TRUST) New feature  : Param::ajouter_flag() must now be used with boolean parameters. Old method with integer flags will be removed soon (but after 1.9.6)
 16/04/24 (TRUST) CI           : Result comparison is not done anymore (make check|ctest) for test cases with header "# lance_test N ecarts #" except on the reference PC
 15/04/25 (TRUST) New feature  : Create reshape function to modify the dimensions of a TRUSTTab, the total size of the array must remain the same
