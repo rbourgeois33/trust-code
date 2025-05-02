@@ -16,13 +16,9 @@
 #include <Simple.h>
 #include <Navier_Stokes_std.h>
 #include <EChaine.h>
-
 #include <Matrice_Bloc.h>
 #include <Matrice_Morse_Sym.h>
-
-
 #include <Assembleur_base.h>
-#include <Statistiques.h>
 #include <Schema_Temps_base.h>
 #include <Schema_Euler_Implicite.h>
 #include <Fluide_Dilatable_base.h>
@@ -37,7 +33,6 @@
 Implemente_instanciable_sans_constructeur(Simple,"Simple",Simpler_Base);
 // XD simple piso simple -1 SIMPLE type algorithm
 // XD attr relax_pression floattant relax_pression 1 Value between 0 and 1 (by default 1), this keyword is used only by the SIMPLE algorithm for relaxing the increment of pressure.
-
 
 Simple::Simple()
 {

@@ -28,7 +28,6 @@
 #include <SFichier.h>
 #include <TRUSTList.h>
 #include <TRUSTTabs.h>
-#include <stat_counters.h>
 #include <Neumann_sortie_libre.h>
 #include <Dirichlet_homogene.h>
 #include <Neumann_homogene.h>

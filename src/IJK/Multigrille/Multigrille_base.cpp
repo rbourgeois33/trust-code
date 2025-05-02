@@ -17,12 +17,10 @@
 #include <Param.h>
 #include <TRUSTTab.h>
 #include <Param.h>
-#include <Statistiques.h>
 #include <Schema_Comm_Vecteurs.h>
 #include <communications.h>
 #include <Matrice_Morse_Sym.h>
 #include <IJK_VDF_converter.h>
-#include <stat_counters.h>
 //#define DUMP_LATA_ALL_LEVELS
 #ifdef DUMP_LATA_ALL_LEVELS
 #include <IJK_lata_dump.h>

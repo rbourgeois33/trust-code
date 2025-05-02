@@ -18,7 +18,6 @@
 #include <EFichier.h>
 #include <communications.h>
 #include <TRUSTTab.h>
-#include <stat_counters.h>
 
 Implemente_instanciable_sans_constructeur(Coarsen_Operator_K, "Coarsen_Operator_K", Coarsen_Operator_base);
 

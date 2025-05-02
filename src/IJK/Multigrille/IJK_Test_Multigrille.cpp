@@ -14,9 +14,9 @@
 *****************************************************************************/
 
 #include <IJK_Test_Multigrille.h>
-#include <Statistiques.h>
 #include <Interprete_bloc.h>
 #include <IJK_tools.h>
+#include <Perf_counters.h>
 
 
 Implemente_instanciable(IJK_Test_Multigrille, "IJK_Test_Multigrille", Interprete);
@@ -51,9 +51,8 @@ Entree& IJK_Test_Multigrille::interpreter(Entree& is)
 
   // Recuperation des donnees de maillage
   split = ref_cast(Domaine_IJK, Interprete_bloc::objet_global(ijk_splitting_name));
-  static Stat_Counter_Id count0 = statistiques().new_counter(0, "timing_init");
-
-  statistiques().begin_count(count0);
+  statistics().create_custom_counter("timing_init",1,"IJK");
+  statistics().begin_count("timing_init");
   rho_.allocate(split, Domaine_IJK::ELEM, 0);
   rhs_.allocate(split, Domaine_IJK::ELEM, 0);
   resu_.allocate(split, Domaine_IJK::ELEM, 0);
@@ -83,22 +82,24 @@ Entree& IJK_Test_Multigrille::interpreter(Entree& is)
       lire_dans_lata(fichier_reprise_rhs_, timestep_reprise_rhs_, name_of_dom_, "PRESSURE_RHS", rhs_);
     }
   Cout<<"End of setting rhs"<<finl;
-  statistiques().end_count(count0);
-  double t0 = statistiques().last_time(count0);
-  statistiques().begin_count(count0);
+  double t0 = statistics().get_time_since_last_open("timing_init");
+  statistics().end_count("timing_init");
+  statistics().begin_count("timing_init");
   poisson_solver_.initialize(split);
-  statistiques().end_count(count0);
-  double t0b = statistiques().last_time(count0);
+  double t0b = statistics().get_time_since_last_open("timing_init");
+  statistics().end_count("timing_init");
   Cout <<"initialisation time "<<t0<< " "<<t0b<<finl;
-  static Stat_Counter_Id count1 = statistiques().new_counter(0, "timing_set_rho");
-  static Stat_Counter_Id count2 = statistiques().new_counter(0, "timing_solve");
-  statistiques().begin_count(count1);
+  statistics().create_custom_counter("timing_set_rho",1,"IJK");
+  statistics().create_custom_counter("timing_solve",1,"IJK");
+  statistics().begin_count("timing_set_rho");
   poisson_solver_.set_rho(rho_);
-  statistiques().end_count(count1);
+  double t1 = statistics().get_time_since_last_open("timing_set_rho");
+  statistics().end_count("timing_set_rho");
 
-  statistiques().begin_count(count2);
+  statistics().begin_count("timing_solve");
   poisson_solver_.resoudre_systeme_IJK(rhs_, resu_);
-  statistiques().end_count(count2);
+  double t2 = statistics().get_time_since_last_open("timing_solve");
+  statistics().end_count("timing_solve");
 
   /*   */
   Nom lata_name("resu.lata");
@@ -110,8 +111,6 @@ Entree& IJK_Test_Multigrille::interpreter(Entree& is)
   dumplata_scalar(lata_name,"RHO",rho_,0);
   /*  */
 
-  double t1 = statistiques().last_time(count1);
-  double t2 = statistiques().last_time(count2);
 #if defined WITH_SSE
   Nom optim("SSE");
 #elif defined WITH_AVX

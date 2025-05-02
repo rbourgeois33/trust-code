@@ -28,7 +28,6 @@
 #include <Comm_Group_MPI.h>
 #include <Quadrangle_VEF.h>
 #include <communications.h>
-#include <Statistiques.h>
 #include <Hexaedre_VEF.h>
 #include <Matrix_tools.h>
 #include <unordered_map>

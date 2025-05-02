@@ -25,14 +25,11 @@
 #include <TRUSTTab_parts.h>
 #include <Operateur_Grad.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Milieu_base.h>
 #include <Array_tools.h>
 #include <Dirichlet.h>
 #include <Debog.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_instanciable(Assembleur_P_PolyMAC,"Assembleur_P_PolyMAC",Assembleur_base);
 

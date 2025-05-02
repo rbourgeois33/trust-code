@@ -25,7 +25,6 @@
 #include <Champ_Uniforme.h>
 #include <Probleme_base.h>
 #include <Matrice_Morse.h>
-#include <Statistiques.h>
 #include <TRUST_2_PDI.h>
 #include <TRUSTTrav.h>
 #include <Operateur.h>
@@ -33,9 +32,6 @@
 #include <Avanc.h>
 #include <Device.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
-extern Stat_Counter_Id source_counter_;
 
 void Convection_Diffusion_Fluide_Dilatable_Proto::calculer_div_rho_u_impl
 (DoubleTab& Div, const Convection_Diffusion_Fluide_Dilatable_base& eqn) const

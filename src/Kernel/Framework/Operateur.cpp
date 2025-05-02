@@ -17,7 +17,6 @@
 #include <Schema_Temps_base.h>
 #include <Operateur_base.h>
 #include <Probleme_base.h>
-#include <stat_counters.h>
 #include <TRUSTTrav.h>
 #include <Operateur.h>
 #include <Perf_counters.h>

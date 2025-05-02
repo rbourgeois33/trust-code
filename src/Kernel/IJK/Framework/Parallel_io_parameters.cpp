@@ -17,7 +17,7 @@
 #include <Param.h>
 #include <IJK_Lata_writer.h>
 #include <Interprete_bloc.h>
-#include <Statistiques.h>
+#include <Perf_counters.h>
 #include <IJK_tools.h>
 
 Implemente_instanciable(Parallel_io_parameters, "Parallel_io_parameters", Interprete);
@@ -120,12 +120,12 @@ void Parallel_io_parameters::run_bench_write(const Nom& ijk_splitting_name)
   dumplata_header("test.lata", vx);
   dumplata_newtime("test.lata", 0.);
 
-  statistiques().set_three_first_steps_elapsed(false);
-  static Stat_Counter_Id cnt = statistiques().new_counter(1, "Parallel_io benchmark");
-  statistiques().begin_count(cnt);
+  statistics().set_nb_time_steps_elapsed(0);
+  statistics().create_custom_counter("Parallel_io benchmark",1,"IJK");
+  statistics().begin_count("Parallel_io benchmark");
   dumplata_vector("test.lata", "VELOCITY", vx, vy, vz, 1);
-  statistiques().end_count(cnt);
-  double t = statistiques().last_time(cnt);
+  double t = statistics().get_time_since_last_open("Parallel_io benchmark");
+  statistics().end_count("Parallel_io benchmark");
   double sz = (double) (splitting.get_nb_elem_tot(DIRECTION_I)+1)
               * (splitting.get_nb_elem_tot(DIRECTION_J)+1)
               * (splitting.get_nb_elem_tot(DIRECTION_K)+1)
@@ -171,15 +171,15 @@ void Parallel_io_parameters::run_bench_read(const Nom& ijk_splitting_name)
   vy.data() = 1e9;
   vz.data() = 1e9;
 
-  statistiques().set_three_first_steps_elapsed(false);
-  static Stat_Counter_Id cnt = statistiques().new_counter(1, "Parallel_io benchmark_read");
-  statistiques().begin_count(cnt);
+  statistics().set_nb_time_steps_elapsed(0);
+  statistics().create_custom_counter("Parallel_io benchmark_read",1,"IJK");
+  statistics().begin_count("Parallel_io benchmark_read");
   lire_dans_lata("test.lata", 1 /* timestep */,
                  splitting.le_nom(),
                  "VELOCITY", vx, vy, vz);
-  statistiques().end_count(cnt);
+  double t = statistics().get_time_since_last_open("Parallel_io benchmark_read");
+  statistics().end_count("Parallel_io benchmark_read");
 
-  double t = statistiques().last_time(cnt);
   double sz = (double) (splitting.get_nb_elem_tot(DIRECTION_I)+1)
               * (splitting.get_nb_elem_tot(DIRECTION_J)+1)
               * (splitting.get_nb_elem_tot(DIRECTION_K)+1)

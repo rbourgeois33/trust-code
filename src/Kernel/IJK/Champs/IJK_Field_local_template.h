@@ -18,8 +18,6 @@
 
 #include <Field_base.h>
 #include <communications.h>
-#include <stat_counters.h>
-#include <Statistiques.h>
 #include <TRUSTVect.h>
 #include <Domaine_IJK.h>
 

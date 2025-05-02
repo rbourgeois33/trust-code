@@ -28,7 +28,6 @@
 #include <MD_Vector_std.h>
 #include <Matrix_tools.h>
 #include <Matrice_Bloc.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <Domaine_VF.h>
 #include <TRUSTTrav.h>

@@ -27,12 +27,9 @@
 #include <Neumann_paroi.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <functional>
 #include <cmath>
-
-//extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_instanciable_sans_constructeur(Op_Diff_PolyMAC_P0_Elem, "Op_Diff_PolyMAC_P0_Elem|Op_Diff_PolyMAC_P0_var_Elem", Op_Diff_PolyMAC_P0_base);
 Implemente_instanciable(Op_Dift_PolyMAC_P0_Elem, "Op_Dift_PolyMAC_P0_Elem_PolyMAC_P0|Op_Dift_PolyMAC_P0_var_Elem_PolyMAC_P0", Op_Diff_PolyMAC_P0_Elem);

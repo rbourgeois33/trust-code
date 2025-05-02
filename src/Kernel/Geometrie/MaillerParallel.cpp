@@ -16,7 +16,6 @@
 #include <Domaine.h>
 #include <Motcle.h>
 #include <Scatter.h>
-#include <Statistiques.h>
 #include <Param.h>
 #include <TRUSTArrays.h>
 #include <Parser_U.h>

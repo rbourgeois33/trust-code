@@ -16,9 +16,6 @@
 #ifndef IJK_Field_tools_TPP_H
 #define IJK_Field_tools_TPP_H
 
-#include <stat_counters.h>
-#include <Statistiques.h>
-
 template<typename _TYPE_, typename _TYPE_ARRAY_>
 double norme_ijk(const IJK_Field_template<_TYPE_, _TYPE_ARRAY_>& residu)
 {

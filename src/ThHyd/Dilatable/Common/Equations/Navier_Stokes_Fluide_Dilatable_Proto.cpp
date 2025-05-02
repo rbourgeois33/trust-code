@@ -24,12 +24,8 @@
 #include <Domaine_VF.h>
 #include <Domaine.h>
 #include <Debog.h>
-#include <Statistiques.h>
 #include <kokkos++.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
-extern Stat_Counter_Id source_counter_;
 
 Navier_Stokes_Fluide_Dilatable_Proto::Navier_Stokes_Fluide_Dilatable_Proto() : cumulative_(0) { }
 

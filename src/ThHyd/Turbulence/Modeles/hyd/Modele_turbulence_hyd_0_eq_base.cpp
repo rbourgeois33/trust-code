@@ -18,7 +18,6 @@
 #include <Domaine_Cl_dis_base.h>
 #include <Discretisation_base.h>
 #include <Schema_Temps_base.h>
-#include <stat_counters.h>
 #include <Equation_base.h>
 #include <Probleme_base.h>
 #include <Ecrire_MED.h>

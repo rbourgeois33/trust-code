@@ -25,15 +25,12 @@
 #include <Probleme_base.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <Milieu_base.h>
 #include <Dirichlet.h>
 #include <TRUSTTrav.h>
 #include <cfloat>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id gradient_counter_;
 
 Implemente_instanciable(Op_Grad_PolyMAC_P0P1NC_Face, "Op_Grad_PolyMAC_P0P1NC_Face", Op_Grad_PolyMAC_Face);
 

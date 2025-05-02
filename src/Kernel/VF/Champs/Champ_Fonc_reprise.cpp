@@ -19,7 +19,6 @@
 #include <LecFicDiffuseBin.h>
 #include <Entree_complete.h>
 #include <Probleme_base.h>
-#include <stat_counters.h>
 #include <Ecrire_YAML.h>
 #include <TRUST_2_PDI.h>
 #include <Op_Moyenne.h>

@@ -18,10 +18,7 @@
 #include <Champ_P0_VDF.h>
 #include <Matrix_tools.h>
 #include <Array_tools.h>
-#include <Statistiques.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_base_sans_constructeur(Op_Diff_VDF_Elem_base,"Op_Diff_VDF_Elem_base",Op_Diff_VDF_base);
 

@@ -26,7 +26,6 @@
 #include <Option_PolyMAC.h>
 #include <Pb_Multiphase.h>
 #include <Probleme_base.h>
-#include <Statistiques.h>
 #include <Matrix_tools.h>
 #include <Milieu_base.h>
 #include <Array_tools.h>
@@ -37,8 +36,6 @@
 #include <cfloat>
 #include <vector>
 #include <cmath>
-
-extern Stat_Counter_Id convection_counter_;
 
 Implemente_instanciable(Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem, "Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem|Op_Conv_EF_Stab_PolyMAC_P0_Elem", Op_Conv_PolyMAC_base);
 Implemente_instanciable_sans_constructeur(Op_Conv_Amont_PolyMAC_P0P1NC_Elem, "Op_Conv_Amont_PolyMAC_P0P1NC_Elem|Op_Conv_Amont_PolyMAC_P0_Elem", Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem);

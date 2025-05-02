@@ -21,11 +21,8 @@
 #include <Champ_Uniforme.h>
 #include <Synonyme_info.h>
 #include <Pb_Multiphase.h>
-#include <Statistiques.h>
 #include <Matrix_tools.h>
 #include <Array_tools.h>
-
-//extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_instanciable( Op_Diff_PolyMAC_P0_Face, "Op_Diff_PolyMAC_P0_Face|Op_Dift_PolyMAC_P0_Face_PolyMAC_P0", Op_Diff_PolyMAC_P0_base );
 Add_synonym(Op_Diff_PolyMAC_P0_Face, "Op_Diff_PolyMAC_P0_var_Face");

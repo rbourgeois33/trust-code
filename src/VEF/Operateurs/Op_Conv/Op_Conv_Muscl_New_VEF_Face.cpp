@@ -21,7 +21,6 @@
 #include <Probleme_base.h>
 #include <ArrOfBit.h>
 #include <TRUSTTabs.h>
-#include <stat_counters.h>
 #include <Neumann.h>
 #include <Symetrie.h>
 #include <Dirichlet_homogene.h>

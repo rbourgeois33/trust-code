@@ -16,7 +16,7 @@
 #define Coarsen_Operator_Uniform_TPP_H
 
 #include <Domaine_IJK.h>
-#include <stat_counters.h>
+#include <Perf_counters.h>
 
 template<typename _TYPE_>
 void Coarsen_Operator_Uniform::initialize_grid_data_(const Grid_Level_Data_template<_TYPE_>& fine,
@@ -102,9 +102,8 @@ void Coarsen_Operator_Uniform::coarsen_(const IJK_Field_template<_TYPE_,_TYPE_AR
                                         IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& coarse,
                                         int compute_weighted_average) const
 {
-  static Stat_Counter_Id coarsen_counter_ = statistiques().new_counter(2, "multigrille : uniform coarsen ");
-  statistiques().begin_count(coarsen_counter_);
-
+  statistics().create_custom_counter("multigrid: uniform coarsening",2,"IJK")
+  statistic().begin_count("multigrid: uniform coarsening");
   const int ni2 = coarse.ni();
   const int nj2 = coarse.nj();
   const int nk2 = coarse.nk();
@@ -135,7 +134,7 @@ void Coarsen_Operator_Uniform::coarsen_(const IJK_Field_template<_TYPE_,_TYPE_AR
         }
     }
 
-  statistiques().end_count(coarsen_counter_);
+  statistics().end_count("multigrid: uniform coarsening");
   return;
 }
 
@@ -150,8 +149,8 @@ void Coarsen_Operator_Uniform::interpolate_sub_shiftk_(const IJK_Field_template<
       Process::exit();
     }
 
-  static Stat_Counter_Id interpolate_counter_ = statistiques().new_counter(2, "multigrille : interpolate (uniform)");
-  statistiques().begin_count(interpolate_counter_);
+  statistics().create_custom_counter("multigrid: interpolate uniform",2,"IJK");
+  statistics().begin_count("multigrid: interpolate uniform");
 
   const int ni2 = coarse.ni();
   const int nj2 = coarse.nj();
@@ -180,7 +179,7 @@ void Coarsen_Operator_Uniform::interpolate_sub_shiftk_(const IJK_Field_template<
     }
 
   fine.shift_k_origin(kshift);
-  statistiques().end_count(interpolate_counter_);
+  statistics().end_count("multigrid: interpolate uniform");
   return;
 }
 

@@ -17,11 +17,10 @@
 #define Multigrille_base_TPP_H
 
 #include <IJK_VDF_converter.h>
-#include <Statistiques.h>
-#include <stat_counters.h>
 #include <Matrice_Morse_Sym.h>
 #include <IJK_Vector.h>
 #include <Interprete_bloc.h>
+#include <Perf_counters.h>
 
 template <typename _TYPE_, typename _TYPE_ARRAY_>
 void Multigrille_base::resoudre_systeme_IJK(const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& rhs, IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x)
@@ -99,9 +98,7 @@ template <typename _TYPE_, typename _TYPE_ARRAY_>
 double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x, const IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& b, IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& residu,
                                       int grid_level, int iter_number)
 {
-
-  static Stat_Counter_Id multigrille_counter_ = statistiques().new_counter(2, "projection: multigrille");
-
+  statistics().create_custom_counter("projection: multigrid",2,"IJK");
   double norme_residu_final = 0.;
   const int needed_kshift = needed_kshift_for_jacobi(grid_level + 1);
 #ifdef DUMP_LATA_ALL_LEVELS
@@ -119,7 +116,7 @@ double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x
     {
       // Pre-smooting
       {
-        statistiques().begin_count(multigrille_counter_);
+        statistics().begin_count("projection: multigrid");
         const int pss = (grid_level >= pre_smooth_steps_.size_array())
                         ? pre_smooth_steps_[pre_smooth_steps_.size_array()-1]
                         : pre_smooth_steps_[grid_level];
@@ -179,10 +176,10 @@ double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x
           // inutile : idem avt avt-presmooth pour grid-level+1
           //  dump_x_b_residue_in_file(coarse_x,coarse_b,coarse_residu, grid_level+1, global_count_dump_in_file, Nom("avt recursive-call"));
 #endif
-          statistiques().end_count(multigrille_counter_);
+          statistics().end_count("projection: multigrid");
 
           multigrille_(coarse_x, coarse_b, coarse_residu, grid_level+1, fmg_step);
-          statistiques().begin_count(multigrille_counter_);
+          statistics().begin_count("projection: multigrid");
 
 #ifdef DUMP_X_B_AND_RESIDUE_IN_FILE
           dump_x_b_residue_in_file(coarse_x,coarse_b,coarse_residu, grid_level+1, global_count_dump_in_file, Nom("avt interpol / apres recursive-call/jacobi-residu/ou/coarse-solver "));
@@ -249,11 +246,11 @@ double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x
           if (grid_level == 0 && norme_residu_final < seuil_ && max_iter_gcp_ == 0)
             break;
         }
-      statistiques().end_count(multigrille_counter_);
+      statistics().end_count("projection: multigrid");
     }
   else
     {
-      statistiques().begin_count(multigrille_counter_);
+      statistics().begin_count("projection: multigrid");
 #ifdef DUMP_X_B_AND_RESIDUE_IN_FILE
       // inutile : idem avt avt-presmooth pour grid-level
       // dump_x_b_residue_in_file(x,b,residu, grid_level, global_count_dump_in_file, Nom("avt coarse-solver"));
@@ -295,7 +292,7 @@ double Multigrille_base::multigrille_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& x
         step[grid_level]++;
       }
 #endif
-      statistiques().end_count(multigrille_counter_);
+      statistics().end_count("projection: multigrid");
 
     }
   return norme_residu_final;

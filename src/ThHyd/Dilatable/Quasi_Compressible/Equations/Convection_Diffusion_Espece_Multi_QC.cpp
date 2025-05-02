@@ -20,15 +20,11 @@
 #include <Discretisation_base.h>
 #include <Navier_Stokes_QC.h>
 #include <Probleme_base.h>
-#include <Statistiques.h>
 #include <Dirichlet.h>
 #include <TRUSTTrav.h>
 #include <EChaine.h>
 #include <Param.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
-extern Stat_Counter_Id source_counter_;
 
 Implemente_instanciable(Convection_Diffusion_Espece_Multi_QC,"Convection_Diffusion_Espece_Multi_QC",Convection_Diffusion_Espece_Multi_base);
 // XD convection_diffusion_espece_multi_QC eqn_base convection_diffusion_espece_multi_QC -1 Species conservation equation for a multi-species quasi-compressible fluid.

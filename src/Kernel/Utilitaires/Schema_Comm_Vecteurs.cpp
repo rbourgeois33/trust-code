@@ -16,7 +16,6 @@
 #include <Comm_Group.h>
 #include <communications.h>
 #include <PE_Groups.h>
-#include <stat_counters.h>
 #include <sstream>
 #include <comm_incl.h>
 

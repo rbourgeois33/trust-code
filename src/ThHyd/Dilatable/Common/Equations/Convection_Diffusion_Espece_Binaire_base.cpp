@@ -19,11 +19,8 @@
 #include <Op_Conv_negligeable.h>
 #include <Discretisation_base.h>
 #include <Probleme_base.h>
-#include <Statistiques.h>
 #include <TRUSTTrav.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_base(Convection_Diffusion_Espece_Binaire_base,"Convection_Diffusion_Espece_Binaire_base",Convection_Diffusion_Espece_Fluide_Dilatable_base);
 

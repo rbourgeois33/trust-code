@@ -19,7 +19,6 @@
 #include <Debog.h>
 #include <Matrice_Bloc.h>
 #include <Assembleur_base.h>
-#include <Statistiques.h>
 #include <Schema_Temps_base.h>
 #include <TRUSTTrav.h>
 

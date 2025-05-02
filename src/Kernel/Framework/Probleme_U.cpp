@@ -14,7 +14,6 @@
 *****************************************************************************/
 
 #include <Probleme_U.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <ICoCoExceptions.h>
 #include <Ch_front_input_uniforme.h>

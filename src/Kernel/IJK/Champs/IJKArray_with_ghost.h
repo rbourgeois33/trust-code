@@ -18,9 +18,8 @@
 
 #include <IJK_communications.h>
 #include <communications.h>
-#include <stat_counters.h>
 #include <Domaine_IJK.h>
-#include <Statistiques.h>
+#include <Perf_counters.h>
 #include <TRUST_Vector.h>
 #include <TRUSTVect.h>
 #include <Perf_counters.h>
@@ -72,7 +71,6 @@ using ArrOfDouble_with_ghost = IJKArray_with_ghost<double,ArrOfDouble>;
 template<typename _TYPE_, typename _TYPE_ARRAY_>
 void IJKArray_with_ghost<_TYPE_,_TYPE_ARRAY_>::echange_espace_virtuel(int pe_min, int pe_max)
 {
-  statistiques().begin_count(echange_vect_counter_);
   statistics().begin_count(STD_COUNTERS::virtual_swap);
   // envoi a pe_max et reception de pe_min
   const int n = tab_.size_array() - ghost_ * 2;
@@ -80,7 +78,6 @@ void IJKArray_with_ghost<_TYPE_,_TYPE_ARRAY_>::echange_espace_virtuel(int pe_min
   ::envoyer_recevoir(pdata + n, ghost_ * sizeof(_TYPE_), pe_max, pdata, ghost_ * sizeof(_TYPE_), pe_min);
   // l'autre
   ::envoyer_recevoir(pdata + ghost_, ghost_ * sizeof(_TYPE_), pe_min, pdata + n + ghost_, ghost_ * sizeof(_TYPE_), pe_max);
-  statistiques().end_count(echange_vect_counter_);
   statistics().end_count(STD_COUNTERS::virtual_swap);
 }
 

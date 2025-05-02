@@ -18,9 +18,7 @@
 #include <communications.h>
 #include <Probleme_base.h>
 #include <Matrice_Morse.h> // necessaire pour visual
-#include <stat_counters.h>
 #include <LecFicDiffuse.h>
-#include <stat_counters.h>
 #include <Equation_base.h>
 #include <TRUST_2_PDI.h>
 #include <sys/stat.h>

@@ -20,12 +20,9 @@
 #include <Neumann_homogene.h>
 #include <Domaine_Cl_VDF.h>
 #include <Neumann_paroi.h>
-#include <Statistiques.h>
 #include <Periodique.h>
 #include <Dirichlet.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id gradient_counter_;
 
 Implemente_instanciable(Op_Grad_P0_to_Face,"Op_Grad_P0_to_Face",Op_Grad_VDF_Face_base);
 

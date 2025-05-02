@@ -19,7 +19,6 @@
 #include <EChaine.h>
 #include <SChaine.h>
 #include <Interprete_bloc.h>
-#include <stat_counters.h>
 
 static void extend_array(const Domaine_IJK& geom1, const int direction, const int ncells, ArrOfDouble& delta, double& origin)
 {

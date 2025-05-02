@@ -16,8 +16,6 @@
 #include <petsc_for_kernel.h>
 #include <communications.h>
 #include <PE_Groups.h>
-#include <stat_counters.h>
-#include <Statistiques.h>
 #include <vector>
 #include <Perf_counters.h>
 #ifdef INT_is_64_
@@ -157,10 +155,7 @@ void Comm_Group_MPI::abort() const
 
 #ifdef MPI_
 template <typename _TYPE_, int TYP_IDX>
-void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, int n, Comm_Group::Collective_Op op,
-                                               const Stat_Counter_Id& cnt_sum_id,
-                                               const Stat_Counter_Id& cnt_min_id,
-                                               const Stat_Counter_Id& cnt_max_id) const
+void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, int n, Comm_Group::Collective_Op op) const
 {
   static_assert(TYP_IDX >= 1 && TYP_IDX <= 4, "Invalid type index!");
   MPI_Datatype mpi_typ = TYP_IDX==1 ? MPI_INT : (TYP_IDX==2 ? MPI_LONG : (TYP_IDX==3 ? MPI_DOUBLE : MPI_FLOAT));

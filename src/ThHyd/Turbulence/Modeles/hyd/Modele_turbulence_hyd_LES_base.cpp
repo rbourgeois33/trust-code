@@ -16,7 +16,6 @@
 #include <Modele_turbulence_hyd_LES_base.h>
 #include <Modifier_pour_fluide_dilatable.h>
 #include <Discretisation_base.h>
-#include <stat_counters.h>
 #include <Equation_base.h>
 #include <Probleme_base.h>
 #include <Milieu_base.h>

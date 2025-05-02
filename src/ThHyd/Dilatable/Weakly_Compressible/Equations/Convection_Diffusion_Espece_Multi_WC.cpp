@@ -22,10 +22,7 @@
 #include <TRUSTTrav.h>
 #include <Param.h>
 #include <Discretisation_base.h>
-#include <Statistiques.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_instanciable(Convection_Diffusion_Espece_Multi_WC,"Convection_Diffusion_Espece_Multi_WC",Convection_Diffusion_Espece_Multi_base);
 // XD convection_diffusion_espece_multi_WC eqn_base convection_diffusion_espece_multi_WC -1 Species conservation equation for a multi-species weakly-compressible fluid.

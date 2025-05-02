@@ -14,7 +14,6 @@
 *****************************************************************************/
 
 #include <Process.h>
-#include <Statistiques.h>
 #include <Comm_Group.h>
 #include <PE_Groups.h>
 #include <communications.h>
@@ -55,7 +54,6 @@ static int        disable_stop_ = 0;
 // Drapeau indiquant si les sorties cerr et cout doivent
 // etre redirigees vers le fichier journal
 static int        cerr_to_journal_ = 0;
-extern Stat_Counter_Id mpi_allreduce_counter_;
 int Process::exception_sur_exit=0;
 int Process::multiple_files=5120; // Valeur modifiable avec la variable d'environnement TRUST_MultipleFiles
 bool Process::force_single_file(const int ranks, const Nom& filename)

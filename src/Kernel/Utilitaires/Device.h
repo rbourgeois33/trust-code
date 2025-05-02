@@ -18,7 +18,6 @@
 
 #include <TRUSTTabs_forward.h>
 #include <Nom.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <kokkos++.h>
 

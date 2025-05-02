@@ -23,9 +23,6 @@
 #include <TRUST_2_PDI.h>
 #include <Domaine.h>
 #include <Avanc.h>
-#include <Statistiques.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_base(Convection_Diffusion_Chaleur_Fluide_Dilatable_base,"Convection_Diffusion_Chaleur_Fluide_Dilatable_base",Convection_Diffusion_Fluide_Dilatable_base);
 

@@ -23,7 +23,6 @@
 #include <communications.h>
 #include <Poly_geom_base.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Domaine_PolyMAC_P0P1NC.h>
 #include <unordered_map>
 #include <Array_tools.h>

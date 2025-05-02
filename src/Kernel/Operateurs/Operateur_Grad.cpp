@@ -16,7 +16,6 @@
 #include <Discretisation_base.h>
 #include <Operateur_Grad.h>
 #include <Probleme_base.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 
 Implemente_instanciable(Operateur_Grad,"Operateur_Grad",OWN_PTR(Operateur_Grad_base));

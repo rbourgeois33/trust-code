@@ -17,7 +17,6 @@
 #include <Matrice_Morse.h>
 #include <ctime>
 #include <communications.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <chrono>
 #include <Device.h>

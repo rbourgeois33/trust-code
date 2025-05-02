@@ -30,7 +30,6 @@
 #include <EcrFicPartage.h>
 #include <Postraitement.h>
 #include <Equation_base.h>
-#include <Statistiques.h>
 #include <Milieu_base.h>
 #include <TRUST_2_PDI.h>
 #include <Domaine_VF.h>
@@ -42,10 +41,6 @@
 #include <Debog.h>
 #include <Param.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
-extern Stat_Counter_Id diffusion_implicite_counter_;
-extern Stat_Counter_Id source_counter_;
 
 // XD condinit objet_lecture nul 0 Initial condition.
 // XD attr nom chaine nom 0 Name of initial condition field.

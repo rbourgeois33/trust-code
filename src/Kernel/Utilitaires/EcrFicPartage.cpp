@@ -14,13 +14,10 @@
 *****************************************************************************/
 
 #include <EcrFicPartage.h>
-#include <Statistiques.h>
 #include <PE_Groups.h>
 #include <Comm_Group.h>
 #include <communications.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id IO_EcrireFicPartageBin_counter_;
 
 Implemente_instanciable_sans_constructeur_ni_destructeur(EcrFicPartage,"EcrFicPartage",SFichier);
 Entree& EcrFicPartage::readOn(Entree& s) { throw; }

@@ -22,7 +22,6 @@
 #include <Pb_Dilatable_base.h>
 #include <Probleme_Couple.h>
 #include <Equation_base.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <Domaine.h>
 #include <Debog.h>

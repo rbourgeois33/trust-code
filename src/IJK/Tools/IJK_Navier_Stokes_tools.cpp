@@ -19,7 +19,7 @@
 #include <EChaine.h>
 #include <SChaine.h>
 #include <Interprete_bloc.h>
-#include <stat_counters.h>
+#include <Perf_counters.h>
 #include <Option_IJK.h>
 #include <Multigrille_Adrien.h>
 #include <Boundary_Conditions_Thermique.h>
@@ -298,8 +298,8 @@ void pressure_projection(IJK_Field_double& vx, IJK_Field_double& vy, IJK_Field_d
                          IJK_Field_double& pressure_rhs,
                          Multigrille_Adrien& poisson_solver)
 {
-  static Stat_Counter_Id projection_counter_ = statistiques().new_counter(2, "maj vitesse : projection");
-  statistiques().begin_count(projection_counter_);
+  statistics().create_custom_counter("Velocity update: projection",2,"IJK");
+  statistics().begin_count("Velocity update: projection");
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);
@@ -330,7 +330,7 @@ void pressure_projection(IJK_Field_double& vx, IJK_Field_double& vy, IJK_Field_d
       double divergence_after = norme_ijk(rhs_after);
       Cout << "Divergence of velocity field: before solver: " << divergence_before << " after solver: " << divergence_after << finl;
     }
-  statistiques().end_count(projection_counter_);
+  statistics().end_count("Velocity update: projection");
 }
 
 // Projects the input velocity field on the zero divergence subspace by solving the Poisson equation:
@@ -348,8 +348,8 @@ void pressure_projection_with_rho(const IJK_Field_double& rho,
                                   IJK_Field_double& pressure_rhs,
                                   Multigrille_Adrien& poisson_solver)
 {
-  static Stat_Counter_Id projection_counter_ = statistiques().new_counter(2, "maj vitesse : projection");
-  statistiques().begin_count(projection_counter_);
+  statistics().create_custom_counter("Velocity update: projection",2,"IJK");
+  statistics().begin_count("Velocity update: projection");
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);
@@ -381,7 +381,7 @@ void pressure_projection_with_rho(const IJK_Field_double& rho,
       double divergence_after = norme_ijk(rhs_after);
       Cout << "Divergence of velocity field: before solver: " << divergence_before << " after solver: " << divergence_after << finl;
     }
-  statistiques().end_count(projection_counter_);
+  statistics().end_count("Velocity update: projection");
 }
 
 // Methode basee sur 1/rho au lieu de rho :
@@ -392,8 +392,8 @@ void pressure_projection_with_inv_rho(const IJK_Field_double& inv_rho,
                                       IJK_Field_double& pressure_rhs,
                                       Multigrille_Adrien& poisson_solver)
 {
-  static Stat_Counter_Id projection_counter_ = statistiques().new_counter(2, "maj vitesse : projection");
-  statistiques().begin_count(projection_counter_);
+  statistics().create_custom_counter("Velocity update: projection",2,"IJK");
+  statistics().begin_count("Velocity update: projection");
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);
@@ -422,7 +422,7 @@ void pressure_projection_with_inv_rho(const IJK_Field_double& inv_rho,
       double divergence_after = norme_ijk(rhs_after);
       Cout << "Divergence of velocity field: before solver: " << divergence_before << " after solver: " << divergence_after << finl;
     }
-  statistiques().end_count(projection_counter_);
+  statistics().end_count("Velocity update: projection");
 }
 
 void forward_euler_update(const IJK_Field_double& dv, IJK_Field_double& v, const int k_layer, double dt_tot)

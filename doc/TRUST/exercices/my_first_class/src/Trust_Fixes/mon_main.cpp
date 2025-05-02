@@ -22,10 +22,9 @@
 #include <PE_Groups.h>
 #include <Journal.h>
 #include <cstdio>
-#include <Statistiques.h>
+#include <Perf_counters.h>
 #include <communications.h>
 #include <petsc_for_kernel.h>
-#include <stat_counters.h>
 #include <info_atelier.h>
 #include <unistd.h> // Pour chdir for other compiler
 #ifndef __CYGWIN__
@@ -33,24 +32,15 @@
 #endif
 
 #include <kokkos++.h>
-#include <Debog.h>
 
-
-// Initialisation des compteurs, dans stat_counters.cpp
-extern void declare_stat_counters();
-extern void end_stat_counters();
-extern Stat_Counter_Id temps_total_execution_counter_;
-extern Stat_Counter_Id initialisation_calcul_counter_;
-
-mon_main::mon_main(int verbose_level, bool journal_master, bool journal_shared, Nom log_directory, bool apply_verification, bool disable_stop)
+mon_main::mon_main(int verbose_level, bool journal_master, Nom log_directory, bool apply_verification, bool disable_stop)
 {
   verbose_level_ = verbose_level;
   journal_master_ = journal_master;
-  journal_shared_ = journal_shared;
   log_directory_ = log_directory;
   apply_verification_ = apply_verification;
   // Creation d'un journal temporaire qui ecrit dans Cerr
-  init_journal_file(verbose_level, 0, 0 /* filename = 0 => Cerr */, 0 /* append */);
+  init_journal_file(verbose_level, 0 /* filename = 0 => Cerr */, 0 /* append */);
   trio_began_mpi_=false;
   disable_stop_=disable_stop;
   change_disable_stop(disable_stop);
@@ -137,6 +127,38 @@ static int init_parallel_mpi(OWN_PTR(Comm_Group) & groupe_trio)
 #endif
 }
 
+static void instantiate_node_mpi(OWN_PTR(Comm_Group) & ngrp, OWN_PTR(Comm_Group) & mgrp, int with_mpi)
+{
+  if (with_mpi)
+    {
+      ngrp.typer("Comm_Group_MPI");
+      mgrp.typer("Comm_Group_MPI");
+    }
+  else
+    {
+      ngrp.typer("Comm_Group_NoParallel");
+      mgrp.typer("Comm_Group_NoParallel");
+    }
+}
+
+static void init_node_mpi(OWN_PTR(Comm_Group) & ngrp)
+{
+#ifdef MPI_
+  assert(ngrp.non_nul());
+  Comm_Group_MPI& mpi_on_node = ref_cast(Comm_Group_MPI, ngrp.valeur());
+  mpi_on_node.init_comm_on_numa_node();
+#endif
+}
+
+static void init_node_masters(OWN_PTR(Comm_Group) & master)
+{
+#ifdef MPI_
+  assert(master.non_nul());
+  Comm_Group_MPI& mm = ref_cast(Comm_Group_MPI, master.valeur());
+  mm.init_comm_on_node_master();
+#endif
+}
+
 ///////////////////////////////////////////////////////////
 // Desormais Petsc/MPI_Initialize et Petsc/MPI_Finalize
 // sont dans un seul fichier: mon_main
@@ -193,9 +215,7 @@ void mon_main::init_parallel(const int argc, char **argv, bool with_mpi, bool ch
         }
     }
   else
-    {
-      groupe_trio_.typer("Comm_Group_NoParallel");
-    }
+    groupe_trio_.typer("Comm_Group_NoParallel");
 
   // Initialisation des groupes de communication.
   PE_Groups::initialize(groupe_trio_);
@@ -207,6 +227,10 @@ void mon_main::init_parallel(const int argc, char **argv, bool with_mpi, bool ch
 
   if (Process::je_suis_maitre())
     Cerr << arguments_info;
+
+  // the node group is instantiated here, so that it's done only once (necessary with ICoCo)
+  // however, it is initialized later, as it involves communication operations, which require statistics to be initialized first...
+  instantiate_node_mpi(node_group_, node_master_, with_mpi);
 
   if (!init_kokkos_before_mpi)
     {
@@ -227,9 +251,17 @@ void mon_main::finalize()
   TClearable::Clear_all();
 
 #ifdef MPI_
-  // MPI_Group_free before MPI_Finalize
+  // MPI_Group_free before MPI_Finalize (not freeing comm as we can not free MPI_COMM_WORLD)
   if (sub_type(Comm_Group_MPI,groupe_trio_.valeur()))
     ref_cast(Comm_Group_MPI,groupe_trio_.valeur()).free();
+
+  if (sub_type(Comm_Group_MPI,node_master_.valeur()))
+    ref_cast(Comm_Group_MPI,node_master_.valeur()).free_all(); // free comm + group
+
+  if (sub_type(Comm_Group_MPI,node_group_.valeur()))
+    ref_cast(Comm_Group_MPI,node_group_.valeur()).free_all(); // free comm + group
+
+
 #endif
 #ifdef PETSCKSP_H
   // On PetscFinalize que si c'est necessaire
@@ -264,16 +296,6 @@ void mon_main::finalize()
 
 void mon_main::dowork(const Nom& nom_du_cas)
 {
-  // Initialisation des compteurs pour les statistiques
-  // avant tout appel a envoyer, recevoir, ...
-  if (!les_statistiques_trio_U_nom_long_pour_decourager_l_utilisation_directe)
-    {
-      declare_stat_counters();
-    }
-  statistiques().begin_count(temps_total_execution_counter_);
-  // Ce compteur est arrete dans Resoudre*
-  statistiques().begin_count(initialisation_calcul_counter_);
-
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)
   // la ligne de commande recuperee avec argv ne contient
@@ -301,7 +323,7 @@ void mon_main::dowork(const Nom& nom_du_cas)
       }
     Process::barrier(); // Otherwise, non-master processes try to write .log file before mkdir is done
     Nom filename = log_directory_ + nom_du_cas;
-    if (Process::nproc() > 1 && !journal_shared_)
+    if (Process::nproc() > 1)
       {
         filename += "_";
         char s[20];
@@ -317,14 +339,13 @@ void mon_main::dowork(const Nom& nom_du_cas)
     // Dans le cas ou l'option "-journal" est specifiee
     if (verbose_level_ < 0)
       {
-        if (!journal_shared_ && !journal_master_ && Process::force_single_file(Process::nproc(), nom_du_cas+".log"))
+        if (!journal_master_ && Process::force_single_file(Process::nproc(), nom_du_cas+".log"))
           verbose_level_ = 0;
         else
           verbose_level_ = 1;
       }
 
-    init_journal_file(verbose_level_, journal_shared_,filename, 0 /* append=0 */);
-    if(journal_shared_) Process::Journal() << "\n[Proc " << Process::me() << "] : ";
+    init_journal_file(verbose_level_,filename, 0 /* append=0 */);
     Process::Journal() << "Journal logging started" << finl;
   }
 
@@ -352,6 +373,16 @@ void mon_main::dowork(const Nom& nom_du_cas)
 #include <instancie_appel_c.h>
       Cerr<<"Fin chargement des modules "<<finl;
     }
+
+  // initializing communicators on node
+  if (Process::is_parallel())
+    init_node_mpi(node_group_);
+  PE_Groups::initialize_node(node_group_);
+
+  // Node_master needs node_group to be initialized first
+  if (Process::is_parallel())
+    init_node_masters(node_master_);
+  PE_Groups::initialize_node_master(node_master_);
 
   Cout<< " " << finl;
   Cout<< " * * * * * * * * * * * * * * * * * * * * * * * * * * * *     " << finl;
@@ -413,26 +444,9 @@ void mon_main::dowork(const Nom& nom_du_cas)
   Cerr << "MAIN: End of data file" << finl;
   Process::imprimer_ram_totale(1);
 
-  std::cout << "Hello World to cout." << std::endl;
-  std::cerr << "Hello World to cerr." << std::endl;
-  Cout << "Hello World to Cout." << finl;
-  Cerr << "Hello World to Cerr." << finl;
-  Process::Journal() << "Hello World to Journal." << finl;
-  double var=2.5;
-  Debog::verifier("- Debog test message!",var);
+  statistics().print_TU_files("Post-resolution statistics");
 
-  // pour les cas ou on ne fait pas de resolution
-  int mode_append=1;
-  if (!Objet_U::disable_TU)
-    {
-      if(GET_COMM_DETAILS)
-        statistiques().print_communciation_tracking_details("Statistiques de post resolution", 1);               // Into _csv.TU file
-
-      statistiques().dump("Statistiques de post resolution", mode_append);
-      print_statistics_analyse("Statistiques de post resolution", 1);
-    }
-
-  double temps = statistiques().get_total_time();
+  double temps = statistics().get_computation_time();
   Cout << finl;
   Cout << "--------------------------------------------" << finl;
   Cout << "clock: Total execution: " << temps << " s" << finl;
@@ -441,7 +455,6 @@ void mon_main::dowork(const Nom& nom_du_cas)
       SFichier ficstop ( nomfic);
       ficstop  << "Finished correctly"<<finl;
     }
-  //  end_stat_counters();
 }
 
 mon_main::~mon_main()
@@ -450,7 +463,6 @@ mon_main::~mon_main()
   // EDIT 12/02/2020: journal needs communication to be turned on if it's written in HDF5 format
   Process::Journal() << "End of Journal logging" << finl;
   end_journal(verbose_level_);
-  end_stat_counters();
   // Destruction de l'interprete principal avant d'arreter le parallele
   interprete_principal_.vide();
   // PetscFinalize/MPI_Finalize
@@ -458,4 +470,7 @@ mon_main::~mon_main()
   // on peut arreter maintenant que l'on a arrete les journaux
   PE_Groups::finalize();
   groupe_trio_.detach();
+  node_group_.detach();
+
 }
+

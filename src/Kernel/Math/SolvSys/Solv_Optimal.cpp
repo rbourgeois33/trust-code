@@ -15,7 +15,6 @@
 #include <Solv_Optimal.h>
 #include <Param.h>
 #include <LecFicDistribueBin.h>
-#include <stat_counters.h>
 #include <LecFicDiffuse.h>
 #include <Matrice_Bloc.h>
 #include <Matrice_Morse_Sym.h>

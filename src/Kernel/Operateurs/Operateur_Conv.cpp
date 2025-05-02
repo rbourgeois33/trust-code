@@ -15,7 +15,6 @@
 
 #include <Discretisation_base.h>
 #include <Operateur_Conv.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <Champ_base.h>
 

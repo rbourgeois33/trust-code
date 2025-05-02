@@ -20,7 +20,6 @@
 #include <Probleme_base.h>
 #include <Synonyme_info.h>
 #include <Postraitement.h>
-#include <stat_counters.h>
 #include <Debog.h>
 #include <Perf_counters.h>
 

@@ -28,15 +28,12 @@
 #include <Static_Int_Lists.h>
 #include <Operateur_Grad.h>
 #include <Pb_Multiphase.h>
-#include <Statistiques.h>
 #include <Matrix_tools.h>
 #include <Array_tools.h>
 #include <Dirichlet.h>
 #include <Debog.h>
 #include <Piso.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_instanciable(Assembleur_P_PolyMAC_P0, "Assembleur_P_PolyMAC_P0", Assembleur_P_PolyMAC_P0P1NC);
 

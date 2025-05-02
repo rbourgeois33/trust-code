@@ -19,7 +19,7 @@
 #include <EFichier.h>
 #include <communications.h>
 #include <TRUSTTab.h>
-#include <stat_counters.h>
+#include <Perf_counters.h>
 
 template<typename _TYPE_>
 void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_TYPE_>& fine,
@@ -219,8 +219,8 @@ void Coarsen_Operator_K::coarsen_(const IJK_Field_template<_TYPE_, _TYPE_ARRAY_>
                                   IJK_Field_template<_TYPE_, _TYPE_ARRAY_>& coarse,
                                   int compute_weighted_average) const
 {
-  static Stat_Counter_Id coarsen_counter_ = statistiques().new_counter(2, "multigrille: K coarsen ");
-  statistiques().begin_count(coarsen_counter_);
+  statistics().create_custom_counter("multigrid: K coarsening",2,"IJK");
+  statistics()..begin_count("multigrid: K coarsening")
 
   const int index_start = 0;
   const int index_end = src_dest_index_local_.dimension(0);
@@ -256,8 +256,7 @@ void Coarsen_Operator_K::coarsen_(const IJK_Field_template<_TYPE_, _TYPE_ARRAY_>
               coarse(i, j, coarse_k) += coef * fine(i, j, fine_k);
         }
     }
-  statistiques().end_count(coarsen_counter_);
-
+  statistics().end_count("multigrid: K coarsening");
 }
 
 template <typename _TYPE_, typename _TYPE_ARRAY_>
@@ -265,9 +264,8 @@ void Coarsen_Operator_K::interpolate_sub_shiftk_(const IJK_Field_template<_TYPE_
                                                  IJK_Field_template<_TYPE_, _TYPE_ARRAY_>& fine,
                                                  const int kshift) const
 {
-  static Stat_Counter_Id interpolate_counter_ = statistiques().new_counter(2, "multigrille : interpolate (K)");
-  statistiques().begin_count(interpolate_counter_);
-
+  statistics().create_custom_counter("multigrid: interpolate K",2,"IJK");
+  statistics().begin_count("multigrid: interpolate K");
   const int index_start = kshift <= 0 ? 0 : src_dest_index_local_.dimension(0) - 1;
   const int index_end = kshift <= 0 ? src_dest_index_local_.dimension(0) : -1;
   const int delta_index = kshift <= 0 ? 1 : -1;
@@ -301,9 +299,7 @@ void Coarsen_Operator_K::interpolate_sub_shiftk_(const IJK_Field_template<_TYPE_
     }
   fine.shift_k_origin(kshift);
   //flop_count += ni*nj*src_dest_index_.dimension(0) * 2;
-
-  statistiques().end_count(interpolate_counter_);
-
+  statistics().end_count("multigrid: interpolate K");
 }
 
 #endif

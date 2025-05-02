@@ -26,11 +26,7 @@
 #include <Domaine_VF.h>
 #include <Matrice_Morse.h>
 #include <Champ_Uniforme.h>
-#include <Statistiques.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
-extern Stat_Counter_Id source_counter_;
 
 Implemente_instanciable(Convection_Diffusion_Temperature,"Convection_Diffusion_Temperature",Convection_Diffusion_Temperature_base);
 // XD convection_diffusion_temperature eqn_base convection_diffusion_temperature -1 Energy equation (temperature diffusion convection).

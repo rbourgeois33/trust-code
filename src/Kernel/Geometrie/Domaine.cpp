@@ -38,7 +38,7 @@
 #include <Domaine_VF.h>
 #include <MD_Vector_std.h>
 #include <MD_Vector_seq.h>
-#include <Statistiques.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable_sans_constructeur_32_64( Domaine_32_64, "Domaine", Domaine_base );
 // XD domaine objet_u domaine -1 Keyword to create a domain.
@@ -1389,7 +1389,7 @@ void Domaine_32_64<_SIZE_>::prepare_dec_with(const Domaine_32_64& other_domain, 
 #if defined(MEDCOUPLING_) && defined(MPI_)
   using namespace MEDCoupling;
 
-  double t0 = Statistiques::get_time_now();
+  Perf_counters::time_point t0 = statistics().start_clock();
   Cerr << "Building DEC of nature" << MEDCouplingNatureOfField::GetRepr(dist->getNature())
        << "from " << other_domain.le_nom() << " (" << Process::mp_sum(dist->getMesh()->getNumberOfCells())
        << " cells) to " << le_nom() << " (" << Process::mp_sum(loc->getMesh()->getNumberOfCells()) << " cells) : ";
@@ -1405,7 +1405,7 @@ void Domaine_32_64<_SIZE_>::prepare_dec_with(const Domaine_32_64& other_domain, 
   dec.attachTargetLocalField(loc);
   dec.synchronize();
 
-  Cerr << Statistiques::get_time_now() - t0 << " s" << finl;
+  Cerr << statistics().compute_time(t0) << " s" << finl;
 #else
   Process::exit("Domaine::prepare_dec_with() should not be called since it requires a TRUST version compiled with MEDCoupling and MPI!");
 #endif

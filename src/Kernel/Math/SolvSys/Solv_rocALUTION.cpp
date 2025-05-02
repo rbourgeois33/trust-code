@@ -23,7 +23,6 @@
 #include <MD_Vector_std.h>
 #include <MD_Vector_composite.h>
 #include <Device.h>
-#include <stat_counters.h>
 #include <Array_tools.h>
 #include <Perf_counters.h>
 

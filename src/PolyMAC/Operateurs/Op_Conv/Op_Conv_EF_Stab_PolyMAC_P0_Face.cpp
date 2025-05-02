@@ -23,7 +23,6 @@
 #include <Option_PolyMAC.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <TRUSTLists.h>
 #include <Dirichlet.h>

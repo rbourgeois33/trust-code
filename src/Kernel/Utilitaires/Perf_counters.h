@@ -92,7 +92,7 @@ public:
 
 ////// Time wrapper /////
 
-  inline time_point start_clock() {return now();}
+  inline time_point start_clock() {return now();} ///< Start a clock, return a time_point, not a double
 
   double compute_time(time_point start); ///< return time since start in seconds
 
@@ -116,11 +116,6 @@ public:
    * @return create a new counter
    */
   void create_custom_counter(std::string counter_description , int counter_level,  std::string counter_family = "None", bool is_comm=false, bool is_gpu=false);
-
-  /*! @brief Start the count of a counter
-   *
-   */
-  //	void begin_count(Counter c);
 
   /*! Standard counters, start the tracking of the wanted operation
    *
@@ -167,19 +162,13 @@ public:
    */
   void reset_counters();
 
-  /*!
-   *
-   * @param is_the_three_first_time_steps_elapsed == True, then the thre first time steps are discarded
-   */
-  void set_time_steps_elapsed(int time_step_elapsed);
-
   /*! @brief Function that encapsulate the two functions that writes the TU files
    *
    */
   void print_TU_files(const std::string& message);
 
 
-  /*!@brief Update computation_time_ and return its value as a double
+  /*!@brief Update computation_time_ and return its value as a double (in seconds)
    *
    */
   double get_computation_time();

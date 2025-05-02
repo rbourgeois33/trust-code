@@ -15,10 +15,7 @@
 
 #include <Op_Diff_VDF_Face_base.h>
 #include <Check_espace_virtuel.h>
-#include <Statistiques.h>
 #include <Perf_counters.h>
-
-extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_base(Op_Diff_VDF_Face_base,"Op_Diff_VDF_Face_base",Op_Diff_VDF_base);
 

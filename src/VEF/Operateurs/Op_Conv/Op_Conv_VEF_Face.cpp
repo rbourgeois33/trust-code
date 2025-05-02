@@ -16,8 +16,6 @@
 #include <Op_Conv_VEF_Face.h>
 #include <Champ_P1NC.h>
 #include <Porosites_champ.h>
-
-#include <stat_counters.h>
 #include <Convection_tools.h>
 #include <Dirichlet_homogene.h>
 #include <Periodique.h>

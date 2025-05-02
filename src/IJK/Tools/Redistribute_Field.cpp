@@ -15,7 +15,7 @@
 
 #include <Redistribute_Field.h>
 #include <Linear_algebra_tools.h>
-#include <stat_counters.h>
+#include <Perf_counters.h>
 
 void Redistribute_Field::initialize(const Domaine_IJK& input,
                                     const Domaine_IJK& output,
@@ -203,8 +203,8 @@ void Redistribute_Field::redistribute_(const IJK_Field_double& input_field,
                                        IJK_Field_double& output_field,
                                        bool add)
 {
-  static Stat_Counter_Id redistribute_tot_counter_ = statistiques().new_counter(2, "redistribute");
-  statistiques().begin_count(redistribute_tot_counter_);
+  statistics().create_custom_counter("Redistribute",2,"IJK");
+  statistics().begin_count("Redistribute");
 
   // For each direction, intersections between the input and output field:
   // Each line contain a bloc to copy from-to another processor
@@ -322,7 +322,7 @@ void Redistribute_Field::redistribute_(const IJK_Field_double& input_field,
               }
         }
   schema.end_comm();
-  statistiques().end_count(redistribute_tot_counter_);
+  statistics().end_count("Redistribute");
 
 }
 

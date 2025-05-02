@@ -15,9 +15,7 @@
 
 #include <Discretisation_base.h>
 #include <Operateur_Diff.h>
-#include <stat_counters.h>
 #include <Champ_base.h>
-
 
 Implemente_instanciable(Operateur_Diff,"Operateur_Diff",OWN_PTR(Operateur_Diff_base));
 // XD diffusion_deriv objet_lecture diffusion_deriv 0 not_set

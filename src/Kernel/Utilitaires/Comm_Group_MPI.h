@@ -20,8 +20,6 @@
 #include <TRUST_Ref.h>
 
 class Comm_Group;
-class Stat_Counter_Id;
-
 //GF comm_incl inclu mpi.h mais il est plus facile de faire un atelier
 // ou l on change le mpi si on passe par ce fichier intermediaire
 
@@ -102,10 +100,7 @@ private:
   // TYP_IDX = 1: int, 2: long, 3: double, 4 :float
   // [ABN] Can not use a MPI datatype directly because in OpenMPI for example this type is too complex to be used as a template parameter.
   template <typename _TYPE_, int TYP_IDX>
-  void mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, int n, Comm_Group::Collective_Op op,
-                                 const Stat_Counter_Id& cnt_sum_id,
-                                 const Stat_Counter_Id& cnt_min_id,
-                                 const Stat_Counter_Id& cnt_max_id) const;
+  void mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, int n, Comm_Group::Collective_Op op) const;
   trustIdType mppartial_sum_impl(trustIdType x) const;
 
   // Voir set_must_mpi_initialize() et init_group_trio()

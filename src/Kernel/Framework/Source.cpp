@@ -16,7 +16,6 @@
 #include <Discretisation_base.h>
 #include <Champ_Uniforme.h>
 #include <Equation_base.h>
-#include <stat_counters.h>
 #include <Milieu_base.h>
 #include <TRUSTTabs.h>
 #include <Source.h>

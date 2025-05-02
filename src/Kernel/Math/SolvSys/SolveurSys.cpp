@@ -13,7 +13,6 @@
 *
 *****************************************************************************/
 
-#include <stat_counters.h>
 #include <SolveurSys.h>
 #include <Motcle.h>
 #include <Param.h>

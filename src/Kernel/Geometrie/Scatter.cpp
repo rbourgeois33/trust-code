@@ -17,7 +17,6 @@
 #include <Scatter.h>
 #include <Domaine.h>
 #include <LecFicDistribueBin.h>
-#include <Statistiques.h>
 #include <TRUSTTabs.h>
 #include <Connectivite_som_elem.h>
 #include <Schema_Comm.h>
@@ -38,8 +37,6 @@
 #include <EFichierBin.h>
 #include <Array_tools.h>
 #include <Perf_counters.h>
-
-//extern Stat_Counter_Id interprete_scatter_counter_;
 
 Implemente_instanciable(Scatter,"Scatter",Interprete);
 // XD scatter interprete scatter 0 Class to read a partionned mesh from the files during a parallel calculation. The files are in binary format.

@@ -20,12 +20,8 @@
 #include <Champ_Face_VDF.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <TRUSTTrav.h>
-
-
-extern Stat_Counter_Id convection_counter_;
 
 Implemente_base(Op_Conv_VDF_base,"Op_Conv_VDF_base",Operateur_Conv_base);
 

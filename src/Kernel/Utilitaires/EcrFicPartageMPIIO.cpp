@@ -14,15 +14,11 @@
 *****************************************************************************/
 
 #include <EcrFicPartageMPIIO.h>
-#include <Statistiques.h>
 #include <OBuffer.h>
 #include <PE_Groups.h>
 #include <communications.h>
 #include <Comm_Group_MPI.h>
 #include <string>
-#include <Perf_counters.h>
-
-extern Stat_Counter_Id IO_EcrireFicPartageMPIIO_counter_;
 
 Implemente_instanciable_sans_constructeur_ni_destructeur(EcrFicPartageMPIIO,"EcrFicPartageMPIIO",SFichier);
 

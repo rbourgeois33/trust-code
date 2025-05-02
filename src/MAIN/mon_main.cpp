@@ -22,11 +22,9 @@
 #include <PE_Groups.h>
 #include <Journal.h>
 #include <cstdio>
-#include <Statistiques.h>
 #include <Perf_counters.h>
 #include <communications.h>
 #include <petsc_for_kernel.h>
-#include <stat_counters.h>
 #include <info_atelier.h>
 #include <unistd.h> // Pour chdir for other compiler
 #ifndef __CYGWIN__
@@ -34,12 +32,6 @@
 #endif
 
 #include <kokkos++.h>
-
-// Initialisation des compteurs, dans stat_counters.cpp
-extern void declare_stat_counters();
-extern void end_stat_counters();
-//extern Stat_Counter_Id temps_total_execution_counter_;
-//extern Stat_Counter_Id initialisation_calcul_counter_;
 
 mon_main::mon_main(int verbose_level, bool journal_master, Nom log_directory, bool apply_verification, bool disable_stop)
 {
@@ -309,14 +301,6 @@ void mon_main::finalize()
 
 void mon_main::dowork(const Nom& nom_du_cas)
 {
-  // Initialisation des compteurs pour les statistiques
-  // avant tout appel a envoyer, recevoir, ...
-  if (!les_statistiques_trio_U_nom_long_pour_decourager_l_utilisation_directe)
-    {
-      declare_stat_counters();
-    }
-  //
-
   // Le processeur maitre envoie le nom du cas a tous les processeurs
   // car avec une distribution MPICH 1.2.7 (Debian)
   // la ligne de commande recuperee avec argv ne contient
@@ -484,7 +468,6 @@ mon_main::~mon_main()
   // EDIT 12/02/2020: journal needs communication to be turned on if it's written in HDF5 format
   Process::Journal() << "End of Journal logging" << finl;
   end_journal(verbose_level_);
-  end_stat_counters();
   // Destruction de l'interprete principal avant d'arreter le parallele
   interprete_principal_.vide();
   // PetscFinalize/MPI_Finalize

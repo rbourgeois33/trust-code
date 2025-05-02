@@ -26,7 +26,6 @@
 #include <Segment_poly.h>
 #include <Matrix_tools.h>
 #include <Hexaedre_VEF.h>
-#include <Statistiques.h>
 #include <Quadri_poly.h>
 #include <Array_tools.h>
 #include <TRUSTLists.h>

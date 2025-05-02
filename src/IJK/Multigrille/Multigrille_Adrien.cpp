@@ -15,7 +15,6 @@
 
 #include <Param.h>
 #include <Parser.h>
-#include <Statistiques.h>
 #include <TRUSTArray.h>
 #include <Multigrille_Adrien.h>
 #include <communications.h>
@@ -23,8 +22,7 @@
 #include <Schema_Comm.h>
 #include <IJK_VDF_converter.h>
 #include <Interprete_bloc.h>
-#include <stat_counters.h>
-
+#include <Perf_counters.h>
 #include <SSE_kernels.h>
 using namespace SSE_Kernels;
 
@@ -113,8 +111,8 @@ void Multigrille_Adrien::initialize(const Domaine_IJK& split)
 //  and the coarse matrix for the coarse grid solver).
 void Multigrille_Adrien::set_rho(const DoubleVect& rho)
 {
-  static Stat_Counter_Id counter = statistiques().new_counter(0, "Multigrille_Adrien::set_rho");
-  statistiques().begin_count(counter);
+  statistics().create_custom_counter("Multigrid_Adrien::set_rho",2,"IJK");
+  statistics().begin_count("Multigrid_Adrien::set_rho");
   if (solver_precision_ != precision_float_)
     {
       IJK_Field_double ijk_rho(grids_data_double_[0].get_update_rho());
@@ -127,7 +125,7 @@ void Multigrille_Adrien::set_rho(const DoubleVect& rho)
       convert_to_ijk(rho, ijk_rho);
       set_rho(ijk_rho);
     }
-  statistiques().end_count(counter);
+  statistics().end_count("Multigrid_Adrien::set_rho");
 }
 
 

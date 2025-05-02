@@ -15,7 +15,6 @@
 
 #include <Discretisation_base.h>
 #include <Operateur_Div.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 
 Implemente_instanciable(Operateur_Div,"Operateur_Div",OWN_PTR(Operateur_Div_base));

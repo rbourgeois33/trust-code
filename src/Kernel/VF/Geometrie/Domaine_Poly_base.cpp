@@ -24,7 +24,6 @@
 #include <communications.h>
 #include <Matrice_Morse.h>
 #include <Segment_poly.h>
-#include <Statistiques.h>
 #include <Hexaedre_VEF.h>
 #include <Matrix_tools.h>
 #include <unordered_map>

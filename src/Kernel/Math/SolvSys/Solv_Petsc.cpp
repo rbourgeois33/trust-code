@@ -24,7 +24,6 @@
 #include <cfenv>
 #include <tuple>
 #include <Matrice_Morse_Sym.h>
-#include <stat_counters.h>
 #include <Matrice_Bloc_Sym.h>
 #include <Matrice_Bloc.h>
 #include <communications.h>
@@ -1692,11 +1691,11 @@ void Solv_Petsc::SaveObjectsToFile(const DoubleVect& secmem, DoubleVect& solutio
 //#endif
       PetscViewerFileSetMode(viewer, FILE_MODE_WRITE);
       PetscViewerFileSetName(viewer, filename);
-      statistiques().begin_count(sauvegarde_counter_);
+      statistics().begin_count(STD_COUNTERS::backup_file);
       trustIdType bytes = 8 * nnz + 4 * nnz + 4 * nb_rows_tot_;
       MatView(MatricePetsc_, viewer);
-      statistiques().end_count(sauvegarde_counter_, bytes);
-      Cerr << "[IO] " << statistiques().last_time(sauvegarde_counter_) << " s to write matrix file." << finl;
+      Cerr << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to write matrix file." << finl;
+      statistics().end_count(STD_COUNTERS::backup_file, 1, bytes);
       // Save also the RHS if on the host:
       if (SecondMembrePetsc_!=nullptr)
         {
@@ -1817,14 +1816,14 @@ void Solv_Petsc::RestoreMatrixFromFile()
 //#endif
   PetscViewerFileSetMode(viewer, FILE_MODE_READ);
   PetscViewerFileSetName(viewer, filename);
-  statistiques().begin_count(sauvegarde_counter_);
+  statistics().begin_count(STD_COUNTERS::backup_file);
   MatLoad(MatricePetsc_, viewer);
   MatInfo Info;
   MatGetInfo(MatricePetsc_,MAT_GLOBAL_SUM,&Info);
   trustIdType nnz = (trustIdType)Info.nz_allocated;
   trustIdType bytes = 8 * nnz + 4 * nnz + 4 * nb_rows_tot_;
-  statistiques().end_count(sauvegarde_counter_, bytes);
-  Cerr << "[IO] " << statistiques().last_time(sauvegarde_counter_) << " s to read matrix file." << finl;
+  Cerr << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to read matrix file." << finl;
+  statistics().end_count(STD_COUNTERS::backup_file, 1, bytes);
 
   PetscViewerDestroy(&viewer);
   if (!matrice_symetrique_)

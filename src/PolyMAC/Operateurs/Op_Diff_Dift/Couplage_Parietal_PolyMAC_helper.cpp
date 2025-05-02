@@ -28,7 +28,6 @@
 #include <Neumann_paroi.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <functional>
 #include <cmath>

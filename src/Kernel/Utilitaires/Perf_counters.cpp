@@ -263,10 +263,8 @@ private:
   std::string get_date() const;
   void print_performance_to_csv(const std::string& message);
   void print_global_TU(const std::string& message);
-  // Store standard counters using unique_ptr
-  std::array<std::unique_ptr<Counter>, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_;
-  // Store custom counters using unique_ptr
-  std::map<std::string, std::unique_ptr<Counter>> custom_counter_map_str_to_counter_;
+  std::array<std::unique_ptr<Counter>, static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER)> std_counters_; ///< Store standard counters using unique_ptr
+  std::map<std::string, std::unique_ptr<Counter>> custom_counter_map_str_to_counter_;  ///< Store custom counters using unique_ptr
   bool end_cache_=false;                 ///< A flag used to know if the two first time steps are over or not
   bool time_loop_=false;                 ///< A flag used to know if we are inside the time loop
   bool counters_stop_=false;             ///< A flag used to know if the counters are paused or not
@@ -282,7 +280,7 @@ private:
   bool gpu_timer_ = false;
   time_point gpu_clock_start_;
   int gpu_timer_counter_=0;
-  int max_str_length_=121;
+  int max_str_length_=118;
 };
 Perf_counters::Impl::~Impl()=default;
 
@@ -927,9 +925,9 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   const int tabular_custom_line_width= counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+level_width;
   const int cpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width;
   const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width;
-  const int number_width=25;
+  const int number_width=15;
   const int text_width =cpu_line_width-count_per_ts_width;
-  const int header_txt_width = 11;
+  const int header_txt_width = 10;
   const int message_width = static_cast<int>(message.length());
   const std::string separator = " | ";
   const std::string line_sep_cpu(max_str_length_,'~');
@@ -1134,7 +1132,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           file_header << std::left << std::setw(header_txt_width)<< "OS:" << get_os() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "CPU:" << get_cpu() << std::endl;
           file_header << std::left << std::setw(header_txt_width) << "GPU:" << get_gpu() << std::endl;
-          file_header << std::left << std::setw(header_txt_width) << "Nb procs : " << nb_procs << std::endl << std::endl;
+          file_header << std::left << std::setw(header_txt_width) << "Nb procs: " << nb_procs << std::endl << std::endl;
           file_header << line_sep_cpu << std::endl;
           spaces.assign((max_str_length_-message_width)/2,' ');
           file_header  << spaces<<message << std::endl;
@@ -1320,7 +1318,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                 perfs_IO <<  std::left <<std::setw(number_width) << allreduce_peak_perf << std::endl;
               perfs_IO <<  std::left <<std::setw(text_width) << "Network maximum bandwidth on all processors: "  <<  std::left <<std::setw(number_width) << max_bandwidth * 1.e-6 << "MB/s"  << std::endl ;
               if (nb_ts>0)
-                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc() / nb_ts * 1e-6 << "MB / time step"  << std::endl;
+                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc() / nb_ts * 1e-6 << "MB/time step"  << std::endl;
               else
                 perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc()* 1e-6 << "MB"  << std::endl;
               perfs_IO <<  std::left <<std::setw(text_width) << "Average message size: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q / comm_sendrecv_c* 1e-3 << "kB" << std::endl;
@@ -1779,11 +1777,6 @@ void Perf_counters::restart_counters()
 void Perf_counters::reset_counters()
 {
   pimpl_->reset_counters_impl();
-}
-
-void Perf_counters::set_time_steps_elapsed(int time_step_elapsed)
-{
-  pimpl_->set_time_steps_elapsed_impl(time_step_elapsed);
 }
 
 void Perf_counters::print_TU_files(const std::string& message)

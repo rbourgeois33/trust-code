@@ -18,7 +18,6 @@
 #include <EcrFicCollecte.h>
 #include <FichierHDFPar.h>
 #include <LecFicDiffuse.h>
-#include <Statistiques.h>
 #include <TRUSTArrays.h>
 #include <Schema_Comm.h>
 #include <TRUSTTabs.h>

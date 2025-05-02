@@ -17,7 +17,6 @@
 #include <Schema_Comm_Vecteurs.h>
 #include <Schema_Comm.h>
 #include <communications.h>
-#include <Statistiques.h>
 #include <Domaine_VF.h>
 #include <IJK_Field.h>
 #include <TRUSTTabs.h>

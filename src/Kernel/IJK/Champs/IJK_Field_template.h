@@ -19,8 +19,6 @@
 #include <IJK_Shear_Periodic_helpler.h>
 #include <communications.h>
 #include <Domaine_IJK.h>
-#include <stat_counters.h>
-#include <Statistiques.h>
 #include <TRUST_Ref.h>
 #include <TRUSTVect.h>
 

@@ -12,13 +12,11 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-
 #include <ProblemTrio.h>
 #include <Probleme_U.h>
 #include <Probleme_base.h>
 #include <ICoCoExceptions.h>
 #include <Noms.h>
-
 #include <Comm_Group_MPI.h>
 #include <MAIN.h>
 #include <mon_main.h>
@@ -28,7 +26,6 @@
 #include <Init_Params.h>
 #include <signal.h>
 #include <Motcle.h>
-
 //#include <ICoCoTrioField.h>
 #include <medcoupling++.h>
 #ifndef NO_MEDFIELD
@@ -36,15 +33,12 @@
 #include <MEDCouplingFieldDouble.hxx>
 #include <MEDCoupling_version.h>
 #endif
-
 #include <Convert_ICoCoTrioField.h>
-#include <stat_counters.h>
 #include <Perf_counters.h>
 #include <Field_base.h>
 
-
 #include <Equation_base.h>
-
+#include <cstdlib>
 
 using ICoCo::Problem;
 using ICoCo::ProblemTrio;

@@ -17,13 +17,9 @@
 #include <Modele_turbulence_hyd_base.h>
 #include <Op_Dift_VDF_base.h>
 #include <Eval_Dift_VDF.h>
-#include <Statistiques.h>
 #include <Perf_counters.h>
-
 #include <TRUSTTrav.h>
 #include <Motcle.h>
-
-extern Stat_Counter_Id diffusion_counter_;
 
 Implemente_base(Op_Dift_VDF_base,"Op_Dift_VDF_base",Op_Diff_VDF_base);
 

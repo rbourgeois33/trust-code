@@ -15,7 +15,6 @@
 
 #include <Coarsen_Operator_Uniform.h>
 #include <Domaine_IJK.h>
-#include <stat_counters.h>
 
 Implemente_instanciable_sans_constructeur(Coarsen_Operator_Uniform, "Coarsen_Operator_Uniform", Coarsen_Operator_base);
 // XD Coarsen_Operator_Uniform objet_lecture nul 0 Object defining the uniform coarsening process of the given grid in IJK discretization

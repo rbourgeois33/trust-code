@@ -19,7 +19,6 @@
 #include <MD_Vector_tools.h>
 #include <MD_Vector_seq.h>
 #include <communications.h>
-#include <stat_counters.h>
 #include <Schema_Comm.h>
 #include <TRUSTTrav.h>
 #include <Perf_counters.h>

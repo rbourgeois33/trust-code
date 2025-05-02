@@ -14,7 +14,6 @@
 *****************************************************************************/
 
 #include <MD_Vector_std.h>
-#include <stat_counters.h>
 #include <Device.h>
 #include <sstream>
 #include <Perf_counters.h>
