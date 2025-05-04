@@ -22,6 +22,7 @@
 #include <MD_Vector_tools.h>
 #include <communications.h>
 #include <TRUSTTab_parts.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable_sans_constructeur(Solv_GCP,"Solv_GCP",solv_iteratif);
 // XD solv_gcp solveur_sys_base gcp 1 Preconditioned conjugated gradient.
@@ -87,18 +88,18 @@ Entree& Solv_GCP::readOn(Entree& is )
 
 int Solv_GCP::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
-
-
+  statistics().end_count(STD_COUNTERS::system_solver,-1,0);
   int n = resoudre_(matrice, secmem, solution, 100);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
   return n;
 }
 
 int Solv_GCP::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution,
                                int nmax)
 {
-
-
+  statistics().end_count(STD_COUNTERS::system_solver,-1,0);
   int n = resoudre_(matrice, secmem, solution, nmax);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
   return n;
 }
 

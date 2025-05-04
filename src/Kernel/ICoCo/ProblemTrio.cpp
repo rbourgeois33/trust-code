@@ -201,9 +201,6 @@ void ProblemTrio::terminate()
       pb->postraiter(1);
       pb->terminate();
     }
-  if (!Objet_U::disable_TU)
-    {
-  statistics().print_TU_files("Time loop statistics");
   if(p)
     {
       delete p;
@@ -279,7 +276,6 @@ bool ProblemTrio::initTimeStep(double dt)
  */
 bool ProblemTrio::solveTimeStep()
 {
-  statistics().begin_count(STD_COUNTERS::timeloop);
   if (pb->lsauv())
     pb->sauver();
   bool res=pb->solveTimeStep();
@@ -310,7 +306,6 @@ void ProblemTrio::validateTimeStep()
       // If *pb is a coupled problem, we may get the last line duplicated in post-processing files.
       pb->postraiter(0);
     }
-  statistics().end_count(STD_COUNTERS::timeloop);
 }
 
 /*! @brief Tells if the Problem unknowns have changed during the last time step.

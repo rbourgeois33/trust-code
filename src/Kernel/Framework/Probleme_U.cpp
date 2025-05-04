@@ -268,10 +268,7 @@ bool Probleme_U::run()
       // Begin the CPU measure of the time step
       statistics().start_time_step();
       statistics().begin_count(STD_COUNTERS::timeloop);
-      statistics().create_custom_counter("Counter bidon",1);
-      statistics().begin_count("Counter bidon");
       ok=false; // Is the time interval successfully solved ?
-      statistics().end_count("Counter bidon",50);
       // Loop on the time interval tries
       while (!ok && !stop)
         {
@@ -420,6 +417,7 @@ bool Probleme_U::runUntil(double time)
       postraiter(0);
     }
   statistics().end_timeloop();
+  statistics().print_TU_files("Time loop statistics");
   return ok;
 }
 

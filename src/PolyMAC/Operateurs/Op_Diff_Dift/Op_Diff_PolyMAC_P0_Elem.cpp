@@ -271,14 +271,12 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
   Cerr << "Internal error with nvc++: Internal error: read_memory_region: not all expected entries were read." << finl;
   Process::exit();
 #else
-  statistics().begin_count(STD_COUNTERS::diffusion);
   init_op_ext();
   update_phif();
 
   if (is_pb_coupl_ || has_flux_par_)
     {
       couplage_parietal_helper_.ajouter_blocs(matrices, secmem, semi_impl);
-      statistics().end_count(STD_COUNTERS::diffusion);
       return;
     }
 
@@ -360,8 +358,6 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
         for (int n = 0; n < N; n++)
           flux_bords_(f, n) = flux(n); //flux aux bords
     }
-
-  statistics().end_count(STD_COUNTERS::diffusion);
 #endif
 }
 

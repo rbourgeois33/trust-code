@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -20,6 +20,7 @@
 #include <Interprete_bloc.h>
 #include <Domaine_dis_cache.h>
 #include <TRUST_2_MED.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Pb_MED,"Pb_MED",Probleme_base);
 Implemente_instanciable(Pbc_MED,"Pbc_MED",Probleme_Couple);
@@ -103,7 +104,9 @@ Entree& Pbc_MED::readOn(Entree& is )
   Cerr<<"nbpasdetemps "<<nbpasdetemps<<finl;
   for (int i=0; i<nbpasdetemps; i++)
     {
+      statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
       schema_temps().mettre_a_jour();
+      statistics().end_count(STD_COUNTERS::update_variables);
       schema_temps().changer_temps_courant(temps_sauv[i]);
       postraiter();
     }

@@ -220,7 +220,7 @@ void Coarsen_Operator_K::coarsen_(const IJK_Field_template<_TYPE_, _TYPE_ARRAY_>
                                   int compute_weighted_average) const
 {
   statistics().create_custom_counter("multigrid: K coarsening",2,"IJK");
-  statistics()..begin_count("multigrid: K coarsening")
+  statistics().begin_count("multigrid: K coarsening",statistics().get_last_opened_counter_level()+1);
 
   const int index_start = 0;
   const int index_end = src_dest_index_local_.dimension(0);
@@ -265,7 +265,7 @@ void Coarsen_Operator_K::interpolate_sub_shiftk_(const IJK_Field_template<_TYPE_
                                                  const int kshift) const
 {
   statistics().create_custom_counter("multigrid: interpolate K",2,"IJK");
-  statistics().begin_count("multigrid: interpolate K");
+  statistics().begin_count("multigrid: interpolate K",statistics().get_last_opened_counter_level()+1);
   const int index_start = kshift <= 0 ? 0 : src_dest_index_local_.dimension(0) - 1;
   const int index_end = kshift <= 0 ? src_dest_index_local_.dimension(0) : -1;
   const int delta_index = kshift <= 0 ? 1 : -1;

@@ -515,7 +515,7 @@ double residual(const Matrice_Base& a, const DoubleVect& b, const DoubleVect& x)
 }
 double residual_device(const GlobalMatrix<double>& a, const GlobalVector<double>& b, const GlobalVector<double>& x, GlobalVector<double>& e)
 {
-  statistics().begin_count(STD_COUNTERS::gpu_library);
+  statistics().begin_count(STD_COUNTERS::gpu_library,statistics().get_last_opened_counter_level()+1);
   a.Apply(x, &e);
   e.ScaleAdd(-1.0, b);
   double norm = e.Norm();
@@ -616,7 +616,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       Update_lhs_rhs<Kokkos::DefaultExecutionSpace>(b, x);
       // Les vecteurs rocALUTION sont deplaces sur le device pour une mise a jour sur le device (optimal)
       if (gpu)
-        statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+        statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
       e.MoveToAccelerator();
@@ -632,7 +632,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
       sol.GetInterior().CopyFromData(lhs_.addr());
       rhs.GetInterior().CopyFromData(rhs_.addr());
       if (gpu)
-        statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+        statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
       sol.MoveToAccelerator();
       rhs.MoveToAccelerator();
       e.MoveToAccelerator();
@@ -689,7 +689,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
   // Calcul des residus sur le host la premiere fois (plus sur) puis sur device ensuite (plus rapide)
   double res_initial = first_solve_ ? residual(a, b, x) : residual_device(mat, rhs, sol, e);
   if (gpu)
-    statistics().begin_count(STD_COUNTERS::gpu_library);
+    statistics().begin_count(STD_COUNTERS::gpu_library,statistics().get_last_opened_counter_level()+1);
   ls->Solve(rhs, &sol);
   if (gpu)
     statistics().end_count(STD_COUNTERS::gpu_library);
@@ -717,7 +717,7 @@ int Solv_rocALUTION::resoudre_systeme(const Matrice_Base& a, const DoubleVect& b
     {
       // Le vecteur est deplace sur le host pour mettre a jour la solution
       if (gpu)
-        statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
+        statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice,statistics().get_last_opened_counter_level()+1);
       sol.MoveToHost();
       if (gpu)
         statistics().end_count(STD_COUNTERS::gpu_copyfromdevice,1,(int)sizeof(double) * nb_rows_);
@@ -971,7 +971,7 @@ void Solv_rocALUTION::Create_objects(const Matrice_Morse& csr)
   assert(mat.Check());
 #endif
   tick = rocalution_time();
-  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
   mat.MoveToAccelerator(); // Important: move mat to device so after ls is built on device (best for performance)
   statistics().end_count(STD_COUNTERS::gpu_copytodevice,1,(int)(sizeof(int)*(N+nnz)+sizeof(double)*nnz));
   Cout << "[rocALUTION] Time to copy matrix on device: " << (rocalution_time() - tick) / 1e6 << finl;

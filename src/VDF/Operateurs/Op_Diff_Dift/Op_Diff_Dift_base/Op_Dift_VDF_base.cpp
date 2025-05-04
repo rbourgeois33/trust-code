@@ -28,13 +28,10 @@ Entree& Op_Dift_VDF_base::readOn(Entree& is) { return Op_Diff_VDF_base::readOn(i
 
 void Op_Dift_VDF_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistics().begin_count(STD_COUNTERS::diffusion);
   iter_->ajouter_blocs(matrices,secmem,semi_impl);
 
   // On ajoute des termes si axi ...
   Op_Dift_VDF_base::ajoute_terme_pour_axi_turb(matrices, secmem, semi_impl);
-
-  statistics().end_count(STD_COUNTERS::diffusion);
 }
 
 // Ajout du terme supplementaire en V/(R*R) dans le cas des coordonnees axisymetriques

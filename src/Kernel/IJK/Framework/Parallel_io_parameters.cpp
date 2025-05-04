@@ -122,7 +122,7 @@ void Parallel_io_parameters::run_bench_write(const Nom& ijk_splitting_name)
 
   statistics().set_nb_time_steps_elapsed(0);
   statistics().create_custom_counter("Parallel_io benchmark",1,"IJK");
-  statistics().begin_count("Parallel_io benchmark");
+  statistics().begin_count("Parallel_io benchmark",statistics().get_last_opened_counter_level()+1);
   dumplata_vector("test.lata", "VELOCITY", vx, vy, vz, 1);
   double t = statistics().get_time_since_last_open("Parallel_io benchmark");
   statistics().end_count("Parallel_io benchmark");
@@ -173,7 +173,7 @@ void Parallel_io_parameters::run_bench_read(const Nom& ijk_splitting_name)
 
   statistics().set_nb_time_steps_elapsed(0);
   statistics().create_custom_counter("Parallel_io benchmark_read",1,"IJK");
-  statistics().begin_count("Parallel_io benchmark_read");
+  statistics().begin_count("Parallel_io benchmark_read",statistics().get_last_opened_counter_level()+1);
   lire_dans_lata("test.lata", 1 /* timestep */,
                  splitting.le_nom(),
                  "VELOCITY", vx, vy, vz);

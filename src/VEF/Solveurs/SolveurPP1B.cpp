@@ -45,7 +45,7 @@ int SolveurPP1B::resoudre_systeme(const Matrice_Base& A,
   assembleur_pression_->changer_base_pression(x);
   int nb_iter=solveur_pression_.resoudre_systeme(A,b_,x);
   assembleur_pression_.changer_base_pression_inverse(x);
-  statistics().begin_count(STD_COUNTERS::system_solver);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
   return nb_iter;
 }
 

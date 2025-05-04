@@ -1,17 +1,17 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
-* All rights reserved.
-*
-* Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-* 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-* 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-* 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
-* IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
-* OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*
-*****************************************************************************/
+ * Copyright (c) 2024, CEA
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
+ * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ *****************************************************************************/
 
 #include <Pilote_ICoCo.h>
 #include <ICoCoTrioField.h>
@@ -22,7 +22,7 @@
   #include <vector>
   #include <string>
   #include <iostream>
-*/
+ */
 //using namespace std;
 using std::string;
 using std::vector;
@@ -86,8 +86,10 @@ void main_pilote_icoco_1(Probleme_U& pb_to_solve)
   double dt=pb.computeTimeStep(stop);
 
   // Loop on the time steps
+  statistics().start_timeloop();
   while(!stop)
     {
+      statistics().begin_count(STD_COUNTERS::timeloop);
 
       ok=false; // Is the time interval successfully solved ?
 
@@ -164,8 +166,11 @@ void main_pilote_icoco_1(Probleme_U& pb_to_solve)
       // Stop the resolution if the Problem is stationnary
       if (pb.isStationary())
         stop=true;
+      statistics().end_count(STD_COUNTERS::timeloop);
     }
-
+  statistics().end_timeloop();
+  if (!Objet_U::disable_TU)
+	  statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 
 }
@@ -195,8 +200,10 @@ void main_pilote_icoco_2(Probleme_U& pb_to_solve)
   double dt=pb.computeTimeStep(stop);
 
   // Loop on the time steps
+  statistics().start_timeloop();
   while(!stop)
     {
+      statistics().begin_count(STD_COUNTERS::timeloop);
 
       ok=false; // Is the time interval successfully solved ?
 
@@ -269,8 +276,11 @@ void main_pilote_icoco_2(Probleme_U& pb_to_solve)
       // Stop the resolution if the Problem is stationnary
       if (pb.isStationary())
         stop=true;
+      statistics().end_count(STD_COUNTERS::timeloop);
     }
-
+  statistics().end_timeloop();
+  if (!Objet_U::disable_TU)
+	  statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 }
 
@@ -292,8 +302,10 @@ void main_pilote_icoco_3(Probleme_U& pb_to_solve, int nb_pas_dt_reset)
   int cnt = 1;
   bool reset = false;
   // Loop on the time steps
+  statistics().start_timeloop();
   while(!stop)
     {
+      statistics().begin_count(STD_COUNTERS::timeloop);
       ok=false; // Is the time interval successfully solved ?
 
       // Loop on the time interval tries
@@ -336,7 +348,11 @@ void main_pilote_icoco_3(Probleme_U& pb_to_solve, int nb_pas_dt_reset)
         stop=true;
 
       cnt ++;
+      statistics().end_count(STD_COUNTERS::timeloop);
     }
+  statistics().end_timeloop();
+  if (!Objet_U::disable_TU)
+	  statistics().print_TU_files("Time loop statistics");
 
   pb.terminate();
 }
@@ -363,9 +379,10 @@ void main_abort( Probleme_U& pb_to_solve)
   bool ok=true; // Is the time interval successfully solved ?
   int n=0;
   //loop on time step
+  statistics().start_timeloop();
   while (!stop)                       // Loop on timesteps
     {
-
+      statistics().begin_count(STD_COUNTERS::timeloop);
       ok=false;
 
       while (!ok && !stop)                  // Loop on timestep tries
@@ -409,8 +426,11 @@ void main_abort( Probleme_U& pb_to_solve)
               pb.validateTimeStep();
             }
         }                                     // End loop on timestep size
+      statistics().end_count(STD_COUNTERS::timeloop);
     }                                   // End loop on timesteps
-
+  statistics().end_timeloop();
+  if (!Objet_U::disable_TU)
+	  statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 }
 Entree& Pilote_ICoCo::interpreter(Entree& is)

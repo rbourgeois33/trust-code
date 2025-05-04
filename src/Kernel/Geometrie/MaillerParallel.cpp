@@ -668,7 +668,7 @@ Entree& MaillerParallel::interpreter(Entree& is)
         exit();
       }
   }
-  statistics().begin_count(STD_COUNTERS::parallel_meshing);
+  statistics().begin_count(STD_COUNTERS::parallel_meshing,statistics().get_last_opened_counter_level()+1);
   // Position du bloc correspondant a numproc dans le decoupage i,j,k:
   ArrOfInt i_proc(dim);
   if (mapping.dimension(0) == 0)
@@ -829,14 +829,14 @@ Entree& MaillerParallel::interpreter(Entree& is)
 
   if (nproc() > 1)
     {
-      statistics().begin_count(STD_COUNTERS::parallel_meshing);
+      statistics().begin_count(STD_COUNTERS::parallel_meshing,statistics().get_last_opened_counter_level()+1);
       Scatter::construire_correspondance_sommets_par_coordonnees(domaine);
       Scatter::calculer_renum_items_communs(domaine.faces_joint(), JOINT_ITEM::SOMMET);
       maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
       statistics().end_count(STD_COUNTERS::parallel_meshing);
       Cerr << "Scatter::construire_correspondance_sommets_par_coordonnees fin, time:"
            << maxtime << finl;
-      statistics().begin_count(STD_COUNTERS::parallel_meshing);
+      statistics().begin_count(STD_COUNTERS::parallel_meshing,statistics().get_last_opened_counter_level()+1);
       Scatter::construire_structures_paralleles(domaine, liste_bords_perio);
 
       maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));

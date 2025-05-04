@@ -246,7 +246,7 @@ void Save_Restart::prepare_PDI_restart(int resume_last_time)
 
 void Save_Restart::sauver_xyz(int verbose) const
 {
-  statistics().begin_count(STD_COUNTERS::backup_file);
+  statistics().begin_count(STD_COUNTERS::backup_file,statistics().get_last_opened_counter_level()+1);
   Nom nom_fich_xyz("");
   if (verbose)
     {

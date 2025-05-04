@@ -32,6 +32,7 @@
 
 #include <assert.h>
 #include <numeric>
+#include <Perf_counters.h>
 
 #ifdef __NVCOMPILER
 #pragma diag_suppress 177
@@ -109,9 +110,7 @@ void init_parallel_vect()
 
 /* A simple 2 procs test */
 TEST(MPI, Simple2procs) {
-
-  declare_stat_counters();
-
+  statistics().set_nb_time_steps_elapsed(3);
   init_parallel_vect();
 
 }

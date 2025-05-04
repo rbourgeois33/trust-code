@@ -187,21 +187,21 @@ void Comm_Group_MPI::mp_collective_op_template(const _TYPE_ *x, _TYPE_ *resu, in
 void Comm_Group_MPI::mp_collective_op(const double *x, double *resu, int n, Collective_Op op) const
 {
 #ifdef MPI_
-  mp_collective_op_template<double, 3 /*double*/>(x, resu, n, op, mpi_sumdouble_counter_, mpi_mindouble_counter_, mpi_maxdouble_counter_);
+  mp_collective_op_template<double, 3 /*double*/>(x, resu, n, op);
 #endif
 }
 
 void Comm_Group_MPI::mp_collective_op(const float *x, float *resu, int n, Collective_Op op) const
 {
 #ifdef MPI_
-  mp_collective_op_template<float, 4 /*float*/>(x, resu, n, op, mpi_sumfloat_counter_, mpi_minfloat_counter_, mpi_maxfloat_counter_);
+  mp_collective_op_template<float, 4 /*float*/>(x, resu, n, op);
 #endif
 }
 
 void Comm_Group_MPI::mp_collective_op(const int *x, int *resu, int n, Collective_Op op) const
 {
 #ifdef MPI_
-  mp_collective_op_template<int, 1 /*int*/>(x, resu, n, op, mpi_sumint_counter_, mpi_minint_counter_, mpi_maxint_counter_);
+  mp_collective_op_template<int, 1 /*int*/>(x, resu, n, op);
 #endif
 }
 
@@ -209,7 +209,7 @@ void Comm_Group_MPI::mp_collective_op(const int *x, int *resu, int n, Collective
 void Comm_Group_MPI::mp_collective_op(const trustIdType *x, trustIdType *resu, int n, Collective_Op op) const
 {
 #ifdef MPI_
-  mp_collective_op_template<trustIdType, 2 /*long*/>(x, resu, n, op, mpi_sumint_counter_, mpi_minint_counter_, mpi_maxint_counter_);
+  mp_collective_op_template<trustIdType, 2 /*long*/>(x, resu, n, op);
 #endif
 }
 #endif

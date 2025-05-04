@@ -145,7 +145,7 @@ void Modele_turbulence_hyd_0_eq_base::completer()
 
 void Modele_turbulence_hyd_0_eq_base::mettre_a_jour(double)
 {
-  statistics().begin_count(STD_COUNTERS::turbulent_viscosity);
+  statistics().begin_count(STD_COUNTERS::turbulent_viscosity,statistics().get_last_opened_counter_level()+1);
   calculer_viscosite_turbulente();
   calculer_energie_cinetique_turb();
   loipar_->calculer_hyd(la_viscosite_turbulente_, energie_cinetique_turbulente());

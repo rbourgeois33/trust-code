@@ -174,7 +174,7 @@ double Operateur::calculer_pas_de_temps() const
   // Si l'equation de l'operateur n'est pas resolue, on ne calcule pas son pas de temps de stabilite
   if (equation().equation_non_resolue())
     return DMAXFLOAT;
-  statistics().begin_count(STD_COUNTERS::compute_dt);
+  statistics().begin_count(STD_COUNTERS::compute_dt,statistics().get_last_opened_counter_level()+1);
   double dt_stab = l_op_base().calculer_dt_stab();
   statistics().end_count(STD_COUNTERS::compute_dt);
   // Verification que l'operateur a bien un mp_min de fait:

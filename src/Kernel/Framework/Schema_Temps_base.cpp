@@ -192,7 +192,7 @@ int Schema_Temps_base::limpr() const
 
 void Schema_Temps_base::validateTimeStep()
 {
-  statistics().begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
   // Update the problem:
   Probleme_base& problem=pb_base();
   problem.mettre_a_jour(temps_courant_+dt_);
@@ -556,7 +556,7 @@ int Schema_Temps_base::mettre_a_jour()
   // Compute next time step stability:
   statistics().end_count(STD_COUNTERS::update_variables,0,0);
   mettre_a_jour_dt_stab();
-  statistics().begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
   assert_parallel(dt_stab_);
   assert_parallel(temps_courant_);
   if (!ind_tps_final_atteint)

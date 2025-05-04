@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <IJK_Striped_Writer.h>
 #include <Parallel_io_parameters.h>
+#include <Perf_counters.h>
 
 template<typename _TYPE_, typename _TYPE_ARRAY_>
 void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::exchange_data(int pe_send_, /* processor to send to */
@@ -285,7 +286,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::exchange_data(int pe_send_, /* pr
 template<typename _TYPE_, typename _TYPE_ARRAY_>
 void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::echange_espace_virtuel(int le_ghost)
 {
-  statistiques().begin_count(echange_vect_counter_);
+  statistics().begin_count(STD_COUNTERS::virtual_swap);
   assert(le_ghost <= (IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>::ghost()));
   const Domaine_IJK& dom = domaine_ref_.valeur();
   int pe_imin_ = dom.get_neighbour_processor(0, 0);
@@ -353,7 +354,7 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::echange_espace_virtuel(int le_gho
   exchange_data(pe_imax_, nii-le_ghost, -le_ghost, nkk      , pe_imin_, -le_ghost, -le_ghost, nkk       , le_ghost, le_ghost, le_ghost);
   exchange_data(pe_imax_, nii-le_ghost, njj      , nkk      , pe_imin_, -le_ghost, njj      , nkk       , le_ghost, le_ghost, le_ghost);
 
-  statistiques().end_count(echange_vect_counter_);
+  statistics().end_count(STD_COUNTERS::virtual_swap);
 }
 
 template<typename _TYPE_, typename _TYPE_ARRAY_>

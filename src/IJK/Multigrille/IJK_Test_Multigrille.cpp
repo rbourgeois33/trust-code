@@ -52,7 +52,7 @@ Entree& IJK_Test_Multigrille::interpreter(Entree& is)
   // Recuperation des donnees de maillage
   split = ref_cast(Domaine_IJK, Interprete_bloc::objet_global(ijk_splitting_name));
   statistics().create_custom_counter("timing_init",1,"IJK");
-  statistics().begin_count("timing_init");
+  statistics().begin_count("timing_init",statistics().get_last_opened_counter_level()+1);
   rho_.allocate(split, Domaine_IJK::ELEM, 0);
   rhs_.allocate(split, Domaine_IJK::ELEM, 0);
   resu_.allocate(split, Domaine_IJK::ELEM, 0);
@@ -84,19 +84,19 @@ Entree& IJK_Test_Multigrille::interpreter(Entree& is)
   Cout<<"End of setting rhs"<<finl;
   double t0 = statistics().get_time_since_last_open("timing_init");
   statistics().end_count("timing_init");
-  statistics().begin_count("timing_init");
+  statistics().begin_count("timing_init",statistics().get_last_opened_counter_level()+1);
   poisson_solver_.initialize(split);
   double t0b = statistics().get_time_since_last_open("timing_init");
   statistics().end_count("timing_init");
   Cout <<"initialisation time "<<t0<< " "<<t0b<<finl;
   statistics().create_custom_counter("timing_set_rho",1,"IJK");
   statistics().create_custom_counter("timing_solve",1,"IJK");
-  statistics().begin_count("timing_set_rho");
+  statistics().begin_count("timing_set_rho",statistics().get_last_opened_counter_level()+1);
   poisson_solver_.set_rho(rho_);
   double t1 = statistics().get_time_since_last_open("timing_set_rho");
   statistics().end_count("timing_set_rho");
 
-  statistics().begin_count("timing_solve");
+  statistics().begin_count("timing_solve",statistics().get_last_opened_counter_level()+1);
   poisson_solver_.resoudre_systeme_IJK(rhs_, resu_);
   double t2 = statistics().get_time_since_last_open("timing_solve");
   statistics().end_count("timing_solve");

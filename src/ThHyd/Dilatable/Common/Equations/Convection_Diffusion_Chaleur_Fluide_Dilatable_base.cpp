@@ -80,7 +80,7 @@ void Convection_Diffusion_Chaleur_Fluide_Dilatable_base::assembler( Matrice_Mors
 
 void Convection_Diffusion_Chaleur_Fluide_Dilatable_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  statistics().begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
   Convection_Diffusion_Fluide_Dilatable_Proto::assembler_blocs(*this,matrices, secmem, semi_impl);
   schema_temps().ajouter_blocs(matrices, secmem, *this);
   if (!discretisation().is_polymac_family())

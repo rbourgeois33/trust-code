@@ -17,6 +17,8 @@
 #define Solv_AMG_included
 
 #include <SolveurSys.h>
+#include <Solv_Petsc.h>
+#include <Perf_counters.h>
 #include <EChaine.h>
 
 /*! @brief AMD solver wrapper to switch to the more robust/performant AMG preconditioner on CPU/GPU Nvidia/GPU AMD
@@ -30,7 +32,10 @@ public :
   virtual int resoudre_systeme(const Matrice_Base& mat, const DoubleVect& b, DoubleVect& x) override;
   virtual int resoudre_systeme(const Matrice_Base& mat, const DoubleVect& b, DoubleVect& x, int niter_max) override
   {
-    return resoudre_systeme(mat, b, x);
+    statistics().end_count(STD_COUNTERS::system_solver,-1,0);
+    int res = solveur_.resoudre_systeme(mat, b, x);
+    statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
+    return res;
   };
 private :
   void create_amg();

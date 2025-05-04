@@ -368,7 +368,7 @@ int EcrFicPartageMPIIO::put(MPI_Datatype MPI_TYPE, const void* ob, int n)
   MPI_File_set_view(mpi_file_, disp_me, etype, filetype, (char*)"native", mpi_info);
 
   // Write all:
-  statistics().begin_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO);
+  statistics().begin_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO,statistics().get_last_opened_counter_level()+1);
   MPI_File_write_all(mpi_file_, (void*)ob, n, etype, MPI_STATUS_IGNORE);
   statistics().end_count(STD_COUNTERS::IO_EcrireFicPartageMPIIO,1,n * sizeof_etype);
 

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -18,6 +18,7 @@
 #include <TRUSTTab_parts.h>
 #include <Motcle.h>
 #include <Param.h>
+#include <Perf_counters.h>
 
 Implemente_instanciable(Solv_GCP_NS, "Solv_GCP_NS", solv_iteratif);
 // XD gcp_ns solv_gcp gcp_ns -1 not_set
@@ -237,5 +238,8 @@ int Solv_GCP_NS::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect&
 
 int Solv_GCP_NS::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
-  return resoudre_systeme(la_matrice, secmem, solution, 1000000);
+  statistics().end_count(STD_COUNTERS::system_solver,-1,0);
+  int res = resoudre_systeme(la_matrice, secmem, solution, 1000000);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
+  return res;
 }

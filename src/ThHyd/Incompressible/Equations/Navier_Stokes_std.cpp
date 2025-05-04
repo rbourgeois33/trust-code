@@ -1027,9 +1027,9 @@ void Navier_Stokes_std::mettre_a_jour(double temps)
   gradient->calculer_flux_bords();
 
   // Update the divergence of the velocity div(U)
-  statistics().end_count(STD_COUNTERS::update_variables,0,0);
+//  statistics().end_count(STD_COUNTERS::update_variables,0,0);
   divergence.calculer(la_vitesse->valeurs(),divergence_U->valeurs());
-  statistics().begin_count(STD_COUNTERS::update_variables);
+  //statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
   divergence_U->mettre_a_jour(temps);
 
   // Pour le postraitement, on veut M-1BtP et non BtP

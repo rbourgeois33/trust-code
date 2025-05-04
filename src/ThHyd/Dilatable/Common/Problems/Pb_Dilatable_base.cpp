@@ -105,13 +105,13 @@ bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
   for (int i=1; i<nombre_d_equations(); i++)
     {
       sch.faire_un_pas_de_temps_eqn_base(equation(i));
-      statistics().begin_count(STD_COUNTERS::update_variables);
+      statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
       equation(i).milieu().mettre_a_jour(temps_futur);;
       equation(i).inconnue().mettre_a_jour(temps_futur);
       statistics().end_count(STD_COUNTERS::update_variables);
     }
 
-  statistics().begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
 
   //2. Compute temperature-dependent coefficients
   le_fluide_->calculer_coeff_T();
@@ -127,7 +127,7 @@ bool Pb_Dilatable_base::iterateTimeStep(bool& converged)
   statistics().end_count(STD_COUNTERS::update_variables);
   //6. Solve Navier Stokes equation
   sch.faire_un_pas_de_temps_eqn_base(equation(0));
-  statistics().begin_count(STD_COUNTERS::update_variables);
+  statistics().begin_count(STD_COUNTERS::update_variables,statistics().get_last_opened_counter_level()+1);
   equation(0).milieu().mettre_a_jour(temps_futur);
   equation(0).inconnue().mettre_a_jour(temps_futur);
   statistics().end_count(STD_COUNTERS::update_variables);

@@ -68,28 +68,24 @@ void test_un_solveur(SolveurSys& solveur, const Matrice_Base& matrice, const Dou
       solution=solution_ref;
 
       // etape de resolution
-      Stat_Results stat_resol_0;
+      statistics().begin_count("Custom solver",statistics().get_last_opened_counter_level()+1);
       double t_0,t;
       t_0 = statistics().get_total_time("Custom solver");
       Cout<<"------------------------------------"<<finl;
       Cout<<"Try " << i << " of solver " << solveur <<finl;
       //solveur->fixer_limpr(0);
-      statistics().begin_count("Custom solver");
       solveur.nommer("test_solver");
 
       solveur.resoudre_systeme(matrice,secmem,solution);
-      statistics().end_count("Custom solver");
-      Stat_Results stat_resol;
       t = statistics().get_time_since_last_open("Custom solver");
+      statistics().end_count("Custom solver");
       // on recupere un delta time et non un time absolu !!
-      double time_resol=stat_resol.time-stat_resol_0.time;
-      time_resol=t-t_0;
       DoubleVect test(secmem);
       test*=-1;
       matrice.ajouter_multvect(solution,test);
       //test-=secmem;
       double norme=mp_norme_vect(test);
-
+      double time_resol = t-t_0;
       Cout<<"CPU= " <<time_resol<<" s , ||Ax -b||= " << norme << finl;
       Process::imprimer_ram_totale();
       temps[i]=Process::mp_max(time_resol);
@@ -346,7 +342,9 @@ void Solv_Optimal::prepare_resol(const Matrice_Base& matrice, const DoubleVect& 
       else
         nb_ite=1; // Matrice non constante (on resout 1 seul fois)
       ArrOfDouble temps(nb_ite);
+      statistics().end_count(STD_COUNTERS::system_solver,0,0);
       int numero_best=test_solveur(le_solveur_,  matrice , secmem , solution  , nmax, temps,list_solveur,seuil_);
+      statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
       Cout <<"------------------------------------------------"<<finl;
       Cout <<"Best solver : number "<<numero_best<<" "<<le_solveur_<<finl;
       Cout <<"Best CPU time = "<<temps[0]<<finl;

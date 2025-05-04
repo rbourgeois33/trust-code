@@ -255,7 +255,7 @@ Entree&  Raffiner_isotrope_parallele::interpreter(Entree& is)
       Scatter::uninit_sequential_domain(dom_new);
       int nb_sommet_avant_completion=dom_new.nb_som();
       Scatter::trier_les_joints(dom_new.faces_joint());
-      statistics().begin_count(STD_COUNTERS::parallel_meshing);
+      statistics().begin_count(STD_COUNTERS::parallel_meshing,statistics().get_last_opened_counter_level()+1);
 
       mon_construire_correspondance_sommets_par_coordonnees(dom_new);
 
@@ -289,7 +289,7 @@ Entree&  Raffiner_isotrope_parallele::interpreter(Entree& is)
         Cerr << "Scatter::construire_correspondance_sommets_par_coordonnees fin, time:"
              << maxtime
              << finl;
-        statistics().begin_count(STD_COUNTERS::parallel_meshing);
+        statistics().begin_count(STD_COUNTERS::parallel_meshing,statistics().get_last_opened_counter_level()+1);
         Scatter::construire_structures_paralleles(dom_new, liste_bords_periodiques);
         maxtime = mp_max(statistics().get_time_since_last_open(STD_COUNTERS::parallel_meshing));
         statistics().end_count(STD_COUNTERS::parallel_meshing);

@@ -299,7 +299,7 @@ void pressure_projection(IJK_Field_double& vx, IJK_Field_double& vy, IJK_Field_d
                          Multigrille_Adrien& poisson_solver)
 {
   statistics().create_custom_counter("Velocity update: projection",2,"IJK");
-  statistics().begin_count("Velocity update: projection");
+  statistics().begin_count("Velocity update: projection",statistics().get_last_opened_counter_level()+1);
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);
@@ -349,7 +349,7 @@ void pressure_projection_with_rho(const IJK_Field_double& rho,
                                   Multigrille_Adrien& poisson_solver)
 {
   statistics().create_custom_counter("Velocity update: projection",2,"IJK");
-  statistics().begin_count("Velocity update: projection");
+  statistics().begin_count("Velocity update: projection",statistics().get_last_opened_counter_level()+1);
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);
@@ -393,7 +393,7 @@ void pressure_projection_with_inv_rho(const IJK_Field_double& inv_rho,
                                       Multigrille_Adrien& poisson_solver)
 {
   statistics().create_custom_counter("Velocity update: projection",2,"IJK");
-  statistics().begin_count("Velocity update: projection");
+  statistics().begin_count("Velocity update: projection",statistics().get_last_opened_counter_level()+1);
   // We need the velocity on the face at right to compute the divergence:
   vx.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_I*/);
   vy.echange_espace_virtuel(1 /*, IJK_Field_double::EXCHANGE_GET_AT_RIGHT_J*/);

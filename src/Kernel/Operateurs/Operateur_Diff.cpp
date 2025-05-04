@@ -94,7 +94,7 @@ const Operateur_base& Operateur_Diff::l_op_base() const
 DoubleTab& Operateur_Diff::ajouter(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  statistics().begin_count(STD_COUNTERS::diffusion);
+  statistics().begin_count(STD_COUNTERS::diffusion,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistics().end_count(STD_COUNTERS::diffusion);
   return tmp;
@@ -112,7 +112,7 @@ DoubleTab& Operateur_Diff::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Diff::calculer(const DoubleTab& donnee,
                                     DoubleTab& resu) const
 {
-  statistics().begin_count(STD_COUNTERS::diffusion);
+  statistics().begin_count(STD_COUNTERS::diffusion,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistics().end_count(STD_COUNTERS::diffusion);
   return tmp;

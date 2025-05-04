@@ -17,6 +17,7 @@
 #define Multigrille_Adrien_TPP_H
 
 #include <SSE_kernels.h>
+#include <Perf_counters.h>
 using namespace SSE_Kernels;
 
 static long long flop_count = 0;
@@ -206,9 +207,8 @@ void Multigrille_Adrien::jacobi_residu_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>&
                                         const int n_jacobi_tot,
                                         IJK_Field_template<_TYPE_,_TYPE_ARRAY_> *residu) const
 {
-  static Stat_Counter_Id jacobi_residu_counter_ = statistiques().new_counter(2, "multigrille : residu jacobi");
-
-  statistiques().begin_count(jacobi_residu_counter_);
+  statistics().create_custom_counter("multigrid: jacobi residual",2,"IJK");
+  statistics().begin_count("multigrid: jacobi residual",statistics().get_last_opened_counter_level()+1);
 
   const IJK_Field_local_template<_TYPE_,_TYPE_ARRAY_>& coeffs_face = get_grid_data<_TYPE_>(grid_level).get_faces_coefficients();
 
@@ -233,7 +233,7 @@ void Multigrille_Adrien::jacobi_residu_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>&
       if (grid_level == 0)
         {
           // Place counter here to avoid counting communication time:
-          //statistiques().begin_count(counter);
+          //statistics().begin_count(counter);
           flop_count = 0;
         }
 
@@ -244,11 +244,11 @@ void Multigrille_Adrien::jacobi_residu_(IJK_Field_template<_TYPE_,_TYPE_ARRAY_>&
 
       if (grid_level == 0)
         {
-          //statistiques().end_count(counter, flop_count);
+          //statistics().end_count(counter, flop_count);
           flop_count = 0;
         }
     }
-  statistiques().end_count(jacobi_residu_counter_, (int)flop_count);
+  statistics().end_count("multigrid: jacobi residual",1, (int)flop_count);
 }
 
 template <typename _TYPE_, typename _TYPE_ARRAY_>

@@ -40,7 +40,6 @@ void Op_Grad_P0_to_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, c
    Process::exit();
    }
    */
-  statistics().begin_count(STD_COUNTERS::gradient);
   const DoubleTab& inco = semi_impl.count("pression") ? semi_impl.at("pression") : equation().inconnue().valeurs();
   assert_espace_virtuel_vect(inco);
   const Domaine_VDF& zvdf = le_dom_vdf.valeur();
@@ -148,5 +147,4 @@ void Op_Grad_P0_to_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, c
       }
 
   secmem.echange_espace_virtuel();
-  statistics().begin_count(STD_COUNTERS::gradient);
 }

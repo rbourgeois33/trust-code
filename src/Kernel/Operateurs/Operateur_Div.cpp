@@ -53,7 +53,7 @@ void Operateur_Div::typer()
 DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
                                   DoubleTab& resu) const
 {
-  statistics().begin_count(STD_COUNTERS::divergence);
+  statistics().begin_count(STD_COUNTERS::divergence,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().ajouter(donnee, resu);
   statistics().end_count(STD_COUNTERS::divergence);
   return tmp;
@@ -69,7 +69,7 @@ DoubleTab& Operateur_Div::ajouter(const DoubleTab& donnee,
 DoubleTab& Operateur_Div::calculer(const DoubleTab& donnee,
                                    DoubleTab& resu) const
 {
-  statistics().begin_count(STD_COUNTERS::divergence);
+  statistics().begin_count(STD_COUNTERS::divergence,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().calculer(donnee, resu);
   statistics().end_count(STD_COUNTERS::divergence);
   return tmp;

@@ -72,7 +72,7 @@ void Source::typer(const Nom& typ, const Equation_base& eqn)
  */
 DoubleTab& Source::ajouter(DoubleTab& xx) const
 {
-  statistics().begin_count(STD_COUNTERS::rhs);
+  statistics().begin_count(STD_COUNTERS::rhs,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().ajouter(xx);
   statistics().end_count(STD_COUNTERS::rhs);
   return tmp;
@@ -87,7 +87,7 @@ DoubleTab& Source::ajouter(DoubleTab& xx) const
  */
 DoubleTab& Source::calculer(DoubleTab& xx) const
 {
-  statistics().begin_count(STD_COUNTERS::rhs);
+  statistics().begin_count(STD_COUNTERS::rhs,statistics().get_last_opened_counter_level()+1);
   DoubleTab& tmp = valeur().calculer(xx);
   statistics().end_count(STD_COUNTERS::rhs);
   return tmp;

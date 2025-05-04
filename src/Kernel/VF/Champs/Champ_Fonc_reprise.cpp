@@ -154,7 +154,7 @@ Entree& Champ_Fonc_reprise::readOn(Entree& s)
   // creation des identifiants pdi (necessaire pour l'initialisation de PDI)
   Nom nom_champ_pdi = Motcle(pb.le_nom()) + "_" + Motcle(nom_champ);
 
-  statistics().begin_count(STD_COUNTERS::restart);
+  statistics().begin_count(STD_COUNTERS::restart,statistics().get_last_opened_counter_level()+1);
 
   // Opening file + get file format
   int mode_lec_sa= EcritureLectureSpecial::mode_lec;

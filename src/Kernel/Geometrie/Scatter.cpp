@@ -195,7 +195,7 @@ Entree& Scatter::interpreter(Entree& is)
   if (Process::je_suis_maitre())
     Cerr << "Execution of the Scatter module." << finl;
 
-  statistics().begin_count(STD_COUNTERS::interprete_scatter);
+  statistics().begin_count(STD_COUNTERS::interprete_scatter,statistics().get_last_opened_counter_level()+1);
   // On recupere le domaine:
   Nom nomdomaine;
   is >> nomdomaine;
@@ -488,7 +488,7 @@ void Scatter::lire_domaine(Nom& nomentree, Noms& liste_bords_periodiques)
       Process::exit();
     }
 
-  statistics().begin_count(STD_COUNTERS::read_scatter);
+  statistics().begin_count(STD_COUNTERS::read_scatter,statistics().get_last_opened_counter_level()+1);
   ArrOfInt mergedDomaines(Process::nproc());
   mergedDomaines = 0;
   bool domain_not_built = true;

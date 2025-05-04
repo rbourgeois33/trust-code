@@ -17,6 +17,7 @@
 #include <TRUSTArray.h>
 #include <string.h>
 #include <DeviceMemory.h>
+#include <Perf_counters.h>
 
 // TRUSTArray kernels for device moved in .cpp file to avoid multiple definition during link
 template <typename _TYPE_, typename _SIZE_>

@@ -209,7 +209,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
                 if (eq_IBM_->sources()(i).valeur().que_suis_je().find("Source_PDF") <= -1)
                   eq_IBM_->sources()(i).ajouter(resu);
             }
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
           matrice.ajouter_multvect(inco, resu); // Add source residual first
           for (int op = 0; op < eq_IBM_->nombre_d_operateurs(); op++)
             {
@@ -254,7 +254,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
             if (op == 1) resu_tmp *= rhoCp;
             resu += resu_tmp;
           }
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
         }
       if (! is_IBM() )
         eq_IBM_->sources().contribuer_a_avec(inco,matrice);
@@ -276,7 +276,7 @@ void Equation_IBM_proto::assembler_ibm_proto(Matrice_Morse& matrice, const Doubl
             if (eq_IBM_->sources()(i).valeur().que_suis_je().find("Source_PDF") <= -1)
               eq_IBM_->sources()(i).ajouter(resu);
         }
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
       // comme dans le cas VIA_CONTRIBUER_AU_SECOND_MEMBRE mais le cas Canal_perio_3D (keps

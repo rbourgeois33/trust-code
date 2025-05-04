@@ -23,6 +23,7 @@
 #include <TRUSTArray.h>
 #include <Comm_Group_Noparallel.h>
 #include <PE_Groups.h>
+#include <Perf_counters.cpp>
 
 
 int main(int argc, char **argv) {
@@ -30,9 +31,7 @@ int main(int argc, char **argv) {
 
     Comm_Group_Noparallel groupe_trio;
     PE_Groups::initialize(groupe_trio);
-    
-    declare_stat_counters();
-
+    statistics().set_nb_time_steps_elapsed(3);
     #ifdef TRUST_USE_GPU
     init_device();
     #endif

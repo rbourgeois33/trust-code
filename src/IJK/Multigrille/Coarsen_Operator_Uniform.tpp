@@ -102,8 +102,8 @@ void Coarsen_Operator_Uniform::coarsen_(const IJK_Field_template<_TYPE_,_TYPE_AR
                                         IJK_Field_template<_TYPE_,_TYPE_ARRAY_>& coarse,
                                         int compute_weighted_average) const
 {
-  statistics().create_custom_counter("multigrid: uniform coarsening",2,"IJK")
-  statistic().begin_count("multigrid: uniform coarsening");
+  statistics().create_custom_counter("multigrid: uniform coarsening",2,"IJK");
+  statistics().begin_count("multigrid: uniform coarsening",statistics().get_last_opened_counter_level()+1);
   const int ni2 = coarse.ni();
   const int nj2 = coarse.nj();
   const int nk2 = coarse.nk();
@@ -150,7 +150,7 @@ void Coarsen_Operator_Uniform::interpolate_sub_shiftk_(const IJK_Field_template<
     }
 
   statistics().create_custom_counter("multigrid: interpolate uniform",2,"IJK");
-  statistics().begin_count("multigrid: interpolate uniform");
+  statistics().begin_count("multigrid: interpolate uniform",statistics().get_last_opened_counter_level()+1);
 
   const int ni2 = coarse.ni();
   const int nj2 = coarse.nj();

@@ -43,10 +43,9 @@ static int nested_solver = 0;
 int SolveurSys::resoudre_systeme(const Matrice_Base& matrice, const DoubleVect& secmem, DoubleVect& solution)
 {
   valeur().save_matrice_secmem_conditionnel(matrice, secmem, solution);
-
   // Cas de solveurs emboites: n'afficher que le temps du solveur "exterieur"
   // temporaire : test issu du baltik IJK_FT en commentaire car sinon erreur dans .TU avec PETSC (solveurs Ax=B => 0%)
-  statistics().begin_count(STD_COUNTERS::system_solver);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
   nested_solver++;
   int nb_iter = valeur().resoudre_systeme(matrice, secmem, solution);
   nested_solver--;

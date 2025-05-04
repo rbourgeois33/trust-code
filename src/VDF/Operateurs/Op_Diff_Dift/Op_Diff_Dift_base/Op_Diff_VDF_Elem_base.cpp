@@ -174,7 +174,6 @@ void Op_Diff_VDF_Elem_base::dimensionner_blocs(matrices_t matrices, const tabs_t
 
 void Op_Diff_VDF_Elem_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const
 {
-  statistics().begin_count(STD_COUNTERS::diffusion);
   if (!op_ext_init_) init_op_ext();
 
   // On commence par l'operateur locale; i.e. *this !
@@ -185,8 +184,6 @@ void Op_Diff_VDF_Elem_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
 
   // On ajoute contribution si monolithique
   if ((int) op_ext.size() > 1) ajouter_blocs_pour_monolithique(matrices, secmem, semi_impl);
-
-  statistics().end_count(STD_COUNTERS::diffusion);
 }
 
 void Op_Diff_VDF_Elem_base::ajouter_blocs_pour_monolithique(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl) const

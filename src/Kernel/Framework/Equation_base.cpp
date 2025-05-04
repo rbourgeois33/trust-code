@@ -1481,7 +1481,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
           Cerr << "solveur_dffusion_implicite can't be used yet with penalization. " << finl;
           Process::exit();
         }
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       DoubleTrav present(solution); // I(n)
       present = solution;
 
@@ -1498,7 +1498,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       operateur(0).l_op_base().contribuer_a_avec(present, matrice); // A=L
       statistics().end_count(STD_COUNTERS::matrix_assembly);
       operateur(0).ajouter(present, secmem);
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       matrice.ajouter_multvect(present, secmem);
       // Add M/dt into matrix
       schema_temps().ajouter_inertie(matrice,secmem,(*this)); // A=M/dt+L
@@ -1521,7 +1521,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       }
   else
     {
-      statistics().begin_count(STD_COUNTERS::implicit_diffusion);
+      statistics().begin_count(STD_COUNTERS::implicit_diffusion,statistics().get_last_opened_counter_level()+1);
       // on retire les sources dependantes de l inco ; on les rajoutera apres
       if (marq_tot)
         {
@@ -1530,7 +1530,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
           for (int i = 0; i < size_s; i++)
             if (marq[i])
               sources()(i).ajouter(toto);
-          statistics().begin_count(STD_COUNTERS::implicit_diffusion);
+          statistics().begin_count(STD_COUNTERS::implicit_diffusion,statistics().get_last_opened_counter_level()+1);
           solv_masse().appliquer(toto);
           secmem.ajoute(-1., toto); // ,VECT_REAL_ITEMS);
         }
@@ -1583,7 +1583,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
       double dt = le_schema_en_temps->pas_de_temps();
       if (precond_diag)
         {
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
           const int nb_case = inconnue().valeurs().dimension_tot(0);
           const int nb_comp = inconnue().valeurs().line_size();
           if (nb_comp * nb_case != n)
@@ -1635,8 +1635,8 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
                 matrice.diag(ca * nb_comp + ncpa) = 1. / (tmp + tempo(ca, ncpa) * aCKN);
             });
             end_gpu_timer(__KERNEL_NAME__);
-            statistics().end_count(STD_COUNTERS::implicit_diffusion,0,0);
           }
+          statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
         }
       // On utilise p pour calculer phiB :
       DoubleTrav p(solution);
@@ -1648,7 +1648,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
             if (marq[i])
               ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(p, moins_phiB);
         }
-      statistics().begin_count(STD_COUNTERS::implicit_diffusion);
+      statistics().begin_count(STD_COUNTERS::implicit_diffusion,statistics().get_last_opened_counter_level()+1);
       moins_phiB*=-1;
       // phiB *= aCKN;  // Crank - Nicholson
       // fait maintenant avant l'appel
@@ -1663,7 +1663,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
             if (marq[i])
               ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(solution, resu);
         }
-      statistics().begin_count(STD_COUNTERS::implicit_diffusion);
+      statistics().begin_count(STD_COUNTERS::implicit_diffusion,statistics().get_last_opened_counter_level()+1);
       solveur_masse->appliquer(resu);
       resu.echange_espace_virtuel();
       resu *= -1.;
@@ -1737,7 +1737,7 @@ void Equation_base::Gradient_conjugue_diff_impl(DoubleTrav& secmem, DoubleTab& s
                   if (marq[i])
                     ref_cast(Source_dep_inco_base, sources()(i).valeur()).ajouter_(p, resu);
               }
-            statistics().begin_count(STD_COUNTERS::implicit_diffusion);
+            statistics().begin_count(STD_COUNTERS::implicit_diffusion,statistics().get_last_opened_counter_level()+1);
             solveur_masse->appliquer(resu);
             resu.echange_espace_virtuel();
 
@@ -1992,7 +1992,7 @@ void Equation_base::assembler(Matrice_Morse& matrice, const DoubleTab& inco, Dou
       sources().contribuer_a_avec(inco,matrice);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       matrice.ajouter_multvect(inco, resu); // Add source residual first
       for (int op = 0; op < nombre_d_operateurs(); op++)
         {
@@ -2038,12 +2038,12 @@ void Equation_base::assembler(Matrice_Morse& matrice, const DoubleTab& inco, Dou
           operateur(op).l_op_base().contribuer_a_avec(inco, matrice);
           statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
           operateur(op).ajouter(resu);
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
         }
       sources().contribuer_a_avec(inco,matrice);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
       // comme dans le cas VIA_CONTRIBUER_AU_SECOND_MEMBRE mais le cas Canal_perio_3D (keps
@@ -2067,7 +2067,7 @@ void Equation_base::modifier_pour_Cl(Matrice_Morse& mat_morse, DoubleTab& secmem
 // assemble, ajoute linertie,et modifie_pour_cl.
 void Equation_base::assembler_avec_inertie( Matrice_Morse& mat_morse,const DoubleTab& present, DoubleTab& secmem)
 {
-  statistics().begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
   assembler(mat_morse,present,secmem);
   schema_temps().ajouter_inertie(mat_morse,secmem,(*this));
   modifier_pour_Cl(mat_morse,secmem);
@@ -2106,13 +2106,13 @@ void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, cons
 
   statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
 
-  statistics().begin_count(STD_COUNTERS::rhs);
+  statistics().begin_count(STD_COUNTERS::rhs,statistics().get_last_opened_counter_level()+1);
   for (int i = 0; i < les_sources.size(); i++)
     les_sources(i)->ajouter_blocs(matrices, secmem, semi_impl);
 
   statistics().end_count(STD_COUNTERS::rhs);
 
-  statistics().begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
   if (!(discretisation().is_polymac_family() || probleme().que_suis_je().debute_par("Pb_Multiphase") || que_suis_je().debute_par("Equation_flux")))
     {
       const std::string& nom_inco = inconnue().le_nom().getString();
@@ -2123,7 +2123,7 @@ void Equation_base::assembler_blocs(matrices_t matrices, DoubleTab& secmem, cons
 
 void Equation_base::assembler_blocs_avec_inertie(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl)
 {
-  statistics().begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
   assembler_blocs(matrices, secmem, semi_impl);
   solv_masse().set_penalisation_flag(0);
   schema_temps().ajouter_blocs(matrices, secmem, *this);

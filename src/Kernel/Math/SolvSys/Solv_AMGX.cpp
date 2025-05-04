@@ -74,7 +74,7 @@ void Solv_AMGX::Create_objects(const Matrice_Morse& mat_morse, int blocksize)
   Perf_counters::time_point start = statistics().start_clock();
   petscToCSR(MatricePetsc_, SolutionPetsc_, SecondMembrePetsc_);
   Cout << "[AmgX] Time to create CSR pointers: " << statistics().compute_time(start) << finl;
-  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
   // Use device pointer to enable device consolidation in AmgXWrapper:
   double* values_device;
   cudaMalloc((void**)&values_device, nNz * sizeof(double));
@@ -159,7 +159,7 @@ PetscErrorCode Solv_AMGX::petscToCSR(Mat& A, Vec& lhs_petsc, Vec& rhs_petsc)
 void Solv_AMGX::Update_matrix(Mat& MatricePetsc, const Matrice_Morse& mat_morse)
 {
   // La matrice CSR de PETSc a ete mise a jour dans check_stencil
-  statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+  statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
   SolveurAmgX_.updateA(nRowsLocal, nNz, values);  // ToDo erreur valgrind au premier appel de updateA...
   Cout << "[AmgX] Time to update matrix (copy+resetup) on GPU: " << statistics().get_time_since_last_open(STD_COUNTERS::gpu_copytodevice) << finl; // Attention balise lue par fiche de validation
   statistics().end_count(STD_COUNTERS::gpu_copytodevice,1 , static_cast<double>(sizeof(double)*(double)nNz));
@@ -239,7 +239,7 @@ int Solv_AMGX::solve(ArrOfDouble& residu)
 {
   mapToDevice(rhs_);
   computeOnTheDevice(lhs_);
-  statistics().begin_count(STD_COUNTERS::gpu_library);
+  statistics().begin_count(STD_COUNTERS::gpu_library,statistics().get_last_opened_counter_level()+1);
   // Offer device pointers to AmgX:
   SolveurAmgX_.solve(addrOnDevice(lhs_), addrOnDevice(rhs_), nRowsLocal, seuil_);
   statistics().end_count(STD_COUNTERS::gpu_library);

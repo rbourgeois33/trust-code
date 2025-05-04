@@ -193,7 +193,7 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
 #ifdef TRUST_USE_GPU
   assert(!isAllocatedOnDevice(ptr)); // Verifie que la zone n'est pas deja allouee
   statistics().start_gpu_clock();
-  statistics().begin_count(STD_COUNTERS::gpu_malloc_free);
+  statistics().begin_count(STD_COUNTERS::gpu_malloc_free,statistics().get_last_opened_counter_level()+1);
   size_t bytes = sizeof(_TYPE_) * size;
   size_t free_bytes  = DeviceMemory::deviceMemGetInfo(0);
   size_t total_bytes = DeviceMemory::deviceMemGetInfo(1);
@@ -243,7 +243,7 @@ template <typename _TYPE_, typename _SIZE_>
 void deleteOnDevice(_TYPE_* ptr, _SIZE_ size)
 {
 #ifdef TRUST_USE_GPU
-  statistics().begin_count(STD_COUNTERS::gpu_malloc_free);
+  statistics().begin_count(STD_COUNTERS::gpu_malloc_free,statistics().get_last_opened_counter_level()+1);
   std::string clock;
   if (PE_Groups::get_nb_groups()>0 && Process::is_parallel()) clock = "[clock]#"+std::to_string(Process::me());
   else
@@ -310,7 +310,7 @@ void copyToDevice(_TYPE_* ptr, _SIZE_ size)
       assert(isAllocatedOnDevice(ptr));
       _SIZE_ bytes = sizeof(_TYPE_) * size;
       start_gpu_timer("copyToDevice",bytes);
-      statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+      statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
       Kokkos::View<_TYPE_*> host_view(ptr, size);
       Kokkos::View<_TYPE_*> device_view(addrOnDevice(ptr), size);
       Kokkos::deep_copy(device_view, host_view);
@@ -353,7 +353,7 @@ void copyFromDevice(_TYPE_* ptr, _SIZE_ size)
       assert(isAllocatedOnDevice(ptr));
       _SIZE_ bytes = sizeof(_TYPE_) * size;
       start_gpu_timer("copyFromDevice",bytes);
-      statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
+      statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice,statistics().get_last_opened_counter_level()+1);
       Kokkos::View<_TYPE_*> host_view(ptr, size);
       Kokkos::View<_TYPE_*> device_view(addrOnDevice(ptr), size);
       Kokkos::deep_copy(host_view, device_view);
@@ -513,7 +513,7 @@ std::string start_gpu_timer(std::string str, int bytes)
       //Process::exit("Error, start_gpu_timer() not closed by end_gpu_timer() !");
 #endif
       if (statistics().is_gpu_clock_on()) statistics().start_gpu_clock();
-      if (bytes == -1) statistics().begin_count(STD_COUNTERS::gpu_kernel);
+      if (bytes == -1) statistics().begin_count(STD_COUNTERS::gpu_kernel,statistics().get_last_opened_counter_level()+1);
 
 #ifdef TRUST_USE_CUDA
       if (!str.empty()) nvtxRangePush(str.c_str());

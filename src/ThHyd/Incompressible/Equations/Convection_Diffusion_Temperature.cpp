@@ -374,7 +374,7 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
           sources().contribuer_a_avec(inco,matrice);
           statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
           sources().ajouter(resu);
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
           matrice.ajouter_multvect(inco, resu); // Add source residual first
           for (int op = 0; op < nombre_d_operateurs(); op++)
             {
@@ -419,13 +419,13 @@ void Convection_Diffusion_Temperature::assembler(Matrice_Morse& matrice, const D
             if (op == 1) resu_tmp *= rhoCp;
             resu += resu_tmp;
           }
-          statistics().begin_count(STD_COUNTERS::matrix_assembly);
+          statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
         }
 
       sources().contribuer_a_avec(inco,matrice);
       statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
       sources().ajouter(resu);
-      statistics().begin_count(STD_COUNTERS::matrix_assembly);
+      statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
       matrice.ajouter_multvect(inco, resu); // Ajout de A*Inco(n)
       // PL (11/04/2018): On aimerait bien calculer la contribution des sources en premier
       // comme dans le cas VIA_CONTRIBUER_AU_SECOND_MEMBRE mais le cas Canal_perio_3D (keps
@@ -479,12 +479,12 @@ void Convection_Diffusion_Temperature::assembler_blocs(matrices_t matrices, Doub
     }
   statistics().end_count(STD_COUNTERS::matrix_assembly,0,0);
 
-  statistics().begin_count(STD_COUNTERS::rhs);
+  statistics().begin_count(STD_COUNTERS::rhs,statistics().get_last_opened_counter_level()+1);
   for (int i = 0; i < les_sources.size(); i++)
     les_sources(i)->ajouter_blocs(matrices, secmem, semi_impl);
   statistics().end_count(STD_COUNTERS::rhs);
 
-  statistics().begin_count(STD_COUNTERS::matrix_assembly);
+  statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
 
   const std::string& nom_inco = inconnue().le_nom().getString();
   Matrice_Morse *mat = matrices.count(nom_inco)?matrices.at(nom_inco):nullptr;

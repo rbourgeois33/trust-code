@@ -1691,11 +1691,11 @@ void Solv_Petsc::SaveObjectsToFile(const DoubleVect& secmem, DoubleVect& solutio
 //#endif
       PetscViewerFileSetMode(viewer, FILE_MODE_WRITE);
       PetscViewerFileSetName(viewer, filename);
-      statistics().begin_count(STD_COUNTERS::backup_file);
+      statistics().begin_count(STD_COUNTERS::backup_file,statistics().get_last_opened_counter_level()+1);
       trustIdType bytes = 8 * nnz + 4 * nnz + 4 * nb_rows_tot_;
       MatView(MatricePetsc_, viewer);
       Cerr << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to write matrix file." << finl;
-      statistics().end_count(STD_COUNTERS::backup_file, 1, bytes);
+      statistics().end_count(STD_COUNTERS::backup_file, 1, static_cast<int>(bytes));
       // Save also the RHS if on the host:
       if (SecondMembrePetsc_!=nullptr)
         {
@@ -1816,14 +1816,14 @@ void Solv_Petsc::RestoreMatrixFromFile()
 //#endif
   PetscViewerFileSetMode(viewer, FILE_MODE_READ);
   PetscViewerFileSetName(viewer, filename);
-  statistics().begin_count(STD_COUNTERS::backup_file);
+  statistics().begin_count(STD_COUNTERS::backup_file,statistics().get_last_opened_counter_level()+1);
   MatLoad(MatricePetsc_, viewer);
   MatInfo Info;
   MatGetInfo(MatricePetsc_,MAT_GLOBAL_SUM,&Info);
   trustIdType nnz = (trustIdType)Info.nz_allocated;
   trustIdType bytes = 8 * nnz + 4 * nnz + 4 * nb_rows_tot_;
   Cerr << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to read matrix file." << finl;
-  statistics().end_count(STD_COUNTERS::backup_file, 1, bytes);
+  statistics().end_count(STD_COUNTERS::backup_file, 1, static_cast<int>(bytes));
 
   PetscViewerDestroy(&viewer);
   if (!matrice_symetrique_)
@@ -2237,7 +2237,7 @@ int Solv_Petsc::solve(ArrOfDouble& residu)
   // Solve
   setupSignalHandlers(true);
   if (gpu_)
-    statistics().begin_count(STD_COUNTERS::gpu_library);
+    statistics().begin_count(STD_COUNTERS::gpu_library,statistics().get_last_opened_counter_level()+1);
   KSPSolve(SolveurPetsc_, SecondMembrePetsc_, SolutionPetsc_);
   if (gpu_)
     statistics().end_count(STD_COUNTERS::gpu_library);
@@ -2344,7 +2344,7 @@ void Solv_Petsc::Update_vectors(const DoubleVect& secmem, DoubleVect& solution)
       solution.ensureDataOnHost();
       PetscInt size=ix.size_array();
       if (gpu_)
-        statistics().begin_count(STD_COUNTERS::gpu_copytodevice);
+        statistics().begin_count(STD_COUNTERS::gpu_copytodevice,statistics().get_last_opened_counter_level()+1);
       VecSetOption(SecondMembrePetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
       VecSetValues(SecondMembrePetsc_, size, ix.addr(), secmem.addr(), INSERT_VALUES);
       VecSetOption(SolutionPetsc_, VEC_IGNORE_NEGATIVE_INDICES, PETSC_TRUE);
@@ -2426,7 +2426,7 @@ void Solv_Petsc::Update_solution(DoubleVect& solution)
         {
           // TRUST and PETSc has same partition, local solution can be accessed from the global vector:
           if (gpu_)
-            statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice);
+            statistics().begin_count(STD_COUNTERS::gpu_copyfromdevice,statistics().get_last_opened_counter_level()+1);
           VecGetValues(SolutionPetsc_, size, ix.addr(), solution.addr());
           if (gpu_)
             statistics().end_count(STD_COUNTERS::gpu_copyfromdevice);

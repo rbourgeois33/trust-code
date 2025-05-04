@@ -204,7 +204,7 @@ void Redistribute_Field::redistribute_(const IJK_Field_double& input_field,
                                        bool add)
 {
   statistics().create_custom_counter("Redistribute",2,"IJK");
-  statistics().begin_count("Redistribute");
+  statistics().begin_count("Redistribute",statistics().get_last_opened_counter_level()+1);
 
   // For each direction, intersections between the input and output field:
   // Each line contain a bloc to copy from-to another processor

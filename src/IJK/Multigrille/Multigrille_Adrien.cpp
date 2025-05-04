@@ -112,7 +112,7 @@ void Multigrille_Adrien::initialize(const Domaine_IJK& split)
 void Multigrille_Adrien::set_rho(const DoubleVect& rho)
 {
   statistics().create_custom_counter("Multigrid_Adrien::set_rho",2,"IJK");
-  statistics().begin_count("Multigrid_Adrien::set_rho");
+  statistics().begin_count("Multigrid_Adrien::set_rho",statistics().get_last_opened_counter_level()+1);
   if (solver_precision_ != precision_float_)
     {
       IJK_Field_double ijk_rho(grids_data_double_[0].get_update_rho());

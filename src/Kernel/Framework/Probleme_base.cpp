@@ -504,7 +504,7 @@ int Probleme_base::sauvegarder(Sortie& os) const
  */
 int Probleme_base::reprendre(Entree& is)
 {
-  statistics().begin_count(STD_COUNTERS::restart);
+  statistics().begin_count(STD_COUNTERS::restart,statistics().get_last_opened_counter_level()+1);
   Debog::set_nom_pb_actuel(le_nom());
   schema_temps().reprendre(is);
   Cerr << "Resuming the problem " << le_nom() << finl;
@@ -1047,7 +1047,7 @@ void Probleme_base::allocation() const
  */
 int Probleme_base::postraiter(int force)
 {
-  statistics().begin_count(STD_COUNTERS::postreatment,1);
+  statistics().begin_count(STD_COUNTERS::postreatment,statistics().get_last_opened_counter_level()+1);
   Schema_Temps_base& sch = schema_temps();
   Debog::set_nom_pb_actuel(le_nom());
   if (sch.nb_pas_dt() != 0)
@@ -1104,7 +1104,7 @@ int Probleme_base::postraiter(int force)
  */
 void Probleme_base::sauver() const
 {
-  statistics().begin_count(STD_COUNTERS::backup_file);
+  statistics().begin_count(STD_COUNTERS::backup_file,statistics().get_last_opened_counter_level()+1);
   int bytes = save_restart_.sauver();
   Debog::set_nom_pb_actuel(le_nom());
   Cout << "[IO] " << statistics().get_time_since_last_open(STD_COUNTERS::backup_file) << " s to write save file." << finl;
