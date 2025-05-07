@@ -172,7 +172,7 @@ void Matrice_Grossiere::build_matrix(const IJK_Field_template<_TYPE_,_TYPE_ARRAY
       {
 
         double DX = domain.get_constant_delta(0);
-        double istmp = shear_x_time_ /DX;
+        double istmp = shear_x_time_ / DX;
         int offset2 = (int) round(istmp);
         interpolation_for_shear_periodicity(i , offset2, istmp, ni, 1.);
         istmp = -shear_x_time_ /DX;

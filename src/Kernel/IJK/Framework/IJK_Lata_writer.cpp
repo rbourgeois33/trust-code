@@ -53,7 +53,11 @@ void dumplata_header(const char *filename)
 /*! When dumping the IJK coordinates, we do not need 64b, since only the x, y and z steps will be written.
  *  This never exceeds 32b.
  */
+<<<<<<< HEAD:src/Kernel/IJK/Framework/IJK_Lata_writer.cpp
 void dumplata_add_geometry(const char *filename, const Domaine_IJK& domain)
+=======
+void dumplata_add_geometry(const char *filename, const Domaine_IJK& splitting)
+>>>>>>> 300d39758 ([IJK] Domaine_IJK can be created in a dataset):src/IJK/Framework/IJK_Lata_writer.cpp
 {
   if (Process::je_suis_maitre())
     {

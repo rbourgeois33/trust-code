@@ -801,17 +801,11 @@ double get_channel_control_volume(IJK_Field_double& field, int local_k_layer, co
           const int last_global_k = field.get_domain().get_nb_items_global(Domaine_IJK::FACES_K, DIRECTION_K) - 1;
           // We have walls, are we on a wall ?
           if (global_k_index == 0)
-            {
               delta_z = delta_z_local[local_k_layer] * 0.5; // size of unique neighboug cell
-            }
           else if (global_k_index == last_global_k)
-            {
               delta_z = delta_z_local[local_k_layer - 1] * 0.5; // size of unique neighboug cell
-            }
           else
-            {
               delta_z = (delta_z_local[local_k_layer - 1] + delta_z_local[local_k_layer]) * 0.5;
-            }
         }
       else
         {

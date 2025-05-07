@@ -198,9 +198,18 @@ Entree& Domaine_IJK::readOn(Entree& is)
       Cerr << "Direction " << i << " has " << delta_dir[i].size_array() << " elements. Total domain size = " << x << finl;
     }
 
+  int tot_proc = 1;
   for (int j = 0; j < dim; j++)
-    if (nprocs[j] < 1)
-      Process::exit("Proc number in every direction must be strictly positive! Did you forget 'nprocs'?");
+    {
+      if(nprocs[j] < 1)
+        Process::exit("Proc number in every direction must be strictly positive! Did you forget 'nprocs'?");
+      tot_proc *= nprocs[j];
+    }
+  if (tot_proc != Process::nproc())
+    {
+      Cerr << "!! ERROR: Domaine_IJK is built with a total number of " << tot_proc << " procs, but TRUST/Trio was launched with " << Process::nproc() << " procs!!" << finl;
+      Process::exit();
+    }
 
   Cerr << "nproc in i, j, k directions = " << nprocs[0] << " " << nprocs[1] << " " << nprocs[2] << finl;
   Cerr << "grouping processes in i, j, k directions (node topology) = "
@@ -1185,7 +1194,7 @@ void Domaine_IJK::update_volume_elem()
         }
       else
         {
-          Cerr << "Error in Maillage_Ft_IJK::update_volume_elem !!! No direction selected?!" << finl;
+          Cerr << "Error in Domaine_IJK::update_volume_elem !!! No direction selected?!" << finl;
           assert(0);
           Process::exit();
         }
@@ -1236,7 +1245,7 @@ void Domaine_IJK::update_volume_elem()
         }
       else
         {
-          Cerr << "Error in Maillage_Ft_IJK::update_volume_elem !!! No direction selected?!" << finl;
+          Cerr << "Error in Domaine_IJK::update_volume_elem !!! No direction selected?!" << finl;
           assert(0);
           Process::exit();
         }
@@ -1257,7 +1266,7 @@ void Domaine_IJK::update_volume_elem()
       volume_elem_status_ = DONE;
       return;
     default:
-      Cerr << "Error Maillage_FT_IJK::update_volume_elem" << finl;
+      Cerr << "Error Domaine_IJK::update_volume_elem" << finl;
       assert(0);
       Process::exit();
       return;

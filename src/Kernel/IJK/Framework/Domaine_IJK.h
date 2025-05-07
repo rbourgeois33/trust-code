@@ -46,26 +46,13 @@ using Int3 = FixedVector<int, 3>;
 class Domaine_IJK : public Domaine_base
 {
   Declare_instanciable_sans_constructeur(Domaine_IJK);
-
 public:
-  /*! @brief Localisation sub class. */
-  enum Localisation
-  {
-    ELEM,
-    NODES,
-    FACES_I,
-    FACES_J,
-    FACES_K
-  };
 
-  /*! @brief status sub class to not compute the same structure twitce when not needed. */
-  enum grid_status
-  {
-    DEFAULT,
-    INITIALIZED,
-    DONE
-  };
+  /*! @brief Localisation sub class */
+  enum Localisation {ELEM, NODES, FACES_I, FACES_J, FACES_K};
 
+  /*! @brief status sub class to not compute the same structure twitce when not needed*/
+  enum grid_status {DEFAULT, INITIALIZED, DONE};
   /*! @brief Returns the face according to the direction
    *
    *  @param direction In IJK, x(0), y(1) or z(2).
@@ -559,16 +546,14 @@ private:
    * The coordinate of the last node is the end coordinate of the mesh: if mesh is periodic, the last
    * node coordinate is not equal to the first one.
    */
-  VECT(ArrOfDouble)
-  node_coordinates_xyz_;
-
+  VECT(ArrOfDouble) node_coordinates_xyz_;
   /*! @brief Mesh cell sizes for the entire mesh.
    *
    *  The size of each array is equal to the total number of cells in each direction.
    *  If possible, this data is not computed from nodes (less truncation errors for uniform meshes)
    */
-  VECT(ArrOfDouble)
-  delta_xyz_;
+  VECT(ArrOfDouble) delta_xyz_;
+
   /*! Number of processors in each direction */
   FixedVector<int, 3> nproc_per_direction_;
 
@@ -576,12 +561,10 @@ private:
   IntTab mapping_;
 
   /*! @brief For each direction, offsets of all slices */
-  VECT(ArrOfInt)
-  offsets_all_slices_;
+  VECT(ArrOfInt) offsets_all_slices_;
 
   /*! @brief For each direction, size of all slices */
-  VECT(ArrOfInt)
-  sizes_all_slices_;
+  VECT(ArrOfInt) sizes_all_slices_;
 
   /*! @brief Stores the uniform flag for each direction */
   bool uniform_[3];
