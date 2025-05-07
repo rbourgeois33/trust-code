@@ -1,19 +1,19 @@
-XX/XX/24 (TRUST) GPU          : Parallel run with number of MPI processes greater than GPU works again though less efficient. Useful for non regression on multi-GPU node
-XX/XX/24 (TRUST) Keyword      : Algebric Multigrid preconditioned solver keyword which select a good choice for CPU/GPU/MPI: solver AMG GCP { rtol|atol value [impr] }
-XX/XX/24 (TRUST) GPU          : Lot of performance improvements in VEF kernels and more VEF features available (y_plus field, source terms for dilatable fluid, time-dependent boundary conditions) 
-XX/XX/24 (TRUST) GPU          : PETSc updated from 3.20 to 3.22 to benefit from GPU solver improvements (Hypre, STRUMPACK)
-XX/XX/24 (TRUST) GPU          : Ada Nvidia architecture card with compute capability 89 (e.g. RTX 4070) and gfx1100 AMD cards supported
-XX/XX/24 (TRUST) GPU          : A100 partition is supported on JeanZay, A100 and H100 partitions on orcus
-XX/XX/24 (TRUST) GPU          : Performance regression on adastra -MI250 AMD) fixed by using HIP backend for Kokkos
-XX/XX/24 (TRUST) GPU          : Parser and several Champ_Generiques (Reduction_0D, Transformation, Interpolated) ported
-XX/XX/24 (TRUST) GPU          : Configure option -openmp to build GPU code is refused as OpenMP target instructions are removed from the code and as it rely only on Kokkos framework (updated from 4.2 to 4.5)
-XX/XX/25 (TRUST) MPI          : Configure option -force_provided_openmpi now use OpenMPI 4.1.6 and -force_latest_openmpi now use OpenMPI 5.0.5
-XX/XX/24 (TRUST) Change       : Parser rewrite can create different initialization for random fields (Champ_front_bruite, ...) or advanced fields using Rnd function
-XX/XX/24 (TRUST) Change       : y+ field were possibly wrong on tetraedra/triangle with more than one boundary face
 --------------------------------------------------------------------------------------------------
 Release notes version 1.9.6_beta : Enhancements, modifications and corrected bugs since version 1.9.5 :
 --------------------------------------------------------------------------------------------------
-19/02/25 (TRUST) Minor change : Postprocessing: 'dt_post' and 'nb_dt_post' can now be used outside the 'fields' part of the postprocessing block. 
+03/03/25 (TRUST) GPU          : Parallel run with number of MPI processes greater than GPU works again though less efficient. Useful for non regression on multi-GPU node
+03/03/25 (TRUST) Keyword      : Algebric Multigrid preconditioned solver keyword which select a good choice for CPU/GPU/MPI: solver AMG GCP { rtol|atol value [impr] }
+03/03/25 (TRUST) GPU          : Lot of performance improvements in VEF kernels and more VEF features available (y_plus field, source terms for dilatable fluid, time-dependent boundary conditions)
+03/03/25 (TRUST) GPU          : PETSc updated from 3.20 to 3.22 to benefit from GPU solver improvements (Hypre, STRUMPACK)
+03/03/25 (TRUST) GPU          : Ada Nvidia architecture card with compute capability 89 (e.g. RTX 4070) and gfx1100 AMD cards supported
+03/03/25 (TRUST) GPU          : A100 partition is supported on JeanZay, A100 and H100 partitions on orcus
+03/03/25 (TRUST) GPU          : Performance regression on adastra -MI250 AMD) fixed by using HIP backend for Kokkos
+03/03/25 (TRUST) GPU          : Parser and several Champ_Generiques (Reduction_0D, Transformation, Interpolated) ported
+03/03/25 (TRUST) GPU          : Configure option -openmp to build GPU code is refused as OpenMP target instructions are removed from the code and as it rely only on Kokkos framework (updated from 4.2 to 4.5)
+03/03/25 (TRUST) MPI          : Configure option -force_provided_openmpi now use OpenMPI 4.1.6 and -force_latest_openmpi now use OpenMPI 5.0.5
+03/03/25 (TRUST) Change       : Parser rewrite can create different initialization for random fields (Champ_front_bruite, ...) or advanced fields using Rnd function
+03/03/25 (TRUST) Change       : y+ field were possibly wrong on tetraedra/triangle with more than one boundary face
+19/02/25 (TRUST) Minor change : Postprocessing: 'dt_post' and 'nb_dt_post' can now be used outside the 'fields' part of the postprocessing block.
 18/02/25 (TRUST) Change       : dt_impr_ustar_mean_only prints now surface-averaged values instead of mean values on boundaries
 18/02/25 (TRUST) New keyword  : dt_impr_nusselt_mean_only prints into a .out file the surface-averaged Nusselt related values on all or some specified boundaries (VDF/VEF/EF discretizations)
 14/02/25 (TRUST) Major change : TRUST (and its baltiks) is now built with 64b support by default! Old 32b mode can still be built with '-with-32-bit-indices'
@@ -73,7 +73,7 @@ Release notes version 1.9.4 : Enhancements, modifications and corrected bugs sin
 07/03/24 (TRUST) Change       : EcritureLectureSpecial is forced to 0 for PolyMAC_P0 simulations; ie: for resuming a simulation, only binary sauv files are accepted for this discretization.
 07/03/24 (TRUST) New Keyword  : Possible to use "Unite" keyword in Definition_champs with Transformation and Morceau_Equation to specify the unit of the field (specified unit will be written in post-processing files instead of "??")
 06/03/24 (TRUST) New feature  : Implementing ICoCo resetTime() method allowing to reset the time origin during the computation. For now previous post files are overwritten by default.
-04/03/24 (TRUST) New feature  : New option 'trust -quiet jdd.data' can be used to run a dataset with not output on the console. 
+04/03/24 (TRUST) New feature  : New option 'trust -quiet jdd.data' can be used to run a dataset with not output on the console.
 04/03/24 (TRUST) New feature  : It is now possible to resume Pb_Multiphase simulations (both via last time or champ_fonc_reprise).
 29/02/24 (TRUST) Tools        : Patched MEDCoupling to correct tetrahedrons remapping (fix will be included in next release of MEDCoupling)
 26/02/24 (TRUST) New feature  : Fallback to coarse solver if the IJK-multigrid has not reached convergence during current timestep (this concerns IJK discretization only)
@@ -128,7 +128,7 @@ Release notes version 1.9.3 : Enhancements, modifications and corrected bugs sin
 02/08/23 (TRUST) Fix          : When diffusive-implicited scheme diverges, backup wasn't done
 02/08/23 (TRUST) GPU          : Default for AmgX preconditionner may be overloaded in data file. Ex: amgx gcp { precond c-amg { p:selector=PMIS p:strength_threshold=0.8 } ... }
 18/07/23 (TRUST) New feature  : Read_MED|Lire_MED new keyword include_internal_face_groups to read a group of internal faces into a MED file. Can be used with keyword Internal_face_groups to apply Perte_Charge_Singuliere on this group of faces. See Perte_Charge_Singuliere validation sheet.
-18/07/23 (TRUST) Keyword      : Previous PolyMAC discretization (compat with Pb_Multi) has been renamed as PolyMAC_P0P1NC. 
+18/07/23 (TRUST) Keyword      : Previous PolyMAC discretization (compat with Pb_Multi) has been renamed as PolyMAC_P0P1NC.
 18/07/23 (TRUST) Major change : Three PolyMAC versions are now available in TRUST: PolyMAC, PolyMAC_P0P1NC and PolyMAC_P0. The last two are compatible with Pb_Multiphase.
 18/07/23 (TRUST) Major change : Initial PolyMAC version is now hosted in TRUST. It is not useful with Pb_Multiphase but is used in several applications.
 07/07/23 (TRUST) New feature  : Read_MED|Lire_MED and Write_MED|Ecrire_MED now relies exclusively on MED groups, not on families. Option 'exclude_groups' can be used in Read_MED to avoid reading some face groups.
@@ -162,14 +162,14 @@ Release notes version 1.9.2 : Enhancements, modifications and corrected bugs sin
 03/04/23 (TRUST) Portability  : Fedora 38 is supported with: sudo dnf install patch g++ gfortran libX11-devel mesa-libGLU-devel texlive-scheme-full
 03/04/23 (TRUST) Portability  : GNU compilers 13.0.1 are supported
 21/03/23 (TRUST) Portability  : VisIt works now on Ubuntu 22
-21/03/23 (TRUST) Portability  : TRUST versions are now built with GNU compilers on orcus-intel/orcus-rome to avoid random crashes or slowdown with MUMPS library. 
+21/03/23 (TRUST) Portability  : TRUST versions are now built with GNU compilers on orcus-intel/orcus-rome to avoid random crashes or slowdown with MUMPS library.
 10/03/23 (TRUST) Major change : TRUST can be linked to a pre-compiled static library of EOS (./configure -with-eos=<YOUR_PATH_TO_EOS_INSTALL>).
 07/03/23 (TRUST) New feature  : Add MUSIG fields/medium + validation (from SCONE baltik) used with Pb_Multiphase
-07/03/23 (TRUST) New feature  : Add void_drift multiphase models + validation (both in VDF and PolyMAC_P0) 
+07/03/23 (TRUST) New feature  : Add void_drift multiphase models + validation (both in VDF and PolyMAC_P0)
 07/03/23 (TRUST) Validation   : Add series of jupyter notebooks to validate Pb_Multiphase and compare VDF/PolyMAC_P0 results
 07/03/23 (TRUST) New feature  : It is possible to perform axi-symetrical simulations with Pb_Multiphase in VDF
 07/03/23 (TRUST) New feature  : New Option_VDF added "traitement_gradient" to compute correctly the velocity gradient at the corners. Can use also all_options to activate all Option_VDF options
-07/03/23 (TRUST) New feature  : Pb_Multiphase is compatable with the VDF discretization (CMFD baltik supports too the VDF discretization) 
+07/03/23 (TRUST) New feature  : Pb_Multiphase is compatable with the VDF discretization (CMFD baltik supports too the VDF discretization)
 07/02/23 (TRUST) Fix          : It was not possible to resume the field k_eps_realisable
 02/02/23 (TRUST) Major Change : Domain and Zone are now merged into a single concept: Domaine. All former keywords remain supported (Sous_Zone, Create_domain_from_sous_zone, etc...), but internally the code now only work with Domaine.
 27/01/23 (TRUST) Portability  : Adastra (CINES) cluster is supported
@@ -244,7 +244,7 @@ Release notes version 1.9.0 : Enhancements, modifications and corrected bugs sin
 17/02/22 (TRUST)  V&V         : New verification sheet for GPU solver with semi-implicit scheme added under Validation/Rapports_automatiques/Verification/Solveurs/GPU directory
 17/02/22 (TRUST)  New option  : Option save_matrix_mtx_format to export from PETSc solvers the matrix to Matrix Market format file (.mtx)
 10/02/22 (TRUST)  Fix         : Add the possibility to read int64 HDF5 files if possible (no overflow) with an int32 binary, and vice-versa.
-09/02/22 (TRUST)  Major Change: Most of the PRM validation forms are migrated to the Jupyter notebook format. 
+09/02/22 (TRUST)  Major Change: Most of the PRM validation forms are migrated to the Jupyter notebook format.
 09/02/22 (TRUST)  New feature : Jupyter validation forms are fully functional. See Validation/Rapports_automatiques/README_jupyter.md. This is now the preferred format for validation forms.
 12/01/22 (TRUST)  Major Change: Class and Substitution Failure Is Not An Error (SFINAE) templates are extensively used for the VDF evaluators, iterators and operators
 10/01/22 (TRUST)  Fix         : Champ_front_recyclage was not working properly if used in parallel calculations
@@ -257,9 +257,9 @@ Release notes version 1.9.0 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 Release notes version 1.8.4 : Enhancements, modifications and corrected bugs since version 1.8.3 :
 --------------------------------------------------------------------------------------------------
-23/11/21 (TRUST)  Fix         : Turbulent flow in a VDF stretched mesh was diverging with the implicited-diffusion solver 
+23/11/21 (TRUST)  Fix         : Turbulent flow in a VDF stretched mesh was diverging with the implicited-diffusion solver
 23/11/21 (TRUST)  New feature : Add the possibility to read int64 binary files (.Zones, .sauv, .xyz) if possible (no overflow) with an int32 binary. The contrary was already true.
-23/11/21 (TRUST)  Fix         : Restart calculation of previous old calculation with TRUST<=1.8.3 
+23/11/21 (TRUST)  Fix         : Restart calculation of previous old calculation with TRUST<=1.8.3
 23/11/21 (TRUST)  Fix         : Read_MED option convertAllToPoly improved to convert hybrid meshes (tetrahHexa+pyramids cells) from MG-Hybrid Salome tool to polyhedron meshes for PolyMAC discretization
 23/11/21 (TRUST)  Fix         : Several AmgX GPU solvers (BiCGstab, FGMRES) may be used for Euler implicit scheme + memory leak fixes. See Solveurs/GPU/Implicite verification sheet
 23/11/21 (TRUST)  Fix         : Champ_front_MED may now be combined with Champ_Fonc_MED_Tabule to enable time & space dependent boundary conditions read from MED file
@@ -269,11 +269,11 @@ Release notes version 1.8.4 : Enhancements, modifications and corrected bugs sin
 15/11/21 (TRUST)  Fix         : Several problems solving different physics on a same domain produced corrupted lml/lata/med files (mesh repeated) during post-processing
 29/10/21 (TRUST)  Keyword     : Syntax change for Champ_Fonc_tabule. The new syntax is Champ_fonc_tabule { pb field } nbcomp { table } (the old syntax was Champ_fonc_tabule field nbcomp { table } )
 29/10/21 (TRUST)  Keyword     : Syntax change for Champ_Fonc_Fonction, Champ_Fonc_Fonction_txyz, and Sutherland where the problem name should be passed before that of the field
-29/10/21 (TRUST)  Major Change: Tables defined with a Champ_fonc_tabule should be strictly monotonic (declaring a multiple times and/or a decreasing time order will stop the code execution) 
+29/10/21 (TRUST)  Major Change: Tables defined with a Champ_fonc_tabule should be strictly monotonic (declaring a multiple times and/or a decreasing time order will stop the code execution)
 29/10/21 (TRUST)  Major Change: Champ_fonc_tabule supports arbitrary number of parameter fields from variables instanced in any problem
 21/10/21 (TRUST)  Library     : Add of the vectorization library Vc (1.4.2)
 18/10/21 (TRUST)  New feature : Possibility to correctly stop the simulation once launched in interactive way using Ctrl+C
-18/10/21 (TRUST)  Major Change: Syntax/keyword modified : state laws for a dilatable fluid ends now with _QC (for quasi-compressible fluid) and with _WC (for weakly-compressible fluid). For example, the EOS gaz_parfait becomes either gaz_parfait_QC or gaz_parfait_WC 
+18/10/21 (TRUST)  Major Change: Syntax/keyword modified : state laws for a dilatable fluid ends now with _QC (for quasi-compressible fluid) and with _WC (for weakly-compressible fluid). For example, the EOS gaz_parfait becomes either gaz_parfait_QC or gaz_parfait_WC
 18/10/21 (TRUST)  Major Change: Media with variable densities do not inherit anymore from "Fluide_Incompressible"
 18/10/21 (TRUST)  New feature : New medium "Fluide_Dilatable_base" from which the Quasi-Compressible and the Weakly-Compressible media inherit
 18/10/21 (TRUST)  New feature : New problems "Pb_Thermohydraulique_WC", "Pb_Thermohydraulique_Especes_WC" and "Pb_Hydraulique_Melange_Binaire_WC" introduced to solve thermo-hydraulic and/or binary/multi species flows using a Weakly Compressible formulation (non-uniform pressure in the state equation)
@@ -287,11 +287,11 @@ Release notes version 1.8.4 : Enhancements, modifications and corrected bugs sin
 16/09/21 (TRUST)  New Feature : A new discretization "CoviMAC" (Numerical schema on polyedrons, main difference with PolyMAC : no more auxiliary variables for scalar unknowns) is now available and can be used with Pb_Multiphase. Implemented with the new Interface_bloc API
 16/09/21 (TRUST)  New feature : New problem "Pb_multiphase" with 3 equations (mass, momentum and energy conservation), having each N components. N=1 corresponds to a single phase model, N=2 corresponds to a 2 fluid model, and N>2 to a multi-field model
 19/08/21 (TRUST)  Portability : ARM partition of Irene Joliot cluster supported
-19/08/21 (TRUST)  Performance : Arrays obtained from octree algorithm are cached. Useful for advanced fields computation needing interpolations each time-step 
+19/08/21 (TRUST)  Performance : Arrays obtained from octree algorithm are cached. Useful for advanced fields computation needing interpolations each time-step
 19/08/21 (TRUST)  Bug fixed   : Regression since 1.8.3 fixed (malformed .dt_ev file with missing columns for coupled problems)
 19/08/21 (TRUST)  Performance : Output files (.out) are opened/closed at the first/last print and not at each print as before
 19/08/21 (TRUST)  Bug fix     : Source_generique source term couldn't be used for PolyMAC discretization
-12/07/21 (TRUST)  Performance : A same advanced field used by several probes are now computed only once during each post-processing phasis 
+12/07/21 (TRUST)  Performance : A same advanced field used by several probes are now computed only once during each post-processing phasis
 05/07/21 (TRUST)  Portability : New CCRT cluster topaze supported (110592 AMD Milan Epyc cores)
 --------------------------------------------------------------------------------------------------
 Release notes version 1.8.3 : Enhancements, modifications and corrected bugs since version 1.8.2 :
@@ -299,11 +299,11 @@ Release notes version 1.8.3 : Enhancements, modifications and corrected bugs sin
 15/06/21 (TRUST)  New feature : Python package added which offers the user a possibility to perform time/space statistical post-processing of the son files (convergence, correlation, spectra ...). See validation file HowTo/Postreatment_stats
 15/06/21 (TRUST)  New feature : Python package added which allows writing and running prm validation files via jupyter-lab using python & markdown syntax
 11/06/21 (TRUST)  Change      : If some conda packages are updated/added/removed after TRUST install, configuring TRUST again will detect that and re-install TRUST's conda packages as per default.
-07/06/21 (TRUST)  Bug fixed   : Finite Element (EF) BTD or SUPG convection scheme were unavailable in Pb_Thermohydraulique 
+07/06/21 (TRUST)  Bug fixed   : Finite Element (EF) BTD or SUPG convection scheme were unavailable in Pb_Thermohydraulique
 03/06/21 (TRUST)  New feature : Source term "a" now supported in VDF for the Conduction_Diffusion_* equation
 31/05/21 (TRUST)  New feature : Parallel partitionning (with ParMetis or Pt-Scotch libraries) thanks to parmetis or ptscotch option with partitionneur keyword
 27/05/21 (TRUST)  Major Change: Class and function templates are used now for the evaluator classes of the VDF diffusion operators
-21/05/21 (TRUST)  Bug fix     : Last backup was not always correctly done, especially within ICoCo context. 
+21/05/21 (TRUST)  Bug fix     : Last backup was not always correctly done, especially within ICoCo context.
 20/05/21 (TRUST)  New feature : New problem Pb_Hydraulique_Melange_Binaire_QC added which allows simulating binary mixture flows at iso-bar and iso-thermal conditions using a low Mach number approximation (turbulent version available in TrioCFD)
 12/05/21 (TRUST)  New feature : Add a new state equation Rho_T which defines the density as a function of the temperature field in a QC problem; i.e. rho=f(T) (independent of the thermo-dynamic pressure)
 11/05/21 (TRUST)  New feature : Add a solid/fluid coupling test case which illustrates the use of ICoCo (V2) with a python supervisor (docond_VEF_3D_ICoCo_py)
@@ -314,7 +314,7 @@ Release notes version 1.8.3 : Enhancements, modifications and corrected bugs sin
 15/04/21 (TRUST)  Portability : GNU compilers 10.3.0 supported
 12/04/21 (TRUST)  New feature : mpi4py Python package now provided by default in the TRUST Python environment when compiling with MPI.
 31/03/21 (TRUST)  New feature : ICoCo (Interface for Code Coupling) version 2! See https://github.com/cea-trust-platform/icoco-coupling for full reference.
-30/03/21 (TRUST)  Performance : Faster partitioning by disabling printing of remote (ghosts) elements (add a print_more_info option to enable it). 
+30/03/21 (TRUST)  Performance : Faster partitioning by disabling printing of remote (ghosts) elements (add a print_more_info option to enable it).
 30/03/21 (TRUST)  Warning     : Detect in VDF a (rare case) with cells near two fluid faces corner where a missing contribution is not computed yet for several schemes except upwind scheme
 30/03/21 (TRUST)  Bug fixed   : Useless write of a result file (containing mesh only) with no fields post_processing block
 30/03/21 (TRUST)  Bug fixed   : Add messages to enhance PolyMAC use : detect incorrect mesh or time scheme
@@ -345,7 +345,7 @@ Release notes version 1.8.3 : Enhancements, modifications and corrected bugs sin
 Release notes version 1.8.2 : Enhancements, modifications and corrected bugs since version 1.8.1 :
 --------------------------------------------------------------------------------------------------
 19/11/20 (TRUST)  Keyword     : Syntax change for Champ_Fonc_Fonction, Champ_Fonc_Fonction_txyz, Champ_Fonc_Tabule, Champ_Fonc_Fonction_txyz_Morceaux with the depending field name now before the number of components
-17/11/20 (TRUST)  Bug fixed   : read_matrix pressure solver option fixed in VEF (pressure matrix was rebuilt uselessly before being read from a file) 
+17/11/20 (TRUST)  Bug fixed   : read_matrix pressure solver option fixed in VEF (pressure matrix was rebuilt uselessly before being read from a file)
 13/11/20 (TRUST)  New feature : Immersed Boundary Method (IBM) using PDF (Penalized Direct Forcing) formulation. Only for EF.
 12/11/20 (TRUST)  New feature : Anisotropic diffusion (VEF) is available for laminar flow or solid conduction (see new validation sheet diffusion_anisotrope_VEF for examples)
 09/11/20 (TRUST)  Portability : GNU compilers 10.2.1 supported and Fedora 33 too (after doing: sudo dnf install make patch g++ gfortran libX11-devel mesa-libGLU-devel)
@@ -385,7 +385,7 @@ Release notes version 1.8.1 : Enhancements, modifications and corrected bugs sin
 19/05/20 (TRUST)  Bug fixed   : Allow different beginning/ending times for statistics and fix bug in case of resumption whith statistics
 12/05/20 (TRUST)  Portability : Ubuntu version 19-20 OS are now supported (after possibly doing: sudo apt-get install gfortran libx11-dev texlive texlive-latex-extra)
 05/05/20 (TRUST)  Tools       : ICoCo tutorial updated ($TRUST_ROOT/doc/TRUST/ICoCo_tutorial.pdf)
-05/05/20 (TRUST)  Keyword     : Simplify Source_generique keyword syntax when giving an analytical expression without field (source refChamp useless) 
+05/05/20 (TRUST)  Keyword     : Simplify Source_generique keyword syntax when giving an analytical expression without field (source refChamp useless)
 04/05/20 (TRUST)  Portability : Centos 6.4, Fedora 20 and GNU version compiler older than 4.8.5 are not supported anymore
 01/05/20 (TRUST)  Tools       : Update PETSc to 3.12.2 version + fix build with OpenMPI 4.x + add ML the multilevel preconditionning package from Trilinos
 01/05/20 (TRUST)  New keyword : New keyword Polyedriser to convert a VDF mesh (Quadrangle/Hexaedre) to a PolyMAC mesh (Polyedre)
@@ -401,7 +401,7 @@ Release notes version 1.8.1 : Enhancements, modifications and corrected bugs sin
 09/04/20 (TRUST)  New keyword : Add single_hdf option for backup/restart keywords Sauvegarde/Reprise to use a single .sauv file thanks to HDF parallel I/O
 09/04/20 (TRUST)  New keyword : Add single_hdf option for Partition keyword to create a single "zones_name_pN.Zone" file instead of N "zones_name_*.Zones" files thanks to HDF parallel I/O
 09/04/20 (TRUST)  Minor Change: Reordonner_faces_periodiques keyword becomes obsolete and should be replaced by Corriger_frontiere_periodique
-09/03/20 (TRUST)  Keyword     : Conduction_milieu_variable becomes obsolete and Conduction keyword can be used for conduction equation with non-uniform Rho*Cp 
+09/03/20 (TRUST)  Keyword     : Conduction_milieu_variable becomes obsolete and Conduction keyword can be used for conduction equation with non-uniform Rho*Cp
 25/02/20 (TRUST)  Bug fixed   : Total pressure in VEF Quasi-Compressible model was not computed correctly
 21/02/20 (TRUST)  Bug fixed   : Rewrite Champ_Fonc_MED class for a faster Champ_Fonc_MED_tabule keyword (read of several time steps in a MED file for field time-tabulation)
 29/01/20 (TRUST)  New feature : New option thermique_monolithique (VDF only) for Scheme_Euler_Implicit keyword to enable full thermal impliciting for coupled problems (single matrix solved)
@@ -413,7 +413,7 @@ Release notes version 1.8.1 : Enhancements, modifications and corrected bugs sin
 07/01/20 (TRUST)  Tools       : Switch to Python 3. Python 2 scripts are not supported anymore
 06/01/20 (TRUST)  Portability : AMD partition Rome on irene CCRT cluster is supported (built with Intel 19.0.5 & IntelMPI 2018.0.3)
 16/12/19 (TRUST)  New keyword : Add Champ_front_debit_QC_VDF_fonc_t keyword to set time-dependent flow rates in quasi-compressible flows with VDF discretization
-05/12/19 (TRUST)  New feature : Add possibility to post-process Y_PLUS on moving boundaries in VEF discretization 
+05/12/19 (TRUST)  New feature : Add possibility to post-process Y_PLUS on moving boundaries in VEF discretization
 04/12/19 (TRUST)  Portability : Add the possibility to configure a baltik in 64 bit indices mode (experimental)
 27/11/19 (TRUST)  Portability : orcus (DM2S) and plafrim (INRIA) clusters supported
 --------------------------------------------------------------------------------------------------
@@ -421,13 +421,13 @@ Release notes version 1.8.0 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 31/10/19 (TRUST)  New feature : First version of a Python module (SWIG) for the ICoCo interface.
 30/10/19 (TRUST)  New feature : PISO scheme now working with PolyMAC.
-30/10/19 (TRUST)  Bug fixed   : Several bug fixes for polyhedrons and PolyMAC discretisation. 
+30/10/19 (TRUST)  Bug fixed   : Several bug fixes for polyhedrons and PolyMAC discretisation.
 30/10/19 (TRUST)  New feature : Time scheme: dt_max argument can now be a function of time (expression is parsed)
 25/10/19 (TRUST)  Major change: Turbulence features (turbulent problems, wall laws, turbulence models and associated boundary conditions) are moved from TRUST to TrioCFD baltik.
-21/10/19 (TRUST)  New feature : Face fields (e.g. temperature/velocity in VEF, velocity in VDF) may be written in MED files (may be visualized by Paraview not VisIt yet) 
-17/10/19 (TRUST)  New feature : Champ_Fonc_Fonction now supports multi-components. 
-17/10/19 (TRUST)  New keyword : Champ_Tabule_Morceaux: tabulated field defined per sub-zone 
-16/10/19 (TRUST)  Portability : Add -with-64-bit-indices configure option in order to build TRUST with 64 bits integers 
+21/10/19 (TRUST)  New feature : Face fields (e.g. temperature/velocity in VEF, velocity in VDF) may be written in MED files (may be visualized by Paraview not VisIt yet)
+17/10/19 (TRUST)  New feature : Champ_Fonc_Fonction now supports multi-components.
+17/10/19 (TRUST)  New keyword : Champ_Tabule_Morceaux: tabulated field defined per sub-zone
+16/10/19 (TRUST)  Portability : Add -with-64-bit-indices configure option in order to build TRUST with 64 bits integers
 16/10/19 (TRUST)  New keyword : Champ_front_xyz_debit field to define a flow rate field with a velocity profil.
 15/10/19 (TRUST)  New keyword : 'segmentfaces{x|y|z}' as new probe type for VDF. Like 'segement' but sticking to one side of the hexaedron to catch a specific component of a face field
 15/10/19 (TRUST)  New keyword : 'gravcl' as new localisation option for probes: like 'grav' but also taking into account BC values
@@ -435,7 +435,7 @@ Release notes version 1.8.0 : Enhancements, modifications and corrected bugs sin
 14/10/19 (TRUST)  Bug fixed   : Remove the duplication of last time post-processings when using ICoCo
 11/10/19 (TRUST)  Bug fixed   : Gmres algorithm was not exiting when iteration numbers was over matrix size
 11/10/19 (TRUST)  Bug fixed   : Sub-zone fix for polyedrons
-11/10/19 (TRUST)  New keyword : Champ_Tabule_Morceaux field to use piece-wise uniform tabulated field  
+11/10/19 (TRUST)  New keyword : Champ_Tabule_Morceaux field to use piece-wise uniform tabulated field
 09/10/19 (TRUST)  Optimization: In Champ_Generique_Transformation a useless MPI synchronization is moved to the right place
 09/10/19 (TRUST)  Bug fixed   : During parallel calculaton, possible divide by 0 on definition_champs expression using fields with non-updated virtual spaces on cells
 07/10/19 (TRUST)  Bug fixed   : Write u+,d+,u*, ... values into *_Ustar.face when temps_cpu_max reached or when stop_file detected.
@@ -460,22 +460,22 @@ Release notes version 1.7.9 : Enhancements, modifications and corrected bugs sin
 29/03/19 (TRUST)  Portability : MEDCoupling library is now mandatory to build Trust so -disable-med and -disable-medcoupling options are removed from the configure
 29/03/19 (TRUST)  Bug fixed   : Several PETSc CLI solvers can't be used together
 13/03/19 (TRUST)  Bug fixed   : Axial symmetry was not functionnal with bidim_axi keyword when reading a 2D MED mesh
-20/02/19 (TRUST)  Bug fixed   : Y+ computation homogeinization for .lata and Ustar.face 
+20/02/19 (TRUST)  Bug fixed   : Y+ computation homogeinization for .lata and Ustar.face
 13/02/19 (TRUST)  New keyword : Add flux_surfacique_bords option to Morceau_equation keyword to post-process surfacic fluxes on boundaries
 05/02/19 (TRUST)  New keyword : Adding possibility to specify maximum number of iteration for the generic "GEN" solver
 25/01/19 (TRUST)  Bug fixed   : File evol_glob for quasi-compressible calculation renamed datacase_pbname.evol_glob
-23/01/19 (TRUST)  Bug fixed   : Stability time steps are now computed and printed for mass fraction transport 
+23/01/19 (TRUST)  Bug fixed   : Stability time steps are now computed and printed for mass fraction transport
 --------------------------------------------------------------------------------------------------
 Release notes version 1.7.8 : Enhancements, modifications and corrected bugs since version 1.7.7 :
 --------------------------------------------------------------------------------------------------
 07/12/18 (TRUST)  Bug fixed   : Heat exchange boundary condition in VEF was not implicited in conduction equation
 25/10/18 (TRUST)  Portability : Released version of PETSc upgraded to 3.10.0
-25/10/18 (TRUST)  Performance : Performance of Cholesky Superlu version improved on symmetric matrix  
+25/10/18 (TRUST)  Performance : Performance of Cholesky Superlu version improved on symmetric matrix
 25/09/18 (TRUST)  Bug fixed   : Possible crash in VEF diffusive operators after reading conductivity field in a MED file
 06/09/18 (TRUST)  Minor change: Possibility to specify the baltik name in trust -baltik
 06/09/18 (TRUST)  Minor change: Writing .sauv when tcpumax reached or .stop detected
-25/07/18 (TRUST)  New feature : Add VEF support for mass fraction transport 
-23/07/18 (TRUST)  Bug fixed   : Issue for some internal boundaries in VDF 
+25/07/18 (TRUST)  New feature : Add VEF support for mass fraction transport
+23/07/18 (TRUST)  Bug fixed   : Issue for some internal boundaries in VDF
 29/06/18 (TRUST)  Portability : Support of irene CCRT cluster
 --------------------------------------------------------------------------------------------------
 Release notes version 1.7.7 : Enhancements, modifications and corrected bugs since version 1.7.6 :
@@ -521,7 +521,7 @@ Release notes version 1.7.4 : Enhancements, modifications and corrected bugs sin
 24/11/16 (TRUST)  Portability : Linux distribution CentOS 7, Ubuntu 16 and gcc 6.2.0 supported
 23/11/16 (TRUST)  New keyword : Add new option to ExtrudeBord. ExtrudeBord improved
 22/11/16 (TRUST)  Major change: Syntaxe modification of predefined field energie_cinetique renamed as energie_cinetique_totale and creation of energie_cinetique_elem
-20/10/16 (TRUST)  New feature : Polygone 
+20/10/16 (TRUST)  New feature : Polygone
 29/07/16 (Tools)  Minor change: Update the VisIt configuration of host profiles automatically on several clusters (CCRT and DM2S)
 22/07/16 (TRUST)  Minor change: Options -evol and -wiz added to the trust script (TRUST_PLOT2D and TRUST_WIZZARD)
 20/07/16 (TRUST)  Minor change: Update reprise_auto script with new archiving option
@@ -607,7 +607,7 @@ Release notes version 1.7.0 : Enhancements, modifications and corrected bugs sin
 21/11/14 (Tools)  Minor change: VisIt client/server mode improved on cluster callisto with 3 new profiles (4cpusBatch, 8cpusBatch, 16cpusBatch)
 21/11/14 (TRUST)  Bug fixed   : Taking into account the porosity in Source_canal_perio for the flow calculation
 21/11/14 (Kernel) Minor change: Champ_front_calc field is now parallelized (but use of Raccord is needed)
-21/11/14 (Kernel) Minor change: Raccord boundaries between coupled problems may now have different names 
+21/11/14 (Kernel) Minor change: Raccord boundaries between coupled problems may now have different names
 18/11/14 (Kernel) New keyword : Boundary_field_uniform_keps_from_ud new keyword which allows to impose on a boundary K and EPS values derived from U velocity and D hydraulic diameter specified in BC
 18/11/14 (Kernel) Portability : Some PETSc solvers (Cholesky from MUMPS library, CG) can be used in non-MPI TRUST build
 03/11/14 (Kernel) New keyword : To impose a normal field whatever VDF or VEF discretization, use new Boundary_field_inward keyword (replacing Champ_front_normal_VEF keyword)
@@ -618,14 +618,14 @@ Release notes version 1.7.0 : Enhancements, modifications and corrected bugs sin
 22/10/14 (TRUST)  Portability : GNU compilers 4.9.1 supported
 21/10/14 (Kernel) Minor change: Possible change of default classe to read/write .xyz files with "EcritureLectureSpecial string" with string = EFichierBin | LecFicDiffuseBin | LecFicPartageMPIIO | EcrFicPartageMPIIO | EcrFicPartageBin
 17/10/14 (TRUST)  Minor change: Time measure for resuming files (e.g. .xyz, .sauv) is now indicated in the .err file
-16/10/14 (Tools)  New feature : Add -nb_pas_dt_max option to Run_fiche script in order to build a validation form with all its test cases running on limited number of time steps 
+16/10/14 (Tools)  New feature : Add -nb_pas_dt_max option to Run_fiche script in order to build a validation form with all its test cases running on limited number of time steps
 15/10/14 (Kernel) Minor change: Add a test to detect that an equation diverges during residual calculation for .dt_ev file
-14/10/14 (Kernel) Minor change: Add strict check of floating point operations in the code which could lead to more "floating point exception" error messages in the near future 
+14/10/14 (Kernel) Minor change: Add strict check of floating point operations in the code which could lead to more "floating point exception" error messages in the near future
 14/10/14 (TRUST)  Bug fixed   : Several possible division by zero fixed in Quick scheme (VDF) and pressure loss source terms in VEF
 08/10/14 (Kernel) Optimization: xyz saving process is now using by default MPI-IO to try to improve write performances during massive parallel calculation
 07/10/14 (Tools)  New feature : Add a -prm option to triou script to generate a PDF report from a previous calculation showing visus and figures of .lata and .son generated files
 06/10/14 (Kernel) Minor change: Describe in the User's Manual how to use Lire_MED to read sub-zones from a MED file
-06/10/14 (TRUST)  Bug fixed   : Crash when RegroupeBord on several boundaries was used after Discretiser_domaine keyword 
+06/10/14 (TRUST)  Bug fixed   : Crash when RegroupeBord on several boundaries was used after Discretiser_domaine keyword
 06/10/14 (TRUST)  Minor change: Add an exercise in the TRUST tutorial ($TRUST_ROOT/doc/TRUST/Tutorial_TRUST.pdf) to build a validation form
 02/10/14 (TRUST)  New feature : New option "debit_impose" for canal_perio to specify the imposed flow rate
 01/10/14 (TRUST)  Validation  : New functionalities for validation forms (.prm files): transposed_display in Table and direct field name in Visu
@@ -634,9 +634,9 @@ Release notes version 1.7.0 : Enhancements, modifications and corrected bugs sin
 26/09/14 (TRUST)  Bug fixed   : An incorrect value for TRUST_TMP variable was defined on DM2S cluster callisto
 25/09/14 (TRUST)  Minor change: .Racc files are not created (and are not needed) anymore during a parallel calculation with coupled boundary conditions
 11/09/14 (Kernel) Minor change: PETSc updated from 3.5.1 to 3.5.2
-10/09/14 (TRUST)  Bug fixed   : Possible (rare) hangs during the restart of a parallel coupled calculation if accidently some (but not all) .Zones files are newer than .Racc files 
+10/09/14 (TRUST)  Bug fixed   : Possible (rare) hangs during the restart of a parallel coupled calculation if accidently some (but not all) .Zones files are newer than .Racc files
 01/09/14 (TRUST)  Bug fixed   : Error "Matrice_Morse::operator(...,...) not defined!" when using non conform boundary conditions in K-Eps and Navier Stokes equations with implicit schemes
-18/08/14 (Kernel) Minor change: nb_it_max option in PETSc solvers has now the same behaviour than the TRUST Gmres solver: it is possible to specify a number of iterations to convergence 
+18/08/14 (Kernel) Minor change: nb_it_max option in PETSc solvers has now the same behaviour than the TRUST Gmres solver: it is possible to specify a number of iterations to convergence
 08/08/14 (Kernel) New keyword : Experimental option for PETSc solvers: petsc_decide 0|1 to let PETSc decide (or not, the default) for the partitioning of the linear system being solved
 08/08/14 (Kernel) New keyword : Experimental option for PETSc solvers: aij to store a symmetric matrix with a non-symmetric format
 06/08/14 (Tools)  Minor change: triou script automatically selects a number of cores per task on CCRT clusters when using PETSc GPU solvers
@@ -655,9 +655,9 @@ Release notes version 1.7.0 : Enhancements, modifications and corrected bugs sin
 Release notes version 1.6.9 : Enhancements, modifications and corrected bugs since version 1.6.8 :
 --------------------------------------------------------------------------------------------------
 08/07/14 (TRUST)  Announcement: TRUST 1.6.9 version released for Linux
-04/07/14 (TRUST)  Bug fixed   : triou -bigmem option failed on CCRT clusters since the software update  
+04/07/14 (TRUST)  Bug fixed   : triou -bigmem option failed on CCRT clusters since the software update
 03/07/14 (TRUST)  Minor change: VisIt client/server mode supported on cluster callisto with only 2 profiles currently working (1cpu, 4cpusFrontal)
-03/07/14 (TRUST)  Bug fixed   : Possible parallel crash when using a concentration equation for the Front Tracking model  
+03/07/14 (TRUST)  Bug fixed   : Possible parallel crash when using a concentration equation for the Front Tracking model
 27/06/14 (TRUST)  New feature : Darcy and Forcheimer source terms for incompressible and quasi compressible flows are available now also for the VEF discretization
 17/06/14 (TRUST)  Minor change: New features in the .prm (transposed arrays and simplified name for the fields for Visu)
 17/06/14 (TRUST)  Minor change: configure script detects Salome 7.x version if already installed on some specific paths
@@ -669,7 +669,7 @@ Release notes version 1.6.9 : Enhancements, modifications and corrected bugs sin
 05/06/14 (TRUST)  Bug fixed   : When using a concentration equation without the definition of a constituant, the code crashed. A proper test has been added.
 05/06/14 (TRUST)  Bug fixed   : CPU times in .TU file changed in order that total CPU time in .TU and _petsc.TU files match
 04/06/14 (TRUST)  New feature : MED files may now be read by VisIt thanks to a new plugin
-03/06/14 (TRUST)  Minor change: Add a new environment variable TRUST_VALIDATION to point to the validation forms directory 
+03/06/14 (TRUST)  Minor change: Add a new environment variable TRUST_VALIDATION to point to the validation forms directory
 03/06/14 (TRUST)  New keyword : Paroi_decalee_Robin, Source_Robin or Source_Robin_Scalaire keywords are available to apply the Pironneau methodology for the wall laws (see $TRUST_ROOT/doc/TRUST/STMF_LMSF_NT_13-011A.pdf)
 23/05/14 (TRUST)  Portability : GNU compilers 4.9.0 supported
 23/05/14 (Kernel) Portability : MED and HDF updated to 3.0.7 and 1.8.13 versions
@@ -691,7 +691,7 @@ Release notes version 1.6.9 : Enhancements, modifications and corrected bugs sin
 11/04/14 (Kernel) Minor change: Setting dt_impr to a negative value in the time scheme definition disable writing information to standard output and .out files during the solve (may be useful for TRUST benchmarking)
 09/04/14 (TRUST)  Bug fixed   : Several fixes on broken validation forms
 09/04/14 (TRUST)  Bug fixed   : Heat fluxes on open boundaries printed in .out files were wrong when the Source_Th_TdivU source term was used in the energy equation of a VEF calculation
-08/04/14 (Kernel) New keyword : Option reorder is added to the partition task to reorder the partitions with the goal that processes which communicate the most are nearer on the network 
+08/04/14 (Kernel) New keyword : Option reorder is added to the partition task to reorder the partitions with the goal that processes which communicate the most are nearer on the network
 31/03/14 (Kernel) Minor change: To enable parallel calculation above 10000 cores, the format of the .sauv and .Zones filenames has been changed
 27/03/14 (TRUST)  Minor change: Add option #MSUB -E "--no-requeue" to prevent from requeuing a job automatically when creating submission file with triou script on CCRT clusters
 17/03/14 (Kernel) New keyword : Add a new Definition_Champs keyword operateur_eqn in order to create/use advanced fields with operator/source terms of an equation
@@ -708,11 +708,11 @@ Release notes version 1.6.9 : Enhancements, modifications and corrected bugs sin
 31/01/14 (Tools)  Portability : MedCoupling tool failed to build sometimes
 29/01/14 (TRUST)  Bug fixed   : Possible error message when using Canal_perio source term during a restart: "Sorry, we didn't find the time ... in the file ...Channel_Flow_Rate_repr_pb_perio"
 21/01/14 (Kernel) Bug fixed   : Resume_last_time keyword failed during a parallel restart calculation
-16/01/14 (Kernel) Bug fixed   : When using an explicit scheme on equations which have temperature dependent characteristics (eg:viscosity, conductivity), these ones are calculated with the previous time instead of the present time  
+16/01/14 (Kernel) Bug fixed   : When using an explicit scheme on equations which have temperature dependent characteristics (eg:viscosity, conductivity), these ones are calculated with the previous time instead of the present time
 14/01/14 (TRUST)  New keyword : muscl_new keyword to use the muscl scheme implemented with a fully multidimensional flux limiter
 14/01/14 (Tools)  Bug fixed   : The animated profile feature was broken in the triou tool
 10/01/14 (Tools)  Bug fixed   : Regression of the reprise_auto tool (several calculations were launched in the same time) has been fixed on CCRT clusters
-08/01/14 (Tools)  Minor change: In the triou tool, some changes for the residual plot to improve the lisibility on a calculation with several equations 
+08/01/14 (Tools)  Minor change: In the triou tool, some changes for the residual plot to improve the lisibility on a calculation with several equations
 24/12/13 (Kernel) Bug fixed   : Slowness of the Raffiner_isotrope keyword when applied on big mesh has been fixed
 24/12/13 (Kernel) New keywords: Raffiner_Simplexes, Refine_Mesh, Verifier_Simplexes, Verifier_Qualite_Raffinements, Rectify_Mesh to work on domains
 19/12/13 (Tools)  New feature : It is now possible to edit the datafile and rerun the calculation from the CLI "triou -monitor" to quickly test different options
@@ -723,10 +723,10 @@ Release notes version 1.6.9 : Enhancements, modifications and corrected bugs sin
 Release notes version 1.6.8 : Enhancements, modifications and corrected bugs since version 1.6.7 :
 --------------------------------------------------------------------------------------------------
 17/12/13 (TRUST)  Announcement: TRUST 1.6.8 version released for Linux
-11/12/13 (Tools)  Minor change: triou script configured on CEA cluster airain to use by default (for DEN users) the new partition ivybridge (7180 cores) 
+11/12/13 (Tools)  Minor change: triou script configured on CEA cluster airain to use by default (for DEN users) the new partition ivybridge (7180 cores)
 10/12/13 (Tools)  Bug fixed   : Impossible to run several "triou -probes" or "triou -monitor" in a same directory
 04/12/13 (TRUST)  Minor change: The syntax of the Interpolation_champ_face keyword has changed in the Penalized Direct Forcing method
-04/12/13 (TRUST)  Model change: Algorithms of the Penalized Direct Forcing method have been improved 
+04/12/13 (TRUST)  Model change: Algorithms of the Penalized Direct Forcing method have been improved
 04/12/13 (Tools)  New feature : MedCoupling tool is provided
 04/12/13 (Kernel) New keyword : ACOS and ATANH are 2 new supported trigonometric functions in the data file
 28/11/13 (TRUST   Portability : CEA cluster mars (312 cores) is supported again
@@ -754,7 +754,7 @@ Release notes version 1.6.8 : Enhancements, modifications and corrected bugs sin
 21/10/13 (Tools)  Minor change: Two new profiles added (4cpusFrontal, 4cpusBatch) on eris cluster client/server mode for VisIt
 15/10/13 (TRUST)  Bug fixed   : Crash fixed on a mesh with 100e6 cells partitionned by the Tranche tool with a high number of parts
 11/10/13 (TRUST)  Optimization: Diffusion operator for the K-Eps equations has been CPU optimized
-11/10/13 (TRUST)  Optimization: Quasi compressible calculations with temperature-dependent field for conductivity and/or viscosity run faster now 
+11/10/13 (TRUST)  Optimization: Quasi compressible calculations with temperature-dependent field for conductivity and/or viscosity run faster now
 10/10/13 (TRUST)  Bug fixed   : Semi implicit quasi compressible calculation may diverge if tinit>0 with no restart
 09/10/13 (TRUST)  Bug fixed   : Crash when the canal_perio source term is used in the energy equation with the diffusion_implicite algorithm activated
 09/10/13 (TRUST)  Bug fixed   : Possible crash when using diffusion_implicite option preconditionnement_diag set to 1 with periodic boundary conditions
@@ -784,7 +784,7 @@ Release notes version 1.6.8 : Enhancements, modifications and corrected bugs sin
 12/07/13 (Kernel) Bug fixed   : Implicited diffusion algorithm was wrong with time dependent boundary condition for energy or conduction equation
 12/07/13 (TRUST)  Bug fixed   : Rare and slight error in volume conservation in parallel Front Tracking calculation fixed
 10/07/13 (TRUST)  Model change: Several bugs fixed in the ALE algorithm
-19/06/13 (TRUST)  Portability : GNU 4.7.3 compilers and Ubuntu 13.04 supported 
+19/06/13 (TRUST)  Portability : GNU 4.7.3 compilers and Ubuntu 13.04 supported
 13/06/13 (TRUST)  Minor change: Add a test in the Init_TRUST environnement initialization script to check the command is ran correctly with source or . before
 13/06/13 (TRUST)  Bug fixed   : A time-dependent volume mesh was not written completely into LATA files (e.g. when using the ALE model) and hence couldn't be visualized correctly with VisIt
 12/06/13 (TRUST)  Minor change: Source term canal_perio is now available in VEF to keep the energy constant in a periodic channel with heat flux imposed
@@ -798,9 +798,9 @@ Release notes version 1.6.8 : Enhancements, modifications and corrected bugs sin
 14/05/13 (TRUST)  Minor change: Boussinesq_concentration { C0 Champ_Uniforme n double double ... } syntax has changed and becomes Boussinesq_concentration { C0 n str str ... } where str may be time-dependent expressions
 13/05/13 (TRUST)  Minor change: Sources { Boussinesq { T0 ... C0 ... } } is obsolete and should be replaced by Sources { Boussinesq_temperature { T0 ... } , Boussinesq_concentration { C0 ... } }
 07/05/13 (TRUST)  Minor change: Name changed for the Channel_Flow_Rate, Channel_Flow_Rate_repr and Pressure_Gradient files created by Canal_perio keyword
-07/05/13 (TRUST)  Minor change: direction_ecoulement option of Canal_perio keyword is obsolete and should be replaced now by the bord option 
+07/05/13 (TRUST)  Minor change: direction_ecoulement option of Canal_perio keyword is obsolete and should be replaced now by the bord option
 07/05/13 (Tools)  Minor change: Released OpenMPI version is now 1.6.4 instead of 1.5.5
-30/04/13 (Kernel) Minor change: Using Ecrire_fichier_xyz_valeur to write a domain field in a file with xyz format is now forbidden 
+30/04/13 (Kernel) Minor change: Using Ecrire_fichier_xyz_valeur to write a domain field in a file with xyz format is now forbidden
 30/04/13 (Kernel) Bug fixed   : Add a test to prevent the use of the Champ_Fonc_Fonction_txyz keyword for a vector field
 30/04/13 (TRUST)  Bug fixed   : Options L and N for a white noise in the Champ_Front_Bruite keyword couldn't be read
 29/04/13 (Tools)  Portability : Gmsh couldn't be installed because of a broken link during the Fltk download
@@ -816,12 +816,12 @@ Release notes version 1.6.7 : Enhancements, modifications and corrected bugs sin
 27/03/13 (TRUST)  Bug fixed   : Error time in the Channel_Flow_Rate_repr file created by the source term canal_perio which could badly impact restarted calculation
 27/03/13 (TRUST)  Minor change: Several fixes on the code thanks to Insure++ tool
 26/03/13 (TRUST)  Model change: The Prandtl value is the scalar TBLE model for law of the wall has been changed from 0.9 to 1.0
-25/03/13 (TRUST)  Minor change: As nodes option for probe does not move the points on vertexes but faces, a som option is introduced to move to the nearest vertex 
-22/03/13 (TRUST)  Bug fixed   : Possible error when restarting a calculation with several Canal_perio source terms cause the flow rate filename was the same for all 
+25/03/13 (TRUST)  Minor change: As nodes option for probe does not move the points on vertexes but faces, a som option is introduced to move to the nearest vertex
+22/03/13 (TRUST)  Bug fixed   : Possible error when restarting a calculation with several Canal_perio source terms cause the flow rate filename was the same for all
 22/03/13 (TRUST)  Portability : Linux OS RedHat 6.4 is supported
-22/03/13 (Kernel) Minor change: Add a test in RegroupeBord keyword to prevent from a crash by using non-existent boundaries 
+22/03/13 (Kernel) Minor change: Add a test in RegroupeBord keyword to prevent from a crash by using non-existent boundaries
 20/03/13 (Kernel) Bug fixed   : OpenBLAS disabled on 32 bits Linux to build BLAS/LAPACK because valgrind errors detected
-18/03/13 (TRUST)  Bug fixed   : Heat flux incorrectly evaluated in the VEF scalar TBLE law 
+18/03/13 (TRUST)  Bug fixed   : Heat flux incorrectly evaluated in the VEF scalar TBLE law
 11/03/13 (TRUST)  Minor change: Schema_MacCormack, Alternant and Alter_interp keywords become obsolete
 11/03/13 (Kernel) Minor change: Add a test to prevent from defining several postprocessing blocks with the same name (only the last one was used)
 11/03/13 (Kernel) Minor change: Add a test to prevent from postprocessing an element or node field to faces
@@ -832,7 +832,7 @@ Release notes version 1.6.7 : Enhancements, modifications and corrected bugs sin
 14/02/13 (Tools)  Bug fixed   : Several crashes of VisIt fixed by activating the LIBGL_ALWAYS_INDIRECT environment variable
 08/02/13 (TRUST)  New keyword : OrienteFacesBord keyword is used on a domain to have the surface normals outer pointing
 31/01/13 (TRUST)  Portability : CEA Cadarache mezel2 cluster is supported
-30/01/13 (TRUST)  Bug fixed   : The canal option of Traitement_particulier keyword was not parallelized when using a turbulent model and a wall law  
+30/01/13 (TRUST)  Bug fixed   : The canal option of Traitement_particulier keyword was not parallelized when using a turbulent model and a wall law
 29/01/13 (Tools)  Bug fixed   : reprise_auto script for chaining TRUST parallel calculation on clusters could not be used by a non-native french user
 29/01/13 (Tools)  Bug fixed   : Plugins were built and applied on a downloaded VisIt version which could corrupt the VisIt binary
 29/01/13 (TRUST)  New keyword : Champ_front_debit_VEF is renamed to Champ_front_debit in order to specify in VDF or VEF a mass flow rate instead of a velocity to an inlet boundary
@@ -840,10 +840,10 @@ Release notes version 1.6.7 : Enhancements, modifications and corrected bugs sin
 28/01/13 (TRUST)  Optimization: Several validation form has been changed to run faster (Poiseuille_Pipe_Velocity, Cube_Atmo, Tube_turb_perio_EF_stab, Tube_turb_perio_muscl, Conv_pipe_InOut, INEEL_VDF_QC, les_Re180Pr071_T0Q)
 28/01/13 (TRUST)  Portability : triou script changed to support borsuk NCNR cluster
 24/01/13 (TRUST)  Minor change: C/C++ code in TRUST can now built with SSE or AVX (Advanced Vector Extensions) vectorization options (run: OPT="_opt_avx";monodir)
-22/01/13 (Kernel) Bug fixed   : Incorrect test done in the Loi_horaire keyword algorithm 
+22/01/13 (Kernel) Bug fixed   : Incorrect test done in the Loi_horaire keyword algorithm
 21/01/13 (TRUST)  Portability : Fedora 18 Linux OS is supported
 16/01/13 (Kernel) Bug fixed   : If TRUST installed within the CEA network but used offline, couldn't initialize TRUST environment (windows closed)
-16/01/13 (Kernel) Bug fixed   : Error when reading with the Lire_Med keyword a MED2 file indicated by a relative path in the data file 
+16/01/13 (Kernel) Bug fixed   : Error when reading with the Lire_Med keyword a MED2 file indicated by a relative path in the data file
 16/01/13 (TRUST)  Minor change: Add a test to prevent from using Ecrire_fichier_xyz_valeur keyword in the K-Eps equation (nothing happened) instead of the Navier Stokes equation
 16/01/13 (TRUST)  Bug fixed   : Writing in a file the y_plus field on a boundary (Ecrire_fichier_xyz_valeur keyword) crashed if y_plus was not used in the Postraitement block
 11/01/13 (TRUST)  Portability : RedHat 6.3 Linux distribution supported
@@ -880,12 +880,12 @@ Release notes version 1.6.6 : Enhancements, modifications and corrected bugs sin
 13/11/12 (TRUST)  Portability : Ubuntu 12.10 linux distribution supported
 06/11/12 (TRUST)  Bug fixed   : Build of the pressure matrix very slow with the P0P1Pa discretization on big meshes
 06/11/12 (TRUST)  Bug fixed   : Crash fixed with the P0P1Pa discretization during a parallel calculation
-05/11/12 (Kernel) Bug fixed   : Fields naming confusion with LML format of Postraiter_domaine keyword on several domains  
+05/11/12 (Kernel) Bug fixed   : Fields naming confusion with LML format of Postraiter_domaine keyword on several domains
 05/11/12 (TRUST)  Minor change: Advise to use PETSc Cholesky instead of an iterative pressure solver when the characteristics of the problem are favorable
 05/11/12 (Tools)  Minor change: Add a TRUST code coverage page at $TRUST_ROOT/doc/Coverage/html/index.html
 05/11/12 (Tools)  Minor change: gmsh2geom tool is not provided anymore: use format MED to export mesh from gmsh and read the mesh into TRUST
 31/10/12 (TRUST)  Bug fixed   : Crash when using the temperature_physique field with a laminar flow
-29/10/12 (Kernel) New keyword : Add an option trois_tetra to the ExtrudeBord keyword to create prisms cut in 3 tetraedras (14 by default) for the extruded VEF mesh 
+29/10/12 (Kernel) New keyword : Add an option trois_tetra to the ExtrudeBord keyword to create prisms cut in 3 tetraedras (14 by default) for the extruded VEF mesh
 29/10/12 (Kernel) Minor change: Add a test and an error message for Extraire_surface keyword to avoid a crash if the domain is not correct
 26/10/12 (TRUST)  Bug fixed   : Crash when averaging a face-located VEF field (e.g. temperature) on a surface with Extraction and Reduction_0D keywords
 26/10/12 (TRUST)  Bug fixed   : The error message about the possible mandatory use of the VerifierCoin keyword in VEF was not printed clearly during a parallel calculation
@@ -918,18 +918,18 @@ Release notes version 1.6.6 : Enhancements, modifications and corrected bugs sin
 28/09/12 (TRUST)  Minor change: Add a test to prevent (not yet coded) using constituants with different diffusion coefficients on a turbulent flow with a law of the wall
 28/09/12 (TRUST)  Bug fixed   : Crash when using a constituant with a zero diffusion coefficient on a turbulent flow with a law of the wall
 28/09/12 (TRUST)  Bug fixed   : Crash when defining for a constituant with a zero diffusion coefficient in a fluid
-26/09/12 (Kernel) Minor change: Defining the precond option of the GCP solver or the PETSc iterative solvers becomes mandatory 
-24/09/12 (Kernel) Bug fixed   : Lire_MED keyword created several boundaries from a MED mesh file containing several boundaries with the same name   
+26/09/12 (Kernel) Minor change: Defining the precond option of the GCP solver or the PETSc iterative solvers becomes mandatory
+24/09/12 (Kernel) Bug fixed   : Lire_MED keyword created several boundaries from a MED mesh file containing several boundaries with the same name
 21/09/12 (Kernel) New keyword : Add to the equations a new option equation_non_resolue condition(t) to not solve an equation according to the time-dependent condition
 21/09/12 (Kernel) Portability : MED3 build can fail if zlib is not installed
 20/09/12 (Tools)  Minor change: The mesh tool Gmsh is now downloaded and built. This 2.6.1 version supports the MED3 format
-18/09/12 (Kernel) Minor change: Change the condition_geometrique option of DecoupeBord_pour_rayonnement to easier apply the keyword on several boundaries and add a nb_parts_geom option 
+18/09/12 (Kernel) Minor change: Change the condition_geometrique option of DecoupeBord_pour_rayonnement to easier apply the keyword on several boundaries and add a nb_parts_geom option
 14/09/12 (Tools)  New keyword : Add options -doc -monitor -probes -copy -mesh to triou run script
 10/09/12 (TRUST)  Minor change: Add the domain name to the files created by the DecoupeBord_pour_rayonnement keyword in order to be used on several domains
 05/09/12 (Kernel) Bug fixed   : PETSc Cholesky solver could hang in parallel on clusters curie-ccrt or airain because of the use of the native SCALAPACK libraries
 04/09/12 (TRUST)  Portability : New CCRT cluster supported (airain.ccc.cea.fr 9504 cores)
 30/08/12 (Kernel) Minor change: Reduce the default value of max_iter_implicite option of implicite schemes to 200 to avoid infinite loops when non converging
-30/08/12 (TRUST)  Bug fixed   : Crash if C0 keyword is not defined when using Boussinesq source term for a flow with concentration calculation 
+30/08/12 (TRUST)  Bug fixed   : Crash if C0 keyword is not defined when using Boussinesq source term for a flow with concentration calculation
 30/08/12 (Kernel) Minor change: Option equation_frequence_resolue of Parametre_implicite keyword may now accept a time-dependent function
 30/08/12 (TRUST)  Bug fixed   : It printed a null value for the convective flux in the .out file for a Dirichlet condition boundary when EF_stab scheme was used
 21/08/12 (Kernel) Bug fixed   : Crash if multiple MPI groups are created and one of them is deleted
@@ -943,8 +943,8 @@ Release notes version 1.6.6 : Enhancements, modifications and corrected bugs sin
 17/07/12 (TRUST)  New syntax  : paroi_couple keyword is now obsolete and should be replaced by paroi_contact keyword
 16/07/12 (TRUST)  Bug fixed   : VDF parallel calculation coupled between solid and fluid (keyword paroi_contact) could hang with some partitioned meshes
 11/07/12 (TRUST)  Bug fixed   : During a parallel calculation on specific VDF meshes, paroi_contact keyword does not detect remote boundary of another problem
-09/07/12 (TRUST)  Portability : Fedora 17 Linux OS and GNU compiler 4.7.0 supported 
-07/06/12 (Kernel) Bug fixed   : Kernel configure did not reject MPI distribution found without a valid mpirun/mpiexec script 
+09/07/12 (TRUST)  Portability : Fedora 17 Linux OS and GNU compiler 4.7.0 supported
+07/06/12 (Kernel) Bug fixed   : Kernel configure did not reject MPI distribution found without a valid mpirun/mpiexec script
 07/06/12 (Kernel) Minor change: The default queue for parallel calculation on CEA eris cluster changed to prod_par
 05/06/12 (Kernel) Bug fixed   : An ICEM binary file was not detected with Lire_fichier kewyord
 31/05/12 (Kernel) Optimization: Add option -ksp_cg_single_reduction by default to PETSc GCP solver to improve the pressure solver scalability above 5000 cores
@@ -973,7 +973,7 @@ Release notes version 1.6.5 : Enhancements, modifications and corrected bugs sin
 27/03/12 (TRUST)  New feature : The available keywords in the case of a liquid-vapor flow with phase change are now documented
 21/03/12 (TRUST)  Portability : New CEA HPC cluster curie supported (~92000 cores)
 14/03/12 (TRUST)  Model change: Algorithm has been slightly changed for the Penalized Direct Forcing method
-23/02/12 (TRUST)  Bug fixed   : Parallel fix for Simple and Piso implicit schemes when used with weak formulation for Neumann boundary condition 
+23/02/12 (TRUST)  Bug fixed   : Parallel fix for Simple and Piso implicit schemes when used with weak formulation for Neumann boundary condition
 22/02/12 (Tools)  Bug fixed   : Weird pre mesh visualization when using Xprepro with old version gfortran compiler (<4.2)
 15/02/12 (Kernel) Optimization: On 64 bits Linux, use of OpenBlas implementation of BLAS to speedup, for large meshes (>400000 elements), the factorization phase of Cholesky solvers
 07/02/12 (Kernel) New keyword : petsc_gpu keyword provides GPU calculation (a NVidia card with up-to-date drivers is mandatory) for several Krylov solvers from PETSc
@@ -981,16 +981,16 @@ Release notes version 1.6.5 : Enhancements, modifications and corrected bugs sin
 03/02/12 (Tools)  Bug fixed   : Some plots (Convergence monitoring and Surfaces fluxes characteristics) couldn't be visualized with Run_sonde tool with recent Gnuplot versions
 01/02/12 (Kernel) Minor change: PETSc API updated to 3.2-p6 version
 01/02/12 (Kernel) Bug fixed   : save_matrice option's solver to save matrix under PETSc format was very slow during parallel calculation
-27/01/12 (Kernel) Bug fixed   : Fix a possible conflict on TRUST_TMP environment variable with a /tmp shared directory 
+27/01/12 (Kernel) Bug fixed   : Fix a possible conflict on TRUST_TMP environment variable with a /tmp shared directory
 25/01/12 (Tools)  Bug fixed   : Crash fixed during a lata2dx_reactor run
 20/01/12 (Tools)  New feature : Released VisIt 2.3.2 is configured to use the client/server mode to visualize data on jade/castor clusters from a PC with more comfort
 19/01/12 (Tools)  Minor change: Parallel launch profile for VisIt on jade changed from 30mn for 4 cpus to 120mn for 4 cpus
 18/01/12 (Tools)  Minor change: Add a sequential launch profile named "1cpu" into VisIt software on castor/jade/titane/cesium clusters
-05/01/12 (TRUST)  Model change: Divergence of the EF_stab scheme during a calculation with inlet fluid on a Neumann condition boundary 
+05/01/12 (TRUST)  Model change: Divergence of the EF_stab scheme during a calculation with inlet fluid on a Neumann condition boundary
 03/01/12 (Kernel) Minor change: Too high verbosity in the .log files during an calculation using ICoCo coupling module
-03/01/12 (Tools)  Minor change: Equation residuals may now be monitored with Run_sonde tool  
+03/01/12 (Tools)  Minor change: Equation residuals may now be monitored with Run_sonde tool
 03/01/12 (Tools)  Bug fixed   : Boundary fluxes were wrong when plotted with Run_sonde tool if moment of forces calculation was specified with Calculer_moments keyword
-03/01/12 (Tools)  Bug fixed   : gnuplot closed unexpectedly after few seconds with Run_sonde tool on Ubuntu Linux   
+03/01/12 (Tools)  Bug fixed   : gnuplot closed unexpectedly after few seconds with Run_sonde tool on Ubuntu Linux
 16/12/11 (Kernel) Bug fixed   : Raffiner_Isotrope keyword crashed on a 3D mesh
 13/12/11 (Tools)  Minor change: Add -doc option to triou script to quickly access to TRUST user's manual
 06/12/11 (Tools)  Minor change: Reduce the number of backuped files created on CCCSTOREDIR directory with reprise_auto script on CEA HPC clusters
@@ -999,7 +999,7 @@ Release notes version 1.6.5 : Enhancements, modifications and corrected bugs sin
 29/11/11 (TRUST)  Portability : Some fixes for Linux distrib Debian 6.0
 29/11/11 (Tools)  Minor change: VisIt upgraded from 2.2.2 to 2.3.2 version
 25/11/11 (Tools)  Minor change: DMFDIR variable changed to CCCSTOREDIR variable for reprise_auto script (for CEA HPC clusters)
-23/11/11 (TRUST)  Minor change: Option taille of transformation_bulles keyword becomes obsolete 
+23/11/11 (TRUST)  Minor change: Option taille of transformation_bulles keyword becomes obsolete
 22/11/11 (Kernel) Minor change: Estimated CPU time to finish the run printed in the .out file
 21/11/11 (Tools)  Bug fixed   : gmsh2geom tool was producing an incorrect message : "Une erreur s'est produite"
 21/11/11 (Tools)  Minor change: VisIt versions built and released with TRUST/Kernel package does not read Silo files anymore
@@ -1009,13 +1009,13 @@ Release notes version 1.6.5 : Enhancements, modifications and corrected bugs sin
 09/11/11 (Tools)  Minor change: On CINES cluster jade, default binding strategy (1 process per core) used by triou script has been changed (1 process per processor) to fix poor PETSc performances
 08/11/11 (TRUST)  Bug fixed   : Small VDF mesh with no Neumann boundary condition solved with a direct solver (e.g. Cholesky) could crash because of non definite matrix
 07/11/11 (Kernel) Bug fixed   : Non convergence in VEF discretization could happen with some pressure solvers used on a non constant matrix system (e.g. Front Tracking model)
-07/11/11 (TRUST)  Bug fixed   : Some fields (e.g. masse_volumique) has time value 0 after a calculation restart 
+07/11/11 (TRUST)  Bug fixed   : Some fields (e.g. masse_volumique) has time value 0 after a calculation restart
 03/11/11 (TRUST)  New keyword : Kinetic energy available as post processing field with Definition_champs { kinetic_energy_field_name Predefini { pb_champ problem_name energie_cinetique } }
 03/11/11 (Kernel) New keyword : New option somme_ponderee to Reduction_0D keyword to calculate integral (weighted sum) of a field on a domain
 25/10/11 (TRUST)  Bug fixed   : Crash possible when using Correction_parcours_thomas option for Parcours_interface keyword during a Front tracking calculation
 21/10/11 (TRUST)  Portability : Intel 12.0 compiler supported
 20/10/11 (Kernel) Bug fixed   : Waiting time for parallel calculation was always 0% in the .TU performance files
-20/10/11 (Kernel) Bug fixed   : Moyenne_ponderee option for Reduction_0D keyword was not parallelized for face located fields 
+20/10/11 (Kernel) Bug fixed   : Moyenne_ponderee option for Reduction_0D keyword was not parallelized for face located fields
 18/10/11 (Kernel) Bug fixed   : Error message if a physical field was the first defined source of the Transformation keyword
 17/10/11 (TRUST)  New keyword : Taux_cisaillement keyword (for local shear strain rate) is available as post processing field for VDF and VEF discretization
 14/10/11 (Kernel) Bug fixed   : .lata master file may be corrupted during a restarting parallel calculation
@@ -1025,18 +1025,18 @@ Release notes version 1.6.5 : Enhancements, modifications and corrected bugs sin
 11/10/11 (Kernel) Minor change: Several minor changes to Postraiter_domaine keyword (LATA_V2 format, fields renamed,...)
 11/10/11 (TRUST)  Bug fixed   : Time steps written in .out files and post processed with pas_de_temps keyword were different for Quasi compressible calculation
 06/10/11 (Kernel) New feature : Add an option -force_provided_mpich2 to configure to switch to MPICH2 MPI implementation (1.4.1p1 version) instead of OpenMPI
-04/10/11 (Kernel) Bug fixed   : xyz saving process crashed with a sequential calculation on a 37e6 elements mesh 
-30/09/11 (Kernel) Minor change: Prevent a crash by adding a test to detect if ecart_type specified after moyenne keyword for statistical field definition 
+04/10/11 (Kernel) Bug fixed   : xyz saving process crashed with a sequential calculation on a 37e6 elements mesh
+30/09/11 (Kernel) Minor change: Prevent a crash by adding a test to detect if ecart_type specified after moyenne keyword for statistical field definition
 27/09/11 (TRUST)  New keyword : Correction_visco_turb_pour_controle_pas_de_temps_parametre to add an option to the Correction_visco_turb_pour_controle_pas_de_temps keyword
 27/09/11 (TRUST)  Model change: Algorithm to limit turbulent viscosity with keyword Correction_visco_turb_pour_controle_pas_de_temps is now applied after law of the wall calculation
 23/09/11 (TRUST)  Minor change: Add a test to detect several interfaces have been defined into a Postraitement_ft_lata definition
 23/09/11 (Tools)  Minor change: export ARCHIVAGE=NO in the submission file will not backup files on /dmnfs with reprise_auto tool
-23/09/11 (Tools)  Minor change: export MAX_JOBS_ENCHAINES=N in the submission file will increase the default number of jobs submitted by reprise_auto 
+23/09/11 (Tools)  Minor change: export MAX_JOBS_ENCHAINES=N in the submission file will increase the default number of jobs submitted by reprise_auto
 23/09/11 (Tools)  Bug fixed   : Several saves (instead of one) occured in the reprise_auto tool which delays the start of the parallel calculation
 22/09/11 (Kernel) Bug fixed   : Use of METIS 4.0 on CCRT cluster platine because a conflict between METIS 5.0 and MPIBull2 crashes parallel calculations
 22/09/11 (TRUST)  Minor change: Add a test to detect an unspecified dt_max (and avoid a crash) with diffusion operators implicited on a flow initialized with a velocity field null
-21/09/11 (TRUST)  Minor change: Fix a regression of parallel performances (since december 2010) on CCRT cluster titane with several iterative solvers 
-21/09/11 (TRUST)  Bug fixed   : Residual dI/dt in the .dt_ev file was null for indicatrice field in Front Tracking calculation 
+21/09/11 (TRUST)  Minor change: Fix a regression of parallel performances (since december 2010) on CCRT cluster titane with several iterative solvers
+21/09/11 (TRUST)  Bug fixed   : Residual dI/dt in the .dt_ev file was null for indicatrice field in Front Tracking calculation
 --------------------------------------------------------------------------------------------------
 Release notes version 1.6.4 : Enhancements, modifications and corrected bugs since version 1.6.3 :
 --------------------------------------------------------------------------------------------------
@@ -1046,7 +1046,7 @@ Release notes version 1.6.4 : Enhancements, modifications and corrected bugs sin
 07/09/11 (Tools)  Minor change: triou launching script now detects if a queue is available or not on titane CCRT cluster
 05/09/11 (Kernel) Minor change: Silo format is not supported anymore, hence meshtv format is suppressed
 05/09/11 (TRUST)  New keyword : Equations_interfaces_vitesse_imposee keyword should be used instead of equation_interfaces_vitesse_imposee when defining several solid interfaces equation
-02/09/11 (Kernel) New keyword : Champ_front_debit_VEF to specify a flow rate instead of a velocity for a Dirichlet boundary condition 
+02/09/11 (Kernel) New keyword : Champ_front_debit_VEF to specify a flow rate instead of a velocity for a Dirichlet boundary condition
 01/09/11 (Kernel) Bug fixed   : methode moyenne option of keyword Reduction_0D was not parallelized when averaging vector fields
 31/08/11 (TRUST)  Bug fixed   : Slow convergence of Crank Nicholson scheme when used in coupled problems due to an error in the dynamic time-step algorithm
 31/08/11 (Kernel) Bug fixed   : Postprocessed fields related to time-steps were erroneous if time-scheme facsec value didn't match 1
@@ -1055,7 +1055,7 @@ Release notes version 1.6.4 : Enhancements, modifications and corrected bugs sin
 17/08/11 (Kernel) Bug fixed   : Metis updated to 5.0 version to fix a crash during the partitionning of a 56e6 elements VEF mesh
 17/08/11 (Kernel) Bug fixed   : Multi calculation crashed (keyword Execute_parallel) when one or several calculations has failed (syntax error or divergence)
 26/07/11 (Tools)  Bug fixed   : reprise_auto script failed on jade CINES cluster with error message "Balise -J introuvable dans ..."
-25/07/11 (TRUST)  New keyword : Reynolds_maille and Courant_maille to postprocess cell Reynolds and Courant numbers in VDF discretization 
+25/07/11 (TRUST)  New keyword : Reynolds_maille and Courant_maille to postprocess cell Reynolds and Courant numbers in VDF discretization
 19/07/11 (TRUST)  Portability : Linux distrib Ubuntu 11.04 and GNU 4.5.2 compilers supported
 18/07/11 (TRUST)  Bug fixed   : Turbulent flow with a dynamic viscosity defined by a Champ_Fonc_XYZ field could crash
 18/07/11 (TRUST)  Bug fixed   : TBLE law of the wall not implemented with temperature dependent fields for dynamic viscosity and thermal conductivity
@@ -1075,18 +1075,18 @@ Release notes version 1.6.4 : Enhancements, modifications and corrected bugs sin
 20/06/11 (Kernel) Bug fixed   : Option moyenne_ponderee of Reduction_0D keyword caused a crash in a VDF calculation when used on a face field
 20/06/11 (Kernel) Bug fixed   : Probes of kind plan (cross section) have false coordinates in the .plan file written which leads to incorrect visualization with Run_sonde
 16/06/11 (Kernel) Bug fixed   : GNU version badly detected on some RedHat 5.3 Linux platform with 4.1.2 compiler which caused a failure during installation
-07/06/11 (Kernel) Bug fixed   : When restarting a parallel calculation without .lata files in the directory, the new .lata file could be corrupted  
-07/06/11 (TRUST)  Bug fixed   : dt_impr period was not applied correctly for printing the exerted force and moment on interfaces when using IBC 
+07/06/11 (Kernel) Bug fixed   : When restarting a parallel calculation without .lata files in the directory, the new .lata file could be corrupted
+07/06/11 (TRUST)  Bug fixed   : dt_impr period was not applied correctly for printing the exerted force and moment on interfaces when using IBC
 06/06/11 (Kernel) Bug fixed   : Error message during a coupled problem calculation if one problem saved to xyz format and the other(s) problem(s) to ASCII or binary format
-31/05/11 (Kernel) Bug fixed   : ExtrudeBord created extruded mesh with possible slightly different coordinates between the initial domain boundary and the new domain boundary  
+31/05/11 (Kernel) Bug fixed   : ExtrudeBord created extruded mesh with possible slightly different coordinates between the initial domain boundary and the new domain boundary
 31/05/11 (Tools)  Minor change: triou script tries now to detect on CCRT cluster titane the lowest loaded queue for test (testext or test queues) or production (prodext, longprodext or prod queues) calculation
-25/05/11 (Kernel) Bug fixed   : An existing .dt_ev file was not re-initialized correctly if a calculation was done without restart with a non-zero tinit 
+25/05/11 (Kernel) Bug fixed   : An existing .dt_ev file was not re-initialized correctly if a calculation was done without restart with a non-zero tinit
 20/05/11 (Kernel) New syntax  : The way to define surface porosity sligthly changed (option Surfacique of keyword Porosites)
 20/05/11 (TRUST)  New syntax  : eps_min becomes only an option of a RANS model (previously abusive option of all turbulence model)
 20/05/11 (TRUST)  Minor change: Surface tension between two fluids defined by sigma option in the Fluide_Diphasique keyword is now a field (previously a constant)
 20/05/11 (TRUST)  Minor change: Heat of phase change defined by chaleur_latente option in the Fluide_Diphasique keyword is now a field (previously a constant)
 20/05/11 (Kernel) New syntax  : non_perio option of ExtrudeParoi keyword is obsolete
-20/05/11 (Kernel) New syntax  : Epaisseur_relative option of ExtrudeParoi keyword is renamed epaisseur and critere_absolu option is introduced to specify if the given width is absolute or relative 
+20/05/11 (Kernel) New syntax  : Epaisseur_relative option of ExtrudeParoi keyword is renamed epaisseur and critere_absolu option is introduced to specify if the given width is absolute or relative
 20/05/11 (Kernel) New syntax  : Syntax for the option composante of keyword Transformation has also changed
 20/05/11 (Kernel) New syntax  : The Transformation keyword to define new fields has two new options, methode and expression. Besides expression option obsoletes the previous fonction option
 20/05/11 (TRUST)  New syntax  : The way to define in turbulence models the caracteristic length has changed (new option longueur_maille)
@@ -1101,14 +1101,14 @@ Release notes version 1.6.4 : Enhancements, modifications and corrected bugs sin
 10/05/11 (Tools)  Minor change: VisIt 2.2.2 is now parallel configured for CINES cluster jade (by default, 4 cpus for 30mn)
 09/05/11 (Tools)  Minor change: VisIt 2.2.2 is now parallel configured for LDAL cluster castor (4<N<12 cpus for 30mn)
 09/05/11 (TRUST)  Minor change: Paroi_Echange_contact_Correlation_VEF keyword may have hydraulic diameter (Dh option) as a non constant value (=f(x)), and surface S may also depends of x (S=f(Dh,x))
-04/05/11 (TRUST)  New keyword : VEF diffusive operator has a new option stab to fix unstabilities on obtuse angle meshes  
+04/05/11 (TRUST)  New keyword : VEF diffusive operator has a new option stab to fix unstabilities on obtuse angle meshes
 29/04/11 (TRUST)  Bug fixed   : Crash if a coupled problem has no problem defined or a hydraulic problem has no media associated
 29/04/11 (TRUST)  Bug fixed   : Error message "Internal error in Zone::md_vector_elements(): descriptor for elements not initialized" when using ExtrudeBord keyword
 29/04/11 (Kernel) Bug fixed   : Comments inside a block in the data file were not supported with keywords Execute_parallel or Lire_fichier datafile ;
 27/04/11 (TRUST)  Bug fixed   : PETSc solvers crashed if used in the data files given into the Execute_parallel keyword for parallel multi calculations
 22/04/11 (TRUST)  Minor change: Canal_perio source term is now available for a flow in a channel which is not oriented according an axis in VEF
 15/04/11 (TRUST)  Portability : Minor changes on source files to enhance the build on Windows platform
-15/04/11 (Tools)  Minor change: Xprepro is now using LATA format instead of SILO format to do pre-mesh visualization   
+15/04/11 (Tools)  Minor change: Xprepro is now using LATA format instead of SILO format to do pre-mesh visualization
 12/04/11 (TRUST)  Bug fixed   : centre4 scheme for scalar advection was wrong on a irregular VDF mesh
 12/04/11 (TRUST)  Bug fixed   : centre4 scheme changed in VDF by replacing upwind scheme by centered scheme for some flux calculations
 12/04/11 (TRUST)  Bug fixed   : centre4 scheme in VDF was wrong for periodic boundary conditions
@@ -1126,7 +1126,7 @@ Release notes version 1.6.3 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 23/02/11 (TRUST)  Announcement: TRUST 1.6.3 version released for Linux
 17/02/11 (Kernel) Portability : triou script improved for jade CINES cluster (bigmem support,...)
-01/02/11 (TRUST)  Portability : Installing TRUST on AIX Unix is not supported anymore 
+01/02/11 (TRUST)  Portability : Installing TRUST on AIX Unix is not supported anymore
 27/01/11 (Kernel) New syntax  : Vector field creation with Transformation keyword do not need anymore the definition of the problem name
 19/01/11 (TRUST)  Portability : On CINES cluster jade, MPT 2.02 is supported
 17/01/11 (TRUST)  Minor change: ConcMoy option of Traitement_particulier keyword for the concentration equation is documented
@@ -1137,24 +1137,24 @@ Release notes version 1.6.3 : Enhancements, modifications and corrected bugs sin
 21/12/10 (Kernel) New feature : Add option norme_L2 to the Reduction_0D keyword to calculate the L2 norm of a field
 17/12/10 (Kernel) Bug fixed   : MUMPS 4.9.2 patch plus default parameter set to INCTL(14)=75 to avoid possible crashes or INFOG(1)=-17 error with PETSc Cholesky solver during parallel calculation with more than 256 processors
 17/12/10 (Tools)  Minor change: Downloaded mesh tool Gmsh is now 2.5.0 version
-15/12/10 (Kernel) Minor change: Try to detect/take Intel optimized SCALAPACK and BLACS (MKL) during MUMPS library installation 
+15/12/10 (Kernel) Minor change: Try to detect/take Intel optimized SCALAPACK and BLACS (MKL) during MUMPS library installation
 13/12/10 (Tools)  Bug fixed   : LATA plugin provided for x86_64 sequential version of VisIt 1.12.2 was incorrectly built
 13/12/10 (TRUST)  Bug fixed   : Crash in Front Tracking calculation if default_phase specified without point_phase keyword specified for initial condition for interface
 18/11/10 (Kernel) New keyword : MaillerParallel directly builds and partitions a channel VDF mesh during a parallel calculation (mandatory for mesh with more than 268*10^6 cells)
-16/11/10 (TRUST)  Bug fixed   : Non-uniform pressure boundary condition was not applied perfectly in VEF discretization 
+16/11/10 (TRUST)  Bug fixed   : Non-uniform pressure boundary condition was not applied perfectly in VEF discretization
 16/11/10 (TRUST)  Minor change: Ecrire_fichier now writes object in a binary file and Lire_fichier can now detect/read binary/ASCII files
 16/11/10 (TRUST)  New keyword : Ecrire_fichier_formatte writes an object in a ASCII file
 16/11/10 (TRUST)  New keyword : Ecrire_fichier_xyz_valeur_bin binary version of the Ecrire_fichier_xyz_valeur keyword
 16/11/10 (TRUST)  Minor change: THI option of Traitement_particulier keyword has been rewritten for the VEF discretization
-16/11/10 (TRUST)  Bug fixed   : Diffusion term with P1NCP1B option fixed when used with an implicit scheme 
+16/11/10 (TRUST)  Bug fixed   : Diffusion term with P1NCP1B option fixed when used with an implicit scheme
 10/11/10 (TRUST)  Portability : Some scripts produced errors on Linux Ubuntu
 10/11/10 (TRUST)  Bug fixed   : If existing, Channel_Flow_Rate_repr file was read during a non restarting calculation with a Canal_perio source term
 04/11/10 (Kernel) New keyword : Champ_fonc_Fonction_txyz permits to specify a space-time-unknown dependent field
-03/11/10 (Kernel) Optimization: Try to detect/take Intel optimized BLAS (MKL) to reduce LU factorization time when Petsc Cholesky solver is used  
+03/11/10 (Kernel) Optimization: Try to detect/take Intel optimized BLAS (MKL) to reduce LU factorization time when Petsc Cholesky solver is used
 26/10/10 (Kernel) Minor change: CPU cost of post processing tasks reported and added in the total time step cost in the .TU files
-22/10/10 (Kernel) Optimization: The parser used to compute analytic functions in the data file has been CPU optimized 
-18/10/10 (Kernel) New feature : dt_post option of Champs post-processing keyword accepts a time expression 
-18/10/10 (Kernel) New keyword : Option nb_pas_dt_post for Champs post-processing keyword to write results with a timestep period  
+22/10/10 (Kernel) Optimization: The parser used to compute analytic functions in the data file has been CPU optimized
+18/10/10 (Kernel) New feature : dt_post option of Champs post-processing keyword accepts a time expression
+18/10/10 (Kernel) New keyword : Option nb_pas_dt_post for Champs post-processing keyword to write results with a timestep period
 14/10/10 (Tools)  Bug fixed   : Possible lata2dx_reactor crash (segmentation fault)
 13/10/10 (TRUST)  Minor change: Laws of the wall Ebcm and Loi_puissance_hydr are removed from TRUST
 13/10/10 (TRUST)  Minor change: Option u_star_impose is now available in all laws of the wall for tubulent flow
@@ -1172,10 +1172,10 @@ Release notes version 1.6.3 : Enhancements, modifications and corrected bugs sin
 13/09/10 (Kernel) Minor change: When using PETSc solvers, if an error occurs, now the code would abort and show a more explicit message
 10/09/10 (TRUST)  Optimization: VDF quick scheme runs now much faster for K-Epsilon or concentration equations
 08/09/10 (Tools)  Portability : gnuplot 4.2.5 is now installed if an older version than 4.1 is found during the configure task
-08/09/10 (TRUST)  Minor change: Keyword for the post-processing field type are shorten (old syntax remains available) 
+08/09/10 (TRUST)  Minor change: Keyword for the post-processing field type are shorten (old syntax remains available)
 08/09/10 (TRUST)  New keyword : The source term Source_Generique allows to account for an expression depending on discrete fields of the problem
 30/08/10 (TRUST)  Portability : GNU 4.5.1 compilers supported
-27/08/10 (Kernel) Bug fixed   : Kernel could not link with several Baltik projects because -fPIC option was not used when installing PETSc 
+27/08/10 (Kernel) Bug fixed   : Kernel could not link with several Baltik projects because -fPIC option was not used when installing PETSc
 26/08/10 (TRUST)  Minor change: Laws of the wall Grotzbach and Shifted are removed from TRUST
 26/08/10 (TRUST)  Optimization: Energy and K-Eps equations optimization in VEF can lead to a 5-15% reduction for CPU time-step
 26/08/10 (TRUST)  Bug fixed   : TBLE law of the wall for energy equation could crash in parallel VEF calculation
@@ -1192,7 +1192,7 @@ Release notes version 1.6.2 : Enhancements, modifications and corrected bugs sin
 17/08/10 (TRUST)  New keyword : Wall boundary condition Paroi_rugueuse permits to change the wall roughness value for turbulent calculation
 28/07/10 (TRUST)  Bug fixed   : Small error on the heat flux balance when using Valeur_totale_sur_volume keyword with Dirichlet boundary condition
 21/07/10 (Kernel) New keyword : New option flux_bords for Champ_Post_Morceau_Equation keyword to create a post processing field for VisIt of an operator's equation boundary flux
-21/07/10 (TRUST)  New keyword : New keyword flux_bords to post process all boundary fluxes (printed also in .out files) as volume fields for VisIt 
+21/07/10 (TRUST)  New keyword : New keyword flux_bords to post process all boundary fluxes (printed also in .out files) as volume fields for VisIt
 21/07/10 (Kernel) New keyword : Option tcpumax added to time scheme definition to stop a calculation according a CPU time limit in seconds
 20/07/10 (TRUST)  Minor change: TRUST user's manual on CCRT cluster becomes obsolete. It is replaced by $TRUST_ROOT/doc/TRUST/TRUST_and_Xprepro_presentation.pdf
 16/07/10 (Kernel) New keyword : Added IBICGSTAB and Cholesky_SuperLU keywords for new PETSc solvers, and Eisenstat keyword for new PETSc preconditioner
@@ -1208,10 +1208,10 @@ Release notes version 1.6.2 : Enhancements, modifications and corrected bugs sin
 09/07/10 (TRUST)  Bug fixed   : (FA788) A singular pressure loss in VDF discretization couldn't be applied on a sub-zone as it is possible in VEF discretization
 08/07/10 (Kernel) Bug fixed   : (FA805) Elements list of a subzone may be incomplete if its definition was done before using mesh keywords like VerifierCoin, Tetraedriser, Extruder,....
 08/07/10 (Kernel) Bug fixed   : (FA935) Parallel calculation could hang with less than 9 processors when post processing fields in VEF on vertexes
-07/07/10 (Tools)  Minor change: More detailed errors given by the validation form build tool Run_fiche  
+07/07/10 (Tools)  Minor change: More detailed errors given by the validation form build tool Run_fiche
 07/07/10 (Tools)  Bug fixed   : Several minor bugs fixed in make_PAR.data tools
 07/07/10 (Kernel) Minor change: If possible, parallel build used for OpenMPI installation
-06/07/10 (TRUST)  Bug fixed   : False error message "The mass balance is too bad..." for some Front Tracking calculations  
+06/07/10 (TRUST)  Bug fixed   : False error message "The mass balance is too bad..." for some Front Tracking calculations
 29/06/10 (TRUST)  Bug fixed   : On Linux Suse, TRUST GUI doesn't execute the files that don't have shell script's headers.
 24/06/10 (Tools)  Bug fixed   : Xprepro failed if material index is too large
 24/06/10 (Tools)  Update      : VisIt 1.12.2 version released with TRUST
@@ -1225,7 +1225,7 @@ Release notes version 1.6.2 : Enhancements, modifications and corrected bugs sin
 29/04/10 (TRUST)  Bug fixed   : Correction_visco_turbulente field was incorrect if the value of the field became to 1 on the whole domain
 23/04/10 (Tools)  Bug fixed   : Automated tool reprise_auto to chain calculations failed if periode_sauvegarde_securite_en_heures was used in the data file
 19/04/10 (Kernel) Bug fixed   : Champ_front_lu failed when reading a file on a boundary cut in several parts during a parallel calculation
-13/04/10 (Kernel) Bug fixed   : Mean and standard deviation calculated by Statistiques_en_serie keyword were wrong 
+13/04/10 (Kernel) Bug fixed   : Mean and standard deviation calculated by Statistiques_en_serie keyword were wrong
 13/04/10 (Kernel) Translation : All messages from the Kernel are now in English
 12/04/10 (TRUST)  Bug fixed   : Pressure loss models in VEF were not parallelized correctly when using non-uniform viscosity
 12/04/10 (TRUST)  Bug fixed   : Perte_Charge_Anisotrope and Perte_Charge_Circulaire pressure loss models did not run with Quasi-Compressible model
@@ -1234,10 +1234,10 @@ Release notes version 1.6.2 : Enhancements, modifications and corrected bugs sin
 07/04/10 (Kernel) Minor change: PETSc API updated to 3.0.0 version
 07/04/10 (TRUST)  Bug fixed   : Postprocessing non-uniform thermal conductivity caused an error
 02/04/10 (Kernel) Minor change: Options -disable-silo -disable-med -disable-petsc -disable-mpi added to the Kernel/TRUST configure tool
-31/03/10 (TRUST)  Minor change: Add -configure option for advanced users during TRUST installation to customize the configure phase 
+31/03/10 (TRUST)  Minor change: Add -configure option for advanced users during TRUST installation to customize the configure phase
 26/03/10 (TRUST)  Optimization: Diffusion operator of K-Eps equation has been CPU-optimized and runs now two times faster in VEF
 25/03/10 (Kernel) Bug fixed   : Crash when using PETSc solvers on a partitioned mesh with nb_parts different than nb_parts_tot value
-24/03/10 (TRUST)  Bug fixed   : Flow rate printed in the Debit.out file could be wrong during Front Tracking calculation 
+24/03/10 (TRUST)  Bug fixed   : Flow rate printed in the Debit.out file could be wrong during Front Tracking calculation
 19/03/10 (Kernel) Minor change: Option moyenne_ponderee_volume_elem of Champ_Post_Reduction_0D becomes moyenne_ponderee
 16/03/10 (Tools)  Bug fixed   : With reprise_auto tool on parallel cluster, several jobs could start and run concurrently, thus corrupting results calculation
 05/03/10 (TRUST)  Bug fixed   : Traitement_coins option activated in Option_VDF keyword crashed in debug mode with non uniform dynamic viscosity
@@ -1249,7 +1249,7 @@ Release notes version 1.6.2 : Enhancements, modifications and corrected bugs sin
 01/03/10 (Kernel) New keyword : Add options produit_scalaire and norme to Champ_Post_Transformation keyword to calculate dot product and norm of vectors
 17/02/10 (TRUST)  New feature : TRUST GUI and Run_sonde tool can plot the surface integrated flux contained in .out files like the field probes
 16/02/10 (TRUST)  Bug fixed   : Some residuals printed in the .dt_ev file were wrong with Sch_CN_iteratif and Sch_CN_EX_iteratif keyword
-16/02/10 (TRUST)  Minor change: Change the test for the periodic printing of information in TRUST to avoid rare crashes caused by very small time steps  
+16/02/10 (TRUST)  Minor change: Change the test for the periodic printing of information in TRUST to avoid rare crashes caused by very small time steps
 16/02/10 (Kernel) Bug fixed   : Error message with field not found when using Champ_Post_Statistiques_Correlation keyword
 15/02/10 (Kernel) New keyword : Add option last_time to the Champ_Fonc_Reprise keyword
 15/02/10 (Kernel) Bug fixed   : Parallel version of VisIt didn't run when more than 4 processors was selected on castor CEA cluster
@@ -1276,23 +1276,23 @@ Release notes version 1.6.1 : Enhancements, modifications and corrected bugs sin
 04/01/10 (Kernel) Optimization: Assembling matrix has been CPU-optimized (-30%) when using an implicit scheme
 18/12/09 (Kernel) New feature : Whatever dt_post used, creating an empty datacase.postraitement file will force the post processing after the next time-step
 18/12/09 (TRUST)  Bug fixed   : Pressure field given by pression_pa keyword was not calculated at the first time step of a (restarted or not) calculation
-18/12/09 (Kernel) Bug fixed   : Crash when naming a new field with Definition_champ by the component name of an existing field  
+18/12/09 (Kernel) Bug fixed   : Crash when naming a new field with Definition_champ by the component name of an existing field
 18/12/09 (Kernel) Bug fixed   : Possible crash on a parallel calculation with empty zones (nb_parts different than nb_parts_tot)
 16/12/09 (TRUST)  Portability : Bullxmpi v1.0.1 supported on titane CCRT cluster
 15/12/09 (Kernel) New keyword : Option Ecrire_frontiere added to Postraiter_domaine keyword to write or not the boundaries as fields
 15/12/09 (Kernel) New keyword : Create_domain_from_sous_zone is a keyword to create a domain from a subzone (useful to extract several domains from a Gmsh mesh)
 15/12/09 (Kernel) New keyword : Lata_to_other replaces Latatoother in order to convert a LATA file to another (LML, MED, MESHTV) format file (face fields not supported yet)
 15/12/09 (Kernel) New keyword : Lata_to_med replaces Latatomed in order to convert a LATA file to a MED file (face fields not supported yet)
-15/12/09 (Kernel) New feature : The new keyword Analyse_angle (called by default during the discretization) prints histogram of the largest angle of each mesh element 
+15/12/09 (Kernel) New feature : The new keyword Analyse_angle (called by default during the discretization) prints histogram of the largest angle of each mesh element
 15/12/09 (Kernel) New feature : Option family_names_from_group_names added to Lire_MED keyword to read directly MED files from Gmsh (which supports MED format)
-15/12/09 (TRUST)  Bug fixed   : Error in the implicit matrix of the K-Eps equation when used with the Quasi-compressible model  
+15/12/09 (TRUST)  Bug fixed   : Error in the implicit matrix of the K-Eps equation when used with the Quasi-compressible model
 15/12/09 (TRUST)  Bug fixed   : Incorrect values for h_echange field when used with an adiabatic boundary condition
-15/12/09 (Kernel) New feature : LATA v2.0 format generated by the Kernel is now read by VisIt  
+15/12/09 (Kernel) New feature : LATA v2.0 format generated by the Kernel is now read by VisIt
 15/12/09 (Kernel) New feature : Comments can now be inserted everywhere in the data file, besides /* ... */ is now supported
 15/12/09 (Tools)  Minor change: Add a new field (LargestAngle) into the Pseudocolor/mesh_quality menu of VisIt to check angles of VEF mesh
 14/12/09 (Kernel) Minor change: Add option moyenne_ponderee_volume_elem to keyword Champ_Post_Reduction_0D to ponderate the mean by element volume
 08/12/09 (TRUST)  Bug fixed   : Energy balance not maintained for the conduction equation when non uniform heat source term was applied on VEF mesh near a boundary
-07/12/09 (Kernel) Minor change: Option direction_periodicite of periodique keyword for boundary condition is now obsolete 
+07/12/09 (Kernel) Minor change: Option direction_periodicite of periodique keyword for boundary condition is now obsolete
 02/12/09 (Kernel) Minor change: Add a -prod option to the triou script
 02/12/09 (TRUST)  Bug fixed   : There was no .out flux files created for temperature or concentration when using Equations_Scalaires_Passifs keyword
 01/12/09 (TRUST)  Bug fixed   : The indicator function was not correct in some cells with the Front Tracking model
@@ -1319,14 +1319,14 @@ Release notes version 1.6.0 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 15/10/09 (TRUST)  Announcement: TRUST 1.6.0 version released for Linux and IBM AIX
 01/10/09 (TRUST)  Bug fixed   : Small error in the implicit matrix for VEF calculation with periodic boundary condition
-25/09/09 (TRUST)  Major change: A lot of new features into the Front Tracking model 
+25/09/09 (TRUST)  Major change: A lot of new features into the Front Tracking model
 25/09/09 (Tools)  Minor change: Downloaded Gmsh version is now 2.4.1 and boundary names are now supported by gmsh2geom
 24/09/09 (TRUST)  Bug fixed   : VEF keyword obsolete. Use instead VEFPreP1B and P0 support
-24/09/09 (TRUST)  Bug fixed   : Non zero pressure boundary condition was false on VEFPreP1B discretization used with P0 support only 
+24/09/09 (TRUST)  Bug fixed   : Non zero pressure boundary condition was false on VEFPreP1B discretization used with P0 support only
 22/09/09 (TRUST)  Bug fixed   : Keyword H_echange used to print heat echange coefficient forgot some boundary conditions
 21/09/09 (Kernel) New keyword : New implicit solver (SIMPLE) with the keyword Simple
 16/09/09 (TRUST)  Minor change: The keyword diffusivite for post processing is now obsolete and replaced by either coefficient_diffusion or diffusivite_thermique to avoid confusion
-16/09/09 (TRUST)  Bug fixed   : Diffusion coefficient for concentration equations was only constant and uniform 
+16/09/09 (TRUST)  Bug fixed   : Diffusion coefficient for concentration equations was only constant and uniform
 16/09/09 (TRUST)  Bug fixed   : TRUST GUI couldn't run VisIt when the LATA format was used in the data file
 14/09/09 (TRUST)  Bug fixed   : During a Front Tracking calculation with Neumann boundary condition, pressure field was offset by a constant
 09/09/09 (Kernel) Minor change: .dt_ev file contains now the residual for all the equations of each problem
@@ -1334,16 +1334,16 @@ Release notes version 1.6.0 : Enhancements, modifications and corrected bugs sin
 09/09/09 (Kernel) Minor change: The time of the LATA filenames is now written with the %.10f format instead of %.6f format
 08/09/09 (Kernel) Bug fixed   : Missing one time in probe files .son
 07/09/09 (TRUST)  Portability : Fedora 11 Linux distribution and GNU compilers 4.4.1 supported
-03/09/09 (TRUST)  Bug fixed   : The option chmoy_faceperio of Traitement_particulier keyword was limited to periodic boundary entirely located on one processor 
+03/09/09 (TRUST)  Bug fixed   : The option chmoy_faceperio of Traitement_particulier keyword was limited to periodic boundary entirely located on one processor
 03/09/09 (Kernel) Minor change: non_perio option of ExtrudeBord keyword is obsolete. ExtrudeBord creates now by default non periodic boundaries
 03/09/09 (Kernel) Minor change: Keyword Extruder_perio becomes obsolete (use Extruder together with RegroupeBord instead)
 01/09/09 (Kernel) New keyword : ExtrudeParoi creates on a 3D VEF mesh a layer of prism cut in 3 tetraedras near a boundary
 26/08/09 (TRUST)  Major change: Array structures re-written and optimized for better CPU&RAM performances
 26/08/09 (TRUST)  Bug fixed   : Paroi_defilante keyword in VEF was not ensuring that normal component of the velocity was equal to zero
-25/08/09 (TRUST)  Bug fixed   : Turbulent diffusion coefficient given by the Schmidt model was not calculated at the first time step 
+25/08/09 (TRUST)  Bug fixed   : Turbulent diffusion coefficient given by the Schmidt model was not calculated at the first time step
 25/08/09 (TRUST)  Bug fixed   : Regression issued from 1.5.5 version: non-uniform diffusivity and/or conductivity were not strictly parallelized
 24/08/09 (Kernel) Minor change: When dt lesser than dt_min the code stops and save results as before but besides now exits with an error
-18/08/09 (TRUST)  Bug fixed   : Several source terms couldn't use the Champ_fonc_fonction field 
+18/08/09 (TRUST)  Bug fixed   : Several source terms couldn't use the Champ_fonc_fonction field
 17/08/09 (Kernel) Minor change: Old syntax (prior to v1.5.3) for the keyword Decouper is now obsolete
 17/08/09 (Kernel) Bug fixed   : Absolute PATH for zones location can't be specified with the Scatter keyword and some other writing keywords
 23/07/09 (TRUST)  Portability : OpenMPI 1.3.2 supported on titane CCRT cluster
@@ -1352,7 +1352,7 @@ Release notes version 1.5.7 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 23/07/09 (TRUST)  Announcement: TRUST 1.5.7 version released for Linux and IBM AIX
 16/07/09 (TRUST)  Portability : Intel version 11.0 compilers supported
-10/07/09 (TRUST)  Minor change: Small changes into the law of the wall for turbulence model with a 3D VEF discretization 
+10/07/09 (TRUST)  Minor change: Small changes into the law of the wall for turbulence model with a 3D VEF discretization
 09/07/09 (Kernel) Minor change: Temperature_physique new keyword to define: Definition_champs { field_name Champ_Post_Tparoi_VEF { source Champ_Post_refChamp { Pb_champ problem_name temperature } } }
 09/07/09 (Kernel) Minor change: Champ_post_interpolation becomes optional for the definition of a new field with Definition_champs
 06/07/09 (Kernel) New keyword : Several new options to Extraire_plan keyword in order to use some Extraire_surface features
@@ -1366,13 +1366,13 @@ Release notes version 1.5.7 : Enhancements, modifications and corrected bugs sin
 26/06/09 (Kernel) New keyword : Option equation_frequence_resolue added to Parametre_equation keyword to solve an equation only every n time steps
 25/06/09 (Kernel) New keyword : Extruder_en20 to extrude 2D triangular mesh in 3D tetrahedral mesh with prism cut in 20 tetra
 22/06/09 (Kernel) Minor change: Extruder_en3_perio becomes obsolete. Extuder_en3 and RegroupeBord keywords should be used now
-22/06/09 (Kernel) Minor change: LATA plugin enhanced to read LML and LATA_V2 format 
+22/06/09 (Kernel) Minor change: LATA plugin enhanced to read LML and LATA_V2 format
 16/06/09 (TRUST)  Minor change: New option omega_relaxation_drho_dt for Fluide_Quasi_Compressible keyword for a relaxed algorithm to solve the mass equation
-10/06/09 (TRUST)  Major change: Solid particles transport model is available in VDF&VEF discretization 
+10/06/09 (TRUST)  Major change: Solid particles transport model is available in VDF&VEF discretization
 08/06/09 (Kernel) Minor change: Periodic boundary condition works now with non parallel axis direction for periodicity
-03/06/09 (TRUST)  Minor change: Add an option expert_only for keyword VerifierCoin to deactivate the test 
+03/06/09 (TRUST)  Minor change: Add an option expert_only for keyword VerifierCoin to deactivate the test
 03/06/09 (Kernel) Minor change: Echange_domcut keyword is now useless and has been removed
-27/05/09 (TRUST)  Bug fixed   : Singular pressure drop source term was not available for Quasi compressible model with VEF discretization 
+27/05/09 (TRUST)  Bug fixed   : Singular pressure drop source term was not available for Quasi compressible model with VEF discretization
 26/05/09 (Kernel) Bug fixed   : Statistic fields not written during calculation if dt_post was different of the dt_post of unknown fields with LATA format
 19/05/09 (TRUST)  Portability : CCRT BULL/Linux cluster named titane supported (534*2 nodes of 2 Xeon quad-core processors)
 13/05/09 (Kernel) Minor change: Champ_don_lu supports .csv file from STAR-CCM to read a field as initial condition
@@ -1386,10 +1386,10 @@ Release notes version 1.5.7 : Enhancements, modifications and corrected bugs sin
 09/04/09 (TRUST)  Bug fixed   : Turbulent diffusivity not calculated into the dynamic subgrid-scale model for VDF discretization
 09/04/09 (Kernel) Bug fixed   : Some files (.sauv,.log,.meshtv,...) had incorrect names during parallel calculation with the MPICH 1.2.7 of Debian Linux
 08/04/09 (Kernel) Bug fixed   : Small changes into the implicit schemes Piso and Simpler
-08/04/09 (TRUST)  Bug fixed   : Regression issued from 1.5.5 version fixed : error in the symmetry boundary condition for vectorial equation (eg: K_Eps) with VEF discretization 
+08/04/09 (TRUST)  Bug fixed   : Regression issued from 1.5.5 version fixed : error in the symmetry boundary condition for vectorial equation (eg: K_Eps) with VEF discretization
 02/04/09 (TRUST)  Bug fixed   : Rare crash possible when restarting Front Tracking calculation with ASCII save files
 30/03/09 (Tools)  Portability : reprise_auto script is supported on cluster jade (CINES). Environment variable DMFDIR for archiving may be set to /data/login
-17/03/09 (TRUST)  Bug fixed   : Mass error when Acceleration source term with a rotation used with periodic boundary condition 
+17/03/09 (TRUST)  Bug fixed   : Mass error when Acceleration source term with a rotation used with periodic boundary condition
 16/03/09 (Kernel) Bug fixed   : Field name used for Champ_fonc_reprise keyword was case sensitive
 13/03/09 (Tools)  Bug fixed   : Several regressions issued from 1.5.6 version fixed for Run_sonde/Run/Extrait_coupe scripts
 13/03/09 (TRUST)  Bug fixed   : Crash if Champ_front_normal_VEF or Champ_front_tangentiel_VEF used with VEF P1 discretization
@@ -1399,8 +1399,8 @@ Release notes version 1.5.7 : Enhancements, modifications and corrected bugs sin
 Release notes version 1.5.6 : Enhancements, modifications and corrected bugs since version 1.5.5 :
 --------------------------------------------------------------------------------------------------
 20/02/09 (TRUST)  Announcement: TRUST 1.5.6 version released for Linux and IBM AIX
-18/02/09 (TRUST)  Bug fixed   : Error on the pressure field when written on mesh nodes in VEFPreP1B discretization 
-09/02/09 (Kernel) New keyword : Runge_Kutta_ordre_4_D3P for a Runge-Kutta 4th order scheme 
+18/02/09 (TRUST)  Bug fixed   : Error on the pressure field when written on mesh nodes in VEFPreP1B discretization
+09/02/09 (Kernel) New keyword : Runge_Kutta_ordre_4_D3P for a Runge-Kutta 4th order scheme
 09/02/09 (Kernel) New option  : numero_elem_sur_maitre option for the Sonde keyword to set a probe on a specific cell
 09/02/09 (Kernel) New option  : equation_non_resolue option for the Parametre_implicite keyword to not solve an equation with the implicit scheme
 09/02/09 (TRUST)  New option  : mode_calcul_convection option for the Convection_Diffusion_Chaleur_QC keyword to change the default calculation of the convective term of the energy equation used with the quasi-compressible model
@@ -1408,20 +1408,20 @@ Release notes version 1.5.6 : Enhancements, modifications and corrected bugs sin
 09/02/09 (TRUST)  New option  : temps_debut_prise_en_compte_drho_dt option for the Fluide_Quasi_Compressible keyword to impose no mass variation during a specified time
 09/02/09 (TRUST)  New keyword : Loi_expert_hydr and Loi_expert_scalaire to change some default parameters of the standard law of the wall of turbulence model
 06/02/09 (Kernel) Bug fixed   : Integrer_champ_med did not give the good flow rate with debit_total method for z section not located between 0 and 1
-05/02/09 (Kernel) Bug fixed   : Probe file was re-initialized if the writing period was larger than the final calculation time 
+05/02/09 (Kernel) Bug fixed   : Probe file was re-initialized if the writing period was larger than the final calculation time
 04/02/09 (TRUST)  New option  : Option amont_sous_zone for EF_stab convection scheme to degenerate into amont scheme in a sub-zone
 15/01/09 (Kernel) Bug fixed   : NAN occured during a calculation with Piso solver of implicit scheme
 14/01/09 (Kernel) Bug fixed   : Champ_fonc_tabule and Champ_fonc_fonction could only use temperature field
 13/01/09 (Kernel) Minor change: Postraiter_domaine may now use binary format LATA with a new option named binaire
 13/01/09 (Kernel) Bug fixed   : LATA sequential postprocessing produced an std::overflow error on big meshes (>50 millions elements)
-09/01/09 (TRUST)  Minor change: Two fluid problem couldn't use mixing length model 
+09/01/09 (TRUST)  Minor change: Two fluid problem couldn't use mixing length model
 09/01/09 (TRUST)  Minor change: Change VEF syntax of mixing length turbulence model
 08/01/09 (Kernel) Bug fixed   : Ecrire_fichier_xyz_valeur couldn't be used more than once per equation
 08/01/09 (Kernel) New keyword : Champ_front_lu to read a field into a ASCII xyz format file
 19/12/08 (TRUST)  Bug fixed   : Stop if pas_de_temps keyword used to post process time steps with no operator (keyword negligeable)
 08/12/08 (TRUST)  Portability : CINES SGI/Linux cluster named jade supported (1536 nodes of 2 quad-core processors)
 02/12/08 (Tools)  Update      : VisIt 1.9.1 version released with TRUST
-25/11/08 (TRUST)  Bug fixed   : The boundary condition Paroi_echange_externe_impose can now be used with the convective scheme EF_stab 
+25/11/08 (TRUST)  Bug fixed   : The boundary condition Paroi_echange_externe_impose can now be used with the convective scheme EF_stab
 25/11/08 (TRUST)  Portability : IDRIS AIX cluster named vargas supported (112 nodes of 32 dual-core processors)
 24/11/08 (TRUST)  Minor change: Additional informations are now printed into the _Nusselt.face file with the dt_impr_nusselt option
 24/11/08 (TRUST)  Minor change: Front tracking model is no longer limited to one solid interface with imposed velocity
@@ -1430,14 +1430,14 @@ Release notes version 1.5.6 : Enhancements, modifications and corrected bugs sin
 06/11/08 (Kernel) Bug fixed   : Possible corruption in LATA format, if the field name does not match to the number of component of the field
 24/10/08 (TRUST)  Bug fixed   : In Sous_Zone Tube, h was not the height of the tube but the coordinate of the end's tube
 23/10/08 (TRUST)  Portability : Intel compilers 10.1 supported
-17/10/08 (Tools)  Major change: Lata plugin to read with VisIt the LATA format files hasPetsc been updated 
+17/10/08 (Tools)  Major change: Lata plugin to read with VisIt the LATA format files hasPetsc been updated
 16/10/08 (TRUST)  Minor change: Muscl and upwind schemes have been changed with the VEF discretization
 16/10/08 (Kernel) Minor change: Add the option numero_elem_sur_maitre to the Sonde keyword
 16/10/08 (Kernel) Minor change: Add the option avec_certains_bords to the Extraire_surface keyword
-16/10/08 (Kernel) New keyword : Extraire_domaine to extract a mesh from another mesh  
+16/10/08 (Kernel) New keyword : Extraire_domaine to extract a mesh from another mesh
 16/10/08 (Kernel) Bug fixed   : Uniform fields (for example, density for an incompressible flow) couldn't be post processed
 16/10/08 (Kernel) Bug fixed   : No good convergence for implicit scheme with periodic boundary conditions
-16/10/08 (TRUST)  Major change: Quasi compressible model and isothermal Front Tracking model can now use the implicit diffusive scheme 
+16/10/08 (TRUST)  Major change: Quasi compressible model and isothermal Front Tracking model can now use the implicit diffusive scheme
 13/10/08 (Tools)  Minor change: The last lines of the .err file are automatically translated in English when GUI is used
 06/10/08 (Tools)  Bug fixed   : Run_sonde has been improved : there are as many flow rate error's curves that there are fluid's problems
 29/09/08 (TRUST)  Bug fixed   : Crash or Nan could happen with the VEF laws of the wall UTAU_IMP in hydraulic and Loi_Paroi_Nu_Impose in thermal
@@ -1445,23 +1445,23 @@ Release notes version 1.5.6 : Enhancements, modifications and corrected bugs sin
 04/09/08 (Tools)  Bug fixed   : Run_sonde plots incorrect X-axis values for 2D profiles (regression issued from 1.5.5 version)
 04/09/08 (Kernel) Minor change: Fix minor inconsistency for the time steps printed in .out file
 03/09/08 (TRUST)  Bug fixed   : In some rare cases, crash (in debug) or wrong indicator function (optimized code) in parallel Front Tracking
-03/09/08 (TRUST)  Bug fixed   : Flow rates printed in the _Debit.out file were always zero for the VEF discretization (regression issued from 1.5.5)   
+03/09/08 (TRUST)  Bug fixed   : Flow rates printed in the _Debit.out file were always zero for the VEF discretization (regression issued from 1.5.5)
 29/08/08 (Kernel) Minor change: The first time step is now calculated and not set to dt_min by default (equivalent to "dt_start dt_calc")
 28/08/08 (TRUST)  Bug fixed   : Crash or Nan could happen with the VEF source term Source_Qdm_Lambdaup
 27/08/08 (Kernel) Bug fixed   : Metis tool updated to v5.0pre2 (the partitioning of a 100 million elements crashed with v4.0)
 22/08/08 (Kernel) Minor change: During a parallel calculation, only the master process writes now in the .err file (error messages written by the other processes are written in .log files)
-20/08/08 (TRUST)  Bug fixed   : Several VEF source terms were not evaluated near boundary with symmetry condition 
-20/08/08 (Kernel) Optimization: The parallelization of Champ_front_calc_recycl_fluct and Champ_front_calc_recycl_fluct_pbperio have been improved (the boundary need not to be on the same processor)  
+20/08/08 (TRUST)  Bug fixed   : Several VEF source terms were not evaluated near boundary with symmetry condition
+20/08/08 (Kernel) Optimization: The parallelization of Champ_front_calc_recycl_fluct and Champ_front_calc_recycl_fluct_pbperio have been improved (the boundary need not to be on the same processor)
 20/08/08 (Kernel) New keyword : Supprime_bord removes one or several boundaries of a domain
 19/08/08 (Tools)  Bug fixed   : Gmsh updated to 2.2.4 version to mesh a IGES geometry (it crashed on this geometry with version 2.0.8)
 19/08/08 (TRUST)  Minor change: New option temperature of the keyword Traitement_particulier to calculate mass flow rate and averaged temperature on a boundary
 06/08/08 (TRUST)  Bug fixed   : Crash of a K-Eps model calculation formulated with 3D cylindrical coordinates
 06/08/08 (Tools)  Minor change: gmsh2geom tool was previously limited to 100000 elements meshes
-05/08/08 (TRUST)  Bug fixed   : Restarting calculation with a .xyz created by a parallel Front Tracking calculation failed 
-04/08/08 (Kernel) Optimization: The parallelization of Champ_front_calc_intern_2pbs has been improved (the boundary need not to be on the same processor) 
+05/08/08 (TRUST)  Bug fixed   : Restarting calculation with a .xyz created by a parallel Front Tracking calculation failed
+04/08/08 (Kernel) Optimization: The parallelization of Champ_front_calc_intern_2pbs has been improved (the boundary need not to be on the same processor)
 01/08/08 (Kernel) Bug fixed   :	Restarting parallel calculation with a .xyz file created at the end of the previous calculation fails (regression issued from 1.5.5)
 30/07/08 (Tools)  Optimization: The tool gmsh2geom has been optimized. The treatment of large mesh is much faster.
-23/07/08 (Kernel) Minor change: Add test to prevent user to run parallel calculation with implicit time scheme and periodic boundary condition  
+23/07/08 (Kernel) Minor change: Add test to prevent user to run parallel calculation with implicit time scheme and periodic boundary condition
 04/07/08 (Kernel) Minor change:	Periodic and symmetric boundary condition of different equations on a same boundary gave strange error message
 01/07/08 (TRUST)  Minor change:	Coupling between a radiating transparent fluid problem and a non-radiating fluid problem is now available
 --------------------------------------------------------------------------------------------------
@@ -1475,7 +1475,7 @@ Release notes version 1.5.5 : Enhancements, modifications and corrected bugs sin
 09/06/08 (TRUST)  New keyword :	Integrer_Champ_MED to calculate flow rate from a velocity MED field
 09/06/08 (TRUST)  New keyword :	Extraire_surface to create a 2D external surface mesh from a specified volume
 09/06/08 (TRUST)  New keyword :	Extraire_plan to create a 2D mesh from a 3D mesh with a plan
-09/06/08 (Kernel) Bug fixed   :	Crash or useless rewrite of result files if nb_pas_dt_max equals 0 
+09/06/08 (Kernel) Bug fixed   :	Crash or useless rewrite of result files if nb_pas_dt_max equals 0
 05/06/08 (Kernel) Minor change:	Multiscalar equation can now be used in VEF discretization (e.g. concentration equation)
 05/06/08 (Kernel) Minor change:	Pressure like other fields can now be post-processed at the domain boundaries with Champ_Post_Extraction
 30/05/08 (Kernel) Bug fixed   : Run_sonde could plot some strange curves when nodes, chsom or grav probe options was used
@@ -1490,7 +1490,7 @@ Release notes version 1.5.5 : Enhancements, modifications and corrected bugs sin
 15/05/08 (TRUST)  Bug fixed   :	Several fixes in the indicatrice calculation in 2D VEF Front Tracking module
 15/05/08 (Tools)  Minor change:	gmsh2geom support surface mesh 1D (segment) in 2D
 15/05/08 (TRUST)  New keyword :	Frontiere_ouverte_rho_u_impose to use a mass rate inlet boundary condition for Quasi compressible model
-15/05/08 (Kernel) New option  :	Champ_Post_Morceau_Equation for Definition_champs keyword to define a field for one equation's time step 
+15/05/08 (Kernel) New option  :	Champ_Post_Morceau_Equation for Definition_champs keyword to define a field for one equation's time step
 15/05/08 (TRUST)  New keyword :	pas_de_temps to post process as fields all the time steps (convective and diffusive operators of each equation)
 15/05/08 (Kernel) Bug fixed   :	Residu in .dt_ev file was not written for all time schemes
 15/05/08 (Kernel) Minor change:	Add check to insure there is enough disk space during a calculation (keyword no_check_disk_space to disable)
@@ -1501,14 +1501,14 @@ Release notes version 1.5.5 : Enhancements, modifications and corrected bugs sin
 14/05/08 (TRUST)  Bug fixed   :	Keyword frontiere_ouverte_gradient_pression_impose_VEFPreP1B gave bad results
 18/04/08 (Kernel) Portability :	Linux distribution Ubuntu 7.10 is supported
 31/03/08 (TRUST)  Minor change:	Syntax of the Source_Qdm_lambdaup keyword becomes: Source_Qdm_lambdaup { lambda value }
-31/03/08 (TRUST)  Minor change:	Change for the pressure gradient field postprocessed 
+31/03/08 (TRUST)  Minor change:	Change for the pressure gradient field postprocessed
 31/03/08 (TRUST)  New keyword :	Solver dedicated to 2D/3D VEF discretization: GCP { precond ssor_bloc { ... } }
-31/03/08 (TRUST)  New keyword :	Solver dedicated to 2D/3D VEF discretization: MG_VEF { seuil 1.e-10 [impr] solveur1 { ... } precond0 { ... } precond1 { ... } preconda { ... } } 
-31/03/08 (TRUST)  New keyword :	Solver dedicated to 2D VEF discretization: GCP_NS { seuil 1.e-10 [impr] solveur0 { ... } solveur1 { ... } [precond ...] } 
+31/03/08 (TRUST)  New keyword :	Solver dedicated to 2D/3D VEF discretization: MG_VEF { seuil 1.e-10 [impr] solveur1 { ... } precond0 { ... } precond1 { ... } preconda { ... } }
+31/03/08 (TRUST)  New keyword :	Solver dedicated to 2D VEF discretization: GCP_NS { seuil 1.e-10 [impr] solveur0 { ... } solveur1 { ... } [precond ...] }
 31/03/08 (TRUST)  Major change:	Re-written VEF discretization (P1NC/P0P1Pa)
-27/03/08 (Kernel) Bug fixed   :	Regression issued from 1.5.4 version fixed: incorrect writing period with LATA format 
+27/03/08 (Kernel) Bug fixed   :	Regression issued from 1.5.4 version fixed: incorrect writing period with LATA format
 --------------------------------------------------------------------------------------------------
-Release notes version 1.5.4 : Enhancements, modifications and corrected bugs since version 1.5.3 : 
+Release notes version 1.5.4 : Enhancements, modifications and corrected bugs since version 1.5.3 :
 --------------------------------------------------------------------------------------------------
 21/02/08 TRUST 1.5.4 version released for Linux and IBM AIX
 19/02/08 New keyword Combinaison to specify a function for the turbulent viscosity
@@ -1535,16 +1535,16 @@ Release notes version 1.5.4 : Enhancements, modifications and corrected bugs sin
 14/01/08 New keyword Discretiser_domaine to discretize a domain without creating a problem
 14/01/08 New options added to the parser (ABS,_AND_,_OR_,_GT_,_LT_,_GE_,_LE_,...)
 14/01/08 New keyword Modif_bord_to_raccord to convert a "Bord" boundary to a "Raccord" boundary
-14/01/08 New keyword Regroupebord to gather several boundaries of a domain into a new one 
+14/01/08 New keyword Regroupebord to gather several boundaries of a domain into a new one
 14/01/08 New options added to Sous_Zone keyword (Restriction, Union, Fonction_sous_zone, Tube_hexagonal)
 08/01/08 New option definition_champs for Postraitement keyword to enhance the postprocessing capabilities
 20/12/07 Meshtv tool is no longer delivered with TRUST. It is replaced by VisIt
 20/12/07 New keyword Execute_parallel available to run several serial and/or parallel calculations with a single mpirun command
 11/12/07 .son files containing the probes are now updated during a re-started calculation
-06/12/07 Bug fixed: Wrong turbulent heat fluxes given by law of the wall during VEF calculations with imposed temperature 
+06/12/07 Bug fixed: Wrong turbulent heat fluxes given by law of the wall during VEF calculations with imposed temperature
 06/12/07 Numerical Platon updated to 3.0 version with Petsc support added
 03/12/07 Bug fixed: Error with the K_Eps field written in lata format
-29/11/07 facsec read in .dt_ev file during restart of a calculation using an implicit scheme 
+29/11/07 facsec read in .dt_ev file during restart of a calculation using an implicit scheme
 27/11/07 VEF law of the wall algorithm changed to fix several bugs (fluctuating timesteps,...)
 22/11/07 reprise_auto is supported on platine cluster and now stops calculation 30mn before CPU limit
 21/11/07 Bug fixed: Wrong heat fluxes at boundaries printed in the .out files with VEF Quasi-compressible model
@@ -1558,10 +1558,10 @@ Release notes version 1.5.4 : Enhancements, modifications and corrected bugs sin
 15/10/07 Linux Mandriva 2008 distribution supported (g++ 4.2.2)
 15/10/07 Linux RedHat Enterprise 4.5 distribution supported
 10/10/07 Bug fixed: Constant volumic mass when an implicit scheme is used with Quasi-compresible module
-08/10/07 Bug fixed: EF_stab scheme was not strictly parallelized near boundaries of some partitioned meshes 
+08/10/07 Bug fixed: EF_stab scheme was not strictly parallelized near boundaries of some partitioned meshes
 08/10/07 Small change for heat conduction with VEFPreP1B discretization (extended control volume near Dirichlet boundary condition)
 05/10/07 Bug fixed: Slow restart of implicit calculation with Prandtl turbulent model
-05/10/07 Bugs fixed: Implicit calculation with Quasi compressible model and K-Epsilon model 
+05/10/07 Bugs fixed: Implicit calculation with Quasi compressible model and K-Epsilon model
 03/10/07 Bugs fixed: Wrong heat fluxes near the wall in Quasi-compressible model when used with turbulent models
 02/10/07 Bug fixed: Frontiere_ouverte keyword couldn't be used with a Champ_front_fonc_xyz field
 01/10/07 Bug fixed: Small error in the timestep calculation for the heat equation of the quasi-compressible module
@@ -1588,7 +1588,7 @@ Release notes version 1.5.3 : Enhancements, modifications and corrected bugs sin
 25/07/07 New keyword Prandt_turbulent_fonction_nu_t_alpha to define a specific turbulent diffusivity in the Prandtl model
 25/07/07 Keyword Decoupebord becomes obsolete and is replaced by the enhanced keyword Decoupebord_pour_rayonnement
 25/07/07 Restarting calculation with a K-Eps model from a previous mixing length model calculation is available
-24/07/07 VEF schemes muscl,centre,amont have been CPU optimized (run 40% faster)  
+24/07/07 VEF schemes muscl,centre,amont have been CPU optimized (run 40% faster)
 23/07/07 New keyword faces to write the field results with the LATA format to the faces of the mesh (and viewable by VisIt)
 11/07/07 Graph partitioning tool Metis updated to 4.0 version to fix the "Memory allocation failed for .... Requested size: ... " error message on large meshes (>10 million elements)
 10/07/07 New keyword Postraiter_domaine to write one or more several domaines into a LML, MESHTV, or LATA format file
@@ -1604,7 +1604,7 @@ Release notes version 1.5.3 : Enhancements, modifications and corrected bugs sin
 19/06/07 Physical property fields of each problem can now be post processed
 19/06/07 Crash (signal 8) when periode was not defined in Traitement_particulier keyword with options EC or ConcMoy
 18/06/07 New keyword Combinaison_champ to create new fields from other ones
-18/06/07 Changes in the VEF law of the wall (continuous analytical functions used instead of functions separataly defined for each sub-layer) 
+18/06/07 Changes in the VEF law of the wall (continuous analytical functions used instead of functions separataly defined for each sub-layer)
 18/06/07 Changes in the muscl and center schemes (flux are now calculated with a first order scheme near the boundaries)
 18/06/07 Changes in the Wale model for VDF and VEF discretizations
 18/06/07 New keyword Raffiner_isotrope to subdivide in a 2D mesh each triangle in 4 new ones and in a 3D mesh one tetrahedra in 8 new ones
@@ -1617,7 +1617,7 @@ Release notes version 1.5.3 : Enhancements, modifications and corrected bugs sin
 13/06/07 VisIt 1.6 released with TRUST on Linux
 06/06/07 reprise_auto script supported on castor cluster
 06/06/07 No flux printed into .out files for a turbulent concentration equation
-29/05/07 Xprepro GUI translated in English 
+29/05/07 Xprepro GUI translated in English
 21/05/07 New keyword Reordonner_Faces_Periodiques to define/reorder the faces from periodic boundaries
 21/05/07 Partitioning tools has been improved/optimized (mesh of 10 millions elements partitioned in 10 minutes) and several bugs were fixed. Syntax also change (see User's Manual)
 21/05/07 Bug fixed: Keyword dt_impr_nusselt was not available for all thermal laws of the wall (results are now printed into a data_filename_Nusselt.file file)
@@ -1640,7 +1640,7 @@ Release notes version 1.5.3 : Enhancements, modifications and corrected bugs sin
 05/04/07 Bug fixed: EF_stab was not parallelized on some partitionned meshes and could lead to velocity divergency
 04/04/07 Bug fixed: Possible segmentation fault when using group with MED file
 --------------------------------------------------------------------------------------------------
-Release notes version 1.5.2 : Enhancements, modifications and corrected bugs since version 1.5.1 : 
+Release notes version 1.5.2 : Enhancements, modifications and corrected bugs since version 1.5.1 :
 --------------------------------------------------------------------------------------------------
 03/04/07 1.5.2 version released for Linux, HP-UX 11, Compaq/DEC OSF, IBM AIX
 27/03/07 MPI-Bull2 supported on CCRT cluster argent
@@ -1658,7 +1658,7 @@ Release notes version 1.5.2 : Enhancements, modifications and corrected bugs sin
 12/02/07 Major changes into the problems hierarchization (see Developer Notes) to give TRUST improved coupling capabilities
 07/02/07 Bug fixed: Possible error message "MPI is not initialized in MPI_Waitall" with some MPI implementations
 ------------------------------------------------------------------------------------------------
-Release notes version 1.5.1 : Enhancements, modifications and corrected bugs since version 1.5 : 
+Release notes version 1.5.1 : Enhancements, modifications and corrected bugs since version 1.5 :
 ------------------------------------------------------------------------------------------------
 01/02/07 1.5.1 version released for Linux, HP-UX 11, SGI IRIX, Compaq/DEC OSF, IBM AIX
 16/01/07 Better initialization for pressure at the start of calculation to improve the Piso convergence during the first timestep
@@ -1667,8 +1667,8 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 15/01/07 TBLE wall model available in VEF discretization
 09/01/07 Improvements to Piso implicit scheme to deal with K-Epsilon calculations
 09/01/07 MED library updated to 2.2.3 version
-05/01/07 Bug fixed: Keyword solveur_bar was cpu expensive when used with Cholesky or GCP/ILU solvers 
-05/01/07 New option Ec_dans_repere_fixe for Traitement_particulier keyword to print total kinetic energy in the non moving referential 
+05/01/07 Bug fixed: Keyword solveur_bar was cpu expensive when used with Cholesky or GCP/ILU solvers
+05/01/07 New option Ec_dans_repere_fixe for Traitement_particulier keyword to print total kinetic energy in the non moving referential
 05/01/07 Bug fixed: Sign error in moment of forces printed in .out files
 05/01/07 Imprimer_flux keyword prints now in .face files instead of .out files
 05/01/07 CPU report files are renamed data_filename.TU
@@ -1680,11 +1680,11 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 05/01/07 Bug fixed: Wrong sign for acceleration in Acceleration term source
 05/01/07 mpirun -gdb now automatically launches several debugging windows (equivalent to scatter debug option)
 12/12/06 Restarting calculation has been accelerated with pressure actually read from save files
-12/12/06 Bug fixed: Crash when using Champ_tabule_temps with Acceleration source term 
+12/12/06 Bug fixed: Crash when using Champ_tabule_temps with Acceleration source term
 11/12/06 Bug fixed: Wrong density dependence of Source_constituant term is removed
 11/12/06 Bug fixed: Source_constituant is now available for VEF discretization
 28/11/06 Numerical Platon updated to v2.6 (Hypre library updated to v1.11.1b) with several bugs fixed
-23/11/06 Bug fixed: Possible stop with assert for Front_Tracking parallel calculations 
+23/11/06 Bug fixed: Possible stop with assert for Front_Tracking parallel calculations
 22/11/06 Optimization of h_imp() method for heat exchange boundaries conditions
 15/11/06 Bug fixed: Possible blocking during VEF discretization operation
 13/11/06 Bug fixed: reprise_auto script failed if the data file was DOS format
@@ -1692,7 +1692,7 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 16/10/06 Bug fixed: Visualizing partitioned meshes with empty zones didn't work with Ecrire_fic_meshtv keyword
 10/10/06 Bug fixed: Transient calculations were wrong when restarting calculations with "Paroi_Echange_contact_Correlation" boundary condition
 29/09/06 New keywords volume_sans_lissage and arete to select the way to calculate the filter length
-29/09/06 Bug fixed: Possible error in the .geom file when using gibi2geom for a three dimensional mesh 
+29/09/06 Bug fixed: Possible error in the .geom file when using gibi2geom for a three dimensional mesh
 07/09/06 Bug fixed: Possible crash during parallel Front_Tracking_Disc calculation with Paroi_FT_disc boundary condition
 31/08/06 Bug fixed: Possible crash if volume probe is selected
 31/08/06 Bug fixed: Moments at the boundaries were badly calculated with VEF discretization
@@ -1700,10 +1700,10 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 23/08/06 Bad values of time indicated in .lata and .mehtv files when Statistiques_en_serie was used
 18/08/06 Bug fixed: VerifierCoin interpreter did not detect all singular element
 11/08/06 Bug fixed: Possible crash with Perte_Charge_VEF and variable physical properties
-11/08/06 Bug fixed: First calculation of temperature at the boundary between coupled problems was wrong with variable physical properties 
+11/08/06 Bug fixed: First calculation of temperature at the boundary between coupled problems was wrong with variable physical properties
 11/08/06 Paroi_FT_Disc (with options) replaces Paroi_fixe for interface equation for Front_Tracking calculations
 10/08/06 Bug fixed: bad values may be read in Channel_Flow_Rate file when restarting a parallel calculation
-09/08/06 Bug fixed: possible crash with Champ_Fonc_reprise when restarting with a statistical field 
+09/08/06 Bug fixed: possible crash with Champ_Fonc_reprise when restarting with a statistical field
 08/08/06 Add test to prevent post of a quantity twice at the same location
 25/07/06 Add test to prevent use of Ecrire_fic_meshtv after Decouper
 19/07/06 New option for Boussinesq source term to avoid checking of the reference value
@@ -1711,15 +1711,15 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 07/07/06 New problems allowing to take into account massic fraction of species
 06/07/06 Ecrire_fichier_xyz_valeur allows to write field values either for the whole domain or for some boundaries
 29/06/06 Trianguler interpreters may now be applied to general quadrangle elements (not only rectangle)
-29/06/06 Bug fixed : Possible crash during the reading of some 2D Tgrid meshes 
+29/06/06 Bug fixed : Possible crash during the reading of some 2D Tgrid meshes
 20/06/06 New keyword Extruder_en3_perio to extrude 2D triangular mesh in 3D tetrahedral mesh with a resulting periodic boundary
 20/06/06 New option for Extruder_en3 : boundaries in the direction of the extrude operation may be renamed
-14/06/06 Runge Kutta time scheme of order three available for Front Tracking calculation 
-13/06/06 Bug fixed: Bad values of some time averaging quantities calculated by Traitement_Particulier_N_S_Canal for restarting calculation 
+14/06/06 Runge Kutta time scheme of order three available for Front Tracking calculation
+13/06/06 Bug fixed: Bad values of some time averaging quantities calculated by Traitement_Particulier_N_S_Canal for restarting calculation
 12/06/06 Bug fixed: Variable physical properties cannot be used with Paroi_flux_impose_Rayo_transp boundary condition for VDF dicretization
 12/06/06 Bug fixed: Error in the location of subzones of "Couronne" type
 09/06/06 Scotti correction available for Smagorinsky and Wale models for VDF discretization
-31/05/06 Bug fixed: "No Space Temperature or Space Node specified for open Enclosure" error message for some meshes calculated by geom2ansys 
+31/05/06 Bug fixed: "No Space Temperature or Space Node specified for open Enclosure" error message for some meshes calculated by geom2ansys
 31/05/06 Regression issued from 1.5 fixed: Boundary heat flux in VEF discretization from conduction equation were wrong in the .out file
 19/05/06 Bug fixed: Post processed values of y_plus were wrong when negigeable type was selected for the wall law
 18/05/06 Bug fixed: Printed values in the .out file of some source term were overestimated during parallel calculation
@@ -1728,29 +1728,29 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 17/05/06 Keywords Puissance_thermique_uniforme/Source_constituant_uniforme become obsolete and should be replaced by Puissance_thermique and Source_constituant
 11/05/06 Bug fixed : TRUST did not print the local values of Nusselt number for turbulent quasi-compressible calculation
 09/05/06 Discontinous Front Tracking model is now available on 2D (planar or axysimmetric) VDF meshes or 2D planar VEF mesh
-05/05/06 Bug fixed: False values for turbulent diffusivity given by the dynamic subgrid-scale model with temperature dependant conductivity 
-26/04/06 Faces are now numbered differently which prevents from re-starting calculation with old .sauv files (use reprise xyz instead) 
+05/05/06 Bug fixed: False values for turbulent diffusivity given by the dynamic subgrid-scale model with temperature dependant conductivity
+26/04/06 Faces are now numbered differently which prevents from re-starting calculation with old .sauv files (use reprise xyz instead)
 26/04/06 .FACES file becomes obsolete (neither created nor read anymore during the faces creation which has been CPU optimized)
 26/04/06 The new version of Scatter prevents from reading old partitioned meshes (they should be re-partitioned)
 26/04/06 New Scatter algorithm which multiply dramatically (*5 on 32*200000 cells) the speed of parallel calculation initialization
 26/04/06 Add test to prevent use of Champ_front_calc_recycl_fluct_pbperio in VDF
 26/04/06 Add test to prevent use of different boundaries name at "raccord" with transparent radiation model
 25/04/06 Bad values fixed into the .dat results files during parallel calculation (keywords Paroi_Echange_Contact_Correlation_VEF/VDF)
-24/04/06 Diffusion operators were CPU optimized in VEF discretization: may improve the conduction calculation speed by 40% 
+24/04/06 Diffusion operators were CPU optimized in VEF discretization: may improve the conduction calculation speed by 40%
 24/04/06 Bug fixed: False results during parallel calculation with keyword Paroi_Echange_Contact_Correlation_VEF
 21/04/06 Bug fixed: Post process with pression_pa does not work for turbulent quasi-compressible calculation
 21/04/06 Bug fixed: Possible crash during restart of a quasi-compressible calculation with keyword pression_pa
-20/04/06 Bug fixed: Blocking during Scatter operation for parallel calculation on cluster paradis 
+20/04/06 Bug fixed: Blocking during Scatter operation for parallel calculation on cluster paradis
 14/04/06 Bug fixed: With some meshes, transparent medium radiation model failed during the build of radiative faces
-13/04/06 Bug fixed: Error with keyword Traitement_Particulier (option Canal) for VEF discretization  
-12/04/06 Bug fixed: Blocking with geom2ansys during view factors build when using method 2 on more than 9999 faces  
+13/04/06 Bug fixed: Error with keyword Traitement_Particulier (option Canal) for VEF discretization
+12/04/06 Bug fixed: Blocking with geom2ansys during view factors build when using method 2 on more than 9999 faces
 12/04/06 New keyword Extruder_en3 to extrude 2D triangular mesh in 3D tetrahedral mesh (prism cut in 3)
 12/04/06 New keyword h_echange_Tref to post process the heat exchange coefficient at the wall
 11/04/06 Bug fixed: .vf view factors file issued from geom2ansys truncated when using method 3 with more than 17 boundaries
 07/04/06 New option for Champ_front_calc_recycl_fluct_pbperio field to use a mean velocity profile from an external file
 30/03/06 Bug fixed: Periodic boundary condition in VEF discretization was not entirely parallelized on some partitioned meshes
 27/03/06 Two new options to Gmres solver used by Simpler et Piso schemes: nb_it_max and controle_residu
-27/03/06 New keyword Temperature_paroi for post-processed fields in VDF only, to obtain the temperature on boundaries 
+27/03/06 New keyword Temperature_paroi for post-processed fields in VDF only, to obtain the temperature on boundaries
 21/03/06 Bug fixed: In the GUI, errors in the location of segment probes and gnuplot screens could appear twice
 21/03/06 MED library supported with GNU gcc 4.x
 17/03/06 Regression issued from 1.5 fixed: Coredump or blocking at the very end of parallel calculation on some machines with native MPI
@@ -1760,12 +1760,12 @@ Release notes version 1.5.1 : Enhancements, modifications and corrected bugs sin
 10/03/06 Bug fixed: Error (and Nan printed) when using Distance_paroi keyword on 2D mesh
 09/08/06 Bug fixed: Possible crash with keyword Traitement_Particulier (option Canal) during parallel calculation on some partitioned mesh
 08/08/06 New option facsec_evol_factor for Crank Nicholson scheme to change the default facsec evolution factor
-08/03/06 dt_max value may now be changed during a calculation by writing the new value into a case_name.dt_max file 
-08/03/06 Bug fixed: Error in the 2nd order centered scheme in VEF discretization 
-08/03/06 Bug fixed: TRUST didn't import Gambit/Tgrid/Fluent 2D meshes with the Lire_Tgrid keyword 
+08/03/06 dt_max value may now be changed during a calculation by writing the new value into a case_name.dt_max file
+08/03/06 Bug fixed: Error in the 2nd order centered scheme in VEF discretization
+08/03/06 Bug fixed: TRUST didn't import Gambit/Tgrid/Fluent 2D meshes with the Lire_Tgrid keyword
 07/06/06 3 objects added to the basic shapes list of Xprepro : ellipse, cone, and tube segment
 06/06/06 Field post-processing task and some few methods have been CPU optimized by suppressing the cell centre recalculations
-06/03/06 Add test to prevent users to set dt_min value to zero 
+06/03/06 Add test to prevent users to set dt_min value to zero
 03/03/06 Linux distribution Mandriva 2006 and GNU compilers 4.0.1 supported
 02/03/06 Option vef added to Lire_Med keyword to read non regular hexahedral mesh in MED format
 ------------------------------------------------------------------------------------------------
@@ -1784,29 +1784,29 @@ Release notes version 1.5 : Enhancements, modifications and corrected bugs since
 16/01/06 Changes and bugs fixed in the standard law of the wall for VEF discretization
 16/01/06 Piso algorithm (Pressure Implicit with Split Operator) added to implicit schemes list (limited to laminar flow)
 12/01/06 Bug fixed: Degraded CPU performance when Correlation keyword used for statistical calculation
-12/01/06 Bug fixed: Erronous heat flux when calculated and printed for paroi_contact keyword with VEF discretization 
+12/01/06 Bug fixed: Erronous heat flux when calculated and printed for paroi_contact keyword with VEF discretization
 11/01/06 New tool with TRUST Xdata which provides a GUI to edit TRUST data files (command line: EditData file.data)
 10/01/06 Bug fixed: 2 coupled thermal-hydraulic problems with turbulence models stops in VEF discretization with paroi_contact or champ_front_contact_VEF keywords
-04/01/06 New keyword gradient_temperature available in VEF discretization for post processing of temperature gradient 
+04/01/06 New keyword gradient_temperature available in VEF discretization for post processing of temperature gradient
 23/12/05 Bug fixed: Ecrire_fic_meshtv keyword or Check_maillage.ksh tool failed on some partitioned meshes
 21/12/05 Bug fixed: Non convergence of parallel calculation could happen on Tranche_perio partitioned meshes
 16/12/05 Keyword Prandtl_sous_maille becomes obsolete. Prandtl keyword should be used instead
 15/12/05 Bug fixed: In Preray GUI when trying to calculate view factors with a 2D triangle mesh
 08/12/05 Option u_etoile of keyword Canal_perio becomes obsolete
 07/12/05 Option Longueur of keyword Periodique for periodic boundary condition becomes obsolete
-06/12/05 Option precond_nul for GCP keyword to use the conjugate gradient method without preconditioning  
+06/12/05 Option precond_nul for GCP keyword to use the conjugate gradient method without preconditioning
 05/12/05 Valgrind tool updated to 3.1.0 version to check memory on 64bits platform where 3.0.0 failed (eg: paradis)
 05/12/05 Partitioning algorithm has been memory and CPU optimized for high number partition (>>64)
 05/12/05 Simpler algorithm and syntax changed to improve the use of the Euler implicit scheme for laminar flow
-29/11/05 FPU exceptions now checked on TRUST Linux version:it stops when overflow, zero divide or invalid operations occur  
+29/11/05 FPU exceptions now checked on TRUST Linux version:it stops when overflow, zero divide or invalid operations occur
 29/11/05 Bug fixed: Crash when using Champ_Fonc_reprise keyword with Moyenne_temperature field
-28/11/05 Bug fixed: Profile obtained at a previous than the specified time with the "extrait_coupe data_file probe_name time" command    
+28/11/05 Bug fixed: Profile obtained at a previous than the specified time with the "extrait_coupe data_file probe_name time" command
 25/11/05 Bug fixed: Crashes on tantale when using sauvegarde_simple keyword may happen on parallel calculation
 23/11/05 TRUST installed on a 1024-processors IBM cluster (IDRIS)
-23/11/05 Bug fixed: Possible memory fault during 3D VEF calculation with K-Eps model 
-22/11/05 Minor crashes on DECAlpha machines of several test cases of TRUST test suite fixed 
+23/11/05 Bug fixed: Possible memory fault during 3D VEF calculation with K-Eps model
+22/11/05 Minor crashes on DECAlpha machines of several test cases of TRUST test suite fixed
 21/11/05 Period of default saves reduced from 22 hours to 10 hours CPU, plus some bugs fixed
-21/11/05 Bug fixed: Incorrect times and duplicated fields during intermediate saves of coupled calculations with Quasi-compressible model 
+21/11/05 Bug fixed: Incorrect times and duplicated fields during intermediate saves of coupled calculations with Quasi-compressible model
 17/11/05 Bug fixed: Some boundaries flux not printed in .out file when using non constant diffusivity coefficient in VEF discretization
 17/11/05 Regression issued from 1.4.9 fixed: Crash if Sutherland law used in Quasi-compressible model without thermal conductivity defined by lambda or Slambda keywords
 15/11/05 Bug fixed: Boundaries flux printed in .out file were false for imposed flux boundary conditions for VEF discretization
@@ -1819,13 +1819,13 @@ Release notes version 1.5 : Enhancements, modifications and corrected bugs since
 24/10/05 New keyword Paroi_contact replaces old syntax used with Paroi_echange_contact_VDF or "Paroi_temperature_imposee Champ_front_contact_VEF"
 24/10/05 Keyword Paroi_temperature_imposee available in VDF discretization and replaces old syntax used with Paroi_echange_contact_VDF
 21/10/05 Bug fixed: Corrupted .meshtv files when written elsewhere than in the current directory
-21/10/05 Keyword Champ_Fonc_Reprise may now also read temporal average field (like moyenne_vitesse) 
+21/10/05 Keyword Champ_Fonc_Reprise may now also read temporal average field (like moyenne_vitesse)
 20/10/05 Keyword Extruder now also supports "raccord" boundaries between two domains
 20/10/05 Bug fixed: Run_sonde didn't detect probes inside data file in DOS format
 18/10/05 New keywords Ecrire_Med/Lire_Med to write/read meshes at MED format (ex: read meshes created by Salome)
 14/10/05 Domain name read in a TRUST mesh file can now be different from the domain name in the data file
 13/10/05 Bug fixed: Wrong diffusive flux printed during VEF Quasi-Compressible turbulent calculation
-10/10/05 Regression issued from 1.4.9 fixed: non convergence of parallel Numerical Platon solvers used in TRUST with VEF discretization 
+10/10/05 Regression issued from 1.4.9 fixed: non convergence of parallel Numerical Platon solvers used in TRUST with VEF discretization
 07/10/05 Bug fixed: Possible incomplete binary files written during save process
 03/10/05 Partitioning algorithm partially re-written to fix bugs and improve speed (1 million elements mesh: +50%)
 03/10/05 Bug fixed: When reading a MED file, possible error message like "La face numero nnn aurait du etre une face de bord definie par les sommets"
@@ -1838,12 +1838,12 @@ Release notes version 1.5 : Enhancements, modifications and corrected bugs since
 31/08/05 Keyword Correction_visco_turb_pour_controle_pas_de_temps available in VEF discretization
 26/08/05 Valgrind tool updated to 3.0.0, may now be used on parallel calculation with "mpirun -dbg=valgrind -np" command
 25/08/05 Partitioning mesh with directions of periodicity improved thanks to option Tranche_perio of Decouper keyword
-23/08/05 Bug fixed: Non-convergency of GCP&SSOR solver used with solveur_bar keyword during // calculation on Metis-partitioned mesh 
+23/08/05 Bug fixed: Non-convergency of GCP&SSOR solver used with solveur_bar keyword during // calculation on Metis-partitioned mesh
 22/08/05 Keyword EchgItemsComm becomes obsolete (useless since 1.4 version)
 22/08/05 Two new keywords Prandtl_K and Prandtl_Eps to change default values 1. and 1.3 in K-Eps model
 17/08/05 Regression issued from 1.4.9 fixed which may cause parallel calculation to not converge
 03/08/05 Saving files aren't any more created at the beginning of the calculation but really at the first saving time
-02/08/05 Circle probe documented and fully supported by Run_sonde script 
+02/08/05 Circle probe documented and fully supported by Run_sonde script
 02/08/05 Bug fixed: Errors on the names of correlation tensor components in Meshtv&VisIt
 29/07/05 Bug fixed: Sutherland law for Quasi-compressible module did not work in parallel calculation
 27/07/05 Script mpirun changed to support new batch LSF/SLURM on tantale CCRT cluster: "mpijob -n" substituted by "mpirun -srun -n"
@@ -1851,10 +1851,10 @@ Release notes version 1.5 : Enhancements, modifications and corrected bugs since
 27/07/05 Bug fixed: Turbulent viscosity was incorrect in turbulent quasi compressible calculation
 27/07/05 Syntax of Canal_perio keyword change (coeff becomes obsolet and u_etoile becomes optional)
 --------------------------------------------------------------------------------------------------
-Release notes version 1.4.9 : Enhancements, modifications and corrected bugs since version 1.4.8 : 
+Release notes version 1.4.9 : Enhancements, modifications and corrected bugs since version 1.4.8 :
 --------------------------------------------------------------------------------------------------
 26/07/05 1.4.9 version released for Linux, HP-UX 11, SGI IRIX, Compaq/DEC OSF, IBM AIX, Sun OS
-07/07/05 Parallel performances increased with communications reduced by 40% in Gradient Conjugate solver 
+07/07/05 Parallel performances increased with communications reduced by 40% in Gradient Conjugate solver
 24/06/05 Partitioning with keyword Decouper now converts "Raccord local homogene" in "Raccord distant homogene"
 23/06/05 Regression issued from 1.4.8 fixed about creation of 2D meshes with Xprepro
 22/06/05 MPICH 1.2.5 supported on Cray 64bits Opteron cluster paradis.intra.cea.fr
@@ -1870,7 +1870,7 @@ Release notes version 1.4.9 : Enhancements, modifications and corrected bugs sin
 20/05/05 New keyword projection_initiale to eventually suppress the initial projection in Navier Stokes resolution
 20/05/05 Bug fixed: During re-starting calculation, projection was done twice if keyword dt_projection was used in Navier Stokes equation
 17/05/05 Bug fixed: Errors in THI and THI_thermo options of Traitement_particulier keyword in VDF discretization
-13/05/05 Bug fixed: Error when Transformer keyword used to create a structured mesh by symetry (eg: Transformer dom x -y) 
+13/05/05 Bug fixed: Error when Transformer keyword used to create a structured mesh by symetry (eg: Transformer dom x -y)
 04/05/05 Bug fixed: Keyword Correlation for statistical calculation unavailable for some fields (eg:Reynolds stresses in VDF discretization)
 27/04/05 New option niter_max_diffusion_implicite for semi-implicit time scheme to change the default value for maximal iteration number
 21/04/05 One-direction partition created by Tranche_Geom option is better balanced now (eg: Tranche_Geom n 1 1)
@@ -1897,19 +1897,19 @@ Release notes version 1.4.9 : Enhancements, modifications and corrected bugs sin
 14/03/05 Bug fixed: Time-dependant field Champ_Fonc_txyz may give bad results during a restart calculation
 04/03/05 Two new keywords Trianguler_fin/Tetraedriser_homogene_fin to divide each cell of a hexahedral mesh in 8 triangles/48 tetrahedrals
 04/03/05 Linux distribution Mandrake 10.1 (g++ 3.4.1) supported by TRUST
-04/03/05 Bug fixed: Coredump on DEC/OSF1 workstation with Wale turbulence model on unstructured mesh  
+04/03/05 Bug fixed: Coredump on DEC/OSF1 workstation with Wale turbulence model on unstructured mesh
 16/02/05 Bug fixed: Keyword nut_max used to set limit on turbulent viscosity was inoperative with some turbulence models
 14/02/05 Keyword dt_impr prints into the .out file the source terms for some solved equation
 08/02/05 Several enhancements to the radiation model in transparent medium (parallel and boundary cutting facilities)
 07/02/05 Bug fixed: Statistic tool on probes gives bad coordinates when segment probes is not axis-parallel
 28/01/05 Bug fixed: Error message and empty .sauv files created with keyword sauvegarde_simple
-20/01/05 Bug fixed: Time-dependant field Champ_Fonc_txyz may give bad results 
+20/01/05 Bug fixed: Time-dependant field Champ_Fonc_txyz may give bad results
 14/01/05 MED supported by TRUST on Opteron 64 bits platform (x86_64)
-13/01/05 Bug fixed: False pressure force printed in .out file during parallel calculation with VEFPreP1B discretization 
+13/01/05 Bug fixed: False pressure force printed in .out file during parallel calculation with VEFPreP1B discretization
 12/01/05 Small bugs fixed in Xprepro with AIX xlf compiler
 07/01/05 Parallel calculation, optimized with non-blocking communications, runs 15% (4 procs) to 100% (64 procs) faster
 --------------------------------------------------------------------------------------------------
-Release notes version 1.4.8 : Enhancements, modifications and corrected bugs since version 1.4.7 : 
+Release notes version 1.4.8 : Enhancements, modifications and corrected bugs since version 1.4.7 :
 --------------------------------------------------------------------------------------------------
 04/01/05 1.4.8 version released for Linux, HP-UX 11, SGI IRIX, Compaq/DEC OSF, IBM AIX, Sun OS
 21/12/04 Bug fixed: Pression_tot couldn't be post processed during turbulent calculation with Quasi-compressible model
@@ -1917,36 +1917,36 @@ Release notes version 1.4.8 : Enhancements, modifications and corrected bugs sin
 17/12/04 Bug fixed in the lml2ensight converter for hexahedral meshes (thanks to PSA)
 16/12/04 Minor bugs fixed in the clean and build scripts of TRUST sources/archives/tools
 17/12/04 Existing keyword Extruder has a new syntax and may create now also 3D hexahedral mesh from a 2D quadrangular mesh
-14/12/04 Keyword index and links to test cases added in the TRUST user's manual and TRUST GUI 
+14/12/04 Keyword index and links to test cases added in the TRUST user's manual and TRUST GUI
 09/12/04 New keyword Echange_domcut to permute two subdomain numbers of a partition (useful for coupled boundary condition)
-09/12/04 Bug fixed: Wall laws used with Quasi-compressible model gave incorrect shear stress and turbulent viscosity 
+09/12/04 Bug fixed: Wall laws used with Quasi-compressible model gave incorrect shear stress and turbulent viscosity
 07/12/04 VEF scheme muscl has been again CPU optimized (runs 40% faster but increases needed RAM of ~200 bytes per cell)
 02/12/04 New keyword gradient_pression to write pressure gradient in the results file
 02/12/04 New keyword volume_maille to write cell volumes in the results file
 23/11/04 3 new options (nodes,chsom,grav) for probes to smooth profiles on unstructured meshes (See Sonde.data)
-22/11/04 Keyword EcritureLectureSpecial to activate (default) or not the save of the restart file .xyz 
+22/11/04 Keyword EcritureLectureSpecial to activate (default) or not the save of the restart file .xyz
 22/11/04 Major feature: New version of the Phase Field problem (VDF, parallelized)
-17/11/04 TBLE wall model changed and extended (keyword Paroi_TBLE_scal) to thermal-hydraulic calculation (VDF, not parallelized) 
+17/11/04 TBLE wall model changed and extended (keyword Paroi_TBLE_scal) to thermal-hydraulic calculation (VDF, not parallelized)
 16/11/04 Bug fixed: Small error in the 3th order Runge Kutta scheme for thermal-hydraulic calculations
-15/11/04 Bug fixed: Zero iteration in the semi-implicit algorithm for diffusive terms leads to false results   
+15/11/04 Bug fixed: Zero iteration in the semi-implicit algorithm for diffusive terms leads to false results
 08/11/04 Bug fixed: Occasional parallel deadlock during face creation
-05/11/04 Several classes (Objet_U, Process,...) have been cleaned to improve debugging facilities 
-04/11/04 Two bugs fixed in the build script Makeatelier.sccs when files are deleted in the $rep_dev directory 
+05/11/04 Several classes (Objet_U, Process,...) have been cleaned to improve debugging facilities
+04/11/04 Two bugs fixed in the build script Makeatelier.sccs when files are deleted in the $rep_dev directory
 04/11/04 Performance regression issued from 1.4.6 version fixed: .Zones were re-written uselessly during parallel calculation
-04/11/04 Probes now can plot the statistical fields thanks to keywords like Moyenne_pression, Ecart_type_vitesse,... 
-03/11/04 New keyword Sauvegarde_simple to have only one time-step of the fields saved in the .sauv files  
+04/11/04 Probes now can plot the statistical fields thanks to keywords like Moyenne_pression, Ecart_type_vitesse,...
+03/11/04 New keyword Sauvegarde_simple to have only one time-step of the fields saved in the .sauv files
 29/10/04 Bug fixed: Parallel Conjugate Gradient whith Cholesky preconditioning gave bad solution on several cases
 28/10/04 Better partitionning may be obtained for domain with periodic condition
 26/10/04 Add tests to detect duplicated nodes, cells or boundary faces when discretizing a mesh
 25/10/04 Class and method comments added in the TRUST html documentation created by Doxygen
-21/10/04 Regression issued from 1.4.6 version fixed : some calculations with K-Eps models may have small time-steps 
+21/10/04 Regression issued from 1.4.6 version fixed : some calculations with K-Eps models may have small time-steps
 20/10/04 Bug fixed in the Quasi-Compressible module during conduction and thermohydraulic calculation
 19/10/04 Keyword ExtrudeBord can now extrude a domain extracted from a boundary of a hexahedral or a tetrahedral mesh
 15/10/04 Mandrake 10.0 (g++ 3.3.2) supported by TRUST. Meshtv 4.3.1 runs fine with this Linux version
 15/10/04 Regression issued from 1.4.6 version fixed: quick scheme may create oscillations
 04/10/04 New tool compare_sonde (for regression test suite) to compare differences between column formatted files
 04/10/04 Partial support (Linux only) of visualization tool VisIt 1.3.5 (command line: visit -o name.visit)
-04/10/04 Keyword ScatterFormatte added and option Formatte added to keyword Decouper to read/write formatted .Zones files 
+04/10/04 Keyword ScatterFormatte added and option Formatte added to keyword Decouper to read/write formatted .Zones files
 04/10/04 Default format for .Zones file is now binary to improve read/write performance of partitionning
 04/10/04 Champ_Fonc fields created by equations can now be used for statistical calculation
 30/09/04 Smalls bug fixed for post processed axisymetrical fields in format lata and lml
@@ -1959,8 +1959,8 @@ Release notes version 1.4.7 : Enhancements, modifications and corrected bugs sin
 14/09/04 Name of the geometric element type added to the .lata file of the LATA postprocessing format
 14/09/04 2 bugs fixed during parallel calculation with different processors number (parallel deadlock and crash when writing .meshtv files)
 13/09/04 Option canal_thermo of Traitement_particulier keyword has been parallelized
-13/09/04 Several potential bugs fixed with valgrind 2.0.0 
-10/09/04 Speed of convergence increased for linear systems of Quasi-compressible and Front-Tracking models 
+13/09/04 Several potential bugs fixed with valgrind 2.0.0
+10/09/04 Speed of convergence increased for linear systems of Quasi-compressible and Front-Tracking models
 10/09/04 New option omega_optimal for SSOR-GCP solver to approximate the optimum relaxation factor (reduce ~15% the iterations number after 50 timesteps)
 09/09/04 v1.4.6 regression fixed about the print of heat flux during turbulent calculation
 08/09/04 New keyword Correlation available for statistical calculation like Reynolds stresses or other two fields correlation (<T'u'>,...)
@@ -1968,21 +1968,21 @@ Release notes version 1.4.7 : Enhancements, modifications and corrected bugs sin
 02/09/04 2 bugs fixed in Ciofalo and power law models for VDF discretization
 30/08/04 VEF schemes have been CPU optimized eg: muscl (10% faster), amont (20% faster),...
 27/08/04 Bug fixed: Error messages stop being written during calculation with radiative model on some Linux gcc 3.2 platforms
-27/08/04 Numerical Platon in TRUST supported on Opteron 64 bits platform 
+27/08/04 Numerical Platon in TRUST supported on Opteron 64 bits platform
 25/08/04 The number of processors per domain may now be different for parallel calculation thanks to new option Nb_parts_tot of Decouper keyword
 24/08/04 Error message added when thermal wall law is used with no hydraulic wall law
 24/08/04 Bug fixed: Crash during parallel calculation with VDF low Reynolds model
 20/08/04 Keywords Champ_front_calc_recycl_fluct_pbperio and Champ_som_lu_VEF extended to 2D
 20/08/04 Bug fixed: Criteria convergency value of dt_projection keyword not used
 20/08/04 New keyword Source_Th_TdivU for source term -T.div(U) available for muscl and upwind schemes
-20/08/04 Crank-Nicolson scheme improved with Euler explicite under-iterations for scalar unknowns 
+20/08/04 Crank-Nicolson scheme improved with Euler explicite under-iterations for scalar unknowns
 16/08/04 Bug fixed: Error message while opening a file (for example .stop file) if too much probes are specified in data files
-16/08/04 Bug fixed: Memory leak when Numerical Platon solvers used on linear systems with time-dependant matrix (Front Tracking,...) 
+16/08/04 Bug fixed: Memory leak when Numerical Platon solvers used on linear systems with time-dependant matrix (Front Tracking,...)
 16/08/04 Three new keywords for pressure loss with VEFPreP1B discretizations: Perte_Charge_Isotrope, Perte_Charge_Directionnelle, Perte_Charge_Anisotrope
 11/08/04 Bug fixed: Incorrect time printed in results file for mean values calculated by Statistiques_en_serie keyword
 10/08/04 Meshtv format improved with new features: sub-zones (Plots->Filled Boundary) and time-dependant meshes are supported
 10/08/04 Silo library updated to version 4.3 for future support of postprocessing tool VisIt
-10/08/04 Error message added when two probes in a data file have the same filename 
+10/08/04 Error message added when two probes in a data file have the same filename
 09/08/04 Improve previous error message "Acces a un Ref a 0" when keyword Champ_front_contact_VEF only used in one problem
 05/08/04 Bug fixed: During parallel calculation, warnings about probes which could be outside domains may be false
 04/08/04 Bug fixed: Unsuccesful intermediate restart during Quasi-compressible calculation
@@ -1996,7 +1996,7 @@ Release notes version 1.4.6 : Enhancements, modifications and corrected bugs sin
 20/07/04 Keyword Sous_Maille_ML for mixing length model in VEF is now changed to Longueur_Melange as in VDF discretization
 13/07/04 Calculation is now stopped when non-convergency occurs with GCP keyword used for pressure solver
 13/07/04 Bug fixed when using solvers of Numerical Platon: several test cases were converging in one time step
-08/07/04 Compilers g++ (prefered) and pgCC are supported with Voltaire MPICH on 64bits Opteron cluster 
+08/07/04 Compilers g++ (prefered) and pgCC are supported with Voltaire MPICH on 64bits Opteron cluster
 08/07/04 mpirun should now be used for sequential calculation with Numerical Platon solvers only
 30/06/04 Bug fixed: Small timesteps with quasi-compressible model and non-uniform viscosity
 30/06/04 Fortran 90 compiler from Absoft supported on Linux
@@ -2008,7 +2008,7 @@ Release notes version 1.4.6 : Enhancements, modifications and corrected bugs sin
 07/06/04 Keyword Decouper has a new option tranche_geom for partitionning unstructured mesh
 07/06/04 Keyword Champ_Fonc_Tabule has a new option : fonction to use an analytical function
 04/06/04 New wall model (TBLE) available for VDF discretization. See TBLE_VDF_3D.data for options
-27/05/04 Bug fixed: LES model other than Sous_maille couldn't be used with non-uniform dynamic viscosity 
+27/05/04 Bug fixed: LES model other than Sous_maille couldn't be used with non-uniform dynamic viscosity
 27/05/04 Bug fixed in function parser (used with keywords Champ_fonc_xyz, Champ_front_fonc_xyz,...) which occured when TRUST compiled with gcc 3.x
 26/05/04 Memory leak fixed in Numerical Platon Conjugate Gradient solver which created crash during computation with large-size mesh
 25/05/04 Keyword NettoieNoeuds substituted by keyword NettoiePasNoeuds to keep nodes numerotation in order to debug for example ICEM meshes.
@@ -2016,16 +2016,16 @@ Release notes version 1.4.6 : Enhancements, modifications and corrected bugs sin
 18/05/04 Keyword NettoieNoeuds becomes obsolete. Useless nodes (nodes without elements) are suppressed from a mesh read in a file.
 17/05/04 New keyword "Extruder domain Lz Nz" to create a 3D tetrahedral mesh (Nz pts in Z direction) from a 2D triangular mesh with an extrude operation of length Lz
 14/05/04 First attempt to improve MPI library detection during TRUST install: configure now tests the first native MPI library found
-07/05/04 Several bugs fixed on irregular structured meshes into models: K-Eps, Low Reynolds K-Eps, Jones-Launder, Second Gradient,... 
-28/04/04 New thermal wall model (ODVM) available only with VDF discretization  
+07/05/04 Several bugs fixed on irregular structured meshes into models: K-Eps, Low Reynolds K-Eps, Jones-Launder, Second Gradient,...
+28/04/04 New thermal wall model (ODVM) available only with VDF discretization
 28/04/04 Quick and centre4 schemes slightly changed for VDF discretization
 23/04/04 MED support added in TRUST for HP 11.x
-07/04/04 Compiler g++ 3.3.x supported 
+07/04/04 Compiler g++ 3.3.x supported
 06/04/04 Bug fixed with keyword Champ_front_contact_VEF
-31/03/04 Portability bugs fixed on HP 11.x (compile error with f90 and awk error if model with lots of boundaries)  
+31/03/04 Portability bugs fixed on HP 11.x (compile error with f90 and awk error if model with lots of boundaries)
 31/03/04 Bugs fixed in the performances output (.TU files) and format changed
 30/03/04 Output of keyword Traitement_particulier (option canal) is parallelized
-26/03/04 Keyword "VerifierCoin name_of_domain" changed to subdivide inconsistent 2D/3D cells with VEFPreP1B discretization 
+26/03/04 Keyword "VerifierCoin name_of_domain" changed to subdivide inconsistent 2D/3D cells with VEFPreP1B discretization
 11/03/04 Small optimizations of the "quick" and "centre4" schemes in VDF
 08/03/04 Bug fixed (possible segmentation fault) during the search of the nodes from periodic boundaries
 08/03/04 Bug fixed for RMS field post-processed with LATA format
@@ -2033,7 +2033,7 @@ Release notes version 1.4.6 : Enhancements, modifications and corrected bugs sin
 Release notes version 1.4.5 : Enhancements, modifications and corrected bugs since version 1.4.4 :
 --------------------------------------------------------------------------------------------------
 05/03/04 1.4.5 version released for Linux, HP-UX 11, SGI IRIX, Compaq/DEC OSF, IBM AIX, Sun OS
-03/03/04 Unstructured meshes converter from Mefisto to TRUST added in $TRUST_ROOT/Outils/mefisto/mefisto_triou 
+03/03/04 Unstructured meshes converter from Mefisto to TRUST added in $TRUST_ROOT/Outils/mefisto/mefisto_triou
 27/02/04 Mixing length model for LES calculation generalized to non academic configurations
 26/02/04 MED support added in TRUST on DEC/Compaq
 26/02/04 mpirun should now be used for sequential calculation of TRUST on some platforms with native MPI library
@@ -2060,14 +2060,14 @@ Release notes version 1.4.4 : Enhancements, modifications and corrected bugs sin
 01/12/03 New keywords Chmoy_faceperio and Champ_front_calc_recycl_fluct_pbperio to generate inlet fluctuating conditions
 01/12/03 New keyword Dt_start for time schemes to define the first time step after restarting a calculation
 28/11/03 Bug fixed: Parallel calculation may block if one process is trying to stop because calculated timestep is lesser than dt_min
-27/11/03 Input/Output is optimized for some files: .son and .lata or .lml are written dramatically faster on Compaq/DEC 
+27/11/03 Input/Output is optimized for some files: .son and .lata or .lml are written dramatically faster on Compaq/DEC
 26/11/03 Bug fixed: No intermediate saves thanks to dt_sauv keyword with Crank-Nicholson scheme and solveur_iteratif option
 26/11/03 Linux on 64bits Itanium II processor, Intel 7.0 compiler, LAM/MPI implementation supported
 17/11/03 Small changes in standard law of wall used on unstructured meshes
 06/11/03 Bug fixed: Possible zero values for faces surface in meshes issued from Xprepro when coordinates are smaller than -1000.
 31/10/03 New file .xyz created to restart on N procs at the last time a calculation saved on P(>1) procs: "reprise xyz name_of_file.xyz"
 31/10/03 Name by default of the save files (dataname.sauv) becomes dataname_problemname.sauv
-28/10/03 Meshtv v4.1.2 updated to v4.3.1 on Linux cause it crashes on recent OS (Mandrake 9.1,...) 
+28/10/03 Meshtv v4.1.2 updated to v4.3.1 on Linux cause it crashes on recent OS (Mandrake 9.1,...)
 29/09/03 Bug fixed: Possible coredump on Compaq/DEC when standard law of wall used during thermal hydraulic calculation
 29/09/03 Parallelization for surface&volume porosity in VEF discretisation
 16/09/03 Changes in surface&volume porosity for VEF discretisation (except for Hexa)
@@ -2082,7 +2082,7 @@ Release notes version 1.4.3 : Enhancements, modifications and corrected bugs sin
 06/08/03 Bug fixed: The CPU printed during parallel calculation in .out (with clock()) was different than the printed CPU in .TU files
 06/08/03 Bug fixed: Law of the wall was not calculated with Wale tubulence model and VDF discretisation
 05/08/03 Bug fixed for the building of one domain from several domains by : Mailler dom { Domaine dom1 , Domaine dom2 , ... }
-04/08/03 Parallelization of 5 turbulent quasi-compressible test cases 
+04/08/03 Parallelization of 5 turbulent quasi-compressible test cases
 04/08/03 Several bugs fixed in Quasi-compressible module: intermediate saving, statistical calculation, .TU performance files
 01/08/03 New Front-Tracking module : VDF and VEF discretisations for 2D and 3D calculation
 22/07/03 Useless include files have been commented in .cpp files thanks to check_include script
@@ -2096,13 +2096,13 @@ Release notes version 1.4.2 : Enhancements, modifications and corrected bugs sin
 30/06/03 Parallelization of several options of the Quasi compressible module in VEFPreP1B
 30/06/03 Radiation P1 model for semi-transparent media parallelized for VDF calculation and convergency improved in VEFPreP1B
 30/06/03 Keywords changed for radiation calculation with model P1 in semi-transparent media (See User's Manual)
-28/06/03 TRUST binaries are released as statically linked on DEC-Compaq and Linux platforms (semi-statically linked otherwise) 
+28/06/03 TRUST binaries are released as statically linked on DEC-Compaq and Linux platforms (semi-statically linked otherwise)
 26/06/03 TRUST dynamically-linked executable can run again in parallel mode with MPICH
 26/06/03 Add access to make_Doxyfile script (generate html TRUST doc with Doxygen) since the GUI
 21/06/03 Add access to movie_generate script (create Mpeg or Gif movies) since the GUI
 21/06/03 Turbulent heat flux given by the wall law changed for thermal hydraulic calculation
 20/06/03 Statistical calculation added for pressure in VEFPreP1B discretisation
-19/06/03 Two data files (croix_3D_VDF, croix_3D_VEF) and a run script added to check results in symmetric domain 
+19/06/03 Two data files (croix_3D_VDF, croix_3D_VEF) and a run script added to check results in symmetric domain
 19/06/03 Memory leak in VDF parallel calculation with K-Eps model completly fixed
 11/06/03 Fix a bug in the server for GUI on Linux and multiuser installation (UTILISE_APPACHE=1)
 11/06/03 Keyword name negligeable_scal changed to negligeable_scalaire
@@ -2120,13 +2120,13 @@ Release notes version 1.4.1 : Enhancements, modifications and corrected bugs sin
 --------------------------------------------------------------------------------------------------
 28/03/03 Installation on Compaq (ARCH=DECalpha) has been improved
 19/03/03 Several bugs fixed for periodic boundary condition (VDF and VEF)
-18/03/03 AVS 6.0 supported to read lml file on Linux and HP workstations 
+18/03/03 AVS 6.0 supported to read lml file on Linux and HP workstations
 18/03/03 File *.TU created containing CPU informations after calculation
 12/03/03 Radiation model for semi-transparent media parallelized for VEF calculation (not tested in VDF)
 01/03/03 New html documentation (created by Doxygen) available at $TRUST_ROOT/doc/html/index.html. Script make_Doxyfile to re-create it.
 21/02/03 Option Brech added for keyword Traitement_particulier to post process Richardson number
 21/02/03 Quasi compressible module improved in VDF and VEFPreP1B discretisation and parallelized in VDF
-20/02/03 165 of 271 cases of the regression test suite now give same results in sequential and parallel calculation 
+20/02/03 165 of 271 cases of the regression test suite now give same results in sequential and parallel calculation
 25/01/03 Patch v1.4.0_7 to fix : Temperature is diverging during a VEF calculation with diffusion=f(Temperature)
 23/01/03 Patch v1.4.0_6 to fix : May crash when subzones are used in parallel VEF calculation
 11/01/03 Patch v1.4.0_5 to fix : Last messages not printed in the .out or .err files
