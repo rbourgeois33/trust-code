@@ -159,7 +159,7 @@ private:
   int n_krilov_; // number of krilov vectors in gmres
   int max_iter_gmres_;
   int solv_jacobi_;
-  int impr_;
+  bool impr_ = false;
   int impr_gmres_;
   int max_iter_mixed_solver_; // maximum number of iterations in mixed precision solver
   int check_residu_;

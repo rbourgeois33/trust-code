@@ -44,8 +44,9 @@ Entree& IJK_VDF_converter::readOn(Entree& is)
   Nom vdf_problem;
   ArrOfInt splitting;
   ArrOfInt direction_mapping(3);
-  ArrOfInt perio_flags(3);
-  perio_flags = 0;
+  bool perio_flag_x = false;
+  bool perio_flag_y = false;
+  bool perio_flag_z = false;
   direction_mapping[0] = 0;
   direction_mapping[1] = 1;
   direction_mapping[2] = 2;
@@ -64,9 +65,9 @@ Entree& IJK_VDF_converter::readOn(Entree& is)
   param.dictionnaire("j",1);
   param.dictionnaire("k",2);
 
-  param.ajouter_flag("perio_i", &perio_flags[0]);
-  param.ajouter_flag("perio_j", &perio_flags[1]);
-  param.ajouter_flag("perio_k", &perio_flags[2]);
+  param.ajouter_flag("perio_i", &perio_flag_x);
+  param.ajouter_flag("perio_j", &perio_flag_y);
+  param.ajouter_flag("perio_k", &perio_flag_z);
 
   param.lire_avec_accolades(is);
 
