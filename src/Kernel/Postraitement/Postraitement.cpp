@@ -55,6 +55,30 @@ Implemente_instanciable_sans_constructeur_ni_destructeur(Postraitement,"Postrait
 // XD attr nom chaine nom 0 Name of the post-processing.
 // XD attr post postraitement_base post 0 the post
 
+/*! @brief Constructeur par defaut.
+ *
+ * Les frequences de postraitement prennent la valeur
+ *     par defaut 1e6. Et aucun postraitement n'est demande.
+ *
+ */
+Postraitement::Postraitement():
+  est_le_premier_postraitement_pour_nom_fich_(-1), est_le_dernier_postraitement_pour_nom_fich_(-1),
+  dt_post_(DT_NOT_INIT),
+  nb_pas_dt_post_(NB_NOT_INIT),
+  nb_champs_stat_(0),
+  tstat_deb_(-1), tstat_fin_(-1), tstat_dernier_calcul_(-1),
+  lserie_(0),
+  dt_integr_serie_(1.e6),
+  sondes_demande_(false), champs_demande_(false), stat_demande_(false), stat_demande_definition_champs_(false), tableaux_demande_(false),
+  binaire_(-1),
+  nom_fich_(nom_du_cas()),
+  format_("lml"),
+  option_para_("SIMPLE"),
+  suffix_for_reset_(""),  // See resetTime() documentation in this class
+  temps_(-1.), dernier_temps_(-1.)
+{
+}
+
 Postraitement::~Postraitement()
 {
   //Cerr<<"remise a zero des noms des sondes" <<finl;
@@ -274,7 +298,7 @@ Entree& Postraitement::readOn(Entree& s)
       nom_fich_ += le_nom_du_post;
     }
 
-  dt_post_ch_ = DT_NOT_INIT;
+  dt_post_ = DT_NOT_INIT;
   nb_pas_dt_post_ = NB_NOT_INIT;
 
   Probleme_base& le_pb = mon_probleme.valeur();
@@ -438,7 +462,16 @@ void Postraitement::set_param(Param& param)
   param.ajouter_non_std("Statistiques_en_serie|Serial_statistics",(this));// XD_ADD_P stats_serie_posts Statistics between two points not fixed : on period of integration.
   param.ajouter_non_std("Statistiques_en_serie_fichier|Serial_statistics_file",(this));// XD_ADD_P stats_serie_posts_fichier Serial_statistics read from a file
   param.ajouter("suffix_for_reset", &suffix_for_reset_); // XD_ADD_P chaine Suffix used to modify the postprocessing file name if the ICoCo resetTime() method is invoked.
+
+  if ((champs_demande_ || stat_demande_)
+      && dt_post_ == DT_NOT_INIT && nb_pas_dt_post_ == NB_NOT_INIT)
+    {
+      Cerr << "Error while reading the input data for postprocessing :" << finl;
+      Cerr << " -> We expected the keyword 'dt_post' or 'nb_pas_dt_post'" << finl;
+      exit();
+    }
 }
+
 
 // XD sondes_fichier objet_lecture nul 1 Keyword to read probes from a file
 // XD   attr fichier|file chaine file 0 name of file
@@ -527,15 +560,16 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
       }
   }
 
+  // Small function to read the dt_post entry potentially using an expression:
   auto lire_dt = [&]() -> double
   {
     Nom expression;
     s >> expression;
-    fdt_post.setNbVar(1);
-    fdt_post.setString(expression);
-    fdt_post.addVar("t");
-    fdt_post.parseString();
-    return fdt_post.eval();
+    fdt_post_.setNbVar(1);
+    fdt_post_.setString(expression);
+    fdt_post_.addVar("t");
+    fdt_post_.parseString();
+    return fdt_post_.eval();
   };
 
   Motcle motlu;
@@ -582,18 +616,19 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
 
       if (motlu == "dt_post")
         {
-          if (dt_post_ch_ != DT_NOT_INIT || nb_pas_dt_post_ != NB_NOT_INIT)
+          double tmp_dt = lire_dt();
+          if ((dt_post_ != DT_NOT_INIT && tmp_dt != dt_post_)|| nb_pas_dt_post_ != NB_NOT_INIT)
             {
-              Cerr << "Error: in postprocessing block, 'dt_post' (or 'nb_pas_dt_post') was already set!" << finl;
-              Cerr << "  -> Set it either after 'field' or directly at the root of the postprocessing block but not both!" << finl;
+              Cerr << "Error: in postprocessing block, 'dt_post' (or 'nb_pas_dt_post') was already set with a different value!" << finl;
+              Cerr << "  -> Set it either only after 'field', or directly at the root of the postprocessing block but not both!" << finl;
               Process::exit();
             }
-          dt_post_ch_ = lire_dt();
+          dt_post_ = tmp_dt;
           expect_acco = true;
         }
       else if (motlu == "nb_pas_dt_post")
         {
-          if (dt_post_ch_ != DT_NOT_INIT || nb_pas_dt_post_ != NB_NOT_INIT)
+          if (dt_post_ != DT_NOT_INIT || nb_pas_dt_post_ != NB_NOT_INIT)
             {
               Cerr << "Error: in postprocessing block, 'dt_post' (or 'nb_pas_dt_post') was already set!" << finl;
               Cerr << "  -> Set it either after 'field' or directly at the root of the postprocessing block but not both!" << finl;
@@ -603,12 +638,6 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
           expect_acco = true;
         }
 
-      if (dt_post_ch_ == DT_NOT_INIT && nb_pas_dt_post_ == NB_NOT_INIT)
-        {
-          Cerr << "Error while reading the input data for postprocessing :" << finl;
-          Cerr << " -> We expected the keyword 'dt_post' or 'nb_pas_dt_post'" << finl;
-          exit();
-        }
       //La methode lire_champs_a_postraiter() va generer auatomatiquement un Champ_Generique_base
       //en fonction des indications du jeu de donnees (ancienne formulation)
 
@@ -632,15 +661,17 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
       s >> motlu;
 
       if (motlu == "dt_post")
-        dt_post_stat_ = lire_dt();
-      else if (motlu == "nb_pas_dt_post")
-        s >> nb_pas_dt_post_;
-      else
         {
-          Cerr << "Error while reading the input data for statistics postprocessing :" << finl;
-          Cerr << "We expected the keyword dt_post or nb_pas_dt_post" << finl;
-          exit();
+          double tmp_dt = lire_dt();
+          if ((dt_post_ != DT_NOT_INIT && tmp_dt != dt_post_)|| nb_pas_dt_post_ != NB_NOT_INIT)
+            {
+              Cerr << "Error: in postprocessing block, 'dt_post' (or 'nb_pas_dt_post') was already set with a different value!" << finl;
+              Cerr << "  -> Set it either only after 'field', or directly at the root of the postprocessing block but not both!" << finl;
+              Process::exit();
+            }
+          dt_post_ = tmp_dt;
         }
+
       //La methode lire_champs_stat_a_postraiter() va generer auatomatiquement un Champ_Generique_base
       //en fonction des indications du jeu de donnees (ancienne formulation)
 
@@ -726,15 +757,24 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
     }
   else if (keyword=="Int_array|Int_array_file")
     {
+      //
+      // [ABN] Is someone using this ???
+      //
+
       Cerr << "Reading of integers arrays to be postprocessed "<< finl;
       s >> motlu;
-      if (motlu != "dt_post")
+
+      if (motlu == "dt_post")
         {
-          Cerr << "Error while reading the statistics block:" << finl;
-          Cerr << "We expected the keyword dt_post " << finl;
-          exit();
+          double tmp_dt = lire_dt();
+          if ((dt_post_ != DT_NOT_INIT && tmp_dt != dt_post_)|| nb_pas_dt_post_ != NB_NOT_INIT)
+            {
+              Cerr << "Error: in postprocessing block, 'dt_post' (or 'nb_pas_dt_post') was already set with a different value!" << finl;
+              Cerr << "  -> Set it either only after 'field', or directly at the root of the postprocessing block but not both!" << finl;
+              Process::exit();
+            }
+          dt_post_ = tmp_dt;
         }
-      s >> dt_post_tab;
 
       if (keyword=="Int_array_file")
         {
@@ -758,7 +798,6 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
         }
 
       s >> dt_integr_serie_;
-      dt_post_stat_ = dt_post_ch_;
 
       if (keyword=="Serial_statistics_file")
         {
@@ -787,7 +826,7 @@ int Postraitement::lire_motcle_non_standard(const Motcle& mot, Entree& s)
     }
   else if (keyword=="dt_post")
     {
-      dt_post_ch_ = lire_dt();
+      dt_post_ = lire_dt();
       return 1;
     }
 
@@ -1763,14 +1802,13 @@ int Postraitement::traiter_champs()
   int nb_pas_dt = sch.nb_pas_dt();
   int ind_pas_dt_post = ind_post(nb_pas_dt);
 
-  if (lpost_champ(temps_courant) || lpost_stat(temps_courant) || ind_pas_dt_post)
+  if (lpost(temps_courant, dt_post_)|| ind_pas_dt_post)
     {
       postraiter_champs();
       if (!ind_pas_dt_post)
         {
-          fdt_post.setVar("t",temps_courant);
-          dt_post_ch_ = fdt_post.eval();
-          dt_post_stat_ = dt_post_ch_;
+          fdt_post_.setVar("t",temps_courant);
+          dt_post_ = fdt_post_.eval();
         }
     }
 
@@ -1781,7 +1819,7 @@ int Postraitement::traiter_tableaux()
 {
   Schema_Temps_base& sch = probleme().schema_temps();
   double temps_courant = sch.temps_courant();
-  if ( lpost_tab(temps_courant) )
+  if ( lpost(temps_courant, dt_post_) )
     postraiter_tableaux();
   return 1;
 }
@@ -2011,9 +2049,9 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
   Entree_complete s_complete(ajout,s);
   s_complete>>champ;
 
-  if (le_domaine->le_nom()!=mon_probleme->domaine().le_nom() && motlu2=="faces")
+  if (le_domaine_->le_nom()!=mon_probleme->domaine().le_nom() && motlu2=="faces")
     {
-      Cerr << "Post-processing a field on faces on a different domain (" << le_domaine->le_nom() << ") than compute domain (" << mon_probleme->domaine().le_nom() << ") is not supported yet !" << finl;
+      Cerr << "Post-processing a field on faces on a different domain (" << le_domaine_->le_nom() << ") than compute domain (" << mon_probleme->domaine().le_nom() << ") is not supported yet !" << finl;
       Cerr << "Switch to som or elem post-processing or post-process on the compute domain." << finl;
       Process::exit();
     }

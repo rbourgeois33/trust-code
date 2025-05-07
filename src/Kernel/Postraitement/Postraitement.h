@@ -107,10 +107,8 @@ public:
   inline int ind_post(int nb_pas_dt) const { return (nb_pas_dt%nb_pas_dt_post_==0) ? 1 : 0; }
   int nb_pas_dt_post() const { return nb_pas_dt_post_; }
 
-  inline double dt_post_ch() const { return dt_post_ch_; }
+  inline double dt_post() const { return dt_post_; }
   inline Nom nom_fich() const { return nom_fich_; }
-  // int contient_champ_fonc(const Motcle& )
-  inline int lpost_tab(double) const;
   static inline LIST(Nom)& noms_fichiers_sondes() { return noms_fichiers_sondes_; }
   inline int& est_le_premier_postraitement_pour_nom_fich() { return est_le_premier_postraitement_pour_nom_fich_; }
   inline int& est_le_dernier_postraitement_pour_nom_fich() { return est_le_dernier_postraitement_pour_nom_fich_; }
@@ -183,12 +181,9 @@ public:
 protected:
 
   int est_le_premier_postraitement_pour_nom_fich_, est_le_dernier_postraitement_pour_nom_fich_;
-  double dt_post_ch_ ;          // ecriture des champs sur fichier nom_du_cas.lml tous les dt_post
-  double dt_post_stat_;         // ecriture des statistiques sur fichier nom_du_cas.lml tous les dt_stat
-  double dt_post_tab;           // ecriture des tableaux d'entiers sur fichier nom_du_cas.lml
-
-  int nb_pas_dt_post_;
-  Parser_U fdt_post;
+  double dt_post_;          ///< ecriture des donnees (champs, stats, int_array) tous les dt_post (un temps)
+  int nb_pas_dt_post_;       ///< ecriture des donnees (champs, stats, int_array) tous les dt_post (une periode en nb d'iteration)
+  Parser_U fdt_post_;
 
   Sondes les_sondes_;           // Sondes a traiter
   Sondes_Int les_sondes_int_;   // Sondes pour des tableaux d'entiers
@@ -250,9 +245,6 @@ inline int Postraitement::lpost(double temps_courant, double dt_post) const
  * @param (double dt) le pas de temps qui vient d'etre accompli
  * @return (int) valeur booleenne, VRAI si le pas de temp et le temps courant fournis indique qu'un postraitement est necessaire, FAUX sinon.
  */
-inline int Postraitement::lpost_champ(double temps_courant) const { return lpost(temps_courant, dt_post_ch_); }
-inline int Postraitement::lpost_stat(double temps_courant) const { return lpost(temps_courant, dt_post_stat_); }
-inline int Postraitement::lpost_tab(double temps_courant) const { return lpost(temps_courant, dt_post_tab); }
 inline int& Postraitement::compteur_champ_stat() { return nb_champs_stat_; }
 inline const double& Postraitement::tstat_deb() const { return tstat_deb_; }
 inline const double& Postraitement::tstat_fin() const { return tstat_fin_; }
