@@ -24,6 +24,10 @@
 #include <TRUST_Ref.h>
 #include <TRUSTVect.h>
 
+// pour IJK_Lata_writer.cpp. TODO : FIXME : to do enum class !!!!!
+#define DIRECTION_I 0
+#define DIRECTION_J 1
+#define DIRECTION_K 2
 
 /*! @brief : This class is an IJK_Field_local with parallel informations.
  *
