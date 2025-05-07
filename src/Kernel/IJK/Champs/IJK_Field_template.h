@@ -66,6 +66,7 @@ public:
   inline Domaine_IJK::Localisation get_localisation() const { return localisation_; }
 
   void allocate_shear_BC(int monofluide, double rov, double rol, int use_inv_rho_in_pressure_solver=0);
+  virtual void dumplata_scalar(const char *filename, int step) const;
   void echange_espace_virtuel(int ghost);
 
   //_TYPE_ interpolation_for_shear_periodicity(const int phase, const int send_j, const int send_k);

@@ -367,10 +367,6 @@ Entree& Postraitement::readOn(Entree& s)
   //format_post->initialize_by_default(base_name);
   format_post_->initialize(base_name, binaire_, option_para_);
 
-  //Le test de verification a ete simplifie entre la v1.5.1 et la v1.5.2
-  //On simplifie donc la methode test_coherence
-  format_post_->test_coherence(champs_demande_, stat_demande_, dt_post_ch_, dt_post_stat_);
-
   return s;
 }
 
@@ -451,7 +447,7 @@ void Postraitement::set_param(Param& param)
 //  attr interfaces champs_posts interfaces 1 Keyword to read all the caracteristics of the interfaces. Different kind of interfaces exist as well as different interface intitialisations.
   param.ajouter("Fichier",&nom_fich_); // XD_ADD_P chaine Name of file.
   param.ajouter("Format",&format_); // XD_ADD_P chaine(into=["lml","lata","single_lata","lata_v2","med","med_major","cgns"]) This optional parameter specifies the format of the output file. The basename used for the output file is the basename of the data file. For the fmt parameter, choices are lml or lata. A short description of each format can be found below. The default value is lml.
-  param.ajouter("dt_post",&dt_post_ch_, Param::Nature::OPTIONAL); // XD_ADD_P entier Field\'s write frequency (as a time period) - can also be specified after the 'field' keyword.
+  param.ajouter_non_std("dt_post",(this)); // XD_ADD_P chaine Field\'s write frequency (as a time period) - can also be specified after the 'field' keyword.
   param.ajouter("nb_pas_dt_post",&nb_pas_dt_post_, Param::Nature::OPTIONAL); // XD_ADD_P entier Field\'s write frequency (as a number of time steps) - can also be specified after the 'field' keyword.
   param.ajouter_non_std("Domaine",(this)); // XD_ADD_P chaine This optional parameter specifies the domain on which the data should be interpolated before it is written in the output file. The default is to write the data on the domain of the current problem (no interpolation).
   param.ajouter_non_std("Sous_domaine|Sous_zone",(this)); // XD_ADD_P chaine This optional parameter specifies the sub_domaine on which the data should be interpolated before it is written in the output file. It is only available for sequential computation.
@@ -867,33 +863,6 @@ void Postraitement::resetTime(double time, const std::string dirname)
   les_sondes_.resetTime(time);
   temps_ = -1.;
   dernier_temps_ = -1.;
-}
-
-
-/*! @brief Constructeur par defaut.
- *
- * Les frequences de postraitement prennent la valeur
- *     par defaut 1e6. Et aucun postraitement n'est demande.
- *
- */
-Postraitement::Postraitement():
-  est_le_premier_postraitement_pour_nom_fich_(-1), est_le_dernier_postraitement_pour_nom_fich_(-1),
-  dt_post_ch_ (1.e6),
-  dt_post_stat_(1.e6),
-  dt_post_tab(1.e6),
-  nb_pas_dt_post_((int)(pow(2.0,(double)((sizeof(True_int)*8)-1))-1)),
-  nb_champs_stat_(0),
-  tstat_deb_(-1), tstat_fin_(-1), tstat_dernier_calcul_(-1),
-  lserie_(0),
-  dt_integr_serie_(1.e6),
-  sondes_demande_(0), champs_demande_(0), stat_demande_(0), stat_demande_definition_champs_(0),
-  binaire_(-1), tableaux_demande_(0),
-  nom_fich_(nom_du_cas()),
-  format_("lml"),
-  option_para_("SIMPLE"),
-  suffix_for_reset_(""),  // See resetTime() documentation in this class
-  temps_(-1.), dernier_temps_(-1.)
-{
 }
 
 /*! @brief for PDI IO: retrieve name, type and dimensions of the fields to save/restore

@@ -208,8 +208,8 @@ protected:
   OWN_PTR(Format_Post_base) format_post_;
 
   static LIST(Nom) noms_fichiers_sondes_;
-  int sondes_demande_, champs_demande_, stat_demande_, stat_demande_definition_champs_;
-  int binaire_, tableaux_demande_;
+  bool sondes_demande_, champs_demande_, stat_demande_, stat_demande_definition_champs_, tableaux_demande_;
+  int binaire_;
   Nom nom_fich_, format_, option_para_;
   Nom suffix_for_reset_; // Suffix appended to post base name when the method resetTime() was invoked - default to "_AFTER_RESET"
   double temps_, dernier_temps_; // temps du precedent appel a postraiter()

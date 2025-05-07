@@ -584,11 +584,11 @@ void IJK_Field_template<_TYPE_, _TYPE_ARRAY_>::dumplata_scalar(const char *filen
         loc = "ELEM";
       else
         loc = "SOM";
-      const Nom& geomname = get_domaine().le_nom();
+      const Nom& domain_name = get_domain().le_nom();
 
       Nom path, base_name;
       split_path_filename(fd, path, base_name);
-      master_file << "Champ " << this->le_nom() << " "<< base_name << " geometrie=" << geomname;
+      master_file << "Champ " << this->le_nom() << " "<< base_name << " geometrie=" << domain_name;
 #ifdef INT_is_64_
       master_file << " file_offset=6";
 #endif

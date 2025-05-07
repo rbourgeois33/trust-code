@@ -19,7 +19,6 @@
 #include <FixedVector.h>
 #include <IJK_Field.h>
 #include <Field_base.h>
-#include <Noms.h>
 #include <Champ_Generique_base.h> // For Entity
 
 /*! @brief The class IJK_Field_vector is a fixed array of polymorphic IJK fields.
