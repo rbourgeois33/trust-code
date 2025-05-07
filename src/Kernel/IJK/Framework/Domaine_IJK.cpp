@@ -15,6 +15,7 @@
 #include <EFichier.h>
 #include <Domaine_IJK.h>
 #include <Hexaedre.h>
+#include <IJK_Tools.h>
 
 #define print_vect(x) (Nom("[") + Nom(x[0]) + Nom(" ") + Nom(x[1]) + Nom(" ") + Nom(x[2]) + Nom("]"))
 

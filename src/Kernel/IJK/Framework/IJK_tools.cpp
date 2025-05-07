@@ -623,7 +623,6 @@ void squared_3x3(double& a11, double& a12, double& a13, double& a21, double& a22
 
 }
 
-
 void interpolate_to_center(IJK_Field_vector3_double& cell_center_field, const IJK_Field_vector3_double& face_field)
 {
   /* Interpole le champ face_field aux centres des elements et le stocke dans cell_center_field */
