@@ -130,11 +130,7 @@ int Multigrille_Adrien::needed_kshift_for_jacobi(int level) const
   return nsweeps_jacobi_residu(level);
 }
 
-<<<<<<< HEAD
 void Multigrille_Adrien::completer_double_for_residue(const Domaine_IJK& domain)
-=======
-void Multigrille_Adrien::completer_double_for_residue(const Domaine_IJK& splitting)
->>>>>>> 300d39758 ([IJK] Domaine_IJK can be created in a dataset)
 {
   Cerr << "Multigrille_Adrien::completer_double_for_residue" << finl;
   grids_data_double_.dimensionner(1);
