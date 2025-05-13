@@ -170,7 +170,7 @@ void main_pilote_icoco_1(Probleme_U& pb_to_solve)
     }
   statistics().end_timeloop();
   if (!Objet_U::disable_TU)
-	  statistics().print_TU_files("Time loop statistics");
+    statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 
 }
@@ -280,7 +280,7 @@ void main_pilote_icoco_2(Probleme_U& pb_to_solve)
     }
   statistics().end_timeloop();
   if (!Objet_U::disable_TU)
-	  statistics().print_TU_files("Time loop statistics");
+    statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 }
 
@@ -352,11 +352,10 @@ void main_pilote_icoco_3(Probleme_U& pb_to_solve, int nb_pas_dt_reset)
     }
   statistics().end_timeloop();
   if (!Objet_U::disable_TU)
-	  statistics().print_TU_files("Time loop statistics");
+    statistics().print_TU_files("Time loop statistics");
 
   pb.terminate();
 }
-
 
 
 /*! @brief Fonction principale de l'interprete: resoudre un probleme
@@ -430,9 +429,10 @@ void main_abort( Probleme_U& pb_to_solve)
     }                                   // End loop on timesteps
   statistics().end_timeloop();
   if (!Objet_U::disable_TU)
-	  statistics().print_TU_files("Time loop statistics");
+    statistics().print_TU_files("Time loop statistics");
   pb.terminate();
 }
+
 Entree& Pilote_ICoCo::interpreter(Entree& is)
 {
   Param param(que_suis_je());

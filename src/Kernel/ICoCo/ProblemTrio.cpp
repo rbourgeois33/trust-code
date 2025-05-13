@@ -144,6 +144,8 @@ bool ProblemTrio::initialize()
   // on lance avec ou sans mpi
   res=main_TRUST(argc,argv,p,(*my_params).is_mpi);
 
+  // Re-open top level counter (it was closed at the end of main_TRUST
+  statistics().begin_count(STD_COUNTERS::total_execution_time);
 
   delete [] argv[0];
   delete [] argv[1];
@@ -179,6 +181,7 @@ bool ProblemTrio::initialize()
   statistics().print_TU_files("Computation start-up statistics");
   return true;
 }
+
 bool ProblemTrio::initialize_pb(Probleme_U& pb_to_solve)
 {
   if (pb==nullptr)
@@ -200,6 +203,7 @@ void ProblemTrio::terminate()
     {
       pb->postraiter(1);
       pb->terminate();
+      statistics().end_count(STD_COUNTERS::total_execution_time);
     }
   if(p)
     {
