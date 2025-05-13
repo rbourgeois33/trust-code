@@ -18,7 +18,10 @@
 #include <TRUSTTabs.h>
 #include <View_Types.h>
 #include <MD_Vector_seq.h>
+
+#ifndef LATATOOLS
 #include <Perf_counters.h>
+#endif
 
 /**************************************************************************************/
 /* Warning ! This kernels are critical for performance into several TRUST applications !

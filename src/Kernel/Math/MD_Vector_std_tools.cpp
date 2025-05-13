@@ -16,7 +16,10 @@
 #include <MD_Vector_std.h>
 #include <Device.h>
 #include <sstream>
+
+#ifndef LATATOOLS
 #include <Perf_counters.h>
+#endif
 
 /**************************************************************************************/
 /* Warning ! This kernels are critical for performance into several TRUST applications !

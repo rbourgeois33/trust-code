@@ -18,7 +18,11 @@
 
 #include <TRUSTTabs_forward.h>
 #include <Nom.h>
+
+#ifndef LATATOOLS
 #include <Perf_counters.h>
+#endif
+
 #include <kokkos++.h>
 
 #ifdef TRUST_USE_CUDA

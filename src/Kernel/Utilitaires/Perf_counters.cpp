@@ -12,6 +12,9 @@
  * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  *****************************************************************************/
+
+#include <Perf_counters.h>
+
 #include <stdio.h>
 #include <algorithm>
 #include <string.h>
@@ -28,13 +31,8 @@
 #include <sstream>
 #include <fstream>
 #include <EntreeSortie.h>
-#include <Perf_counters.h>
 #include <iomanip>
 #include <EcrFicPartage.h>
-#include <SChaine.h>
-#include <communications.h>
-#include <TRUSTArray.h>
-#include <Comm_Group_MPI.h>
 #include <memory>
 #include <iomanip>
 
@@ -1063,12 +1061,12 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   // Estimates bandwidth
   double bandwidth = 1.1e30;
   if (c_mpi_sendrecv.total_time_.count()>0)
-    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + DMINFLOAT);
+    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + std::numeric_limits<double>::min());
 
   double max_bandwidth = Process::mp_max(bandwidth);
   // Compute wait time due to synch
   // We take the total communication time and we substract the theoretical tume computed with allreduce_peak_perf and max bandwidth
-  double theoric_comm_time = comm_allreduce_c * allreduce_peak_perf + comm_sendrecv_c / (max_bandwidth + DMINFLOAT);
+  double theoric_comm_time = comm_allreduce_c * allreduce_peak_perf + comm_sendrecv_c / (max_bandwidth + std::numeric_limits<double>::min());
   // Je suppose que le temps minimum pour realiser les communications sur un proc
   //  depend du processeur qui a le plus de donnees a envoyer:
   theoric_comm_time = Process::mp_max(theoric_comm_time);
@@ -1088,7 +1086,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   if (total_time_avg == 0)
     wait_fraction = 0.;
   else
-    wait_fraction = wait_time / (total_time_avg + DMINFLOAT);
+    wait_fraction = wait_time / (total_time_avg + std::numeric_limits<double>::min());
   wait_fraction = 0.1 * floor(wait_fraction * 1000);
   if (wait_fraction < 0.)
     wait_fraction = 0.;
@@ -1301,17 +1299,17 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                   perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl<< std::endl;
                 }
               double fraction = 0.0;
-              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + DMINFLOAT);
+              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + std::numeric_limits<double>::min());
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Average of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + DMINFLOAT);
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + std::numeric_limits<double>::min());
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Max of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + DMINFLOAT);
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + std::numeric_limits<double>::min());
               fraction = 0.1 * floor(fraction * 1000);
               perfs_IO <<  std::left <<std::setw(text_width) << "Min of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%"  << std::endl;
               perfs_IO  <<  std::left <<std::setw(text_width) << "Time of one mpsum measured by an internal bench over 0.1s (network latency): ";
