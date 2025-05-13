@@ -193,6 +193,11 @@ public:
    */
   double get_time_since_last_open(const std::string& name) ;
 
+  /*!@brief Check whether a counter is already running. Should rarely be used!
+  *
+  */
+  bool is_running(const STD_COUNTERS& name);
+
   /*!
    * @brief Set time_loop_ to true in order to account for cache properly
    */

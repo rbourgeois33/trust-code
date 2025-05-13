@@ -415,7 +415,11 @@ int main_TRUST(int argc, char** argv,mon_main*& main_process,bool force_mpi, boo
     // Clean
     MD_Vector_tools::CleanMyStatics();
   }
-  statistics().end_count(STD_COUNTERS::total_execution_time);
+
+  // In some very tricky cases (typically Pilote_ICoCo keyword) this might have already been closed:
+  if(statistics().is_running(STD_COUNTERS::total_execution_time))
+    statistics().end_count(STD_COUNTERS::total_execution_time);
+
   //  pour detruire les derniers octets
   desalloue_pwd();
   return (0);

@@ -36,6 +36,8 @@
 #include <memory>
 #include <iomanip>
 
+#define DMINFLOAT 1.e-34  // smth small!
+
 /**************************************************************************************************************************
  *
  *      Introduction of the class counter that described the behavior of a single counter in TRUST
@@ -61,7 +63,9 @@ struct Counter
 
   inline void set_parent(Counter * parent_counter) { parent_ = parent_counter;}
 
-  inline double get_time_() {return total_time_.count();}
+  inline double get_time_() const {return total_time_.count();}
+
+  inline bool running_() const { return is_running_; }
 
   /*! @brief update variables : avg_time_per_step_ , min_time_per_step_ , max_time_per_step_ , sd_time_per_step_
    *
@@ -247,7 +251,7 @@ public:
   void set_gpu_timer_impl(bool timer);
   void add_to_gpu_timer_counter_impl(int to_add=1) ;
   int get_gpu_timer_counter_impl() const ;
-
+  bool running_impl(const STD_COUNTERS name) { return get_counter(name).running_(); }
 
 private:
   Counter& get_counter(const STD_COUNTERS name) ;
@@ -1061,12 +1065,14 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   // Estimates bandwidth
   double bandwidth = 1.1e30;
   if (c_mpi_sendrecv.total_time_.count()>0)
-    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + std::numeric_limits<double>::min());
+    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + DMINFLOAT);
 
   double max_bandwidth = Process::mp_max(bandwidth);
   // Compute wait time due to synch
   // We take the total communication time and we substract the theoretical tume computed with allreduce_peak_perf and max bandwidth
-  double theoric_comm_time = comm_allreduce_c * allreduce_peak_perf + comm_sendrecv_c / (max_bandwidth + std::numeric_limits<double>::min());
+  double theoric_comm_time = 0.0;
+  if(max_bandwidth)
+    theoric_comm_time = comm_allreduce_c * allreduce_peak_perf + comm_sendrecv_c / max_bandwidth;
   // Je suppose que le temps minimum pour realiser les communications sur un proc
   //  depend du processeur qui a le plus de donnees a envoyer:
   theoric_comm_time = Process::mp_max(theoric_comm_time);
@@ -1086,7 +1092,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   if (total_time_avg == 0)
     wait_fraction = 0.;
   else
-    wait_fraction = wait_time / (total_time_avg + std::numeric_limits<double>::min());
+    wait_fraction = wait_time / (total_time_avg + DMINFLOAT);
   wait_fraction = 0.1 * floor(wait_fraction * 1000);
   if (wait_fraction < 0.)
     wait_fraction = 0.;
@@ -1299,17 +1305,17 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                   perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl<< std::endl;
                 }
               double fraction = 0.0;
-              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + std::numeric_limits<double>::min());
+              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + DMINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Average of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + std::numeric_limits<double>::min());
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + DMINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Max of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + std::numeric_limits<double>::min());
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + DMINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               perfs_IO <<  std::left <<std::setw(text_width) << "Min of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%"  << std::endl;
               perfs_IO  <<  std::left <<std::setw(text_width) << "Time of one mpsum measured by an internal bench over 0.1s (network latency): ";
@@ -1808,6 +1814,11 @@ double Perf_counters::get_time_since_last_open(const STD_COUNTERS& name)
 double Perf_counters::get_time_since_last_open(const std::string& name)
 {
   return pimpl_->get_time_since_last_open_impl(name);
+}
+
+bool Perf_counters::is_running(const STD_COUNTERS& name)
+{
+  return pimpl_->running_impl(name);
 }
 
 void Perf_counters::start_timeloop()
