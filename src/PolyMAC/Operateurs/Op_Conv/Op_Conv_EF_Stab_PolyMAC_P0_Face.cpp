@@ -28,7 +28,6 @@
 #include <Dirichlet.h>
 #include <Param.h>
 #include <cmath>
-#include <Perf_counters.h>
 
 Implemente_instanciable( Op_Conv_EF_Stab_PolyMAC_P0_Face, "Op_Conv_EF_Stab_PolyMAC_P0_Face", Op_Conv_EF_Stab_PolyMAC_P0P1NC_Face ) ;
 Implemente_instanciable(Op_Conv_Amont_PolyMAC_P0_Face, "Op_Conv_Amont_PolyMAC_P0_Face", Op_Conv_EF_Stab_PolyMAC_P0_Face);

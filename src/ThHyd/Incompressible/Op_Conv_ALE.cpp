@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -37,7 +37,10 @@ void Op_Conv_ALE::associer_vitesse(const Champ_base& vit)
 
 DoubleTab& Op_Conv_ALE::ajouter(const DoubleTab& inco, DoubleTab& resu) const
 {
+  statistics().end_count(STD_COUNTERS::convection, 0, 0);
   op_conv.ajouter(inco, resu);
+  statistics().begin_count(STD_COUNTERS::convection,statistics().get_last_opened_counter_level()+1);
+
   Cerr << "equation : " << equation().le_nom() << finl;
   Motcle le_nom_eqn=equation().le_nom();
   if (le_nom_eqn!="pbNavier_Stokes_standard_ALE")
@@ -49,12 +52,14 @@ DoubleTab& Op_Conv_ALE::ajouter(const DoubleTab& inco, DoubleTab& resu) const
   //ajouterALE(inco,resu);
   return resu;
 }
+
 DoubleTab& Op_Conv_ALE::calculer(const DoubleTab& inco, DoubleTab& resu) const
 {
   //Cerr << "Op_Conv_ALE::calculer" << finl;
   op_conv.calculer(inco, resu);
   return resu;
 }
+
 void Op_Conv_ALE::associer(const Domaine_dis_base& zdis,
                            const Domaine_Cl_dis_base& zcl_dis,
                            const Champ_Inc_base& inco)

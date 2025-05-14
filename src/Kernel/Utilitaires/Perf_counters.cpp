@@ -36,7 +36,7 @@
 #include <memory>
 #include <iomanip>
 
-#define DMINFLOAT 1.e-34  // smth small!
+#define MINFLOAT 1.e-34  // smth small!
 
 /**************************************************************************************************************************
  *
@@ -270,7 +270,7 @@ private:
   bool end_cache_=false;                 ///< A flag used to know if the two first time steps are over or not
   bool time_loop_=false;                 ///< A flag used to know if we are inside the time loop
   bool counters_stop_=false;             ///< A flag used to know if the counters are paused or not
-  int counter_lvl_to_print_=1;       ///< Counter level that you want to be printed in the global_TU
+  //int counter_lvl_to_print_=1;       ///< Counter level that you want to be printed in the global_TU
   duration computation_time_=duration::zero();      ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_=duration::zero();       ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter* last_opened_counter_=nullptr;   ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
@@ -292,6 +292,7 @@ Perf_counters::Impl::Impl()
   std_counters_[static_cast<int>(STD_COUNTERS::total_execution_time)] = std::make_unique<Counter>(-1, "Total time");
   std_counters_[static_cast<int>(STD_COUNTERS::computation_start_up)] = std::make_unique<Counter>(0, "Computation start-up");
   std_counters_[static_cast<int>(STD_COUNTERS::timeloop)] = std::make_unique<Counter>(0, "Time loop");
+  std_counters_[static_cast<int>(STD_COUNTERS::backup_file)] = std::make_unique<Counter>(0, "Back-up operations");
   std_counters_[static_cast<int>(STD_COUNTERS::system_solver)] = std::make_unique<Counter>(1, "Linear solver resolutions Ax=B");
   std_counters_[static_cast<int>(STD_COUNTERS::petsc_solver)] = std::make_unique<Counter>(2, "Petsc solver");
   std_counters_[static_cast<int>(STD_COUNTERS::implicit_diffusion)] = std::make_unique<Counter>(1, "Number of linear system resolutions for implicit diffusion:");
@@ -302,8 +303,7 @@ Perf_counters::Impl::Impl()
   std_counters_[static_cast<int>(STD_COUNTERS::gradient)] = std::make_unique<Counter>(1, "Gradient operator");
   std_counters_[static_cast<int>(STD_COUNTERS::divergence)] = std::make_unique<Counter>(1, "Divergence operator");
   std_counters_[static_cast<int>(STD_COUNTERS::rhs)] = std::make_unique<Counter>(1, "Source_terms");
-  std_counters_[static_cast<int>(STD_COUNTERS::postreatment)] = std::make_unique<Counter>(1, "Post-treatment");
-  std_counters_[static_cast<int>(STD_COUNTERS::backup_file)] = std::make_unique<Counter>(0, "Back-up operations");
+  std_counters_[static_cast<int>(STD_COUNTERS::postreatment)] = std::make_unique<Counter>(1, "Post-treatment operations");
   std_counters_[static_cast<int>(STD_COUNTERS::restart)] = std::make_unique<Counter>(1, "Read file for restart");
   std_counters_[static_cast<int>(STD_COUNTERS::matrix_assembly)] = std::make_unique<Counter>(1, "Nb matrix assembly for implicit scheme:");
   std_counters_[static_cast<int>(STD_COUNTERS::update_variables)] = std::make_unique<Counter>(1, "Update ::mettre_a_jour");
@@ -982,7 +982,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
 
   auto write_globalTU_line = [&] (const Counter& c_to_print_,std::ostringstream & line)
   {
-    if (c_to_print_.count_>0  && c_to_print_.level_==counter_lvl_to_print_)
+    if (c_to_print_.count_>0  ) //&& c_to_print_.level_==counter_lvl_to_print_)
       {
         double t_c = c_to_print_.total_time_.count();
         int count = c_to_print_.count_;
@@ -1065,7 +1065,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   // Estimates bandwidth
   double bandwidth = 1.1e30;
   if (c_mpi_sendrecv.total_time_.count()>0)
-    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + DMINFLOAT);
+    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + MINFLOAT);
 
   double max_bandwidth = Process::mp_max(bandwidth);
   // Compute wait time due to synch
@@ -1092,7 +1092,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   if (total_time_avg == 0)
     wait_fraction = 0.;
   else
-    wait_fraction = wait_time / (total_time_avg + DMINFLOAT);
+    wait_fraction = wait_time / (total_time_avg + MINFLOAT);
   wait_fraction = 0.1 * floor(wait_fraction * 1000);
   if (wait_fraction < 0.)
     wait_fraction = 0.;
@@ -1188,7 +1188,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           perfs_TU<<std::endl;
           perfs_TU << std::left <<std::setw(counter_description_width) << "Standard counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/step"<<std::endl;
           perfs_TU << line_sep_tabular << std::endl;
-          for (int i =0 ; i< static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER); i++)
+          for (int i = static_cast<int>(STD_COUNTERS::system_solver); i< static_cast<int>(STD_COUNTERS::postreatment); i++)
             {
               Counter& c_to_print = *std_counters_[i];
               write_globalTU_line(c_to_print,perfs_TU);
@@ -1305,17 +1305,17 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                   perfs_IO<< "---------------------------------------------------------------------------------------------------------"<< std::endl<< std::endl;
                 }
               double fraction = 0.0;
-              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + DMINFLOAT);
+              fraction = (comm_sendrecv_t + comm_allreduce_t)/ (total_time + MINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Average of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + DMINFLOAT);
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][1] + min_max_avg_sd_t_q_c_allreduce_comm[0][1])/ (total_time_max + MINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               if (fraction > 100.)
                 fraction = 100.;
               perfs_IO <<  std::left <<std::setw(text_width) << "Max of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%" << std::endl;
-              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + DMINFLOAT);
+              fraction = (min_max_avg_sd_t_q_c_sendrecv_comm[0][0] + min_max_avg_sd_t_q_c_allreduce_comm[0][0])/ (total_time_max + MINFLOAT);
               fraction = 0.1 * floor(fraction * 1000);
               perfs_IO <<  std::left <<std::setw(text_width) << "Min of the fraction of the time spent in communications between processors: " <<  std::left <<std::setw(number_width) << fraction << "%"  << std::endl;
               perfs_IO  <<  std::left <<std::setw(text_width) << "Time of one mpsum measured by an internal bench over 0.1s (network latency): ";
@@ -1608,10 +1608,9 @@ void Perf_counters::Impl::end_time_step_impl(unsigned int tstep)
   stop_counters_impl(); ///< stop_counters already updated c->tim_ts_
   if (last_opened_counter_ == nullptr)
     Process::exit("You are trying to compute the statistics of a time steps but have not open any counter");
-  Counter& c_r=get_counter(STD_COUNTERS::total_execution_time);
   if (!time_loop_)
     Process::exit("You are trying to compute time loop statistics outside of the time loop");
-  int step = tstep - nb_steps_elapsed_;
+  int step = tstep - nb_steps_elapsed_ +1;
   auto compute = [step](Counter& c)
   {
     if (c.level_>=0 && step>0 && c.count_>0)
@@ -1647,7 +1646,8 @@ void Perf_counters::Impl::end_time_step_impl(unsigned int tstep)
       end_cache_ = tstep >= nb_steps_elapsed_;
       if (end_cache_)
         {
-          time_skipped_ts_ = now() - c_r.last_open_time_;
+          time_skipped_ts_ += get_counter(STD_COUNTERS::total_execution_time).total_time_;
+          computation_time_ += get_counter(STD_COUNTERS::total_execution_time).total_time_;
           reset_counters_impl();
         }
     }

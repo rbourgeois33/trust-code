@@ -27,21 +27,21 @@ enum class STD_COUNTERS : unsigned int
   total_execution_time , ///< Lowest level counter that track the total time of the computation
   computation_start_up , ///< Track the time before the Resoudre loop
   timeloop ,   ///< Track time elapsed in the time loop
+  backup_file ,
   system_solver, ///< Track time elapsed in SolveurSys::resoudre_systeme
-  petsc_solver,  ///< Track the time elapsed using petsc solver
+  convection ,
+  diffusion ,
+  rhs ,
+  gradient ,
+  divergence ,
+  matrix_assembly ,
+  update_variables  ,
   implicit_diffusion,  ///< Track time elapsed in Equation_base::conjugue_diff_impl
   compute_dt , ///< Track time used to compute the time step dt
   turbulent_viscosity ,
-  convection ,
-  diffusion ,
-  gradient ,
-  divergence ,
-  rhs ,
-  postreatment ,
-  backup_file ,
   restart ,
-  matrix_assembly ,
-  update_variables  ,
+  postreatment ,
+  petsc_solver,  ///< Track the time elapsed using petsc solver
   mpi_sendrecv  ,
   mpi_send ,
   mpi_recv ,

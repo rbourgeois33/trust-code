@@ -27,7 +27,6 @@
 #include <Milieu_base.h>
 #include <Periodique.h>
 #include <TRUSTTrav.h>
-#include <Perf_counters.h>
 
 Implemente_instanciable(Op_Grad_PolyMAC_P0_Face, "Op_Grad_PolyMAC_P0_Face", Op_Grad_PolyMAC_P0P1NC_Face);
 
