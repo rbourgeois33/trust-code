@@ -6,14 +6,30 @@ check()
    do
       if [ $ligne = "dt" ]
       then
-         # Temps par dt
-         ref=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU.ref_$2`
-         new=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU`
+         # Time per step
+         ref=`awk 'Average time per time step:/ {print $NF}' $1.TU.ref_$2`
+         if [ -z "$ref" ]
+         then
+            ref=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU.ref_$2`
+         fi
+         new=`awk 'Average time per time step:/ {print $NF}' $1.TU`
+         if [ -z "$new" ]
+         then
+            new=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU`
+         fi
       elif [ $ligne = "total" ]
       then
-         # Temps total
-         ref=`awk '/Temps total/ {t+=$NF} END {print t}' $1.TU.ref_$2`
-         new=`awk '/Temps total/ {t+=$NF} END {print t}' $1.TU`
+         # Total time
+         ref=`awk '/Total time for the whole computation/ {print $NF}' $1.TU.ref_$2`
+         if [ -z "$ref" ]
+         then
+            ref=`awk '/Temps total/ {t+=$NF} END {print t}' $1.TU.ref_$2`
+         fi
+         new=`awk '/Total time for the whole computation/ {print $NF}' $1.TU`
+         if [ -z "$new" ]
+         then
+            new=`awk '/Temps total/ {t+=$NF} END {print t}' $1.TU`
+         fi
       fi
       echo $ref $new | awk '// {err=2*($2-$1)/($1+$2);OK=(err>0.05?0:(err>-0.025?1:2));exit OK}' # On verifie qu'on ne depasse pas +5% de la performance
       OK=$?
@@ -41,15 +57,16 @@ check()
          echo "$1.TU.ref_$2" updated !
          exit 0
       fi
-   done   
+   done
 }
 # ToDo: prevoir dans le script trust un lock avant le lancement
 # On compare les performances avec le fichier jdd.TU.ref_$HOST_BUILD
 # Si le fichier existe
 # Si le binaire est bien opt (et pas debug ou semi_opt)
-if [ ! -f $1.TU.ref_$HOST_BUILD ] || [ ${exec%_semi_opt} != $exec ] || [ ${exec%_opt} = $exec ] 
+if [ ! -f $1.TU.ref_$HOST_BUILD ] || [ ${exec%_semi_opt} != $exec ] || [ ${exec%_opt} = $exec ]
 then
    exit 0
 else
    check $1 $HOST_BUILD
 fi
+
