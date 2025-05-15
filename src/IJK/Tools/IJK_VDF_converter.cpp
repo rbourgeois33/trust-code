@@ -42,7 +42,7 @@ Entree& IJK_VDF_converter::readOn(Entree& is)
     }
   Param param(que_suis_je());
   Nom vdf_problem;
-  ArrOfInt splitting;
+  ArrOfInt domain;
   ArrOfInt direction_mapping(3);
   bool perio_flag_x = false;
   bool perio_flag_y = false;
@@ -51,7 +51,7 @@ Entree& IJK_VDF_converter::readOn(Entree& is)
   direction_mapping[1] = 1;
   direction_mapping[2] = 2;
   param.ajouter("vdf_problem", &vdf_problem, Param::REQUIRED);
-  param.ajouter("splitting", &splitting);
+  param.ajouter("domain", &domain);
   param.ajouter("x_maps_to", &direction_mapping[0]);
   param.dictionnaire("i",0);
   param.dictionnaire("j",1);
@@ -72,9 +72,9 @@ Entree& IJK_VDF_converter::readOn(Entree& is)
   param.lire_avec_accolades(is);
 
   // Check parameters
-  if (splitting.size_array() != 3)
+  if (domain.size_array() != 3)
     {
-      Cerr << "Error in IJK_VDF_converter::readOn: splitting must be an array of 3 (ex splitting 3 8 8 8)" << finl;
+      Cerr << "Error in IJK_VDF_converter::readOn: domain must be an array of 3 (ex domain 3 8 8 8)" << finl;
       exit();
     }
 

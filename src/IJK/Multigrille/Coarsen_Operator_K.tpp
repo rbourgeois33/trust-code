@@ -121,12 +121,12 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
 
   // For the moment, the algorithm cannot interpolate data across processors so the mesh boundaries on each processor
   // on the coarse and on the fine meshes must coincide (message "cannot merge")
-  // Compute the splitting of the coarse mesh: coarsened cells are on the same processor than the fine cells
+  // Compute the domain of the coarse mesh: coarsened cells are on the same processor than the fine cells
   // they come from:
   // Same processor mapping as fine mesh
   IntTab processor_mapping;
   src_domain.get_processor_mapping(processor_mapping);
-  // Same splitting in i and j directions
+  // Same domain in i and j directions
   ArrOfInt slice_size_i, slice_size_j, fine_slice_size_k, coarse_slice_size_k;
   src_domain.get_slice_size(0, Domaine_IJK::ELEM, slice_size_i);
   src_domain.get_slice_size(1, Domaine_IJK::ELEM, slice_size_j);
@@ -152,7 +152,7 @@ void Coarsen_Operator_K::initialize_grid_data_(const Grid_Level_Data_template<_T
                 // This is currently not supported
                 Cerr << "Error in Coarsen_Operator_K::initialize_grid_data: "
                      << " cannot merge cells across processors, you must put a coarse node at z=";
-                Cerr << coord_z_fine[src_dest_index_(i,0)] << " (or modify processor splitting)" << finl;
+                Cerr << coord_z_fine[src_dest_index_(i,0)] << " (or modify processor domain)" << finl;
                 error = true;
               }
             slice_num++;
