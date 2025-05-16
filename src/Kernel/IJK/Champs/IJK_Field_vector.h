@@ -70,6 +70,29 @@ public:
 
   static int size() { return N; }
 
+  void nommer(const Nom& nam) override
+  {
+    Field_base::nommer(nam);
+    const char *compos[] = {"_X", "_Y", "_Z"};
+    this->fixer_nb_comp(N);
+    Noms compos2(N);
+    for (int i=0; i<N; i++)
+      {
+        const Nom nom_compo = nam + Nom(compos[i]);
+        compos2[i] = nom_compo;
+        this->data_[i]->nommer(nom_compo);
+      }
+    this->fixer_noms_compo(compos2);
+  }
+
+  void add_synonymous(const Nom& nam) override
+  {
+    Field_base::add_synonymous(nam);
+    const char *compos[] = {"_X", "_Y", "_Z"};
+    for (int i=0; i<N; i++)
+      this->data_[i]->add_synonymous(nam + Nom(compos[i]));
+  }
+
   Entity& localisation() { return loc_; }
   const Entity& localisation() const { return loc_; }
 
