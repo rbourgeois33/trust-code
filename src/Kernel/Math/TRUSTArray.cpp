@@ -204,7 +204,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::inject_array(const TRUST
     {
       bool kernelOnDevice = checkDataOnDevice(source);
 #ifndef LATATOOLS
-      if (statistics().get_gpu_timer() && nb_elements>100) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu() && nb_elements>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
       if (kernelOnDevice)
         {
@@ -226,7 +226,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::inject_array(const TRUST
 #endif
         }
 #ifndef LATATOOLS
-      if (statistics().get_gpu_timer() && nb_elements>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+      if (statistics().get_use_gpu() && nb_elements>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
     }
   return *this;
@@ -327,7 +327,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator=(_TYPE_ x)
   const _SIZE_ size = size_array();
   bool kernelOnDevice = checkDataOnDevice();
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu() && size>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
   if (kernelOnDevice)
     {
@@ -342,7 +342,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator=(_TYPE_ x)
       for (_SIZE_ i = 0; i < size; i++) data[i] = x;
     }
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
   return *this;
 }
@@ -356,7 +356,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator+=(const TRUSTAr
   _SIZE_ size = size_array();
   bool kernelOnDevice = checkDataOnDevice(y);
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu() && size>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
   if (kernelOnDevice)
     {
@@ -373,7 +373,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator+=(const TRUSTAr
       for (_SIZE_ i = 0; i < size; i++) dx[i] += dy[i];
     }
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
   return *this;
 }
@@ -386,7 +386,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator+=(const _TYPE_ 
   _SIZE_ size = size_array();
   bool kernelOnDevice = checkDataOnDevice();
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu() && size>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
   if (kernelOnDevice)
     {
@@ -401,7 +401,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator+=(const _TYPE_ 
       for(_SIZE_ i = 0; i < size; i++) data[i] += dy;
     }
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
   return *this;
 }
@@ -415,7 +415,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator-=(const TRUSTAr
   _SIZE_ size = size_array();
   bool kernelOnDevice = checkDataOnDevice(y);
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu() && size>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
   if (kernelOnDevice)
     {
@@ -432,7 +432,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator-=(const TRUSTAr
       for (_SIZE_ i = 0; i < size; i++) data[i] -= data_y[i];
     }
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
   return *this;
 }
@@ -454,7 +454,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator*= (const _TYPE_
   _SIZE_ size = size_array();
   bool kernelOnDevice = checkDataOnDevice();
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu() && size>100) start_gpu_timer(__KERNEL_NAME__);
 #endif
   if (kernelOnDevice)
     {
@@ -469,7 +469,7 @@ TRUSTArray<_TYPE_, _SIZE_>& TRUSTArray<_TYPE_, _SIZE_>::operator*= (const _TYPE_
       for(_SIZE_ i=0; i < size; i++) data[i] *= dy;
     }
 #ifndef LATATOOLS
-  if (statistics().get_gpu_timer() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu() && size>100) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
   return *this;
 }

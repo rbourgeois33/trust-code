@@ -43,7 +43,7 @@ void vect_items_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
     {
       auto buffer_view = buffer.template view_wo<1, ExecSpace>().data();
       auto vect_view = vect.template view_ro<1, ExecSpace>().data();
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(
                              const int item)
       {
@@ -62,7 +62,7 @@ void vect_items_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
     {
       auto buffer_view = buffer.template view_ro<1, ExecSpace>().data();
       auto vect_view = vect.template view_rw<1, ExecSpace>().data();
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(
                              const int item)
       {
@@ -84,7 +84,7 @@ void vect_items_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
           }
       });
     }
-  if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+  if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 }
 #endif
 
@@ -161,7 +161,7 @@ void vect_blocs_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
         {
           auto buffer_view = buffer.template view_wo<1, ExecSpace>().data();
           auto vect_view = vect.template view_ro<1, ExecSpace>().data();
-          if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+          if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
           Kokkos::parallel_for(policy, KOKKOS_LAMBDA(
                                  const int j)
           {
@@ -174,7 +174,7 @@ void vect_blocs_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
         {
           auto buffer_view = buffer.template view_ro<1, ExecSpace>().data();
           auto vect_view = vect.template view_rw<1, ExecSpace>().data();
-          if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+          if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
           Kokkos::parallel_for(policy, KOKKOS_LAMBDA(
                                  const int j)
           {
@@ -184,7 +184,7 @@ void vect_blocs_generic_kernel(int line_size, int idx, int idx_end_of_list, cons
             else if (IS_ADD) vect_view[jj] += buffer_view[ii];
           });
         }
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
       ii_base += bloc_size;
     }
 }

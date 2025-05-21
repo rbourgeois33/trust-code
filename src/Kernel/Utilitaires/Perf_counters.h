@@ -16,6 +16,7 @@
 #include <string>
 #include <chrono>
 #include <memory>
+#include <iostream>
 
 #ifndef Perf_counters_included
 #define Perf_counters_included
@@ -96,16 +97,54 @@ public:
 
   double compute_time(time_point start); ///< return time since start in seconds
 
-  /*! @brief The class Perf_counters is based on a singleton pattern. To access to the unique object inside the code, use the getInstance() function
+  /*
+    static Perf_counters& getInstance()
+    {
+      static Perf_counters counters_stat_ ;
+      return counters_stat_;
+    }
+  */
+  /*! @brief The class Perf_counters is based on a phoenix singleton pattern. To access to the unique object inside the code, use the getInstance() function
    *
    * @return the unique Perf_counters object
    */
   static Perf_counters& getInstance()
   {
-    static Perf_counters counters_stat_ ;
-    return counters_stat_;
-  }
+    // Static flag for tracking singleton state
+    static bool destroyed = false;
+    static Perf_counters* instance = nullptr;
 
+    if (instance == nullptr)
+      {
+        if (destroyed)
+          {
+            // If the instance has already been destroyed but still asked for somewhere, the instance is reborn
+            std::cout<< "[Stats] The singleton pattern had to be reconstructed for avoiding \'Static Initialization Order Fiasco\' " <<std::endl;
+            std::cout<< "It does not impact the TU files but be careful with the values of times printed afterwards" <<std::endl;
+            static void* memory = ::operator new(sizeof(Perf_counters));
+            instance = new (memory) Perf_counters();
+            // A cleaning method for avoiding memory leaks
+            std::atexit([]()
+            {
+              instance->~Perf_counters();
+            });
+          }
+        else
+          {
+            // For the first creation of the instance
+            static Perf_counters counters_stat_;
+            instance = &counters_stat_;
+
+            // Update destruction flag
+            std::atexit([]()
+            {
+              destroyed = true;
+              instance = nullptr;
+            });
+          }
+      }
+    return *instance;
+  }
   /*! @brief Create a new counter and add it to the map of custom counters
    *
    * @param to_print_in_global_TU : if true, then the statistics associated with the counter will appear in the global_TU file
@@ -225,12 +264,12 @@ public:
 
   /////// GPU features for a cleaner Device class
 
-  void start_gpu_clock();
+  void start_gpu_timer();
 
-  void stop_gpu_clock();
+  void stop_gpu_timer();
 
-  bool is_gpu_clock_on() const ;
-  void set_gpu_clock(bool on) ;
+  bool is_gpu_verbose_on() const ;
+  void set_gpu_verbose(bool on) ;
 
   bool get_init_device() const ;
 
@@ -244,7 +283,9 @@ public:
 
   int get_gpu_timer_counter() const ;
 
-  double stop_gpu_clock_and_compute_gpu_time() ;
+  double stop_gpu_timer_and_compute_gpu_time() ;
+
+  bool get_use_gpu() const;
 
 //// end of GPU features
 

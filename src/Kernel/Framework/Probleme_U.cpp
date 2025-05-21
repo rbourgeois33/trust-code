@@ -328,10 +328,9 @@ bool Probleme_U::run()
           double temps = statistics().get_time_since_last_open(STD_COUNTERS::timeloop);
           Cout << finl << "clock: Time of the last time step: " << temps << " s" << finl << finl;
         }
-
-      statistics().end_time_step(tstep);
-      statistics().end_count(STD_COUNTERS::timeloop);
       tstep++;
+      statistics().end_count(STD_COUNTERS::timeloop);
+      statistics().end_time_step(tstep);
 #ifdef VTRACE
       // Flush the buffer regulary to avoid setting VT_MAX_FLUSHES=0 variable...
       VT_BUFFER_FLUSH();

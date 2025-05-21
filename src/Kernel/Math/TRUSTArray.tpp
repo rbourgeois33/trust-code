@@ -19,6 +19,7 @@
 #include <string.h>
 #include <algorithm>
 #include <TRUSTTravPool.h>
+#include <Perf_counters.h>
 
 
 /*! Destroy array, potentially making block available again if this was a Trav

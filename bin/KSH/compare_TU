@@ -7,12 +7,12 @@ check()
       if [ $ligne = "dt" ]
       then
          # Time per step
-         ref=`awk 'Average time per time step:/ {print $NF}' $1.TU.ref_$2`
+         ref=`awk '/Average time per time step:/ {print $NF}' $1.TU.ref_$2`
          if [ -z "$ref" ]
          then
             ref=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU.ref_$2`
          fi
-         new=`awk 'Average time per time step:/ {print $NF}' $1.TU`
+         new=`awk '/Average time per time step:/ {print $NF}' $1.TU`
          if [ -z "$new" ]
          then
             new=`awk '/Secondes/ && /pas de temps/ {print $NF}' $1.TU`
@@ -33,19 +33,18 @@ check()
       fi
       echo $ref $new | awk '// {err=2*($2-$1)/($1+$2);OK=(err>0.05?0:(err>-0.025?1:2));exit OK}' # On verifie qu'on ne depasse pas +5% de la performance
       OK=$?
+      ecart=`echo $ref $new | awk '// {printf("%2.1f%\n",-2*($1-$2)/($1+$2)*100)}'`
       if [ $OK = 0 ]
       then
          sdiff $1.TU.ref_$2 $1.TU
          echo "================================"
-         echo "Performance is KO for $1 on $2 !"
+         echo "Performance is KO ($ecart) $new s > $ref s (reference) for $1 on $2"
          echo "================================"
          exit -1
       elif [ $OK = 1 ]
       then
-         ecart=`echo $ref $new | awk '// {printf("%2.1f%\n",-2*($1-$2)/($1+$2)*100)}'`
-         echo "Performance is OK ($ecart) $new s < $ref s (reference) for $1 on $2"
+         echo "Performance is OK ($ecart) $new s - $ref s (reference) for $1 on $2"
       else
-         ecart=`echo $ref $new | awk '// {printf("%2.1f%\n",-2*($1-$2)/($1+$2)*100)}'`
          echo "Performance reference isn't up to date ($ecart) $new s < $ref s (reference) for $1 on $2"
          #echo "With: cp `pwd`/$1.TU `find $project_directory/tests/Reference -name $1.TU.ref_$2`"
          if [ "$project_directory" != "" ]

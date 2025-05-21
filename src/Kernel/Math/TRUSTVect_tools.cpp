@@ -156,7 +156,7 @@ void operation_speciale_tres_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, con
       const int resu_start_idx = begin_bloc * delta_line_size;
 
       Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(const int i)
       {
         const _TYPE_ x = vx_view[i];
@@ -171,7 +171,7 @@ void operation_speciale_tres_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, con
               resu_view[resu_idx] *= ((_TYPE_)1 / x);
           }
       });
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
     }
 }
 }
@@ -246,7 +246,7 @@ void operation_speciale_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, const TR
       assert(begin_bloc >= 0 && end_bloc <= vect_size_tot && end_bloc >= begin_bloc);
 
       Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(const int i)
       {
         const _TYPE_ x = vx_view[i];
@@ -256,7 +256,7 @@ void operation_speciale_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, const TR
         else //If it's not ADD, it's SQUARE
           resu_view[i] += alpha * x * x;
       });
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
     }
 }
 }
@@ -328,7 +328,7 @@ void operator_vect_vect_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const TRU
 
       assert(begin_bloc >= 0 && end_bloc <= vect_size_tot && end_bloc >= begin_bloc);
       Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(const _SIZE_ i)
       {
         const _TYPE_ x = vx_view[i];
@@ -338,7 +338,7 @@ void operator_vect_vect_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const TRU
         if (IS_DIV) resu_view[i] /= x;
         if (IS_EGAL) resu_view[i] = x;
       });
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
     }
 #else
   // Need to keep C++ optimized (pointer) implementation for PolyMAC in Flica5
@@ -438,7 +438,7 @@ void operator_vect_single_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const _
 
       assert(begin_bloc >= 0 && end_bloc <= vect_size_tot && end_bloc >= begin_bloc);
       Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy, KOKKOS_LAMBDA(const _SIZE_ i)
       {
         if (IS_SUB) resu_view[i] -= x;
@@ -452,7 +452,7 @@ void operator_vect_single_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const _
         if (IS_DIV) resu_view[i] /= x;
         if (IS_INV) resu_view[i] = (_TYPE_) ((_TYPE_)1 /resu_view[i]);
       });
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
     }
 }
 }
@@ -583,7 +583,7 @@ void local_extrema_vect_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, int n
       reducer_value_type bloc_min_max;
 
       //Reduction
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_reduce(policy,
                               KOKKOS_LAMBDA(const int i, reducer_value_type& local_min_max)
       {
@@ -596,7 +596,7 @@ void local_extrema_vect_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, int n
           }
       }
       ,reducer(bloc_min_max)); //Reduce in bloc_min_max
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
 
       //Bloc-level reduction
       if ( (IS_MAXS && bloc_min_max.val > min_max_val) || (IS_MINS && bloc_min_max.val < min_max_val) )
@@ -704,7 +704,7 @@ void local_operations_vect_bis_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx
       _TYPE_ bloc_sum=0;
 
       //Reduction
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_reduce(policy, KOKKOS_LAMBDA(const _SIZE_ i, _TYPE_& local_sum)
       {
         const _TYPE_ x = vx_view[i];
@@ -712,7 +712,7 @@ void local_operations_vect_bis_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx
         if (IS_SUM) local_sum += x;
       }
       ,bloc_sum); //Reduce in bloc_sum
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
 
       //Bloc-level reduction
       sum += bloc_sum;
@@ -788,24 +788,24 @@ void invalidate_data_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu,
       //Define Policy
       Kokkos::RangePolicy<ExecSpace> policy(i, bloc_end);
       //Loop
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_for(policy,KOKKOS_LAMBDA(const int count)
       {
         resu_view[count]=invalid;
       });
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
       i = items_blocs[blocs_idx+1] * line_size;
     }
   const _SIZE_ bloc_end = resu.size_array(); // Process until end of vector
   //Define Policy
   Kokkos::RangePolicy<ExecSpace> policy(i, bloc_end);
   //Loop
-  if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+  if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
   Kokkos::parallel_for(policy,KOKKOS_LAMBDA(const int count)
   {
     resu_view[count]=invalid;
   });
-  if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+  if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
 }
 }
 #endif
@@ -868,7 +868,7 @@ void local_prodscal_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, const TRUSTVect<_
       _TYPE_ bloc_sum=0;
 
       //Reduction
-      if (statistics().get_gpu_timer()) start_gpu_timer(__KERNEL_NAME__);
+      if (statistics().get_use_gpu()) start_gpu_timer(__KERNEL_NAME__);
       Kokkos::parallel_reduce(policy, KOKKOS_LAMBDA(const _SIZE_ i, _TYPE_& local_sum)
       {
         local_sum += vx_view[i]*vy_view[i];
@@ -876,7 +876,7 @@ void local_prodscal_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, const TRUSTVect<_
       , Kokkos::Sum<_TYPE_>(bloc_sum)); //Reduce in bloc_sum
 
       //timer
-      if (statistics().get_gpu_timer()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+      if (statistics().get_use_gpu()) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
 
       //Bloc-level reduction
       sum += bloc_sum;

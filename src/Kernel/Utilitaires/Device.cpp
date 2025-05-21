@@ -74,7 +74,7 @@ void init_device()
 {
   if (statistics().get_init_device()) return;
   statistics().set_init_device(true);
-  if (getenv("TRUST_CLOCK_ON")!= nullptr) statistics().set_gpu_clock(true);
+  if (getenv("TRUST_CLOCK_ON")!= nullptr) statistics().set_gpu_verbose(true);
   if (getenv("TRUST_DISABLE_FENCE")!=nullptr) fence = false;
   Process::imprimer_ram_totale(); // Impression avant copie des donnees sur GPU
 }
@@ -193,7 +193,6 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
 {
 #ifdef TRUST_USE_GPU
   assert(!isAllocatedOnDevice(ptr)); // Verifie que la zone n'est pas deja allouee
-  statistics().start_gpu_clock();
   statistics().begin_count(STD_COUNTERS::gpu_malloc_free,statistics().get_last_opened_counter_level()+1);
   size_t bytes = sizeof(_TYPE_) * size;
   size_t free_bytes  = DeviceMemory::deviceMemGetInfo(0);
@@ -206,6 +205,13 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   _TYPE_* device_ptr = static_cast<_TYPE_*>(Kokkos::kokkos_malloc(bytes));
   // Map host_ptr with device_ptr:
   DeviceMemory::add(ptr, device_ptr, size * sizeof(_TYPE_));
+  if (statistics().is_gpu_verbose_on() && Process::je_suis_maitre())
+    {
+      std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
+      double ms = 1000 * statistics().get_time_since_last_open(STD_COUNTERS::gpu_malloc_free);
+      printf("%s %7.3f ms [Data]   Allocate on device [%9s] %6ld Bytes (%ld/%ldGB free) Currently allocated: %6ld\n", clock.c_str(), ms, ptrToString(ptr).c_str(), long(bytes), free_bytes/(1024*1024*1024), total_bytes/(1024*1024*1024), long(DeviceMemory::allocatedBytesOnDevice()));
+    }
+  statistics().end_count(STD_COUNTERS::gpu_malloc_free);
 #ifndef NDEBUG
   const _TYPE_ INVALIDE_ = (std::is_same<_TYPE_,double>::value) ? DMAXFLOAT*0.999 : ( (std::is_same<_TYPE_,int>::value) ? INT_MIN : 0); // Identique a TRUSTArray<_TYPE_>::fill_default_value()
   Kokkos::View<_TYPE_*> ptr_v(device_ptr, size);
@@ -215,13 +221,6 @@ _TYPE_* allocateOnDevice(_TYPE_* ptr, _SIZE_ size)
   });
   end_gpu_timer(__KERNEL_NAME__);
 #endif
-  statistics().end_count(STD_COUNTERS::gpu_malloc_free);
-  if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
-    {
-      std::string clock(Process::is_parallel() ? "[clock]#"+std::to_string(Process::me()) : "[clock]  ");
-      double ms = 1000 * statistics().stop_gpu_clock_and_compute_gpu_time();
-      printf("%s %7.3f ms [Data]   Allocate on device [%9s] %6ld Bytes (%ld/%ldGB free) Currently allocated: %6ld\n", clock.c_str(), ms, ptrToString(ptr).c_str(), long(bytes), free_bytes/(1024*1024*1024), total_bytes/(1024*1024*1024), long(DeviceMemory::allocatedBytesOnDevice()));
-    }
 #endif
   return ptr;
 }
@@ -250,7 +249,7 @@ void deleteOnDevice(_TYPE_* ptr, _SIZE_ size)
   else
     clock = "[clock]  ";
   _SIZE_ bytes = sizeof(_TYPE_) * size;
-  if (statistics().is_gpu_clock_on() && Process::je_suis_maitre())
+  if (statistics().is_gpu_verbose_on() && Process::je_suis_maitre())
     cout << clock << "            [Data]   Delete on device array [" << ptrToString(ptr).c_str() << "] of " << bytes << " Bytes. It remains " << DeviceMemory::getMemoryMap().size()-1 << " arrays." << endl << flush;
   Kokkos::kokkos_free(addrOnDevice(ptr));
   DeviceMemory::del(ptr);
@@ -362,7 +361,7 @@ void copyFromDevice(_TYPE_* ptr, _SIZE_ size)
       std::stringstream message;
       message << "Copy from device [" << ptrToString(ptr) << "] " << size << " items ";
       end_gpu_timer(message.str(), 0, bytes);
-      //if (statistics().is_gpu_clock_on()) printf("\n");
+      //if (statistics().is_gpu_verbose_on()) printf("\n");
       if (DeviceMemory::warning(size)) // Warning for large array only:
         ToDo_Kokkos("D2H update of large array! Add a breakpoint to find the reason if not IO.");
     }

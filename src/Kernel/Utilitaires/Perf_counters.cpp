@@ -82,7 +82,7 @@ struct Counter
   const bool is_comm_;
   const bool is_gpu_;
   int count_;
-  int quantity_;
+  long int quantity_;
   Counter* parent_;
   duration total_time_;
   duration time_alone_;   // time when the counter is open minus the time where an counter of lower lvl was open
@@ -133,10 +133,8 @@ void Counter::begin_count_(int counter_level, time_point t)
 
 void Counter::end_count_(int count_increment, int quantity_increment, time_point t_stop)
 {
-  if (last_open_time_ == time_point() || !is_running_)
+  if (!is_running_)
     Process::exit("Last open_time was not properly set"+ description_);
-  if (last_open_time_alone_ == time_point()|| !is_running_)
-    Process::exit("Last open_time alone was not properly set" + description_);
   duration t_tot = t_stop-last_open_time_;
   duration t_alone = t_stop - last_open_time_alone_;
   quantity_ += quantity_increment;
@@ -240,17 +238,17 @@ public:
   void end_time_step_impl(unsigned int tstep);
   int get_last_opened_counter_level_impl() const;
   void print_TU_files_impl(const std::string& message);
-  void start_gpu_clock_impl();
-  void stop_gpu_clock_impl();
+  void start_gpu_timer_impl();
+  void stop_gpu_timer_impl();
   double compute_gpu_time_impl();
-  bool is_gpu_clock_on_impl() const ;
-  void set_gpu_clock_impl(bool on) ;
+  bool is_gpu_verbose_on_impl() const ;
+  void set_gpu_verbose_impl(bool on) ;
   bool get_init_device_impl() const ;
   void set_init_device_impl(bool init) ;
   bool get_gpu_timer_impl() const ;
-  void set_gpu_timer_impl(bool timer);
   void add_to_gpu_timer_counter_impl(int to_add=1) ;
   int get_gpu_timer_counter_impl() const ;
+  bool get_use_gpu_impl() const {return use_gpu_;}
   bool running_impl(const STD_COUNTERS name) { return get_counter(name).running_(); }
 
 private:
@@ -274,14 +272,15 @@ private:
   duration computation_time_=duration::zero();      ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_=duration::zero();       ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter* last_opened_counter_=nullptr;   ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  unsigned int nb_steps_elapsed_=3;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
+  unsigned int nb_steps_elapsed_=0;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
   int total_nb_backup_=0;
   double total_data_exchange_per_backup_=0.;
-  bool gpu_clock_on_ =false;
+  bool gpu_verbose_ =false;
   bool init_device_ = false;
   bool gpu_timer_ = false;
-  time_point gpu_clock_start_;
-  int gpu_timer_counter_=0;
+  bool use_gpu_=false;
+  time_point gpu_timer_start_;
+  int gpu_timer_count_=0;
   int max_str_length_=118;
 };
 Perf_counters::Impl::~Impl()=default;
@@ -295,7 +294,7 @@ Perf_counters::Impl::Impl()
   std_counters_[static_cast<int>(STD_COUNTERS::backup_file)] = std::make_unique<Counter>(0, "Back-up operations");
   std_counters_[static_cast<int>(STD_COUNTERS::system_solver)] = std::make_unique<Counter>(1, "Linear solver resolutions Ax=B");
   std_counters_[static_cast<int>(STD_COUNTERS::petsc_solver)] = std::make_unique<Counter>(2, "Petsc solver");
-  std_counters_[static_cast<int>(STD_COUNTERS::implicit_diffusion)] = std::make_unique<Counter>(1, "Number of linear system resolutions for implicit diffusion:");
+  std_counters_[static_cast<int>(STD_COUNTERS::implicit_diffusion)] = std::make_unique<Counter>(1, "Solver for implicit diffusion:");
   std_counters_[static_cast<int>(STD_COUNTERS::compute_dt)] = std::make_unique<Counter>(1, "Computation of the time step dt");
   std_counters_[static_cast<int>(STD_COUNTERS::turbulent_viscosity)] = std::make_unique<Counter>(1, "Turbulence model::update");
   std_counters_[static_cast<int>(STD_COUNTERS::convection)] = std::make_unique<Counter>(1, "Convection operator");
@@ -342,8 +341,10 @@ Perf_counters::Impl::Impl()
   //IO
   std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageBin)] = std::make_unique<Counter>(2, "write", "IO",true);
   std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageMPIIO)] = std::make_unique<Counter>(2,"MPI_File_write_all", "IO",true);
+  if (nb_steps_elapsed_==0)
+    end_cache_=true;
 #ifdef TRUST_USE_GPU
-  gpu_timer_ = true;
+  use_gpu_=true;
 #endif
 }
 ///////  Private methods of Pimpl
@@ -388,7 +389,7 @@ void Perf_counters::Impl::check_begin(Counter& c, int counter_lvl, time_point t)
 
 void Perf_counters::Impl::check_end(Counter& c, time_point t)
 {
-  if (!c.is_running_)
+  if (!c.is_running_ || last_opened_counter_==nullptr)
     Process::exit("You are trying to close a counter that is not running: " + c.description_);
   if (last_opened_counter_ != &c)
     {
@@ -918,7 +919,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   std::ostringstream perfs_IO;   ///< Stringstream that contains algomerated stats that will be printed in the .TU
   std::ostringstream captions;
   std::ostringstream file_header;      ///< Stringstream that contains the File header
-  const int counter_description_width = 45;
+  const int counter_description_width = 40;
   const int time_per_step_width= 15;
   const int percent_loop_time_width=11;
   const int count_per_ts_width=15;
@@ -926,7 +927,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   const int bandwith_width= 10;
   const int tabular_custom_line_width= counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+level_width;
   const int cpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width;
-  const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width;
+  const int gpu_line_width=counter_description_width+3+time_per_step_width+3+percent_loop_time_width+3+count_per_ts_width+3+bandwith_width+4;
   const int number_width=15;
   const int text_width =cpu_line_width-count_per_ts_width;
   const int header_txt_width = 10;
@@ -947,7 +948,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   std::array< std::array<double,4> ,3> min_max_avg_sd_t_q_c_allreduce_comm = min_max_avg_sd_t_q_c_sendrecv_comm ;
   Counter& c_timeloop = get_counter(STD_COUNTERS::timeloop);
   int nb_ts = c_timeloop.count_;
-  nb_ts = std::max(nb_ts,0);
+  nb_ts = std::max(nb_ts,1);
   double time_tl=c_timeloop.total_time_.count();
   double total_untracked_time_ts=c_timeloop.time_alone_.count();
   Counter& c_total_time = get_counter(STD_COUNTERS::total_execution_time);
@@ -962,6 +963,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   Counter& c_io_seq = get_counter(STD_COUNTERS::IO_EcrireFicPartageBin);
   Counter& c_io_par = get_counter(STD_COUNTERS::IO_EcrireFicPartageMPIIO);
   Counter& c_petsc=get_counter(STD_COUNTERS::petsc_solver);
+  Counter& c_allocfree=get_counter(STD_COUNTERS::gpu_malloc_free);
   int petcs_count = Process::mp_max(c_petsc.count_);
   int copy_to_device_count = Process::mp_max(c_todevice.count_);
   int max_virtual_swap_c = Process::mp_max(c_virtual_swap.count_);
@@ -987,7 +989,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
         double t_c = c_to_print_.total_time_.count();
         int count = c_to_print_.count_;
         line << std::left <<std::setw(counter_description_width) << c_to_print_.description_ <<separator ;
-        double t = nb_ts>0 ? t_c/nb_ts : t_c;
+        double t = nb_ts>0 ? c_to_print_.avg_time_per_step_ : t_c;
         line << std::left << std::setw(time_per_step_width) <<t << separator << std::setprecision(3) << std::setw(percent_loop_time_width) << t_c/total_time*100 ;
         if (nb_ts>0)
           {
@@ -1155,7 +1157,13 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
               cerr<<"No time step after cache filling was computed"<<std::endl;
               return;
             }
-          file_header << "The " <<  nb_steps_elapsed_<< " first time steps are not accounted for the computation of the time loop statistics"<< std::endl;
+          if (nb_steps_elapsed_>0)
+            {
+              if (nb_steps_elapsed_>1)
+                file_header << "The " <<  nb_steps_elapsed_<< " first time steps are not accounted for the computation of the time loop statistics"<< std::endl;
+              else
+                file_header << "The first time step is not accounted for the computation of the time loop statistics"<< std::endl;
+            }
           file_header <<  std::left <<std::setw(text_width)<< "Total time: "<<  std::left <<std::setw(number_width) << c_total_time.total_time_.count() << std::endl;
           file_header <<  std::left <<std::setw(text_width) <<  "Number of time steps: " <<  std::left <<std::setw(number_width) << nb_ts << std::endl;
           file_header <<  std::left <<std::setw(text_width) << "Average time per time step: " <<  std::left <<std::setw(number_width) << c_total_time.total_time_.count()/nb_ts << endl;
@@ -1219,7 +1227,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
         {
           double allreduce_per_ts = (double) min_max_avg_sd_t_q_c_allreduce_comm[2][1]/nb_ts;
           perfs_TU <<  std::left <<std::setw(text_width) << "Maximum number of MPI allreduce per time step" <<  std::left <<std::setw(number_width) << allreduce_per_ts << std::endl;
-          if (allreduce_per_ts > 30.0)
+          if (allreduce_per_ts > 30.0 && message=="Time loop statistics")
             {
               perfs_TU << std::endl << line_sep_cpu << std::endl;
               perfs_TU << " Warning: number of MPI_allreduce calls per time step is high. Contact TRUST team to run massive parallel calculations" << std::endl;
@@ -1242,14 +1250,18 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           perfs_TU <<  std::left <<std::setw(text_width) << "Average number of iteration of the linear solver per call: " <<  std::left <<std::setw(number_width) <<  nb_it_per_solver_calls << std::endl <<std::endl;
         }
       // GPU part of the TU :
-      auto compute_percent_and_write_tabular_line = [&] (Counter& c_, const std::string str)
+      auto compute_percent_and_write_tabular_line = [& perfs_GPU, & nb_ts, & time_tl, & counter_description_width, & time_per_step_width, & percent_loop_time_width, & count_per_ts_width, & bandwith_width, & separator] (const Counter& c_, const std::string str)
       {
         double max_time = c_.total_time_.count();
         double calls = c_.count_/nb_ts;
         double t_ts = max_time/nb_ts;
-        double bw = c_.quantity_*(1021.*1024.*c_.total_time_.count());
-        double percent = 100*max_time/nb_ts;
-        perfs_GPU << std::left << std::setw(counter_description_width) << str <<separator << std::setw(time_per_step_width) << t_ts<<separator  << std::setw(count_per_ts_width) <<  percent <<separator<< std::setw(count_per_ts_width) << calls <<separator<< std::setw(bandwith_width) << bw <<  std::endl;
+        double bw = c_.quantity_/(1024.*1024.*1024*max_time);
+        double percent = 100*max_time/time_tl;
+        perfs_GPU << std::left << std::setw(counter_description_width) << str <<separator << std::setw(time_per_step_width) << t_ts<<separator  << std::setw(percent_loop_time_width) <<  percent <<separator<< std::setw(count_per_ts_width) << calls <<separator;
+        if (bw >1.0e-10)
+          perfs_GPU << std::setw(bandwith_width) << bw << "GB/s" << std::endl;
+        else
+          perfs_GPU << std::endl;
         return percent;
       };
       if (copy_to_device_count>0 && nb_ts >0 && message=="Time loop statistics")
@@ -1258,7 +1270,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           spaces.assign((max_str_length_-14)/2,' ');
           perfs_GPU << spaces <<"GPU statistics" << std::endl;
           perfs_GPU << line_sep_gpu<<std::endl;
-          perfs_GPU << std::left <<std::setw(counter_description_width) << "Counter description" << separator <<std::setw(time_per_step_width) << "Time per step" <<separator<< std::setw(percent_loop_time_width) << "Percent of loop time" <<separator<< std::setw(count_per_ts_width) << "Calls per time step" <<separator<< std::setw(bandwith_width)<< "Bandwidth"<<std::endl;
+          perfs_GPU << std::left <<std::setw(counter_description_width) << "Counter description" << separator <<std::setw(time_per_step_width) << "Time per step" <<separator<< std::setw(percent_loop_time_width) << "% loop time" <<separator<< std::setw(count_per_ts_width) << "Call(s)/step" <<separator<< std::setw(bandwith_width)<< "Bandwidth"<<std::endl;
           perfs_GPU << line_sep_gpu << std::endl;
           double ratio_gpu_library = compute_percent_and_write_tabular_line(c_gpu_l,"Libraries: ");
           double ratio_gpu_kernel = compute_percent_and_write_tabular_line(c_gpu_k,"Kernels: ");
@@ -1267,7 +1279,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           ratio_copy += compute_percent_and_write_tabular_line(c_fromdevice,"Copy device to host: ");
           double ratio_comm = 100.0 * (comm_sendrecv_t+ comm_allreduce_t)/c_timeloop.max_time_per_step_;
           double ratio_cpu = 100 - ratio_copy - ratio_gpu - ratio_comm;
-          perfs_GPU << std::setprecision(3) << "GPU: " << ratio_gpu << "% Copy H<->D: " << ratio_copy << "Comm: "<< ratio_comm << " ; CPU & other: " << ratio_cpu << std::setprecision(6)<<std::endl;
+          double ratio_allocfree = compute_percent_and_write_tabular_line(c_allocfree,"Alloc/Free on device: ");
+          perfs_GPU << std::setprecision(3) << "GPU: " << ratio_gpu << "% Copy H<->D: " << ratio_copy << "% Alloc/free:" << ratio_allocfree << "% Comm: "<< ratio_comm << "% CPU & other: " << ratio_cpu << std::setprecision(6)<<"%"<<std::endl;
           if (ratio_gpu<50)
             {
               Cerr << "==============================================================================================" << std::endl;
@@ -1354,8 +1367,6 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
     }
 }
 
-
-
 /////////////////////////////////////// Public methods of Pimpl ////////////////////////////////////////////
 
 void Perf_counters::Impl::create_custom_counter_impl(std::string counter_description , int counter_level,  std::string counter_family , bool is_comm, bool is_gpu)
@@ -1399,7 +1410,6 @@ void Perf_counters::Impl::begin_count_impl(const std::string& custom_count_name,
       check_begin(c, counter_lvl,t);
       c.begin_count_(counter_lvl,t);
     }
-
 }
 
 /*! @brief End the count of a counter and update the counter values
@@ -1610,7 +1620,7 @@ void Perf_counters::Impl::end_time_step_impl(unsigned int tstep)
     Process::exit("You are trying to compute the statistics of a time steps but have not open any counter");
   if (!time_loop_)
     Process::exit("You are trying to compute time loop statistics outside of the time loop");
-  int step = tstep - nb_steps_elapsed_ +1;
+  int step = tstep - nb_steps_elapsed_;
   auto compute = [step](Counter& c)
   {
     if (c.level_>=0 && step>0 && c.count_>0)
@@ -1656,6 +1666,8 @@ void Perf_counters::Impl::end_time_step_impl(unsigned int tstep)
 
 int Perf_counters::Impl::get_last_opened_counter_level_impl() const
 {
+  if (last_opened_counter_==nullptr)
+    return -5;
   return last_opened_counter_->level_;
 }
 
@@ -1674,35 +1686,35 @@ void Perf_counters::Impl::print_TU_files_impl(const std::string& message)
     }
 }
 
-void Perf_counters::Impl::start_gpu_clock_impl()
+void Perf_counters::Impl::start_gpu_timer_impl()
 {
-  if (gpu_clock_on_)
-    Process::exit("You try to start the gpu clock and it is already running");
-  gpu_clock_start_=now();
-  gpu_clock_on_ = true;
+  if (gpu_timer_)
+    Process::exit("You try to start the gpu timer and it is already running");
+  gpu_timer_start_=now();
+  gpu_timer_ = true;
 }
 
-void Perf_counters::Impl::stop_gpu_clock_impl()
+void Perf_counters::Impl::stop_gpu_timer_impl()
 {
-  if(!gpu_clock_on_)
-    Process::exit("You try to stop the GPU clock, but it has not been started yet");
-  gpu_clock_on_=false;
+  if(!gpu_timer_)
+    Process::exit("You try to stop the GPU timer, but it has not been started yet");
+  gpu_timer_=false;
 }
 
 double Perf_counters::Impl::compute_gpu_time_impl()
 {
-  stop_gpu_clock_impl();
-  duration d= now() - gpu_clock_start_;
+  stop_gpu_timer_impl();
+  duration d= now() - gpu_timer_start_;
   return d.count();
 }
 
-bool Perf_counters::Impl::is_gpu_clock_on_impl() const
+bool Perf_counters::Impl::is_gpu_verbose_on_impl() const
 {
-  return gpu_clock_on_;
+  return gpu_verbose_;
 }
-void Perf_counters::Impl::set_gpu_clock_impl(bool on)
+void Perf_counters::Impl::set_gpu_verbose_impl(bool on)
 {
-  gpu_clock_on_ = on;
+  gpu_verbose_ = on;
 }
 bool Perf_counters::Impl::get_init_device_impl() const
 {
@@ -1716,17 +1728,13 @@ bool Perf_counters::Impl::get_gpu_timer_impl() const
 {
   return gpu_timer_;
 }
-void Perf_counters::Impl::set_gpu_timer_impl(bool timer)
-{
-  gpu_timer_=timer;
-}
 void Perf_counters::Impl::add_to_gpu_timer_counter_impl(int to_add)
 {
-  gpu_timer_counter_ += to_add;
+  gpu_timer_count_ += to_add;
 }
 int Perf_counters::Impl::get_gpu_timer_counter_impl() const
 {
-  return gpu_timer_counter_;
+  return gpu_timer_count_;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1851,24 +1859,24 @@ int Perf_counters::get_last_opened_counter_level() const
   return pimpl_->get_last_opened_counter_level_impl();
 }
 
-void Perf_counters::start_gpu_clock()
+void Perf_counters::start_gpu_timer()
 {
-  pimpl_->start_gpu_clock_impl();
+  pimpl_->start_gpu_timer_impl();
 }
 
-void Perf_counters::stop_gpu_clock()
+void Perf_counters::stop_gpu_timer()
 {
-  pimpl_->stop_gpu_clock_impl();
+  pimpl_->stop_gpu_timer_impl();
 }
 
-bool Perf_counters::is_gpu_clock_on() const
+bool Perf_counters::is_gpu_verbose_on() const
 {
-  return pimpl_->is_gpu_clock_on_impl();
+  return pimpl_->is_gpu_verbose_on_impl();
 }
 
-void Perf_counters::set_gpu_clock(bool on)
+void Perf_counters::set_gpu_verbose(bool on)
 {
-  pimpl_->set_gpu_clock_impl(on);
+  pimpl_->set_gpu_verbose_impl(on);
 }
 
 bool Perf_counters::get_init_device() const
@@ -1883,12 +1891,7 @@ void Perf_counters::set_init_device(bool init)
 
 bool Perf_counters::get_gpu_timer() const
 {
-  return pimpl_->get_gpu_timer_counter_impl();
-}
-
-void Perf_counters::set_gpu_timer(bool timer)
-{
-  pimpl_->set_gpu_timer_impl(timer);
+  return pimpl_->get_gpu_timer_impl();
 }
 
 void Perf_counters::add_to_gpu_timer_counter(int to_add)
@@ -1901,7 +1904,9 @@ int Perf_counters::get_gpu_timer_counter() const
   return pimpl_->get_gpu_timer_counter_impl();
 }
 
-double Perf_counters::stop_gpu_clock_and_compute_gpu_time()
+double Perf_counters::stop_gpu_timer_and_compute_gpu_time()
 {
   return pimpl_->compute_gpu_time_impl();
 }
+
+bool Perf_counters::get_use_gpu() const {return pimpl_->get_use_gpu_impl();}

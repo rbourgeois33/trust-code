@@ -122,18 +122,19 @@ public:
       {
         int size = tab_valeurs.dimension(0);
         int nb_comp = tab_valeurs.line_size();
-        start_gpu_timer(__KERNEL_NAME__);
         bool kernelOnDevice = tab_valeurs.checkDataOnDevice();
         if (kernelOnDevice)
           {
 #ifdef KOKKOS
             CDoubleTabView valeurs = valeurs_.view_ro();
             DoubleTabView tab_valeurs_v = tab_valeurs.view_rw();
+            start_gpu_timer(__KERNEL_NAME__);
             Kokkos::parallel_for(__KERNEL_NAME__, Kokkos::MDRangePolicy<Kokkos::Rank<2>>({0, 0}, {size, nb_comp}),
                                  KOKKOS_LAMBDA(const int i, const int j)
             {
               tab_valeurs_v(i, j) = valeurs(0, j);
             });
+            end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
 #endif
           }
         else
@@ -142,7 +143,6 @@ public:
               for (int j = 0; j < nb_comp; j++)
                 tab_valeurs(i, j) = valeurs_(0, j);
           }
-        end_gpu_timer(__KERNEL_NAME__, kernelOnDevice);
         return tab_valeurs;
       }
 
