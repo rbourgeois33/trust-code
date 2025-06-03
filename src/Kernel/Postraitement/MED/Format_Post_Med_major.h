@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,21 +12,23 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
+#ifndef Format_Post_Med_major_included
+#define Format_Post_Med_major_included
 
-#ifndef Option_CGNS_included
-#define Option_CGNS_included
+#include <Format_Post_Med.h>
 
-#include <Interprete.h>
-
-class Motcle;
-
-class Option_CGNS: public Interprete
+/*! @brief : Exactly the same as Format_Post_Med but with the last major version of MED
+ */
+class Format_Post_Med_major : public Format_Post_Med
 {
-  Declare_instanciable(Option_CGNS);
+  Declare_instanciable_sans_constructeur(Format_Post_Med_major);
 public:
-  Entree& interpreter(Entree&) override;
-  int lire_motcle_non_standard(const Motcle&, Entree&) override;
-  static bool SINGLE_PRECISION, MULTIPLE_FILES, PARALLEL_OVER_ZONE, USE_LINKS; /* NOT BY DEFAULT */
+  Format_Post_Med_major()
+  {
+    ecr_med_.set_major_mode(true);
+  }
+
+protected:
 };
 
-#endif /* Option_CGNS_included */
+#endif

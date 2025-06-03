@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,29 +12,24 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-#include <Format_Post_Med_major.h>
 
-Implemente_instanciable_sans_constructeur(Format_Post_Med_major,"Format_Post_Med_major",Format_Post_Med);
 
-/*! @brief erreur => exit
+
+
+#ifndef Ecrire_Champ_MED_included
+#define Ecrire_Champ_MED_included
+
+#include <Interprete.h>
+
+/*! @brief classe Ecrire_Champ_MED
  *
+ * @sa Interprete
  */
-Sortie& Format_Post_Med_major::printOn(Sortie& os) const
+class Ecrire_Champ_MED : public Interprete
 {
-  Cerr << "Format_Post_Mesh_major::printOn : error" << finl;
-  exit();
-  return os;
-}
+  Declare_instanciable(Ecrire_Champ_MED);
+public :
+  Entree& interpreter(Entree&) override;
+};
 
-/*! @brief Lecture des parametres du postraitement au format "jeu de donnees" Le format attendu est le suivant:
- *
- *   {
- *     nom_fichier filename_sans_extension
- *   }
- *
- */
-Entree& Format_Post_Med_major::readOn(Entree& is)
-{
-  Format_Post_Med::readOn(is);
-  return is;
-}
+#endif

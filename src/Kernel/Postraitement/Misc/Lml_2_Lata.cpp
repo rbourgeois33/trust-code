@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,47 +13,33 @@
 *
 *****************************************************************************/
 
-#ifndef med_utils_included
-#define med_utils_included
+#include <Lml_2_Lata.h>
+#include <LataFilter.h>
+#include <LmlReader.h>
+#include <Motcle.h>
 
-#include <Process.h>
-#include <Nom.h>
-#include <TRUSTTabs_forward.h>
-#include <med++.h>
-#include <medcoupling++.h>
-#ifdef MEDCOUPLING_
-#   include <NormalizedGeometricTypes>
-#endif
+Implemente_instanciable(Lml_2_Lata, "Lml_to_lata|Lml_2_Lata", Interprete);
+// XD lml_to_lata interprete lml_to_lata -1 To convert results file written with LML format to a single LATA file.
+// XD attr file_lml chaine file_lml 0 LML file to convert to the new format.
+// XD attr file_lata chaine file_lata 0 Name of the single LATA file.
 
+Sortie& Lml_2_Lata::printOn(Sortie& os) const { return Interprete::printOn(os); }
+Entree& Lml_2_Lata::readOn(Entree& is) { return Interprete::readOn(is); }
 
-////
-//// Useful MED-related fonctions
-////
-
-class Char_ptr;
-class Entree;
-class Nom;
-
-inline void med_non_installe()
+Entree& Lml_2_Lata::interpreter(Entree& is)
 {
-  Process::exit("This version has not been built with MED library.");
+  Cerr << "Syntax Lml_to_lata nom_lml||NOM_DU_CAS nom_fichier_sortie_lata||NOM_DU_CAS   " << finl;
+
+  Nom nom_lml, nom_lata;
+  is >> nom_lml >> nom_lata;
+
+  if (Motcle(nom_lml) == "NOM_DU_CAS") nom_lml = nom_du_cas() + ".lml";
+  if (Motcle(nom_lata) == "NOM_DU_CAS") nom_lata = nom_du_cas() + ".lata";
+
+  if (!Motcle(nom_lml).finit_par(".lml")) nom_lml += Nom(".lml");
+  if (!Motcle(nom_lata).finit_par(".lata")) nom_lata += Nom(".lata");
+
+  lml_to_lata(nom_lml, nom_lata, 0 /* binaire */, 1 /* fortran_blocs */, 0 /* pas fortran_ordering */, 1 /* fortran_indexing */);
+
+  return is;
 }
-
-void test_version(Nom& nom) ;
-void traite_nom_fichier_med(Nom& nom_fic);
-void read_med_field_names(const Nom& nom_fic, Noms& noms_chps, ArrOfDouble& temps_sauv);
-
-template <typename _SIZE_>
-void conn_trust_to_med(IntTab_T<_SIZE_>& les_elems2, const Nom& type_elem, bool toMED);
-
-#ifdef MED_
-med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem);
-med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem_,med_axis_type& rep);
-
-#ifdef MEDCOUPLING_
-INTERP_KERNEL::NormalizedCellType type_geo_trio_to_type_medcoupling(const Nom& type_elem_, int& mesh_dimension);
-#endif
-
-#endif
-
-#endif

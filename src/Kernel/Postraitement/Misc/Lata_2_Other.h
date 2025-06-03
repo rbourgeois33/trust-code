@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,23 +13,19 @@
 *
 *****************************************************************************/
 
-
-
-
-#ifndef Ecrire_Champ_MED_included
-#define Ecrire_Champ_MED_included
+#ifndef Lata_2_Other_included
+#define Lata_2_Other_included
 
 #include <Interprete.h>
 
-/*! @brief classe Ecrire_Champ_MED
- *
- * @sa Interprete
+/*! @brief Classe Lata_2_Other  Converts lata file to med or lml
+ * Can only be used with small lata files (fitting in 32b).
  */
-class Ecrire_Champ_MED : public Interprete
+class Lata_2_Other: public Interprete
 {
-  Declare_instanciable(Ecrire_Champ_MED);
-public :
-  Entree& interpreter(Entree&) override;
+  Declare_instanciable(Lata_2_Other);
+public:
+  Entree& interpreter(Entree& is) override;
 };
 
-#endif
+#endif /* Lata_2_Other_included */

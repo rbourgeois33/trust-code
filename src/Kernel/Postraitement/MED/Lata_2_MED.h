@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -12,23 +12,20 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-#ifndef Format_Post_Med_major_included
-#define Format_Post_Med_major_included
 
-#include <Format_Post_Med.h>
+#ifndef Lata_2_MED_included
+#define Lata_2_MED_included
 
-/*! @brief : Exactly the same as Format_Post_Med but with the last major version of MED
+/*! @brief Classe Lata_2_MED  Converts lata file to med
+ *
  */
-class Format_Post_Med_major : public Format_Post_Med
-{
-  Declare_instanciable_sans_constructeur(Format_Post_Med_major);
-public:
-  Format_Post_Med_major()
-  {
-    ecr_med_.set_major_mode(true);
-  }
+#include <Interprete.h>
 
-protected:
+class Lata_2_MED : public Interprete
+{
+  Declare_instanciable(Lata_2_MED);
+public :
+  Entree& interpreter(Entree&) override;
 };
 
-#endif
+#endif /* Lata_2_MED_included */

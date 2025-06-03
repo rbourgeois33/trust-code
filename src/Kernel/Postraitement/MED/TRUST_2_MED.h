@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,19 +13,47 @@
 *
 *****************************************************************************/
 
-#ifndef Lml_2_Lata_included
-#define Lml_2_Lata_included
+#ifndef med_utils_included
+#define med_utils_included
 
-#include <Interprete.h>
+#include <Process.h>
+#include <Nom.h>
+#include <TRUSTTabs_forward.h>
+#include <med++.h>
+#include <medcoupling++.h>
+#ifdef MEDCOUPLING_
+#   include <NormalizedGeometricTypes>
+#endif
 
-/*! @brief Classe Lml_2_Lata  Converts lml file to lata
- *
- */
-class Lml_2_Lata: public Interprete
+
+////
+//// Useful MED-related fonctions
+////
+
+class Char_ptr;
+class Entree;
+class Nom;
+
+inline void med_non_installe()
 {
-  Declare_instanciable(Lml_2_Lata);
-public:
-  Entree& interpreter(Entree& is) override;
-};
+  Process::exit("This version has not been built with MED library.");
+}
 
-#endif /* Lml_2_Lata_included */
+void test_version(Nom& nom) ;
+void traite_nom_fichier_med(Nom& nom_fic);
+void read_med_field_names(const Nom& nom_fic, Noms& noms_chps, ArrOfDouble& temps_sauv);
+
+template <typename _SIZE_>
+void conn_trust_to_med(IntTab_T<_SIZE_>& les_elems2, const Nom& type_elem, bool toMED);
+
+#ifdef MED_
+med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem);
+med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem_,med_axis_type& rep);
+
+#ifdef MEDCOUPLING_
+INTERP_KERNEL::NormalizedCellType type_geo_trio_to_type_medcoupling(const Nom& type_elem_, int& mesh_dimension);
+#endif
+
+#endif
+
+#endif

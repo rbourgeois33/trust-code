@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,19 +13,34 @@
 *
 *****************************************************************************/
 
-#ifndef Lata_2_MED_included
-#define Lata_2_MED_included
+#ifndef Merge_MED_included
+#define Merge_MED_included
 
-/*! @brief Classe Lata_2_MED  Converts lata file to med
+/*! @brief Class Merge_MED Merge several MED files written by several procs into a single field object
+ *     with a proper underlying mesh (no duplicate nodes)
+ *
+ *     Usage in data file : Merge_MED [NOM_DU_CAS||med_files_base_name] [all_times||last_time]
  *
  */
 #include <Interprete.h>
+#include <vector>
+#include <string>
 
-class Lata_2_MED : public Interprete
+class Merge_MED : public Interprete
 {
-  Declare_instanciable(Lata_2_MED);
+  Declare_instanciable(Merge_MED);
 public :
   Entree& interpreter(Entree&) override;
+
+private:
+  void mergeFields(const std::vector< std::string >& field_names,
+                   const std::vector< std::string >& meshes_names,
+                   const std::vector<std::string>& listmed,
+                   const std::vector< std::pair< std::pair< True_int,True_int>,double >>& lst_dt,
+                   const int mesh_numb,
+                   const int iter_numb,
+                   Nom out_file,
+                   bool& first_time, const bool isCell) const;
 };
 
-#endif /* Lata_2_MED_included */
+#endif /* Merge_MED_included */
