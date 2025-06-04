@@ -22,6 +22,7 @@
 #include <cgns++.h>
 #include <sstream>
 #include <iomanip>
+//#include <regex>
 
 #ifdef HAS_CGNS
 
@@ -85,10 +86,25 @@ struct Ecrire_CGNS_helper
 
   std::string convert_double_to_string(const double t)
   {
-    /* KEEP GOOD PRECISION */
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(15) << t;
-    return ss.str();
+    // On fait comme dans les latas !
+    char str_temps[100] = "0.0";
+    if (t >= 0.)
+      snprintf(str_temps, 100, "%.10f", t);
+
+    return std::string(str_temps);
+
+// Sinon je laisse cette belle methode au cas ou elle pourrait servir un jour !
+//    /* KEEP GOOD PRECISION */
+//    std::stringstream ss;
+//    ss << std::fixed << std::setprecision(15) << t;
+//
+//    std::string ret_str = ss.str();
+//
+//    /* REMOVE USELESS 0s */
+//    ret_str = std::regex_replace(ret_str, std::regex("([0-9]*\\.[0-9]*?[1-9])0+$"), "$1"); // remove useless 0s
+//    ret_str = std::regex_replace(ret_str, std::regex("\\.0+$"), ""); // remove the final .0 if integer
+//
+//    return ret_str;
   }
 };
 
