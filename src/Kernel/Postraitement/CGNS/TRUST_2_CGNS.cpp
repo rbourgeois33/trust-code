@@ -18,6 +18,7 @@
 #include <TRUST_2_CGNS.h>
 #include <Domaine_VF.h>
 #include <Domaine.h>
+#include <cstring>
 
 #ifdef HAS_CGNS
 
@@ -47,6 +48,27 @@ Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const No
     }
 
   (LOC == "SOM") ? fieldId_som++ : fieldId_elem++; // TODO FIXME FACES
+
+  /*
+   * XXX Elie Saikali : dans CGNS on est limite a char de taille 32 max ! sinon pas supporte (regarde la methode cgi_check_strlen ...)
+   * Go Bricorama !
+   */
+
+  const char * id_char = id_du_champ_modifie.getChar();
+  size_t sz =  std::strlen(id_char);
+  if (sz > CGNS_STR_SIZE)
+    {
+#ifndef NDEBUG
+      Cerr << "The field " << id_char << " contains " << sz << " chars & CGNS is limited to " << CGNS_STR_SIZE << " ==> renamed to ";
+#endif
+      std::string prem(id_char, 25); // Les 25 premiers
+      std::string der(id_char + sz - 5, 5); // Les 5 derniers
+      std::string new_id_du_champ_modifie = prem + ".." + der;
+      id_du_champ_modifie = Motcle(new_id_du_champ_modifie);
+#ifndef NDEBUG
+      Cerr << id_du_champ_modifie << " !!! " << finl;
+#endif
+    }
 
   return id_du_champ_modifie;
 }
