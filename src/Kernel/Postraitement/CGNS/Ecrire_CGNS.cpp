@@ -151,6 +151,7 @@ void Ecrire_CGNS::cgns_add_time(const double t)
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_) cgns_open_close_link_files(t);
 
   time_post_.push_back(t); // add time_post
+  fieldName_dumped_.clear();
   flowId_elem_++, flowId_som_++; // increment
   fieldId_elem_ = 0, fieldId_som_ = 0; // reset
   solname_elem_written_ = false, solname_som_written_ = false; // reset
@@ -197,15 +198,33 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
     {
       for (int i = 0; i < nb_cmp; i++)
         {
-          if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
-            cgns_write_field_par_over_zone(i /* compo */, temps, nb_cmp > 1 ? Motcle(noms_compo[i]) : id_du_champ, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+          const Motcle field_name = nb_cmp > 1 ? Motcle(noms_compo[i]) : id_du_champ;
+
+          if (std::find(fieldName_dumped_.begin(), fieldName_dumped_.end(), field_name) == fieldName_dumped_.end()) // pas dedans => faut ecrire !
+            {
+              if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
+                cgns_write_field_par_over_zone(i /* compo */, temps, field_name, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+              else
+                cgns_write_field_par_in_zone(i /* compo */, temps, field_name, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+
+              fieldName_dumped_.push_back(field_name);
+            }
           else
-            cgns_write_field_par_in_zone(i /* compo */, temps, nb_cmp > 1 ? Motcle(noms_compo[i]) : id_du_champ, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+            Cerr << "Field " << field_name << " is already written => we skip it ..." << finl;
         }
     }
   else
     for (int i = 0; i < nb_cmp; i++)
-      cgns_write_field_seq(i /* compo */, temps, nb_cmp > 1 ? Motcle(noms_compo[i]) : id_du_champ, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+      {
+        const Motcle field_name = nb_cmp > 1 ? Motcle(noms_compo[i]) : id_du_champ;
+        if (std::find(fieldName_dumped_.begin(), fieldName_dumped_.end(), field_name) == fieldName_dumped_.end()) // pas dedans => faut ecrire !
+          {
+            cgns_write_field_seq(i /* compo */, temps, field_name, id_du_domaine, localisation, fld_loc_map_.at(LOC), valeurs);
+            fieldName_dumped_.push_back(field_name);
+          }
+        else
+          Cerr << "Field " << field_name << " is already written => we skip it ..." << finl;
+      }
 }
 
 /*

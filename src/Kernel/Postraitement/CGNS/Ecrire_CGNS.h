@@ -42,6 +42,7 @@ private:
   std::string solname_elem_ = "", solname_som_ = "", baseFile_name_ = "", baseZone_name_ = "";
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
   std::vector<Nom> doms_written_;
+  std::vector<Nom> fieldName_dumped_; /* filed just once to see what fields are already written ! */
   std::vector<std::string> connectname_;
   std::vector<double> time_post_;
   std::vector<True_int> baseId_, zoneId_;
