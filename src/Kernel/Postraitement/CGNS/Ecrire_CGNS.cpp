@@ -75,18 +75,10 @@ void Ecrire_CGNS::cgns_open_file()
   if (Process::is_parallel()) cgns_init_MPI(); // 1er truc a faire
   std::string fn = baseFile_name_ + ".cgns"; // file name
 
-
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
-#ifdef MPI_
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_) // si sans link, on ouvre
-        {
-          if (cgp_open(fn.c_str(), CG_MODE_WRITE, &fileId_) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_open_file : cgp_open !" << finl, TRUST_CGNS_ERROR();
-
-          Cerr << "**** Parallel CGNS file " << fn << " opened !" << finl;
-        }
-#endif
+        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
     }
   else
     {
@@ -94,12 +86,7 @@ void Ecrire_CGNS::cgns_open_file()
         fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
 
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_) // si sans link, on ouvre
-        {
-          if (cg_open(fn.c_str(), CG_MODE_WRITE, &fileId_) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_open_file : cg_open !" << finl, TRUST_CGNS_ERROR();
-
-          Cerr << "**** CGNS file " << fn << " opened !" << finl;
-        }
+        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
 }
 
@@ -115,18 +102,12 @@ void Ecrire_CGNS::cgns_close_file()
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
-#ifdef MPI_
       if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
         cgns_write_iters_par_over_zone();
       else
         cgns_write_iters_par_in_zone();
 
-      //  Process::barrier();
-      if (cgp_close (fileId_) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_close_file : cgp_close !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** Parallel CGNS file " << fn << " closed !" << finl;
-#endif
+      cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
     }
   else
     {
@@ -135,10 +116,7 @@ void Ecrire_CGNS::cgns_close_file()
 
       cgns_write_iters_seq();
 
-      if (cg_close(fileId_) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_close_file : cg_close !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** CGNS file " << fn << " closed !" << finl;
+      cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
 
   /* dernier truc a faire ! */
@@ -333,8 +311,8 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   if (nb_elem) // XXX cas // mais MULTIPLE_FILES
     {
       /* 5.1 : Create zone & grid coords */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE::SEQ>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
-                                                                  zoneId_, xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
+                                                                       zoneId_, xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
 
       /* 5.2 : Set element connectivity */
       True_int sectionId;
@@ -394,12 +372,12 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
   if (nb_vals)
     {
       /* 3 : Write solution names for iterative data later */
-      cgns_helper_.cgns_sol_write<TYPE_ECRITURE::SEQ>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
-                                                      solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+      cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::SEQ>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
+                                                           solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
 
       /* 4 : Fill field values & dump to cgns file */
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_, comp,
-                                                             id_champ, valeurs, fieldId_som_, fieldId_elem_);
+      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_, comp,
+                                                                  id_champ, valeurs, fieldId_som_, fieldId_elem_);
     }
 }
 
@@ -417,7 +395,7 @@ void Ecrire_CGNS::cgns_write_iters_seq()
       ind_doms_dumped.push_back(ind);
       assert(ind > -1);
 
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
+      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
     }
 
   /* 2 : on iter sur les autres domaines; ie: domaine dis */
@@ -429,7 +407,7 @@ void Ecrire_CGNS::cgns_write_iters_seq()
           const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
           assert(ind > -1);
 
-          cgns_helper_.cgns_write_iters<TYPE_ECRITURE::SEQ>(false /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, "rien", solname_som_, solname_elem_, time_post_);
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(false /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, "rien", solname_som_, solname_elem_, time_post_);
         }
       else { /* Do Nothing */ }
     }
@@ -512,9 +490,9 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         coordsIdz.push_back(-123);
 
       /* 5.1 : Create zone & Construct the grid coordinates nodes */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE::PAR_OVER>(icelldim, fileId_, baseId_, zonename.c_str(), isize[0],
-                                                                       zoneId_, xCoords, yCoords, zCoords,
-                                                                       coordsIdx.back(), coordsIdy.back(), coordsIdz.empty() ? coordsIdy.back() /* inutile */ : coordsIdz.back());
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_, zonename.c_str(), isize[0],
+                                                                            zoneId_, xCoords, yCoords, zCoords,
+                                                                            coordsIdx.back(), coordsIdy.back(), coordsIdz.empty() ? coordsIdy.back() /* inutile */ : coordsIdz.back());
 
       /* 5.2 : Construct the sections to host connectivity later */
       sectionId.push_back(-123);
@@ -573,9 +551,9 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
             }
 
       /* 6.1 : Write grid coordinates */
-      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE::PAR_OVER>(icelldim, fileId_, baseId_, zoneId_par_.back()[indx],
-                                                                       coordsIdx[indx], coordsIdy[indx], coordsIdz.empty() ? -123 : coordsIdz[indx],
-                                                                       min, max, xCoords, yCoords, zCoords);
+      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_, zoneId_par_.back()[indx],
+                                                                            coordsIdx[indx], coordsIdy[indx], coordsIdz.empty() ? -123 : coordsIdz[indx],
+                                                                            min, max, xCoords, yCoords, zCoords);
 
       /* 6.2 : Set element connectivity */
       if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
@@ -641,11 +619,11 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
   const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
   const bool all_write = TRUST2CGNS.all_procs_write(); // all procs will write !
 
-  cgns_helper_.cgns_sol_write<TYPE_ECRITURE::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, temps, zoneId_par_[ind], LOC, solname_som_, solname_elem_,
-                                                       solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, temps, zoneId_par_[ind], LOC, solname_som_, solname_elem_,
+                                                            solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
 
-  cgns_helper_.cgns_field_write<TYPE_ECRITURE::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC,
-                                                         flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+  cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC,
+                                                              flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
 
   /* 4 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
@@ -662,8 +640,8 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
               break;
             }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC, flowId_som_, flowId_elem_,
-                                                                  fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
+      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC, flowId_som_, flowId_elem_,
+                                                                       fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
     }
 #endif
 }
@@ -686,7 +664,7 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
       const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
       const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE::PAR_OVER>(true /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC, solname_som_, solname_elem_, time_post_);
+      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(true /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC, solname_som_, solname_elem_, time_post_);
     }
 
   /* 2 : on iter sur les autres domaines; ie: domaine dis */
@@ -701,7 +679,7 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
           const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
           const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
-          cgns_helper_.cgns_write_iters<TYPE_ECRITURE::PAR_OVER>(false /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], "rien", solname_som_, solname_elem_, time_post_);
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(false /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], "rien", solname_som_, solname_elem_, time_post_);
         }
       else { /* Do Nothing */ }
     }
@@ -765,8 +743,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   True_int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
 
-  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
-                                                                 zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
+  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
+                                                                      zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
 
   /* 4.2 : Construct the sections to host connectivity later */
   cgsize_t start = -123, end = -123;
@@ -826,8 +804,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
       assert (min < max);
 
       /* 5.1 : Write grid coordinates */
-      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE::PAR_IN>(icelldim, fileId_, baseId_, zoneId_.back(),
-                                                                     coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
+      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, zoneId_.back(),
+                                                                          coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
 
       /* 5.2 : Set element connectivity */
       if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
@@ -902,11 +880,11 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
    *  - Only field meta-data is written to the library at this stage ... So no worries ^^
    *  - And just once per dt !
    */
-  cgns_helper_.cgns_sol_write<TYPE_ECRITURE::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
-                                                     solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
+                                                          solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
 
-  cgns_helper_.cgns_field_write<TYPE_ECRITURE::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, zoneId_, LOC,
-                                                       flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+  cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                            flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
 
   /* 2 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
@@ -925,8 +903,8 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
           min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
         }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_,
-                                                                fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
+      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_,
+                                                                     fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
     }
 #endif
 }

@@ -71,21 +71,9 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
   std::string fn = baseFile_name_ + ".grid.cgns"; // file name
   unlink(fn.c_str());
   if (Process::is_parallel())
-    {
-#ifdef MPI_
-      if (cgp_open(fn.c_str(), CG_MODE_WRITE, &fileId_) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_grid_file : cgp_open !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** Parallel CGNS file " << fn << " opened !" << finl;
-#endif
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
   else
-    {
-      if (cg_open(fn.c_str(), CG_MODE_WRITE, &fileId_) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_grid_file : cg_open !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** CGNS file " << fn << " opened !" << finl;
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
 }
 
 void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string& LOC, const double t, bool is_link)
@@ -104,23 +92,9 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   unlink(fn.c_str());
 
   if (Process::is_parallel())
-    {
-#ifdef MPI_
-      if (cgp_open(fn.c_str(), CG_MODE_WRITE, &fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cgp_open !" << finl, TRUST_CGNS_ERROR();
-
-      if (is_link)
-        Cerr << "**** Parallel CGNS file " << fn << " opened !" << finl;
-#endif
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_link);
   else
-    {
-      if (cg_open(fn.c_str(), CG_MODE_WRITE, &fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_open !" << finl, TRUST_CGNS_ERROR();
-
-      if (is_link)
-        Cerr << "**** CGNS file " << fn << " opened !" << finl;
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, is_link);
 
   if (cg_base_write(fileId, baseZone_name_.c_str(), cellDim_, Objet_U::dimension, &baseId_[0]) != CG_OK)
     Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
@@ -159,21 +133,9 @@ void Ecrire_CGNS::cgns_close_grid_solution_link_file(const int ind, const std::s
   const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
 
   if (Process::is_parallel())
-    {
-#ifdef MPI_
-      if (cgp_close(fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_close_solution_file : cgp_close !" << finl, TRUST_CGNS_ERROR();
-
-      if (is_cerr) Cerr << "**** Parallel CGNS file " << fn << " closed !" << finl;
-#endif
-    }
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_cerr);
   else
-    {
-      if (cg_close(fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_close_solution_file : cg_close !" << finl, TRUST_CGNS_ERROR();
-
-      if (is_cerr) Cerr << "**** CGNS file " << fn << " closed !" << finl;
-    }
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, is_cerr);
 }
 
 void Ecrire_CGNS::cgns_write_final_link_file()
@@ -207,7 +169,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
         }
 
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[0], 0 /* 1st Zone */, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
+      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[0], 0 /* 1st Zone */, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
 
       cgns_close_grid_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
     }
@@ -236,8 +198,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
       /* Step 1 : on ouvre baseFile_name_0000.cgns et on lit */
       fn = (Nom(baseFile_name_)).nom_me(0).getString() + ".cgns"; // file name
 
-      if (cg_open(fn.c_str(), CG_MODE_READ, &fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_open !" << finl, TRUST_CGNS_ERROR();
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ, TYPE_MODE_CGNS::READ>(fn, fileId, false);
 
       if (cg_base_read(fileId, baseId, basename, &cell_dim, &phys_dim) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_base_read !" << finl, TRUST_CGNS_ERROR();
@@ -267,17 +228,13 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
           sols.push_back(std::string(solname));
         }
 
-      if (cg_close(fileId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_close !" << finl, TRUST_CGNS_ERROR();
+      cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, false);
 
       /* Step 2 : on ouvre le link file, on laisse ouvert et on ecrit dans la premiere noeud ... */
       fn = baseFile_name_ + ".cgns"; // file name
       unlink(fn.c_str());
 
-      if (cg_open(fn.c_str(), CG_MODE_WRITE, &fileId_l) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_open !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** CGNS file " << fn << " opened !" << finl;
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_l, true);
 
       if (cg_base_write(fileId_l, basename, cell_dim, phys_dim, &baseId_l) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_base_write !" << finl, TRUST_CGNS_ERROR();
@@ -356,10 +313,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
         }
 
       /* Step 4 : on ferme le link file, on laisse ouvert et on ecrit la base */
-      if (cg_close(fileId_l) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_close !" << finl, TRUST_CGNS_ERROR();
-
-      Cerr << "**** CGNS file " << baseFile_name_ + ".cgns" << " closed !" << finl;
+      cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(baseFile_name_ + ".cgns", fileId_l, true);
     }
 }
 

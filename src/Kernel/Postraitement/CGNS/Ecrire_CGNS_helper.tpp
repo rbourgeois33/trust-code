@@ -16,12 +16,78 @@
 #ifndef Ecrire_CGNS_helper_tpp_included
 #define Ecrire_CGNS_helper_tpp_included
 
-template<TYPE_ECRITURE _TYPE_>
+template<TYPE_RUN_CGNS _TYPE_, TYPE_MODE_CGNS _MODE_>
+inline void Ecrire_CGNS_helper::cgns_open_file(const std::string& fn, int& fileId, const bool is_print)
+{
+  constexpr bool is_SEQ = (_TYPE_ == TYPE_RUN_CGNS::SEQ), is_WRITE = (_MODE_ == TYPE_MODE_CGNS::WRITE), is_MODIFY = (_MODE_ == TYPE_MODE_CGNS::MODIFY);
+  if (is_SEQ)
+    {
+      if (cg_open(fn.c_str(), is_WRITE ? CG_MODE_WRITE : ( is_MODIFY ? CG_MODE_MODIFY : CG_MODE_READ), &fileId) != CG_OK)
+        {
+          Cerr << "Error Ecrire_CGNS_helper::cgns_open_file : cg_open !" << finl;
+          TRUST_CGNS_ERROR();
+        }
+
+      if (is_print)
+        Cerr << "**** CGNS file " << fn << " opened !" << finl;
+    }
+  else
+    {
+#ifdef MPI_
+      if (cgp_open(fn.c_str(), is_WRITE ? CG_MODE_WRITE : ( is_MODIFY ? CG_MODE_MODIFY : CG_MODE_READ), &fileId) != CG_OK)
+        {
+          Cerr << "Error Ecrire_CGNS_helper::cgns_open_file : cgp_open !" << finl;
+          TRUST_CGNS_ERROR();
+        }
+
+      if (is_print)
+        Cerr << "**** Parallel CGNS file " << fn << " opened !" << finl;
+#else
+      Cerr << "Parallel CGNS files need MPI installed ... " << finl;
+      TRUST_CGNS_ERROR();
+#endif
+    }
+}
+
+template<TYPE_RUN_CGNS _TYPE_>
+inline void Ecrire_CGNS_helper::cgns_close_file(const std::string& fn, const int fileId, const bool is_print)
+{
+  constexpr bool is_SEQ = (_TYPE_ == TYPE_RUN_CGNS::SEQ);
+  if (is_SEQ)
+    {
+      if (cg_close(fileId) != CG_OK)
+        {
+          Cerr << "Error Ecrire_CGNS_helper::cgns_close_file : cg_close !" << finl;
+          TRUST_CGNS_ERROR();
+        }
+
+      if (is_print)
+        Cerr << "**** CGNS file " << fn << " closed !" << finl;
+    }
+  else
+    {
+#ifdef MPI_
+      if (cgp_close(fileId) != CG_OK)
+        {
+          Cerr << "Error Ecrire_CGNS_helper::cgns_close_file : cgp_close !" << finl;
+          TRUST_CGNS_ERROR();
+        }
+
+      if (is_print)
+        Cerr << "**** Parallel CGNS file " << fn << " closed !" << finl;
+#else
+      Cerr << "Parallel CGNS files need MPI installed ... " << finl;
+      TRUST_CGNS_ERROR();
+#endif
+    }
+}
+
+template<TYPE_ECRITURE_CGNS _TYPE_>
 inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, const True_int fileId, const std::vector<True_int>& baseId, const char *zonename, const cgsize_t *isize, std::vector<True_int>& zoneId,
                                                            const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords,
                                                            True_int& coordsIdx, True_int& coordsIdy, True_int& coordsIdz)
 {
-  constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE::SEQ);
+  constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ);
 
   if (cg_zone_write(fileId, baseId.back(), zonename, isize, CGNS_ENUMV(Unstructured), &zoneId.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
@@ -58,8 +124,8 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
     }
 }
 
-template<TYPE_ECRITURE _TYPE_>
-inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE::SEQ, void>
+template<TYPE_ECRITURE_CGNS _TYPE_>
+inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const True_int fileId, const std::vector<True_int>& baseId, const True_int zoneId,
                                                const True_int coordsIdx, const True_int coordsIdy, const True_int coordsIdz, const cgsize_t min, const cgsize_t max,
                                                const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords)
@@ -77,12 +143,12 @@ Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const True_in
 #endif
 }
 
-template<TYPE_ECRITURE _TYPE_>
+template<TYPE_ECRITURE_CGNS _TYPE_>
 inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const double temps, const std::vector<True_int>& zoneId, const std::string& LOC,
                                                std::string& solname_som, std::string& solname_elem, bool& solname_som_written, bool& solname_elem_written, True_int& flowId_som, True_int& flowId_elem)
 {
   // uen fois par dt !!
-  constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE::SEQ), is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE::PAR_OVER);
+  constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ), is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
 
   if (!solname_som_written && LOC == "SOM")
     {
@@ -127,13 +193,13 @@ inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, cons
     }
 }
 
-template<TYPE_ECRITURE _TYPE_>
-inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE::SEQ, void>
+template<TYPE_ECRITURE_CGNS _TYPE_>
+inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId, const std::string& LOC,
                                      const True_int flowId_som, const True_int flowId_elem, const char * id_champ, True_int& fieldId_som, True_int& fieldId_elem)
 {
 #ifdef MPI_
-  constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE::PAR_OVER);
+  constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
   for (int ii = 0; ii != nb_zones_to_write; ii++)
     {
       if (LOC == "SOM")
@@ -150,8 +216,8 @@ Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const True_int
 #endif
 }
 
-template<TYPE_ECRITURE _TYPE_>
-inline std::enable_if_t<_TYPE_ == TYPE_ECRITURE::SEQ, void>
+template<TYPE_ECRITURE_CGNS _TYPE_>
+inline std::enable_if_t<_TYPE_ == TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
                                           const std::string& LOC, const True_int flowId_som, const True_int flowId_elem, const int comp,
                                           const char * id_champ, const DoubleTab& valeurs, True_int& fieldId_som, True_int& fieldId_elem)
@@ -187,8 +253,8 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
     }
 }
 
-template<TYPE_ECRITURE _TYPE_>
-inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE::SEQ, void>
+template<TYPE_ECRITURE_CGNS _TYPE_>
+inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
                                           const std::string& LOC, const True_int flowId_som, const True_int flowId_elem, const True_int fieldId_som,
                                           const True_int fieldId_elem, const int comp, const cgsize_t min, const cgsize_t max, const DoubleTab& valeurs)
@@ -226,12 +292,12 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
 #endif
 }
 
-template<TYPE_ECRITURE _TYPE_>
+template<TYPE_ECRITURE_CGNS _TYPE_>
 inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
                                                  const std::string& LOC, const std::string& solname_som, const std::string& solname_elem, const std::vector<double>& time_post)
 {
   const int nsteps = static_cast<int>(time_post.size());
-  constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE::PAR_OVER);
+  constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
 
   /* create BaseIterativeData */
   if (cg_biter_write(fileId, baseId, "TimeIterValues", nsteps) != CG_OK)
