@@ -30,15 +30,17 @@ public:
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
-  void cgns_close_file();
+  void cgns_finir();
   void cgns_add_time(const double );
   void cgns_write_domaine(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field(const Domaine&, const Noms&, double, const Nom&, const Nom&, const Nom&, const DoubleTab&);
+  void finir_ecriture(double);
 
 private:
   // Attributes
   bool solname_elem_written_ = false, solname_som_written_ = false;
-  bool postraiter_domaine_ = false, grid_file_opened_ = false;
+  bool postraiter_domaine_ = false;
+  bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
   std::string solname_elem_ = "", solname_som_ = "", baseFile_name_ = "", baseZone_name_ = "";
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
   std::vector<Nom> doms_written_;
@@ -57,12 +59,13 @@ private:
 
   // Methodes pour LINK
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
-  void cgns_open_close_link_files(const double);
+  void cgns_open_solution_link_files(const double);
+  void cgns_close_solution_link_files(const double);
   void cgns_open_grid_base_link_file();
   void cgns_open_solution_link_file(const int, const std::string&, const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_link_file_for_multiple_files();
-  void cgns_close_grid_solution_link_file(const int, const std::string&, bool is_cerr = false);
+  void cgns_close_grid_or_solution_link_file(const int, const std::string&, bool is_cerr = true);
 
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
@@ -85,8 +88,13 @@ private:
 inline void verify_if_cgns(const char * nom_funct)
 {
 #ifdef HAS_CGNS
+#ifdef MPI_
   return;
-#else
+#else /* NOT MPI_ */
+  if (Process::is_parallel())
+    Process::exit("Parallel CGNS files need MPI installed ... ");
+#endif /* MPI_ */
+#else /* NOT HAS_CGNS */
   Cerr << "Format_Post_CGNS::" <<  nom_funct << " should not be called since TRUST is not compiled with the CGNS library !!! " << finl;
   Process::exit();
 #endif /* HAS_CGNS */

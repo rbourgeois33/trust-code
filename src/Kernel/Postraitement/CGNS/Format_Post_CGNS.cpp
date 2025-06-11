@@ -111,12 +111,20 @@ int Format_Post_CGNS::ecrire_temps(const double t)
   return 1;
 }
 
+int Format_Post_CGNS::finir_ecriture(double temps_courant)
+{
+#ifdef HAS_CGNS
+  cgns_writer_.finir_ecriture(temps_courant);
+#endif
+  return 1;
+}
+
 int Format_Post_CGNS::finir(const int est_le_dernier_post)
 {
   if (est_le_dernier_post)
     {
 #ifdef HAS_CGNS
-      cgns_writer_.cgns_close_file();
+      cgns_writer_.cgns_finir();
 #endif
     }
   return 1;

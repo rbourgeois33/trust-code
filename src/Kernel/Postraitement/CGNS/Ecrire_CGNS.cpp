@@ -90,13 +90,19 @@ void Ecrire_CGNS::cgns_open_file()
     }
 }
 
-void Ecrire_CGNS::cgns_close_file()
+void Ecrire_CGNS::finir_ecriture(double temps)
 {
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     {
-      cgns_write_final_link_file();
-      return;
+      cgns_close_solution_link_files(temps);
+      cgns_write_final_link_file(); /* rewrite the link file so you can visualize during simulation !!! */
     }
+}
+
+void Ecrire_CGNS::cgns_finir()
+{
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+    return; /* All done */
 
   std::string fn = baseFile_name_ + ".cgns"; // file name
 
@@ -126,7 +132,9 @@ void Ecrire_CGNS::cgns_close_file()
 
 void Ecrire_CGNS::cgns_add_time(const double t)
 {
-  if (Option_CGNS::USE_LINKS && !postraiter_domaine_) cgns_open_close_link_files(t);
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+    if (!time_post_.empty()) /* 1er fois, on fais dans cgns_write_field => fill field_loc_map */
+      cgns_open_solution_link_files(t);
 
   time_post_.push_back(t); // add time_post
   fieldName_dumped_.clear();
@@ -246,6 +254,13 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
       else // Option_CGNS::USE_LINKS
         {
           assert (Option_CGNS::USE_LINKS);
+
+          if (grid_file_opened_)
+            {
+              cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+              grid_file_opened_ = false;
+            }
+
           if (static_cast<int>(fld_loc_map_.size()) == 0)
             {
               fld_loc_map_.insert( { LOC, domaine.le_nom() });

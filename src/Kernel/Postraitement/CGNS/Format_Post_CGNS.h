@@ -70,6 +70,7 @@ public:
   int ecrire_entete(const double, const int, const int) override;
   int ecrire_temps(const double) override;
   int finir(const int) override;
+  int finir_ecriture(double) override;
 
   int ecrire_domaine(const Domaine&, const int) override;
   int ecrire_domaine_low_level(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );

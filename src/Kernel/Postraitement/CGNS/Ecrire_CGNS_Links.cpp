@@ -45,23 +45,25 @@ void Ecrire_CGNS::cgns_fill_info_grid_link_file(const char* basename, const CGNS
     }
 }
 
-void Ecrire_CGNS::cgns_open_close_link_files(const double t)
+void Ecrire_CGNS::cgns_open_solution_link_files(const double t)
 {
-  if (grid_file_opened_)
+  assert ((static_cast<int>(fld_loc_map_.size()) <= 2)); // ELEM, SOM au max pour le moment
+  for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
     {
-      cgns_close_grid_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
-      grid_file_opened_ = false;
+      const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
+      cgns_open_solution_link_file(ind, itr->first, t);
     }
+}
 
-  if (!time_post_.empty()) /* 1er fois, on fais dans cgns_write_field => fill field_loc_map */
+void Ecrire_CGNS::cgns_close_solution_link_files(const double t)
+{
+  assert ((static_cast<int>(fld_loc_map_.size()) <= 2)); // ELEM, SOM au max pour le moment
+  for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
     {
-      assert ((static_cast<int>(fld_loc_map_.size()) <= 2)); // ELEM, SOM au max pour le moment
-      for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
-        {
-          const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-          cgns_close_grid_solution_link_file(ind, baseFile_name_);
-          cgns_open_solution_link_file(ind, itr->first, t);
-        }
+      const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
+      std::string fn;
+      fn = baseFile_name_ + "_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+      cgns_close_grid_or_solution_link_file(ind, fn);
     }
 }
 
@@ -74,6 +76,17 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
   else
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+}
+
+void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std::string& fn, bool is_cerr)
+{
+  assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
+  const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
+
+  if (Process::is_parallel())
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_cerr);
+  else
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, is_cerr);
 }
 
 void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string& LOC, const double t, bool is_link)
@@ -94,7 +107,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   if (Process::is_parallel())
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_link);
   else
-    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, is_link);
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, true);
 
   if (cg_base_write(fileId, baseZone_name_.c_str(), cellDim_, Objet_U::dimension, &baseId_[0]) != CG_OK)
     Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
@@ -127,17 +140,6 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
     }
 }
 
-void Ecrire_CGNS::cgns_close_grid_solution_link_file(const int ind, const std::string& fn, bool is_cerr)
-{
-  assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
-  const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
-
-  if (Process::is_parallel())
-    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_cerr);
-  else
-    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, is_cerr);
-}
-
 void Ecrire_CGNS::cgns_write_final_link_file()
 {
   const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
@@ -145,9 +147,6 @@ void Ecrire_CGNS::cgns_write_final_link_file()
   for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
     {
       const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-
-      // XXX a pas oublier, dernier sol fichier ... faut le fermer
-      cgns_close_grid_solution_link_file(ind, baseFile_name_);
 
       // Fichier link maintenant
       const std::string& LOC = itr->first;
@@ -171,7 +170,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
 
       cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[0], 0 /* 1st Zone */, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
 
-      cgns_close_grid_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
+      cgns_close_grid_or_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
     }
 }
 
