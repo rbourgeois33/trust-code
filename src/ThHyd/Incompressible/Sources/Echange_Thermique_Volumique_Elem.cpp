@@ -105,7 +105,7 @@ void Echange_Thermique_Volumique_Elem::dimensionner_blocs(matrices_t matrices, c
   for (int e = 0; e < ne_tot; e++) polys(e) = e;
   Ai_->valeur_aux_elems(dom.xp(), polys, Ai);
   /* matrice du remapper */
-  const std::vector<std::map<mcIdType,double>>& interp = equation().probleme().domaine().get_remapper(o_ech_->equation().probleme().domaine())->getCrudeMatrix();
+  const std::vector<std::map<mcIdType,double>>& interp = equation().probleme().domaine().get_remapper(o_ech_->equation().probleme().domaine(), true)->getCrudeMatrix();
 
   /* derivees : aux mailles ou Ai > 0 */
   IntTab sten[2];
@@ -172,7 +172,7 @@ void Echange_Thermique_Volumique_Elem::ajouter_blocs(matrices_t matrices, Double
       }
 
   /* matrice du remapper */
-  const std::vector<std::map<mcIdType,double>>& interp = equation().probleme().domaine().get_remapper(o_ech_->equation().probleme().domaine())->getCrudeMatrix();
+  const std::vector<std::map<mcIdType,double>>& interp = equation().probleme().domaine().get_remapper(o_ech_->equation().probleme().domaine(), true)->getCrudeMatrix();
   bilan().resize(N[0]), bilan() = 0;
 
   for (int e = 0; e < dom[0]->nb_elem(); e++)
