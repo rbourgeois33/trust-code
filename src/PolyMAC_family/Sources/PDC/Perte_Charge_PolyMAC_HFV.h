@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2024, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,47 +13,19 @@
 *
 *****************************************************************************/
 
-#ifndef Perte_Charge_Isotrope_PolyMAC_CDO_Face_included
-#define Perte_Charge_Isotrope_PolyMAC_CDO_Face_included
+#ifndef Perte_Charge_PolyMAC_HFV_included
+#define Perte_Charge_PolyMAC_HFV_included
 
-#include <Perte_Charge_PolyMAC_HFV.h>
-#include <PDC_PolyMAC_CDO_impl.h>
+#include <Perte_Charge_PolyMAC_CDO.h>
 
-//!  Perte de charge isotrope (proportionnelle a -u )
-/**
- du/dt = - lambda(Re,x,y,z,t) * u * ||u|| / 2 Dh
-
- Lecture des arguments :
-
- Perte_Charge_Isotrope_PolyMAC_CDO_Face diametre_hydraulique {
- lambda expression(Re,x,y,z,t)
- diam_hydr champ_don
- [sous_domaine nom]
- }
- */
-
-class Perte_Charge_Isotrope_PolyMAC_CDO_Face: public Perte_Charge_PolyMAC_CDO, public PDC_Isotrope_PolyMAC_CDO
+class Perte_Charge_PolyMAC_HFV : public Perte_Charge_PolyMAC_CDO
 {
-  Declare_instanciable(Perte_Charge_Isotrope_PolyMAC_CDO_Face);
+  Declare_base(Perte_Charge_PolyMAC_HFV);
 public:
-  void mettre_a_jour(double temps) override { diam_hydr->mettre_a_jour(temps); }
-
-protected:
-  //! Implemente le calcul effectif de la perte de charge pour un lieu donne
-  void coeffs_perte_charge(const DoubleVect&, const DoubleVect&, double, double, double, double, double, double&, double&, double&, DoubleVect&) const override;
+  int has_interface_blocs() const override { return 1; }
+  void check_multiphase_compatibility() const override { }
+  void dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl = {}) const override { } //rien
+  void ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const tabs_t& semi_impl = {}) const override;
 };
 
-/////////////////////////////////////////////////
-
-class Perte_Charge_Isotrope_PolyMAC_HFV_Face: public Perte_Charge_PolyMAC_HFV, public PDC_Isotrope_PolyMAC_CDO
-{
-  Declare_instanciable(Perte_Charge_Isotrope_PolyMAC_HFV_Face);
-
-public:
-  void mettre_a_jour(double temps) override { diam_hydr->mettre_a_jour(temps); }
-
-protected:
-  void coeffs_perte_charge(const DoubleVect&, const DoubleVect&, double, double, double, double, double, double&, double&, double&, DoubleVect&) const override;
-};
-
-#endif /* Perte_Charge_Isotrope_PolyMAC_CDO_Face_included */
+#endif /* Perte_Charge_PolyMAC_HFV_included */
