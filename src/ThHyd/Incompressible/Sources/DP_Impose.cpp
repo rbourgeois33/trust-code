@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -60,16 +60,16 @@ Entree& DP_Impose::lire_donnees(Entree& is)
   else if (motlu == "dp_regul")
     {
       regul_ = 1;
-      Nom eps_str, deb_str;
+      Nom alpha_str, deb_str;
       Param param("dp_regul");
       param.ajouter("DP0", &dp_regul_, Param::REQUIRED);
       param.ajouter("deb", &deb_str, Param::REQUIRED);
-      param.ajouter("eps", &eps_str, Param::REQUIRED);
+      param.ajouter("eps", &alpha_str, Param::REQUIRED);
       param.lire_avec_accolades(is);
-      deb_cible_.setNbVar(1), eps_.setNbVar(1);
-      deb_cible_.setString(deb_str), eps_.setString(eps_str);
-      deb_cible_.addVar("t"), eps_.addVar("t");
-      deb_cible_.parseString(), eps_.parseString();
+      deb_cible_.setNbVar(1), alpha_.setNbVar(1);
+      deb_cible_.setString(deb_str), alpha_.setString(alpha_str);
+      deb_cible_.addVar("t"), alpha_.addVar("t");
+      deb_cible_.parseString(), alpha_.parseString();
     }
   else
     {
@@ -89,11 +89,11 @@ void DP_Impose::update_dp_regul(const Equation_base& eqn, double deb, DoubleVect
 {
   if (!regul_) return;
   double t = eqn.probleme().schema_temps().temps_courant(), dt = eqn.probleme().schema_temps().pas_de_temps();
-  deb_cible_.setVar(0, t), eps_.setVar(0, t);
+  deb_cible_.setVar(0, t), alpha_.setVar(0, t);
   double deb_cible = deb_cible_.eval();
   if (std::abs(deb_cible) > 1e-10)
     {
-      const double eps = eps_.eval(), error = (deb - deb_cible) / deb_cible;
+      const double eps = alpha_.eval(), error = (deb - deb_cible) / deb_cible;
       dp_regul_ -= dt * eps * error;
     }
 
