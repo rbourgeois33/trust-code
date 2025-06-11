@@ -36,7 +36,7 @@ class Perte_Charge_Isotrope_PolyMAC_CDO_Face: public Perte_Charge_PolyMAC_CDO, p
 {
   Declare_instanciable(Perte_Charge_Isotrope_PolyMAC_CDO_Face);
 public:
-  void mettre_a_jour(double temps) override { diam_hydr->mettre_a_jour(temps); }
+  void mettre_a_jour(double temps) override { Perte_Charge_PolyMAC_CDO::mettre_a_jour(temps); diam_hydr->mettre_a_jour(temps); }
 
 protected:
   //! Implemente le calcul effectif de la perte de charge pour un lieu donne
@@ -50,7 +50,7 @@ class Perte_Charge_Isotrope_PolyMAC_HFV_Face: public Perte_Charge_PolyMAC_HFV, p
   Declare_instanciable(Perte_Charge_Isotrope_PolyMAC_HFV_Face);
 
 public:
-  void mettre_a_jour(double temps) override { diam_hydr->mettre_a_jour(temps); }
+  void mettre_a_jour(double temps) override { Perte_Charge_PolyMAC_HFV::mettre_a_jour(temps); diam_hydr->mettre_a_jour(temps); }
 
 protected:
   void coeffs_perte_charge(const DoubleVect&, const DoubleVect&, double, double, double, double, double, double&, double&, double&, DoubleVect&) const override;
