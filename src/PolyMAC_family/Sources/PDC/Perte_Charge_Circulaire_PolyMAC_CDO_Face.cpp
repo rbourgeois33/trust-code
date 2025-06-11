@@ -58,7 +58,7 @@ void Perte_Charge_Circulaire_PolyMAC_CDO_Face::coeffs_perte_charge(const DoubleV
                                                                double dh, double nu, double reynolds, double& coeff_ortho,
                                                                double& coeff_long, double& u_l, DoubleVect& av_valeur) const
 {
-  coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, coeff_ortho, coeff_long, u_l, av_valeur, lambda);
+  coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, K_, coeff_ortho, coeff_long, u_l, av_valeur, lambda);
 }
 
 /////////////////////////////////////////////////
@@ -104,5 +104,5 @@ void Perte_Charge_Circulaire_PolyMAC_HFV_Face::coeffs_perte_charge(const DoubleV
                                                                       double dh, double nu, double reynolds, double& coeff_ortho,
                                                                       double& coeff_long, double& u_l, DoubleVect& av_valeur) const
 {
-  coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, coeff_ortho, coeff_long, u_l, av_valeur, lambda);
+  coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, K_, coeff_ortho, coeff_long, u_l, av_valeur, lambda);
 }
