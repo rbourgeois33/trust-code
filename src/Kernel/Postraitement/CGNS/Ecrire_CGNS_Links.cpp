@@ -92,6 +92,7 @@ void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std
 void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string& LOC, const double t, bool is_link)
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
+
   const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
 
   std::string fn;
@@ -142,36 +143,43 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
 
 void Ecrire_CGNS::cgns_write_final_link_file()
 {
-  const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
+  cgns_init_MPI(true); // set self mpi
 
-  for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
+  if (!Process::me())
     {
-      const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
+      const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
 
-      // Fichier link maintenant
-      const std::string& LOC = itr->first;
-      cgns_open_solution_link_file(ind, LOC, -123., true /* dernier fichier => link */);
-
-      const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
-
-      // link solutions
-      for (auto& itr_t : time_post_)
+      for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
         {
-          std::string solname = "FlowSolution" + cgns_helper_.convert_double_to_string(itr_t) + "_" + LOC;
+          const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
 
-          std::string linkfile = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns"; // file name
-          linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+          // Fichier link maintenant
+          const std::string& LOC = itr->first;
+          cgns_open_solution_link_file(ind, LOC, -123., true /* dernier fichier => link */);
 
-          std::string linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/" + solname + "/";
+          const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
 
-          if (cg_link_write(solname.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+          // link solutions
+          for (auto& itr_t : time_post_)
+            {
+              std::string solname = "FlowSolution" + cgns_helper_.convert_double_to_string(itr_t) + "_" + LOC;
+
+              std::string linkfile = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns"; // file name
+              linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+
+              std::string linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/" + solname + "/";
+
+              if (cg_link_write(solname.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+            }
+
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[0], 0 /* 1st Zone */, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
+
+          cgns_close_grid_or_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
         }
-
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[0], 0 /* 1st Zone */, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
-
-      cgns_close_grid_or_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
     }
+
+  cgns_init_MPI(); // back to COMM_WORLD
 }
 
 void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()

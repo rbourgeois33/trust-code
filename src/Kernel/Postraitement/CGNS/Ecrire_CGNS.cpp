@@ -26,10 +26,10 @@ void Ecrire_CGNS::cgns_set_base_name(const Nom& fn)
   baseFile_name_ = fn.getString();
 }
 
-void Ecrire_CGNS::cgns_init_MPI()
+void Ecrire_CGNS::cgns_init_MPI(bool is_self)
 {
 #ifdef MPI_
-  if (Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_)
+  if ((Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_) || is_self)
     {
       if (cgp_mpi_comm(/* XXX */ MPI_COMM_SELF) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
@@ -149,7 +149,10 @@ void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, con
 
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     if (!grid_file_opened_)
-      cgns_open_grid_base_link_file(), grid_file_opened_ = true; // On ouvre pour .grid.cgns
+      {
+        cgns_open_grid_base_link_file();
+        grid_file_opened_ = true; // On ouvre pour .grid.cgns
+      }
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {

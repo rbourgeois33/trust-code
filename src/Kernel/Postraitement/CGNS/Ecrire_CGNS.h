@@ -26,7 +26,7 @@ class Ecrire_CGNS
 {
 #ifdef HAS_CGNS
 public:
-  void cgns_init_MPI();
+  void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
