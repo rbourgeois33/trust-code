@@ -16,6 +16,8 @@
 #ifndef Ecrire_CGNS_helper_tpp_included
 #define Ecrire_CGNS_helper_tpp_included
 
+#include <TRUSTTrav.h>
+
 template<TYPE_RUN_CGNS _TYPE_, TYPE_MODE_CGNS _MODE_>
 inline void Ecrire_CGNS_helper::cgns_open_file(const std::string& fn, int& fileId, const bool is_print)
 {
@@ -237,17 +239,19 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
     }
   else
     {
-      std::vector<double> field_cgns; /* XXX TODO Elie Saikali : try DoubleTrav with addr() later ... mais je pense pas :p */
-      for (int i = 0; i < valeurs.dimension(0); i++) field_cgns.push_back(valeurs(i, comp));
+      const int nb = valeurs.dimension(0);
+      DoubleTrav field_cgns(nb);
+      for (int i = 0; i < nb; i++)
+        field_cgns(i) = valeurs(i, comp);
 
       if (LOC == "SOM")
         {
-          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_som, CGNS_DOUBLE_TYPE, id_champ, field_cgns.data(), &fieldId_som) != CG_OK)
+          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_som, CGNS_DOUBLE_TYPE, id_champ, field_cgns.addr(), &fieldId_som) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
         }
       else // ELEM // TODO FIXME FACES
         {
-          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_elem, CGNS_DOUBLE_TYPE, id_champ, field_cgns.data(), &fieldId_elem) != CG_OK)
+          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_elem, CGNS_DOUBLE_TYPE, id_champ, field_cgns.addr(), &fieldId_elem) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
         }
     }
@@ -275,17 +279,19 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
     }
   else
     {
-      std::vector<double> field_cgns; /* XXX TODO Elie Saikali : try DoubleTrav with addr() later ... mais je pense pas :p */
-      for (int i = 0; i < valeurs.dimension(0); i++) field_cgns.push_back(valeurs(i, comp));
+      const int nb = valeurs.dimension(0);
+      DoubleTrav field_cgns(nb);
+      for (int i = 0; i < nb; i++)
+        field_cgns(i) = valeurs(i, comp);
 
       if (LOC == "SOM")
         {
-          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_som, fieldId_som, &min, &max, field_cgns.data()) != CG_OK)
+          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_som, fieldId_som, &min, &max, field_cgns.addr()) != CG_OK)
             Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl,  TRUST_CGNS_ERROR();
         }
       else
         {
-          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_elem, fieldId_elem, &min, &max, field_cgns.data()) != CG_OK)
+          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_elem, fieldId_elem, &min, &max, field_cgns.addr()) != CG_OK)
             Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl,  TRUST_CGNS_ERROR();
         }
     }

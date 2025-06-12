@@ -127,11 +127,15 @@ void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>
   const int dim = sommets_->dimension(1), nb_som = sommets_->dimension(0);
   const DoubleTab& sommets = sommets_.valeur();
 
+  xCoords.resize(nb_som);
+  yCoords.resize(nb_som);
+  if (dim > 2) zCoords.resize(nb_som);
+
   for (int i = 0; i < nb_som; i++)
     {
-      xCoords.push_back(sommets(i, 0));
-      yCoords.push_back(sommets(i, 1));
-      if (dim > 2) zCoords.push_back(sommets(i, 2));
+      xCoords[i] = sommets(i, 0);
+      yCoords[i] = sommets(i, 1);
+      if (dim > 2) zCoords[i] = sommets(i, 2);
     }
 }
 
