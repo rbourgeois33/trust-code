@@ -397,59 +397,76 @@ int TRUST_2_CGNS::compute_shift(const std::vector<int>& vect_incr_max)
 int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type , std::vector<cgsize_t>& elems)
 {
   const int nb_elem = elems_->dimension(0);
-  const IntTab& les_elems =  elems_.valeur();
+  const IntTab& les_elems = elems_.valeur();
+  int decal = par_in_zone_ ? compute_shift(global_incr_max_som_) : 0;
 
-  int decal = 0;
+  int nodes_per_elem = -1;
 
-  if (par_in_zone_)
-    decal = compute_shift(global_incr_max_som_); // shift by sommets !!
+  switch(type)
+    {
+    case CGNS_ENUMV(HEXA_8):
+      nodes_per_elem = 8;
+      break;
+    case CGNS_ENUMV(QUAD_4):
+      nodes_per_elem = 4;
+      break;
+    case CGNS_ENUMV(TETRA_4):
+      nodes_per_elem = 4;
+      break;
+    case CGNS_ENUMV(TRI_3):
+      nodes_per_elem = 3;
+      break;
+    case CGNS_ENUMV(BAR_2):
+      nodes_per_elem = 2;
+      break;
+    default:
+      Cerr << "Type not yet coded in TRUST_2_CGNS::convert_connectivity ! Call the 911 !" << finl;
+      Process::exit();
+      return -100;
+    }
 
-  switch (type)
+  elems.resize(nb_elem * nodes_per_elem); // allocation une fois
+  cgsize_t* data = elems.data();
+
+  switch(type)
     {
     case CGNS_ENUMV(HEXA_8):
       for (int i = 0; i < nb_elem; i++)
         {
-          elems.push_back(les_elems(i, 0) + 1 + decal);
-          elems.push_back(les_elems(i, 1) + 1 + decal);
-          elems.push_back(les_elems(i, 3) + 1 + decal);
-          elems.push_back(les_elems(i, 2) + 1 + decal);
-          elems.push_back(les_elems(i, 4) + 1 + decal);
-          elems.push_back(les_elems(i, 5) + 1 + decal);
-          elems.push_back(les_elems(i, 7) + 1 + decal);
-          elems.push_back(les_elems(i, 6) + 1 + decal);
+          *data++ = les_elems(i, 0) + 1 + decal;
+          *data++ = les_elems(i, 1) + 1 + decal;
+          *data++ = les_elems(i, 3) + 1 + decal;
+          *data++ = les_elems(i, 2) + 1 + decal;
+          *data++ = les_elems(i, 4) + 1 + decal;
+          *data++ = les_elems(i, 5) + 1 + decal;
+          *data++ = les_elems(i, 7) + 1 + decal;
+          *data++ = les_elems(i, 6) + 1 + decal;
         }
-      return 8;
+      break;
+
     case CGNS_ENUMV(QUAD_4):
       for (int i = 0; i < nb_elem; i++)
         {
-          elems.push_back(les_elems(i, 0) + 1 + decal);
-          elems.push_back(les_elems(i, 1) + 1 + decal);
-          elems.push_back(les_elems(i, 3) + 1 + decal);
-          elems.push_back(les_elems(i, 2) + 1 + decal);
+          *data++ = les_elems(i, 0) + 1 + decal;
+          *data++ = les_elems(i, 1) + 1 + decal;
+          *data++ = les_elems(i, 3) + 1 + decal;
+          *data++ = les_elems(i, 2) + 1 + decal;
         }
-      return 4;
+      break;
+
     case CGNS_ENUMV(TETRA_4):
-      for (int i = 0; i < nb_elem; i++)
-        for (int j = 0; j < 4; j++)
-          elems.push_back(les_elems(i, j) + 1 + decal);
-      return 4;
     case CGNS_ENUMV(TRI_3):
-      for (int i = 0; i < nb_elem; i++)
-        for (int j = 0; j < 3; j++)
-          elems.push_back(les_elems(i, j) + 1 + decal);
-      return 3;
     case CGNS_ENUMV(BAR_2):
       for (int i = 0; i < nb_elem; i++)
-        for (int j = 0; j < 2; j++)
-          elems.push_back(les_elems(i, j) + 1 + decal);
-      return 2;
-    default:
-      {
-        Cerr << "Type not yet coded in TRUST_2_CGNS::convert_connectivity ! Call the 911 !" << finl;
-        Process::exit();
-        return -100;
-      }
+        for (int j = 0; j < nodes_per_elem; j++)
+          *data++ = les_elems(i, j) + 1 + decal;
+      break;
+
+    default: /* already handled above */
+      break;
     }
+
+  return nodes_per_elem;
 }
 
 CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
