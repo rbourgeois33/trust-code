@@ -150,7 +150,7 @@ void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, con
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     if (!grid_file_opened_)
       {
-        cgns_open_grid_base_link_file();
+        cgns_open_grid_base_link_file(Option_CGNS::MASTER_SKELETON ? false : true);
         grid_file_opened_ = true; // On ouvre pour .grid.cgns
       }
 
@@ -260,8 +260,13 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
 
           if (grid_file_opened_)
             {
-              cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
-              grid_file_opened_ = false;
+              if (Option_CGNS::MASTER_SKELETON && Process::is_parallel())
+                Process::exit("grid_file_opened should not be true here ! Call the 911 !!!");
+              else
+                {
+                  cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+                  grid_file_opened_ = false;
+                }
             }
 
           if (static_cast<int>(fld_loc_map_.size()) == 0)
@@ -731,8 +736,13 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
 
-  if (cg_base_write(fileId_, basename, icelldim, iphysdim, &baseId_.back()) != CG_OK)
-    Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cg_base_write !" << finl, TRUST_CGNS_ERROR();
+  bool should_write = true;
+  if (Option_CGNS::MASTER_SKELETON && Process::me())
+    should_write = false;
+
+  if (should_write)
+    if (cg_base_write(fileId_, basename, icelldim, iphysdim, &baseId_.back()) != CG_OK)
+      Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
   /* 4 : CREATION OF FILE STRUCTURE : zones, coords & sections
    *
@@ -761,57 +771,83 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   True_int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
 
-  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
-                                                                      zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
+  if (Option_CGNS::MASTER_SKELETON)
+    cgns_init_MPI(true); /* back to SELF */
 
-  /* 4.2 : Construct the sections to host connectivity later */
-  cgsize_t start = -123, end = -123;
-  if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
+  if (should_write)
     {
-      cgsize_t maxoffset = -123;
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
+                                                                          zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
 
-      if (is_polyedre) // Pas pour polygone
+      /* 4.2 : Construct the sections to host connectivity later */
+      cgsize_t start = -123, end = -123;
+      if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
         {
-          const int nb_fs = TRUST2CGNS.get_nfs_tot();
-          const int nb_fs_offset = TRUST2CGNS.get_nfs_offset_tot();
+          cgsize_t maxoffset = -123;
 
-          start = 1, end = start + nb_fs - 1;
-          maxoffset = nb_fs_offset;
+          if (is_polyedre) // Pas pour polygone
+            {
+              const int nb_fs = TRUST2CGNS.get_nfs_tot();
+              const int nb_fs_offset = TRUST2CGNS.get_nfs_offset_tot();
+
+              start = 1, end = start + nb_fs - 1;
+              maxoffset = nb_fs_offset;
+              assert(start <= end);
+
+              if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NGON_n", CGNS_ENUMV(NGON_n), start, end, maxoffset, 0, &sectionId) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
+
+              const int nb_ef = TRUST2CGNS.get_nef_tot();
+              const int nb_ef_offset = TRUST2CGNS.get_nef_offset_tot();
+
+              start = end + 1, end = start + nb_ef - 1;
+              maxoffset = nb_ef_offset;
+              assert(start <= end);
+
+              if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NFACE_n", CGNS_ENUMV(NFACE_n), start, end, maxoffset, 0, &sectionId2) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
+            }
+          else // polygon
+            {
+              const int nb_es = ne_tot;
+              const int nb_es_offset = TRUST2CGNS.get_nes_offset_tot();
+
+              start = 1, end = start + nb_es - 1;
+              maxoffset = nb_es_offset;
+
+              if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NGON_n", CGNS_ENUMV(NGON_n), start, end, maxoffset, 0, &sectionId) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
+            }
+        }
+      else
+        {
+          start = 1, end = ne_tot;
           assert(start <= end);
 
-          if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NGON_n", CGNS_ENUMV(NGON_n), start, end, maxoffset, 0, &sectionId) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
-
-          const int nb_ef = TRUST2CGNS.get_nef_tot();
-          const int nb_ef_offset = TRUST2CGNS.get_nef_offset_tot();
-
-          start = end + 1, end = start + nb_ef - 1;
-          maxoffset = nb_ef_offset;
-          assert(start <= end);
-
-          if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NFACE_n", CGNS_ENUMV(NFACE_n), start, end, maxoffset, 0, &sectionId2) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
+          if (cgp_section_write(fileId_, baseId_.back(), zoneId_.back(), "Elem", cgns_type_elem, start, end, 0, &sectionId) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_section_write !" << finl, TRUST_CGNS_ERROR();
         }
-      else // polygon
-        {
-          const int nb_es = ne_tot;
-          const int nb_es_offset = TRUST2CGNS.get_nes_offset_tot();
 
-          start = 1, end = start + nb_es - 1;
-          maxoffset = nb_es_offset;
-
-          if (cgp_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NGON_n", CGNS_ENUMV(NGON_n), start, end, maxoffset, 0, &sectionId) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_section_write !" << finl, TRUST_CGNS_ERROR();
-        }
+      if (Option_CGNS::MASTER_SKELETON)
+        cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+//        cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(baseFile_name_ + ".grid.cgns", fileId_, true);
     }
-  else
+
+  if (Option_CGNS::MASTER_SKELETON)
     {
-      start = 1, end = ne_tot;
-      assert(start <= end);
+      cgns_init_MPI(); /* back to COMM_WORLD */
+      envoyer_broadcast(sectionId,0);
+      envoyer_broadcast(sectionId2,0);
+      envoyer_broadcast(coordsIdx,0);
+      envoyer_broadcast(coordsIdy,0);
+      envoyer_broadcast(coordsIdz,0);
+      envoyer_broadcast(zoneId_.back(),0);
+      envoyer_broadcast(baseId_.back(),0);
 
-      if (cgp_section_write(fileId_, baseId_.back(), zoneId_.back(), "Elem", cgns_type_elem, start, end, 0, &sectionId) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_section_write !" << finl, TRUST_CGNS_ERROR();
+//      cgns_open_grid_base_link_file(true /* all procs */);
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY /* XXX */>(baseFile_name_ + ".grid.cgns", fileId_, true);
     }
+
 
   /* 5 : Write grid coordinates & set connectivity */
   if (nb_elem > 0) // seulement si le proc a qlq chose a ecrire
@@ -873,6 +909,13 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
         }
     }
   TRUST2CGNS.clear_vectors();
+
+  if (Option_CGNS::MASTER_SKELETON)
+    {
+      cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+//      cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(baseFile_name_ + ".grid.cgns", fileId_, true);
+      grid_file_opened_ = false;
+    }
 #endif
 }
 

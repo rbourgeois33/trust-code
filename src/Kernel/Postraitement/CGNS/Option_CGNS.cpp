@@ -24,6 +24,7 @@ bool Option_CGNS::SINGLE_PRECISION = false; /* NOT BY DEFAULT */
 bool Option_CGNS::MULTIPLE_FILES = false; /* NOT BY DEFAULT */
 bool Option_CGNS::PARALLEL_OVER_ZONE = false; /* NOT BY DEFAULT */
 bool Option_CGNS::USE_LINKS = false; /* NOT BY DEFAULT */
+bool Option_CGNS::MASTER_SKELETON = false; /* NOT BY DEFAULT */
 
 Sortie& Option_CGNS::printOn(Sortie& os) const { return Interprete::printOn(os); }
 Entree& Option_CGNS::readOn(Entree& is) { return Interprete::readOn(is); }
@@ -35,7 +36,15 @@ Entree& Option_CGNS::interpreter(Entree& is)
   param.ajouter_non_std("MULTIPLE_FILES", (this)); // XD_ADD_P rien If used, data will be written in separate files (ie: one file per processor).
   param.ajouter_non_std("PARALLEL_OVER_ZONE", (this)); // XD_ADD_P rien If used, data will be written in separate zones (ie: one zone per processor). This is not so performant but easier to read later ...
   param.ajouter_non_std("USE_LINKS", (this)); // XD_ADD_P rien If used, data will be written in separate files; one file for mesh, and then one file for solution time. Links will be used.
+  param.ajouter_non_std("MASTER_SKELETON", (this)); // XD_ADD_P rien If used, master proc will write the CGNS skeleton
   param.lire_avec_accolades_depuis(is);
+
+  if (PARALLEL_OVER_ZONE && MASTER_SKELETON)
+    {
+      Cerr << "Error in Option_CGNS :" << finl;
+      Cerr << "       - 'PARALLEL_OVER_ZONE' can not be used when using the 'MASTER_SKELETON' option ... Fix your data file !!!" << finl;
+      Process::exit();
+    }
 
   if ((MULTIPLE_FILES || PARALLEL_OVER_ZONE) && USE_LINKS)
     {
@@ -61,7 +70,7 @@ int Option_CGNS::lire_motcle_non_standard(const Motcle& mot_cle, Entree& is)
     {
       Cerr << mot_cle << " => CGNS data will be written in a multiple files ..." << finl;
       MULTIPLE_FILES = true;
-      Cerr << mot_cle << " => CGNS data will be written in separate zones ..." << finl;
+      Cerr << "PARALLEL_OVER_ZONE => CGNS data will be written in separate zones ..." << finl;
       PARALLEL_OVER_ZONE = true;
     }
   else if (mot_cle == "PARALLEL_OVER_ZONE")
@@ -72,6 +81,13 @@ int Option_CGNS::lire_motcle_non_standard(const Motcle& mot_cle, Entree& is)
   else if (mot_cle == "USE_LINKS")
     {
       Cerr << mot_cle << " => CGNS data will be written in separate files (mesh, solution ...)" << finl;
+      USE_LINKS = true;
+    }
+  else if (mot_cle == "MASTER_SKELETON")
+    {
+      Cerr << mot_cle << " => CGNS skeleton will be written by the master proc ..." << finl;
+      MASTER_SKELETON = true;
+      Cerr << "USE_LINKS => CGNS data will be written in separate files (mesh, solution ...)" << finl;
       USE_LINKS = true;
     }
   else

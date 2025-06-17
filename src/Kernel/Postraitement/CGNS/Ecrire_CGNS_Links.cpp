@@ -67,15 +67,37 @@ void Ecrire_CGNS::cgns_close_solution_link_files(const double t)
     }
 }
 
-void Ecrire_CGNS::cgns_open_grid_base_link_file()
+void Ecrire_CGNS::cgns_open_grid_base_link_file(const bool skelton_but_par) /* if skelton_but_par == false => do as in SEQ */
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
   std::string fn = baseFile_name_ + ".grid.cgns"; // file name
-  unlink(fn.c_str());
-  if (Process::is_parallel())
+
+  if (first_grid_skeleton_)
+    unlink(fn.c_str());
+
+  if (Process::is_parallel() && skelton_but_par)
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
   else
-    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+    {
+      if (Option_CGNS::MASTER_SKELETON && Process::is_parallel())
+        {
+          cgns_init_MPI(true); /* back to SELF */
+          if (!Process::me())
+            {
+              if (first_grid_skeleton_)
+                {
+                  cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::WRITE>(fn, fileId_);
+                }
+              else
+                cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId_);
+            }
+          cgns_init_MPI(); /* back to COMM_WORLD */
+          envoyer_broadcast(fileId_,0);
+          first_grid_skeleton_ = false;
+        }
+      else
+        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+    }
 }
 
 void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std::string& fn, bool is_cerr)
