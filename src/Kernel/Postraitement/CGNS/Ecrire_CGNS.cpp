@@ -94,7 +94,9 @@ void Ecrire_CGNS::finir_ecriture(double temps)
 {
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     {
-      cgns_close_solution_link_files(temps);
+      if (!Option_CGNS::MASTER_SKELETON || Process::is_sequential()) // si Option_CGNS::MASTER_SKELETON && parallel => on fait rien
+        cgns_close_solution_link_files(temps);
+
       cgns_write_final_link_file(); /* rewrite the link file so you can visualize during simulation !!! */
     }
 }
@@ -134,7 +136,12 @@ void Ecrire_CGNS::cgns_add_time(const double t)
 {
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     if (!time_post_.empty()) /* 1er fois, on fais dans cgns_write_field => fill field_loc_map */
-      cgns_open_solution_link_files(t);
+      {
+        cgns_open_solution_link_files(t);
+
+        if (Option_CGNS::MASTER_SKELETON && Process::is_parallel())
+          cgns_close_solution_link_files(t);
+      }
 
   time_post_.push_back(t); // add time_post
   fieldName_dumped_.clear();
@@ -272,16 +279,43 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
           if (static_cast<int>(fld_loc_map_.size()) == 0)
             {
               fld_loc_map_.insert( { LOC, domaine.le_nom() });
-              cgns_open_solution_link_file(0, LOC, time_post_.back()); // 1st sol file to open here !!
+
+              if (Option_CGNS::MASTER_SKELETON && Process::is_parallel())
+                {
+                  cgns_init_MPI(true); // set self mpi
+                  if (!Process::me())
+                    {
+                      cgns_open_solution_link_file(0, LOC, time_post_.back()); // 1st sol file to open here !!
+                      cgns_close_solution_link_files(time_post_.back());
+                    }
+                  cgns_init_MPI(); // back to COMM_WORLD
+                  Process::barrier();
+                }
+              else
+                cgns_open_solution_link_file(0, LOC, time_post_.back()); // 1st sol file to open here !!
             }
           else
             {
               const bool in_map = (fld_loc_map_.count(LOC) != 0);
               if (!in_map)
                 {
-                  Cerr << "A second CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
                   fld_loc_map_.insert( { LOC, domaine.le_nom() });
-                  cgns_open_solution_link_file(1, LOC, time_post_.back());  // 2nd sol file to open here !!
+
+                  Cerr << "A second CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
+                  if (Option_CGNS::MASTER_SKELETON && Process::is_parallel())
+                    {
+                      cgns_init_MPI(true); // set self mpi
+                      if (!Process::me())
+                        {
+                          cgns_open_solution_link_file(1, LOC, time_post_.back());  // 2nd sol file to open here !!
+                          std::string fn = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(time_post_.back()) + ".cgns"; // file name
+                          cgns_close_grid_or_solution_link_file(1, fn, true);
+                        }
+                      cgns_init_MPI(); // back to COMM_WORLD
+                      Process::barrier();
+                    }
+                  else
+                    cgns_open_solution_link_file(1, LOC, time_post_.back());  // 2nd sol file to open here !!
                 }
             }
         }
@@ -935,17 +969,49 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     TRUST_2_CGNS::modify_fileId_for_post(fld_loc_map_, LOC, fileId2_, fileId);
 
-  /* 1 : CREATION OF FILE STRUCTURE
-   *
-   *  - All processors write the same information.
-   *  - Only field meta-data is written to the library at this stage ... So no worries ^^
-   *  - And just once per dt !
-   */
-  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
-                                                          solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+  bool should_write = true;
+  if (Option_CGNS::MASTER_SKELETON && Process::me())
+    should_write = false;
 
-  cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, zoneId_, LOC,
-                                                            flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+  std::string fn = "";
+  if (Option_CGNS::MASTER_SKELETON)
+    {
+      cgns_init_MPI(true); /* back to SELF */
+      fn = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(temps) + ".cgns"; // file name
+    }
+
+  if (should_write)
+    {
+      if (Option_CGNS::MASTER_SKELETON)
+        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId, true);
+
+      /* 1 : CREATION OF FILE STRUCTURE
+       *
+       *  - All processors write the same information.
+       *  - Only field meta-data is written to the library at this stage ... So no worries ^^
+       *  - And just once per dt !
+       */
+      cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
+                                                              solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+
+      cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+
+      if (Option_CGNS::MASTER_SKELETON)
+        cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, true);
+    }
+
+  if (Option_CGNS::MASTER_SKELETON)
+    {
+      cgns_init_MPI(); /* back to COMM_WORLD */
+      envoyer_broadcast(fileId,0);
+      envoyer_broadcast(flowId_som_,0);
+      envoyer_broadcast(flowId_elem_,0);
+      envoyer_broadcast(fieldId_som_,0);
+      envoyer_broadcast(fieldId_elem_,0);
+
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId, true);
+    }
 
   /* 2 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
@@ -967,6 +1033,9 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
       cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_,
                                                                      fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
     }
+
+  if (Option_CGNS::MASTER_SKELETON)
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, true);
 #endif
 }
 

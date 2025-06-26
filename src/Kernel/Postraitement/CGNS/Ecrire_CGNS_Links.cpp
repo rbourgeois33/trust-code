@@ -125,10 +125,10 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   else
     fn = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
 
-  unlink(fn.c_str());
+  //unlink(fn.c_str());
 
   if (Process::is_parallel())
-    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_link);
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, true);
   else
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, true);
 
