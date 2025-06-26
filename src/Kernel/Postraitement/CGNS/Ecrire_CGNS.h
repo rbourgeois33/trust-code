@@ -41,7 +41,6 @@ private:
   bool solname_elem_written_ = false, solname_som_written_ = false;
   bool postraiter_domaine_ = false;
   bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
-  bool first_grid_skeleton_ = true;
   std::string solname_elem_ = "", solname_som_ = "", baseFile_name_ = "", baseZone_name_ = "";
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
   std::vector<Nom> doms_written_;
@@ -62,7 +61,7 @@ private:
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
   void cgns_open_solution_link_files(const double);
   void cgns_close_solution_link_files(const double);
-  void cgns_open_grid_base_link_file(const bool skelton_but_par = true);
+  void cgns_open_grid_base_link_file();
   void cgns_open_solution_link_file(const int, const std::string&, const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_link_file_for_multiple_files();
