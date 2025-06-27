@@ -112,23 +112,16 @@ Entree& My_Comm_Group::interpreter(Entree& is)
 #endif
 
   const int nb_procs = Process::nproc();
-  // XXX Elie Saikali TODO FIXME : should be more flexible
-  if (nb_procs % nb_groups != 0)
-    {
-      Cerr << "Big problem in My_Comm_Group::interpreter !!!! " << finl;
-      Cerr << "TRUST is running on " << nb_procs << " procs while you ask to create " <<  nb_groups << " comm groups." << finl;
-      Cerr << "This is not allowed make sure that Process::nproc() % nb_groups = 0 !" << finl;
-      Process::exit();
-    }
+  const int base_size = nb_procs / nb_groups;
+  const int extra = nb_procs % nb_groups; // nombre des procs avec 1 de plus !
 
   VECT(OWN_PTR(Comm_Group)) my_groups(nb_groups);
   int count = 0;
-  const int nb_procs_local = nb_procs / nb_groups;
-
   for (int i = 0; i < nb_groups; i++)
     {
-      ArrOfInt tab(nb_procs_local);
-      for (int j = 0; j < nb_procs_local; j++)
+      const int group_size = base_size + (i < extra ? 1 : 0); // le 1 de plus envoyer aux premiers !!!
+      ArrOfInt tab(group_size);
+      for (int j = 0; j < group_size; j++)
         tab[j] = count++;
 
       PE_Groups::create_group(tab, my_groups[i]);
