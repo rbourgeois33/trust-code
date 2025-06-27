@@ -29,6 +29,9 @@ const Comm_Group * PE_Groups::current_group_ = 0;
 // and might be used throughout the code together with other groups
 static OBS_PTR(Comm_Group) node_group;
 static OBS_PTR(Comm_Group) node_master;
+// For the user that defines his own groups ! not done in the main, see the My_Comm_Group class !
+static int nb_user_defined_groups = 0;
+static VECT(OBS_PTR(Comm_Group)) user_defined_groups;
 
 int PE_Groups::check_current_group()
 {
@@ -204,6 +207,15 @@ const Comm_Group& PE_Groups::get_node_master()
   return node_master.valeur();
 }
 
+/*! @brief Renvoie une reference au groupe sur defini par l'utilisateur
+ *
+ */
+const Comm_Group& PE_Groups::get_user_defined_group(const int i)
+{
+  assert(user_defined_groups.size() > 0 && i < user_defined_groups.size());
+  return user_defined_groups[i].valeur();
+}
+
 /*! @brief Methode a appeler au debut de l'execution (MAIN.
  *
  * cpp) Elle initialise current_group() avec groupe_trio_u
@@ -233,6 +245,21 @@ void PE_Groups::initialize_node_master(const Comm_Group& ngrp)
   node_master = ngrp;
 }
 
+/*! @brief Methode a appeler apres l'initialisation de trio_u_world et l'initialisation des compteurs statistiques de TRUST
+ */
+void PE_Groups::add_user_defined_group(const Comm_Group& ngrp)
+{
+  if (nb_user_defined_groups == 0 && user_defined_groups.size())
+    Process::exit("NO NO NO !");
+
+  user_defined_groups.add(ngrp);
+  nb_user_defined_groups++;
+}
+
+const int& PE_Groups::get_number_user_groups()
+{
+  return nb_user_defined_groups;
+}
 
 /*! @brief Methode a appeler en fin d'execution, une fois qu'on est revenu dans le groupe_TRUST() et juste avant de detruire de Comm_Group
  *
@@ -247,6 +274,7 @@ void PE_Groups::finalize()
   current_group_ = 0;
   node_group.reset();
   node_master.reset();
+  user_defined_groups.clear();
 }
 
 const int& PE_Groups::get_nb_groups()
