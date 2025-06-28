@@ -45,12 +45,12 @@ public:
   static const Comm_Group& get_node_group();
   static const Comm_Group& get_node_master();
   static const Comm_Group& get_user_defined_group(const int i);
+  static VECT(OWN_PTR(Comm_Group))& get_user_defined_groups();
 
   static void initialize(const Comm_Group& groupe_trio_u);
   static void initialize_node(const Comm_Group& ngrp);
   static void initialize_node_master(const Comm_Group& ngrp);
-  static void add_user_defined_group(const Comm_Group& ngrp);
-  static const int& get_number_user_groups();
+  static int get_number_user_groups();
   static void finalize();
 
 private:

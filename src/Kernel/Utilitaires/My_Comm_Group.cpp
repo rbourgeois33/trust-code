@@ -112,10 +112,17 @@ Entree& My_Comm_Group::interpreter(Entree& is)
 #endif
 
   const int nb_procs = Process::nproc();
+
+  if (nb_groups > nb_procs)
+    nb_groups = nb_procs; // sinon
+
   const int base_size = nb_procs / nb_groups;
   const int extra = nb_procs % nb_groups; // nombre des procs avec 1 de plus !
 
-  VECT(OWN_PTR(Comm_Group)) my_groups(nb_groups);
+  auto& my_groups = PE_Groups::get_user_defined_groups();
+  assert(my_groups.size() == 0);
+  my_groups.resize(nb_groups);
+
   int count = 0;
   for (int i = 0; i < nb_groups; i++)
     {
@@ -125,7 +132,6 @@ Entree& My_Comm_Group::interpreter(Entree& is)
         tab[j] = count++;
 
       PE_Groups::create_group(tab, my_groups[i]);
-      PE_Groups::add_user_defined_group(my_groups[i]); // XXX
     }
 
 //  test();

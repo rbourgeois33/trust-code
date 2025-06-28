@@ -30,8 +30,7 @@ const Comm_Group * PE_Groups::current_group_ = 0;
 static OBS_PTR(Comm_Group) node_group;
 static OBS_PTR(Comm_Group) node_master;
 // For the user that defines his own groups ! not done in the main, see the My_Comm_Group class !
-static int nb_user_defined_groups = 0;
-static VECT(OBS_PTR(Comm_Group)) user_defined_groups;
+static VECT(OWN_PTR(Comm_Group)) user_defined_groups;
 
 int PE_Groups::check_current_group()
 {
@@ -245,20 +244,14 @@ void PE_Groups::initialize_node_master(const Comm_Group& ngrp)
   node_master = ngrp;
 }
 
-/*! @brief Methode a appeler apres l'initialisation de trio_u_world et l'initialisation des compteurs statistiques de TRUST
- */
-void PE_Groups::add_user_defined_group(const Comm_Group& ngrp)
+VECT(OWN_PTR(Comm_Group))& PE_Groups::get_user_defined_groups()
 {
-  if (nb_user_defined_groups == 0 && user_defined_groups.size())
-    Process::exit("NO NO NO !");
-
-  user_defined_groups.add(ngrp);
-  nb_user_defined_groups++;
+  return user_defined_groups;
 }
 
-const int& PE_Groups::get_number_user_groups()
+int PE_Groups::get_number_user_groups()
 {
-  return nb_user_defined_groups;
+  return user_defined_groups.size();
 }
 
 /*! @brief Methode a appeler en fin d'execution, une fois qu'on est revenu dans le groupe_TRUST() et juste avant de detruire de Comm_Group
