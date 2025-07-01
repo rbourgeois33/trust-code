@@ -29,8 +29,8 @@ const Comm_Group * PE_Groups::current_group_ = 0;
 // and might be used throughout the code together with other groups
 static OBS_PTR(Comm_Group) node_group;
 static OBS_PTR(Comm_Group) node_master;
-// For the user that defines his own groups ! not done in the main, see the My_Comm_Group class !
-static VECT(OWN_PTR(Comm_Group)) user_defined_groups;
+// For the user that defines his own group ! not done in the main, see the My_Comm_Group class !
+static OBS_PTR(Comm_Group) user_defined_group;
 
 int PE_Groups::check_current_group()
 {
@@ -209,10 +209,10 @@ const Comm_Group& PE_Groups::get_node_master()
 /*! @brief Renvoie une reference au groupe sur defini par l'utilisateur
  *
  */
-const Comm_Group& PE_Groups::get_user_defined_group(const int i)
+const Comm_Group& PE_Groups::get_user_defined_group()
 {
-  assert(user_defined_groups.size() > 0 && i < user_defined_groups.size());
-  return user_defined_groups[i].valeur();
+  assert(user_defined_group.non_nul());
+  return user_defined_group.valeur();
 }
 
 /*! @brief Methode a appeler au debut de l'execution (MAIN.
@@ -236,22 +236,23 @@ void PE_Groups::initialize_node(const Comm_Group& ngrp)
   node_group = ngrp;
 }
 
+void PE_Groups::initialize_user_defined_group(const Comm_Group& ngrp)
+{
+  assert(user_defined_group.est_nul());
+  user_defined_group = ngrp;
+}
+
+bool PE_Groups::has_user_defined_group()
+{
+  return user_defined_group.non_nul();
+}
+
 /*! @brief Methode a appeler apres l'initialisation de trio_u_world et de node_group et l'initialisation des compteurs statistiques de TRUST
  */
 void PE_Groups::initialize_node_master(const Comm_Group& ngrp)
 {
   assert(node_master.est_nul());
   node_master = ngrp;
-}
-
-VECT(OWN_PTR(Comm_Group))& PE_Groups::get_user_defined_groups()
-{
-  return user_defined_groups;
-}
-
-int PE_Groups::get_number_user_groups()
-{
-  return user_defined_groups.size();
 }
 
 /*! @brief Methode a appeler en fin d'execution, une fois qu'on est revenu dans le groupe_TRUST() et juste avant de detruire de Comm_Group
@@ -267,7 +268,7 @@ void PE_Groups::finalize()
   current_group_ = 0;
   node_group.reset();
   node_master.reset();
-  user_defined_groups.clear();
+  user_defined_group.reset();
 }
 
 const int& PE_Groups::get_nb_groups()

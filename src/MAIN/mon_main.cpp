@@ -273,16 +273,12 @@ void mon_main::finalize()
   if (sub_type(Comm_Group_MPI,node_group_.valeur()))
     ref_cast(Comm_Group_MPI,node_group_.valeur()).free_all(); // free comm + group
 
-
   // user defined groups (if any !)
-  if (PE_Groups::get_number_user_groups() > 0)
+  if (PE_Groups::has_user_defined_group())
     {
-      for (int i =0; i < PE_Groups::get_number_user_groups(); i++)
-        {
-          auto& grp = PE_Groups::get_user_defined_group(i);
-          if (sub_type(Comm_Group_MPI,grp))
-            ref_cast_non_const(Comm_Group_MPI,grp).free_all(); // free comm + group
-        }
+      auto& grp = PE_Groups::get_user_defined_group();
+      if (sub_type(Comm_Group_MPI,grp))
+        ref_cast_non_const(Comm_Group_MPI,grp).free_all(); // free comm + group
     }
 
 #endif

@@ -334,6 +334,14 @@ void Process::exit(const Nom& message ,int i)
 #ifdef MPI_
       if (Process::is_parallel())
         {
+          // user defined groups (if any !)
+          if (PE_Groups::has_user_defined_group())
+            {
+              auto& grp = PE_Groups::get_user_defined_group();
+              if (sub_type(Comm_Group_MPI,grp))
+                ref_cast_non_const(Comm_Group_MPI,grp).free_all(); // free comm + group
+            }
+
           const MPI_Comm& mpi_comm=ref_cast(Comm_Group_MPI,PE_Groups::groupe_TRUST()).get_mpi_comm();
           int tag = 666;
           int buffer[1]= {1};

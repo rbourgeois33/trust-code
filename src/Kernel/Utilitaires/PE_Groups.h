@@ -44,13 +44,13 @@ public:
   static const Comm_Group& groupe_TRUST();
   static const Comm_Group& get_node_group();
   static const Comm_Group& get_node_master();
-  static const Comm_Group& get_user_defined_group(const int i);
-  static VECT(OWN_PTR(Comm_Group))& get_user_defined_groups();
+  static const Comm_Group& get_user_defined_group();
+  static bool has_user_defined_group();
 
   static void initialize(const Comm_Group& groupe_trio_u);
   static void initialize_node(const Comm_Group& ngrp);
   static void initialize_node_master(const Comm_Group& ngrp);
-  static int get_number_user_groups();
+  static void initialize_user_defined_group(const Comm_Group& ngrp);
   static void finalize();
 
 private:

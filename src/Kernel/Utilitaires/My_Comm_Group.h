@@ -23,6 +23,8 @@ class My_Comm_Group : public Interprete
   Declare_instanciable(My_Comm_Group);
 public:
   Entree& interpreter(Entree&) override;
+
+  static const Comm_Group& get_my_comm_group();
 };
 
 #endif /* My_Comm_Group_included */
