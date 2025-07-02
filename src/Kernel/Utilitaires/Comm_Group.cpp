@@ -104,14 +104,22 @@ void Comm_Group::init_group(const ArrOfInt& pe_list)
     {
       // rank du pe dans current_group()
       const int pe = pe_list[i];
-      if (check_enabled())
+      if (check_enabled() && nproc_ > 1)
         {
-          int pe_check = pe;
-          envoyer_broadcast(pe_check, 0);
-          if (pe_check != pe)
+          if(Process::me() == pe_list[0])
             {
-              Cerr << "Comm_Group::set_group_properties : processes have different pe_lists" << finl;
-              Process::exit();
+              for(int j=1; j < nproc_; j++)
+                envoyer(pe_list[i], Process::me(), pe_list[j], 1);
+            }
+          else
+            {
+              int rcv;
+              recevoir(rcv, pe_list[0], Process::me(), 1);
+              if (rcv != pe_list[i])
+                {
+                  Cerr << "Comm_Group::init_group : processes have different pe_lists" << finl;
+                  Process::exit();
+                }
             }
         }
       if (pe < 0 || pe >= current.nproc_)
