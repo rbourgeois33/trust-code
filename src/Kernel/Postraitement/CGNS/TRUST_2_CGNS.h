@@ -30,6 +30,9 @@ class Motcle;
 
 class TRUST_2_CGNS
 {
+private:
+  void fill_global_infos_by_comm_group();
+
 public:
   TRUST_2_CGNS() { }
   void associer_domaine_TRUST(const Domaine *, const DoubleTab&, const IntTab&, const bool);
@@ -41,6 +44,8 @@ public:
   const std::vector<int>& get_proc_non_zero_elem() const { return proc_non_zero_elem_; }
   const std::vector<int>& get_global_nb_elem() const { return global_nb_elem_; }
   const std::vector<int>& get_global_nb_som() const { return global_nb_som_; }
+
+  int get_proc_me_local_comm() const { return proc_me_local_comm_; }
 
   void fill_global_infos();
   void fill_global_infos_poly(const bool);
@@ -106,6 +111,7 @@ private:
 
   bool par_in_zone_ = false, all_procs_write_ = true, postraiter_domaine_ = false;
   int ns_tot_ = -123, ne_tot_ = -123, nb_procs_writing_ = -123;
+  int proc_me_local_comm_ = -123;
 
   std::vector<int> global_nb_elem_, global_nb_som_, proc_non_zero_elem_;
 

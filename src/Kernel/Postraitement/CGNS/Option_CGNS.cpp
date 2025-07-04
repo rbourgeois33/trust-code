@@ -24,6 +24,7 @@ bool Option_CGNS::SINGLE_PRECISION = false; /* NOT BY DEFAULT */
 bool Option_CGNS::MULTIPLE_FILES = false; /* NOT BY DEFAULT */
 bool Option_CGNS::PARALLEL_OVER_ZONE = false; /* NOT BY DEFAULT */
 bool Option_CGNS::USE_LINKS = false; /* NOT BY DEFAULT */
+bool Option_CGNS::FILE_PER_COMM_GROUP = false; /* NOT BY DEFAULT */
 
 Sortie& Option_CGNS::printOn(Sortie& os) const { return Interprete::printOn(os); }
 Entree& Option_CGNS::readOn(Entree& is) { return Interprete::readOn(is); }
@@ -35,7 +36,14 @@ Entree& Option_CGNS::interpreter(Entree& is)
   param.ajouter_non_std("MULTIPLE_FILES", (this)); // XD_ADD_P rien If used, data will be written in separate files (ie: one file per processor).
   param.ajouter_non_std("PARALLEL_OVER_ZONE", (this)); // XD_ADD_P rien If used, data will be written in separate zones (ie: one zone per processor). This is not so performant but easier to read later ...
   param.ajouter_non_std("USE_LINKS", (this)); // XD_ADD_P rien If used, data will be written in separate files; one file for mesh, and then one file for solution time. Links will be used.
+  param.ajouter_non_std("FILE_PER_COMM_GROUP", (this)); // XD_ADD_P rien If used, data will be written (at each comm group) in separate files; one file for mesh, and then one file for solution time. Links will be used.
   param.lire_avec_accolades_depuis(is);
+
+  if (FILE_PER_COMM_GROUP)
+    {
+      MULTIPLE_FILES = false;
+      PARALLEL_OVER_ZONE = false;
+    }
 
   if ((MULTIPLE_FILES || PARALLEL_OVER_ZONE) && USE_LINKS)
     {
@@ -72,6 +80,13 @@ int Option_CGNS::lire_motcle_non_standard(const Motcle& mot_cle, Entree& is)
   else if (mot_cle == "USE_LINKS")
     {
       Cerr << mot_cle << " => CGNS data will be written in separate files (mesh, solution ...)" << finl;
+      USE_LINKS = true;
+    }
+  else if (mot_cle == "FILE_PER_COMM_GROUP")
+    {
+      Cerr << mot_cle << " => A CGNS file will be written in each COMM group ..." << finl;
+      FILE_PER_COMM_GROUP = true;
+      Cerr << "USE_LINKS => CGNS data will be written in separate files (mesh, solution ...)" << finl;
       USE_LINKS = true;
     }
   else

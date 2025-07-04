@@ -29,10 +29,25 @@ void Ecrire_CGNS::cgns_set_base_name(const Nom& fn)
 void Ecrire_CGNS::cgns_init_MPI(bool is_self)
 {
 #ifdef MPI_
+
   if ((Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_) || is_self)
     {
       if (cgp_mpi_comm(/* XXX */ MPI_COMM_SELF) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+    }
+  else if (Option_CGNS::FILE_PER_COMM_GROUP && !postraiter_domaine_)
+    {
+      if (PE_Groups::has_user_defined_group())
+        {
+          const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
+          if (cgp_mpi_comm(comm_loc.get_mpi_comm()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+        }
+      else
+        {
+          if (cgp_mpi_comm(/* XXX MPI_COMM_WORLD */ Comm_Group_MPI::get_trio_u_world()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+        }
     }
   else
     {
@@ -73,20 +88,20 @@ void Ecrire_CGNS::cgns_init_MPI(bool is_self)
 void Ecrire_CGNS::cgns_open_file()
 {
   if (Process::is_parallel()) cgns_init_MPI(); // 1er truc a faire
+
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+    return; /* rien a faire si USE_LINKS ou FILE_PER_COMM_GROUP */
+
   std::string fn = baseFile_name_ + ".cgns"; // file name
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-    {
-      if (!Option_CGNS::USE_LINKS || postraiter_domaine_) // si sans link, on ouvre
-        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
   else
     {
       if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
         fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
 
-      if (!Option_CGNS::USE_LINKS || postraiter_domaine_) // si sans link, on ouvre
-        cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
 }
 
@@ -724,13 +739,12 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension, proc_me = Process::me();
+  const int icelldim = les_som.dimension(1), nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
 
   /* 3 : Base write */
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
-
 
   if (cg_base_write(fileId_, basename, icelldim, iphysdim, &baseId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cg_base_write !" << finl, TRUST_CGNS_ERROR();
@@ -744,16 +758,25 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
 
   TRUST2CGNS.fill_global_infos(); // XXX
 
+  int proc_me = Process::me();
+  const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
+  if (enter_group_comm)
+    {
+      proc_me = TRUST2CGNS.get_proc_me_local_comm();
+      assert (proc_me >= 0);
+    }
+
   if (cgns_type_elem == CGNS_ENUMV(NGON_n)) /*cas polygone/polyedre */
     TRUST2CGNS.fill_global_infos_poly(is_polyedre);
 
   const int ns_tot = TRUST2CGNS.get_ns_tot(), ne_tot = TRUST2CGNS.get_ne_tot();
-  assert (ne_tot > 0 && ns_tot > 0);
+
+  assert (enter_group_comm || (!enter_group_comm && ns_tot > 0 && ne_tot > 0));
 
   /* 4.1 : Create zone & grid */
   cgsize_t isize[3][1];
-  isize[0][0] = ns_tot;
-  isize[1][0] = ne_tot;
+  isize[0][0] = (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot; // si ns_tot = 0, on va juste creer une zone vide
+  isize[1][0] = (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot; // si ne_tot = 0, on va juste creer une zone vide
   isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
   if (Option_CGNS::USE_LINKS)
@@ -764,6 +787,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
 
   cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
                                                                       zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
+
+  if (ne_tot == 0 && ns_tot == 0) return; // XXX Elie Saikali : zone vide creer, rien a faire de plus ... (cas FILE_PER_COMM_GROUP !!!)
 
   /* 4.2 : Construct the sections to host connectivity later */
   cgsize_t start = -123, end = -123;
