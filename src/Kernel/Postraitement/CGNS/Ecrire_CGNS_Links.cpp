@@ -77,16 +77,16 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
       const auto& grp = PE_Groups::get_user_defined_group();
       if (PE_Groups::enter_group(grp))
         {
-          int nb_glob = PE_Groups::groupe_TRUST().rank();
-          envoyer_broadcast(nb_glob, 0); // XXX should do this !
-          fn = (Nom(baseFile_name_)).nom_me(nb_glob).getString() + ".grid.cgns"; // file name
+          proc_maitre_local_comm_ = PE_Groups::groupe_TRUST().rank();
+          envoyer_broadcast(proc_maitre_local_comm_, 0); // XXX should do this !
+          fn = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + ".grid.cgns"; // file name
 
           unlink(fn.c_str());
 
-          cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
+          cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_, false);
           PE_Groups::exit_group();
         }
-      Process::barrier();
+      Cerr << "**** Multiple parallel CGNS files " << baseFile_name_ << "_XXXX.grid.cgns opened !" << finl;
     }
   else
     {
@@ -110,16 +110,9 @@ void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std
     {
       if ( Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
         {
-          const auto& grp = PE_Groups::get_user_defined_group();
-          if (PE_Groups::enter_group(grp))
-            {
-              int nb_glob = PE_Groups::groupe_TRUST().rank();
-              envoyer_broadcast(nb_glob, 0); // TODO FIXME juste pour affichage ...a voir
-              const std::string fn_new = (Nom(baseFile_name_)).nom_me(nb_glob).getString() + ".grid.cgns"; // file name
-              cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn_new, fileId, is_cerr);
-              PE_Groups::exit_group();
-            }
-          Process::barrier();
+          const std::string fn_new = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + ".grid.cgns"; // file name
+          cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn_new, fileId, false);
+          Cerr << "**** Multiple parallel CGNS files " << baseFile_name_ << "_XXXX.grid.cgns closed !" << finl;
         }
       else
         cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_cerr);

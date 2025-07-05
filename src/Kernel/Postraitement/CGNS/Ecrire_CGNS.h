@@ -55,6 +55,8 @@ private:
   True_int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, cellDim_ = -123;
   True_int fileId2_ = -123; /* cas ou on a 2 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
 
+  int proc_maitre_local_comm_ = -123;
+
   void cgns_fill_field_loc_map(const Domaine&, const std::string&);
 
   // Methodes pour LINK
