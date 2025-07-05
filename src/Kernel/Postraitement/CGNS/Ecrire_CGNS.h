@@ -66,6 +66,7 @@ private:
   void cgns_open_grid_base_link_file();
   void cgns_open_solution_link_file(const int, const std::string&, const double, bool is_link = false);
   void cgns_write_final_link_file();
+  void cgns_write_final_link_file_comm_group();
   void cgns_write_link_file_for_multiple_files();
   void cgns_close_grid_or_solution_link_file(const int, const std::string&, bool is_cerr = true);
 

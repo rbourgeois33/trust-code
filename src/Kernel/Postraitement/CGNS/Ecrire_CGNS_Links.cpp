@@ -62,7 +62,10 @@ void Ecrire_CGNS::cgns_close_solution_link_files(const double t)
     {
       const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
       std::string fn;
-      fn = baseFile_name_ + "_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+      if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
+        fn = baseFile_name_ + "_XXXX_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+      else
+        fn = baseFile_name_ + "_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
       cgns_close_grid_or_solution_link_file(ind, fn);
     }
 }
@@ -110,9 +113,8 @@ void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std
     {
       if ( Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
         {
-          const std::string fn_new = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + ".grid.cgns"; // file name
-          cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn_new, fileId, false);
-          Cerr << "**** Multiple parallel CGNS files " << baseFile_name_ << "_XXXX.grid.cgns closed !" << finl;
+          cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn /* inutile */, fileId, false);
+          Cerr << "**** Multiple parallel CGNS files " << fn << " closed !" << finl;
         }
       else
         cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId, is_cerr);
@@ -126,6 +128,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
 
   const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
+  const bool enter_group_comm = Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group();
 
   std::string fn;
   True_int& fileId = (ind == 0 ? fileId_ : fileId2_); // XXX : ref
@@ -133,12 +136,22 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   if (is_link)
     fn = !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns"; // file name
   else
-    fn = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+    {
+      if (enter_group_comm)
+        fn = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+      else
+        fn = baseFile_name_ + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+    }
 
-  //unlink(fn.c_str());
+  unlink(fn.c_str());
 
   if (Process::is_parallel())
-    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, true);
+    {
+      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId, enter_group_comm ? false : true);
+
+      if (enter_group_comm)
+        Cerr << "**** Multiple parallel CGNS files " << baseFile_name_ << "_XXXX_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns opened !" << finl;
+    }
   else
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, true);
 
@@ -154,6 +167,10 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
 
   std::string linkfile = baseFile_name_ + ".grid.cgns"; // file name
+
+  if (enter_group_comm)
+    linkfile = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + ".grid.cgns"; // file name
+
   linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
   std::string linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/GridCoordinates/";
@@ -173,8 +190,19 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
     }
 }
 
+void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
+{
+
+}
+
 void Ecrire_CGNS::cgns_write_final_link_file()
 {
+  if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
+    {
+      cgns_write_final_link_file_comm_group();
+      return;
+    }
+
   cgns_init_MPI(true); // set self mpi
 
   if (!Process::me())

@@ -275,7 +275,10 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
 
           if (grid_file_opened_)
             {
-              cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+              if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
+                cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + "_XXXX.grid.cgns", false);
+              else
+                cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
               grid_file_opened_ = false;
             }
 
@@ -905,7 +908,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
 void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temps, const Nom& id_du_champ, const Nom& id_du_domaine, const Nom& localisation, const Nom& nom_dom, const DoubleTab& valeurs)
 {
 #ifdef MPI_
-  const int proc_me = Process::me(), nb_vals = valeurs.dimension(0);
+  const int nb_vals = valeurs.dimension(0);
   const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
   assert(ind > -1);
 
@@ -933,8 +936,17 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   /* 2 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
     {
-      cgsize_t min = -123, max = -123;
       const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+      int proc_me = Process::me();
+      const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
+
+      if (enter_group_comm)
+        {
+          proc_me = TRUST2CGNS.get_proc_me_local_comm();
+          assert (proc_me >= 0);
+        }
+
+      cgsize_t min = -123, max = -123;
 
       if (LOC == "SOM")
         {
