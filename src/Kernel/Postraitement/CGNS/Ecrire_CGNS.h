@@ -55,7 +55,10 @@ private:
   True_int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, cellDim_ = -123;
   True_int fileId2_ = -123; /* cas ou on a 2 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
 
+  // specifique FILE_PER_COMM_GROUP
   int proc_maitre_local_comm_ = -123;
+  std::vector<int> vec_proc_maitre_local_comm_, unique_vec_proc_maitre_local_comm_;
+  std::vector<cgsize_t> sizeId_som_local_comm_, sizeId_elem_local_comm_;
 
   void cgns_fill_field_loc_map(const Domaine&, const std::string&);
 

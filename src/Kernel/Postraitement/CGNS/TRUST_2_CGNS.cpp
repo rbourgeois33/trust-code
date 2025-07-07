@@ -262,7 +262,6 @@ void TRUST_2_CGNS::fill_global_infos()
   MPI_Allgather(&nb_elem, 1, MPI_ENTIER, global_nb_elem_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
   MPI_Allgather(&nb_som, 1, MPI_ENTIER, global_nb_som_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
 
-
   if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
     {
       global_incr_min_elem_.assign(nb_procs, -123 /* default */);

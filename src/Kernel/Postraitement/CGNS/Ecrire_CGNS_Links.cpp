@@ -15,6 +15,7 @@
 
 #include <Comm_Group_MPI.h>
 #include <communications.h>
+#include <unordered_set>
 #include <Ecrire_CGNS.h>
 #include <Domaine.h>
 #include <unistd.h>
@@ -192,7 +193,127 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
 
 void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
 {
+  if (vec_proc_maitre_local_comm_.empty())
+    {
+      vec_proc_maitre_local_comm_.assign(Process::nproc(), -123 /* default */);
+      MPI_Allgather(&proc_maitre_local_comm_, 1, MPI_ENTIER, vec_proc_maitre_local_comm_.data(), 1, MPI_ENTIER, Comm_Group_MPI::get_trio_u_world());
 
+      std::unordered_set<int> seen;
+
+      for (int val : vec_proc_maitre_local_comm_)
+        if (seen.insert(val).second)
+          unique_vec_proc_maitre_local_comm_.push_back(val); // si val pas dedans
+
+      std::vector<cgsize_t> sizeId_som_local_comm_tmp, sizeId_elem_local_comm_tmp;
+
+      sizeId_som_local_comm_tmp.assign(Process::nproc(), -123 /* default */);
+      sizeId_elem_local_comm_tmp.assign(Process::nproc(), -123 /* default */);
+
+      MPI_Allgather(&sizeId_[0], 1, MPI_LONG, sizeId_som_local_comm_tmp.data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      MPI_Allgather(&sizeId_[1], 1, MPI_LONG, sizeId_elem_local_comm_tmp.data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+
+      const int nb_grps = static_cast<int>(unique_vec_proc_maitre_local_comm_.size());
+      sizeId_som_local_comm_.assign(nb_grps, -123 /* default */);
+      sizeId_elem_local_comm_.assign(nb_grps, -123 /* default */);
+
+      for (int i = 0; i < nb_grps; i++)
+        {
+          int proc_grp = unique_vec_proc_maitre_local_comm_[i];
+          sizeId_som_local_comm_[i] = sizeId_som_local_comm_tmp[proc_grp];
+          sizeId_elem_local_comm_[i] = sizeId_elem_local_comm_tmp[proc_grp];
+        }
+    }
+
+  if (!Process::me())
+    {
+      const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
+      const int nb_grps = static_cast<int>(unique_vec_proc_maitre_local_comm_.size());
+
+      for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
+        {
+          const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
+          const std::string& LOC = itr->first;
+
+          int& fileId = (ind == 0 ? fileId_ : fileId2_);
+          std::string fn = !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns";
+
+          unlink(fn.c_str());
+          cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, true);
+
+          if (cg_base_write(fileId, baseZone_name_.c_str(), cellDim_, Objet_U::dimension, &baseId_[0]) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_base_write !" << finl, TRUST_CGNS_ERROR();
+
+          if (cg_biter_write(fileId, baseId_[0], "TimeIterValues", time_post_.size()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_biter_write !" << finl, TRUST_CGNS_ERROR();
+
+          if (cg_goto(fileId, baseId_[0], "BaseIterativeData_t", 1, "end") != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
+
+          cgsize_t nuse = static_cast<cgsize_t>(time_post_.size());
+          if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nuse, time_post_.data()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
+
+          if (cg_simulation_type_write(fileId, baseId_[0], CGNS_ENUMV(TimeAccurate)) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
+
+          for (int gid = 0; gid < nb_grps; gid++)
+            {
+              int proc_grp = unique_vec_proc_maitre_local_comm_[gid];
+              std::string file_group_id = Nom(baseFile_name_).nom_me(proc_grp).getString();
+              file_group_id = TRUST_2_CGNS::remove_slash_linkfile(file_group_id);
+
+              std::string zone_name = Nom("Zone").nom_me(proc_grp).getString();
+              std::string linkfile = file_group_id + ".grid.cgns";
+
+              cgsize_t isize[3][1];
+              isize[0][0] = sizeId_som_local_comm_[gid];
+              isize[1][0] = sizeId_elem_local_comm_[gid];
+              isize[2][0] = 0;
+
+              int zoneId_tmp = -1;
+              if (cg_zone_write(fileId, baseId_[0], zone_name.c_str(), isize[0], CGNS_ENUMV(Unstructured), &zoneId_tmp) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
+
+              std::string linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/GridCoordinates/";
+
+              if (cg_goto(fileId, baseId_[0], "Zone_t", gid + 1, "end") != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
+
+              if (cg_link_write("GridCoordinates", linkfile.c_str(), linkpath.c_str()) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_link_write GridCoordinates !" << finl, TRUST_CGNS_ERROR();
+
+              for (auto& con : connectname_)
+                {
+                  linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/" + con + "/";
+                  if (cg_link_write(con.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
+                    Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_link_write connectivity " << con << finl, TRUST_CGNS_ERROR();
+                }
+
+              for (auto& itr_t : time_post_)
+                {
+                  std::string solname = "FlowSolution" + cgns_helper_.convert_double_to_string(itr_t) + "_" + LOC;
+                  linkfile = file_group_id + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns";
+                  linkpath = "/" + baseZone_name_ + "/" + baseZone_name_ + "/" + solname + "/";
+
+                  if (cg_link_write(solname.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
+                    Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_link_write FlowSolution " << solname << finl, TRUST_CGNS_ERROR();
+                }
+
+              cgsize_t idata[2] = {CGNS_STR_SIZE, static_cast<cgsize_t>(time_post_.size())};
+              if (cg_ziter_write(fileId, baseId_[0], zoneId_tmp, "ZoneIterativeData") != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_ziter_write !" << finl, TRUST_CGNS_ERROR();
+
+              if (cg_goto(fileId, baseId_[0], "Zone_t", gid + 1, "ZoneIterativeData_t",  1, "end") != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
+
+              const char* solname = (LOC == "SOM") ? solname_som_.c_str() : solname_elem_.c_str();
+              if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname) != CG_OK)
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
+            }
+
+          cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId, true);
+        }
+    }
 }
 
 void Ecrire_CGNS::cgns_write_final_link_file()
