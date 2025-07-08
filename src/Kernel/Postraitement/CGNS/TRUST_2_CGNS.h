@@ -32,7 +32,7 @@ class TRUST_2_CGNS
 {
 public:
   TRUST_2_CGNS() { }
-  void associer_domaine_TRUST(const Domaine *, const DoubleTab&, const IntTab&, const bool);
+  void associer_domaine_TRUST(const Domaine *, const Domaine_dis_base*, const DoubleTab&, const IntTab&, const bool);
   void fill_coords(std::vector<double>&, std::vector<double>&, std::vector<double>&);
   CGNS_TYPE convert_elem_type(const Motcle&);
 
@@ -103,6 +103,7 @@ public:
   static std::string remove_slash_linkfile(std::string&);
 
 private:
+  OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.
   OBS_PTR(Domaine) dom_trust_;
   OBS_PTR(DoubleTab) sommets_;
   OBS_PTR(IntTab) elems_;

@@ -26,6 +26,7 @@ class Ecrire_CGNS
 {
 #ifdef HAS_CGNS
 public:
+  void cgns_associer_domaine_dis(const Domaine_dis_base& );
   void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_base_name(const Nom& );
@@ -38,6 +39,8 @@ public:
 
 private:
   // Attributes
+  OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.
+
   bool solname_elem_written_ = false, solname_som_written_ = false;
   bool postraiter_domaine_ = false;
   bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */

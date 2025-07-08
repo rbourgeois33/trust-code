@@ -115,9 +115,10 @@ int TRUST_2_CGNS::get_index_nom_vector(const std::vector<Nom>& vect, const Nom& 
   return ind;
 }
 
-void TRUST_2_CGNS::associer_domaine_TRUST(const Domaine * dom, const DoubleTab& som, const IntTab& elem, const bool post_dom)
+void TRUST_2_CGNS::associer_domaine_TRUST(const Domaine * dom, const Domaine_dis_base* dom_dis, const DoubleTab& som, const IntTab& elem, const bool post_dom)
 {
   if (dom) dom_trust_ = *dom;
+  if (dom_dis) domaine_dis_ = *dom_dis;
   sommets_ = som;
   elems_ = elem;
   postraiter_domaine_ = post_dom;
@@ -558,8 +559,10 @@ CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
 int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::vector<cgsize_t>& eoff, int decal)
 {
   assert (dom_trust_.non_nul());
-  const Nom dom_poly("Domaine_PolyMAC");
-  const Domaine_dis_base& domaine_dis = Domaine_dis_cache::Build_or_get_poly_post(dom_poly, dom_trust_.valeur());
+
+  const Domaine_dis_base& domaine_dis = domaine_dis_.non_nul() ? domaine_dis_.valeur() :
+                                        Domaine_dis_cache::Build_or_get_poly_post(Nom("Domaine_PolyMAC"), dom_trust_.valeur());
+
   const Domaine_VF& vf = ref_cast (Domaine_VF, domaine_dis);
   const IntTab& ef = vf.elem_faces();
 
@@ -601,8 +604,9 @@ int TRUST_2_CGNS::convert_connectivity_ngon(std::vector<cgsize_t>& econ, std::ve
   assert (dom_trust_.non_nul());
   if (is_polyedre)
     {
-      const Nom dom_poly("Domaine_PolyMAC");
-      const Domaine_dis_base& domaine_dis = Domaine_dis_cache::Build_or_get_poly_post(dom_poly, dom_trust_.valeur());
+      const Domaine_dis_base& domaine_dis = domaine_dis_.non_nul() ? domaine_dis_.valeur() :
+                                            Domaine_dis_cache::Build_or_get_poly_post(Nom("Domaine_PolyMAC"), dom_trust_.valeur());
+
       const Domaine_VF& vf = ref_cast(Domaine_VF, domaine_dis);
       const IntTab& fs = vf.face_sommets();
 

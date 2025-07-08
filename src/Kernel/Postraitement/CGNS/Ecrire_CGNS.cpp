@@ -26,6 +26,11 @@ void Ecrire_CGNS::cgns_set_base_name(const Nom& fn)
   baseFile_name_ = fn.getString();
 }
 
+void Ecrire_CGNS::cgns_associer_domaine_dis(const Domaine_dis_base& domaine_dis_base)
+{
+  domaine_dis_ = domaine_dis_base;
+}
+
 void Ecrire_CGNS::cgns_init_MPI(bool is_self)
 {
 #ifdef MPI_
@@ -305,7 +310,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
 {
   /* 1 : Instance of TRUST_2_CGNS */
   TRUST_2_CGNS TRUST2CGNS;
-  TRUST2CGNS.associer_domaine_TRUST(domaine, les_som, les_elem, postraiter_domaine_);
+  TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
   doms_written_.push_back(nom_dom);
 
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
@@ -458,7 +463,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
   /* 1 : Instance of TRUST_2_CGNS */
   T2CGNS_.push_back(TRUST_2_CGNS());
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_.back();
-  TRUST2CGNS.associer_domaine_TRUST(domaine, les_som, les_elem, postraiter_domaine_);
+  TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr,les_som, les_elem, postraiter_domaine_);
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
 
   /* 2 : Fill coords */
@@ -730,7 +735,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   /* 1 : Instance of TRUST_2_CGNS */
   T2CGNS_.push_back(TRUST_2_CGNS());
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_.back();
-  TRUST2CGNS.associer_domaine_TRUST(domaine, les_som, les_elem, postraiter_domaine_);
+  TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
 
   /* 2 : Fill coords */
