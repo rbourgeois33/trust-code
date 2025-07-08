@@ -269,8 +269,12 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
 #ifdef MPI_
   assert(dom_trust_.non_nul());
 
+  const bool by_comm_grp = (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP
+                            && PE_Groups::has_user_defined_group() && !postraiter_domaine_ );
+
   int decal = 0; // a modifier plus tard !!!
-  const int nb_procs = Process::nproc();
+  const int nb_procs = by_comm_grp ? nb_proc_local_comm_ : Process::nproc();
+
   par_in_zone_ = (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_) ? true : false;
 
   if (is_polyedre)
@@ -285,9 +289,17 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
       global_nb_face_som_.assign(nb_procs, -123 /* default */);
       global_nb_elem_face_.assign(nb_procs, -123 /* default */);
 
-
-      MPI_Allgather(&nb_fs, 1, MPI_ENTIER, global_nb_face_som_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
-      MPI_Allgather(&nb_ef, 1, MPI_ENTIER, global_nb_elem_face_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+      if (by_comm_grp)
+        {
+          const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
+          MPI_Allgather(&nb_fs, 1, MPI_ENTIER, global_nb_face_som_.data(), 1, MPI_ENTIER, comm_loc.get_mpi_comm());
+          MPI_Allgather(&nb_ef, 1, MPI_ENTIER, global_nb_elem_face_.data(), 1, MPI_ENTIER, comm_loc.get_mpi_comm());
+        }
+      else
+        {
+          MPI_Allgather(&nb_fs, 1, MPI_ENTIER, global_nb_face_som_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+          MPI_Allgather(&nb_ef, 1, MPI_ENTIER, global_nb_elem_face_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+        }
 
 
       if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
@@ -335,8 +347,17 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
       global_nb_face_som_offset_.assign(nb_procs, -123 /* default */);
       global_nb_elem_face_offset_.assign(nb_procs, -123 /* default */);
 
-      MPI_Allgather(&nb_fs_offset, 1, MPI_ENTIER, global_nb_face_som_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
-      MPI_Allgather(&nb_ef_offset, 1, MPI_ENTIER, global_nb_elem_face_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+      if (by_comm_grp)
+        {
+          const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
+          MPI_Allgather(&nb_fs_offset, 1, MPI_ENTIER, global_nb_face_som_offset_.data(), 1, MPI_ENTIER, comm_loc.get_mpi_comm());
+          MPI_Allgather(&nb_ef_offset, 1, MPI_ENTIER, global_nb_elem_face_offset_.data(), 1, MPI_ENTIER, comm_loc.get_mpi_comm());
+        }
+      else
+        {
+          MPI_Allgather(&nb_fs_offset, 1, MPI_ENTIER, global_nb_face_som_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+          MPI_Allgather(&nb_ef_offset, 1, MPI_ENTIER, global_nb_elem_face_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+        }
 
       if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
         {
@@ -377,7 +398,13 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
       // incr sur nb_elem tot offset
       global_nb_elem_som_offset_.assign(nb_procs, -123 /* default */);
 
-      MPI_Allgather(&nb_es_offset, 1, MPI_ENTIER, global_nb_elem_som_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
+      if (by_comm_grp)
+        {
+          const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
+          MPI_Allgather(&nb_es_offset, 1, MPI_ENTIER, global_nb_elem_som_offset_.data(), 1, MPI_ENTIER, comm_loc.get_mpi_comm());
+        }
+      else
+        MPI_Allgather(&nb_es_offset, 1, MPI_ENTIER, global_nb_elem_som_offset_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
 
       if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
         {
