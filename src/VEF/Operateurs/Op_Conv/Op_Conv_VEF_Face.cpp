@@ -153,14 +153,18 @@ void Op_Conv_VEF_Face::completer()
 //
 ////////////////////////////////////////////////////////////////////
 
-DoubleTab& Op_Conv_VEF_Face::ajouter(const DoubleTab& transporte,
-                                     DoubleTab& resu) const
+DoubleTab& Op_Conv_VEF_Face::ajouter(const DoubleTab& transporte, DoubleTab& resu) const
+{
+  const Champ_Inc_base& la_vitesse_aux_faces = vitesse();
+  return ajouter_gen(transporte, la_vitesse_aux_faces, resu);
+}
+
+DoubleTab& Op_Conv_VEF_Face::ajouter_gen(const DoubleTab& transporte, const Champ_Inc_base& la_vitesse, DoubleTab& resu) const
 {
 
   assert((type_op==amont) || (type_op==muscl) || (type_op==centre));
   const Domaine_Cl_VEF& domaine_Cl_VEF = la_zcl_vef.valeur();
   const Domaine_VEF& domaine_VEF = ref_cast(Domaine_VEF, le_dom_vef.valeur());
-  const Champ_Inc_base& la_vitesse=vitesse();
   const DoubleTab& vitesse_face_absolue=la_vitesse.valeurs();
   const DoubleVect& porosite_face = equation().milieu().porosite_face();
 
@@ -750,7 +754,7 @@ DoubleTab& Op_Conv_VEF_Face::ajouter(const DoubleTab& transporte,
                   int itypcl = (rang==-1 ? 0 : domaine_Cl_VEF.type_elem_Cl(rang));
 
                   // calcul de vc (a l'intersection des 3 facettes) vc vs vsom proportionnelles a la porosite
-                  type_elemvef.calcul_vc(face,vc,vs,vsom,vitesse(),itypcl,porosite_face);
+                  type_elemvef.calcul_vc(face, vc, vs, vsom, la_vitesse, itypcl, porosite_face);
 
                   // calcul de xc (a l'intersection des 3 facettes) necessaire pour muscl3
                   if (ordre_==3)
@@ -1025,11 +1029,15 @@ KOKKOS_INLINE_FUNCTION void convbisimplicite_dec(const double psc_, const int nu
 
 void Op_Conv_VEF_Face::ajouter_contribution(const DoubleTab& tab_transporte, Matrice_Morse& matrice_morse) const
 {
+  const Champ_Inc_base& v = vitesse();
+  ajouter_contribution_gen(tab_transporte, v, matrice_morse);
+}
+
+void Op_Conv_VEF_Face::ajouter_contribution_gen(const DoubleTab& tab_transporte, const Champ_Inc_base& la_vitesse, Matrice_Morse& matrice_morse) const
+{
   modifier_matrice_pour_periodique_avant_contribuer(matrice_morse,equation());
   const Domaine_Cl_VEF& domaine_Cl_VEF = la_zcl_vef.valeur();
   const Domaine_VEF& domaine_VEF = le_dom_vef.valeur();
-  const Champ_Inc_base& la_vitesse=vitesse();
-
   const Domaine& domaine = domaine_VEF.domaine();
   const Elem_VEF_base& type_elem = domaine_VEF.type_elem();
   const int nfa7 = type_elem.nb_facette();

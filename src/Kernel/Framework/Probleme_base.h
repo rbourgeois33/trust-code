@@ -209,8 +209,10 @@ public:
     Motcle mot(nom_correlation);
     return (int)correlations_.count(mot.getString());
   }
+  bool isALE() const { return isALE_;}
 
 protected :
+  bool isALE_ = false;
 
   void warn_old_syntax();
   virtual void typer_lire_milieu(Entree& is) ;
