@@ -33,26 +33,21 @@ void Ecrire_CGNS::cgns_init_MPI(bool is_self)
   if ((Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_) || is_self)
     {
       if (cgp_mpi_comm(/* XXX */ MPI_COMM_SELF) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- MPI_COMM_SELF !" << finl, TRUST_CGNS_ERROR();
     }
-  else if (Option_CGNS::FILE_PER_COMM_GROUP && !postraiter_domaine_)
+  else
     {
-      if (PE_Groups::has_user_defined_group())
+      if (Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_)
         {
           const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
           if (cgp_mpi_comm(comm_loc.get_mpi_comm()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- Comm_Group_MPI !" << finl, TRUST_CGNS_ERROR();
         }
       else
         {
           if (cgp_mpi_comm(/* XXX MPI_COMM_WORLD */ Comm_Group_MPI::get_trio_u_world()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- trio_u_world !" << finl, TRUST_CGNS_ERROR();
         }
-    }
-  else
-    {
-      if (cgp_mpi_comm(/* XXX MPI_COMM_WORLD */ Comm_Group_MPI::get_trio_u_world()) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
     }
 
   /*
@@ -761,13 +756,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
 
   TRUST2CGNS.fill_global_infos(); // XXX
 
-  int proc_me = Process::me();
   const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
-  if (enter_group_comm)
-    {
-      proc_me = TRUST2CGNS.get_proc_me_local_comm();
-      assert (proc_me >= 0);
-    }
+  int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
 
   if (cgns_type_elem == CGNS_ENUMV(NGON_n)) /*cas polygone/polyedre */
     TRUST2CGNS.fill_global_infos_poly(is_polyedre);
@@ -937,14 +927,8 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   if (nb_vals > 0) // this proc will write !
     {
       const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
-      int proc_me = Process::me();
       const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
-
-      if (enter_group_comm)
-        {
-          proc_me = TRUST2CGNS.get_proc_me_local_comm();
-          assert (proc_me >= 0);
-        }
+      const int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
 
       cgsize_t min = -123, max = -123;
 
