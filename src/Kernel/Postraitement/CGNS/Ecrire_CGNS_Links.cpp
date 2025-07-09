@@ -243,7 +243,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
           if (cg_base_write(fileId, baseZone_name_.c_str(), cellDim_, Objet_U::dimension, &baseId_[0]) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
-          if (cg_biter_write(fileId, baseId_[0], "TimeIterValues", time_post_.size()) != CG_OK)
+          if (cg_biter_write(fileId, baseId_[0], "TimeIterValues", static_cast<int>(time_post_.size())) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_biter_write !" << finl, TRUST_CGNS_ERROR();
 
           if (cg_goto(fileId, baseId_[0], "BaseIterativeData_t", 1, "end") != CG_OK)
