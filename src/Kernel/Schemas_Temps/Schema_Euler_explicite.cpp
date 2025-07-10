@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -56,7 +56,14 @@ int Schema_Euler_explicite::faire_un_pas_de_temps_eqn_base(Equation_base& eqn)
   // Un+1=Un+dt_*dU/dt
   futur = dudt;
   futur *= dt_;
-  futur += present;
+  if (eqn.domaine_dis().domaine().deformable())
+    {
+      DoubleTab present_copy(present);
+      eqn.domaine_dis().domaine().apply_old_to_new_volume_scaling(present_copy);
+      futur += present_copy;
+    }
+  else
+    futur += present;
 
   eqn.domaine_Cl_dis().imposer_cond_lim(eqn.inconnue(), temps_courant() + pas_de_temps());
   update_critere_statio(dudt, eqn);

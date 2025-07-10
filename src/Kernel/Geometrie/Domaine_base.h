@@ -65,6 +65,10 @@ public:
   virtual void set_dt(double& dt_) {}
   virtual void mettre_a_jour(double temps, Domaine_dis_base&, Probleme_base&) {}
   virtual void update_after_post(double temps) {}
+  int mesh_update_required() const { return mesh_update_required_; }
+  virtual const DoubleVect& old_volumes_entrelaces() const { throw; }
+  virtual const DoubleVect& old_volumes() const { throw; }
+  virtual void apply_old_to_new_volume_scaling(DoubleTab& tab) { }
   virtual bool getUpdateTheGrid() {return true;}
   virtual void setUpdateTheGrid(bool) {}
 
@@ -90,6 +94,7 @@ public:
   inline bool& deformable() {   return deformable_;  }
   inline void set_fichier_lu(Nom& nom)  {    fichier_lu_=nom;   }
   inline const Nom& get_fichier_lu() const  {   return fichier_lu_;  }
+  virtual void ajouter_correctif_volumique(const DoubleTab&, const DoubleTab&, double, DoubleTab& ) const {}
 
 protected:
   /// Domaine name
@@ -108,6 +113,7 @@ protected:
   /// Volume total du domaine (somme sur tous les processeurs)
   double volume_total_;
   Champs_compris champs_compris_;
+  bool mesh_update_required_ = false;
 };
 
 
