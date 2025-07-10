@@ -155,7 +155,6 @@ public :
   virtual const Champ_Inc_base& rho_la_vitesse() const;
   inline Operateur_Conv& get_terme_convectif() { return terme_convectif; }
 
-  virtual void div_ale_derivative( DoubleTrav& derivee_ale, double timestep, DoubleTab& derivee, DoubleTrav& secmemP );
   virtual void updateFluidForce(DoubleTab&) {}
   // Retrieve true if implicit coupling with another code
   // required to perform filtering of pressure Champ_P1_isoP1Bull during sub-iterations of the implicit loop
