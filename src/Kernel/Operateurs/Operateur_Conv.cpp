@@ -14,6 +14,7 @@
 *****************************************************************************/
 
 #include <Discretisation_base.h>
+#include <Op_Conv_negligeable.h>
 #include <Operateur_Conv.h>
 #include <Perf_counters.h>
 #include <Champ_base.h>
@@ -50,10 +51,10 @@ Entree& Operateur_Conv::readOn(Entree& is)
       exit();
     }
 
-  if(mon_equation->le_nom().contient("ALE") && (valeur().que_suis_je()!="Op_Conv_ALE_VEF") )
+  if (!sub_type(Op_Conv_negligeable, valeur()) && mon_equation->domaine_dis().domaine().que_suis_je().contient("ALE") && !valeur().que_suis_je().contient("ALE"))
     {
       Cerr<<" You should use the ALE convection operator within the Navier_Stokes_standard_ALE/Navier_Stokes_Turbulent_ALE equation "<<finl;
-      Cerr<<" Exemple:  convection { ALE { muscl } }  "<<finl;
+      Cerr<<" Exemple:  convection { ALE amont }  "<<finl;
       Process::exit();
     }
 
