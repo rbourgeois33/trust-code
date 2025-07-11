@@ -75,7 +75,7 @@ void DP_Impose_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secme
       for (i = 0; i < num_faces.size(); i++)
         if ((f = num_faces(i)) < dom.nb_faces())
           for (d = 0; d < D; d++)
-            secmem(f, d) += nf(f, d) * pf(f) * sgn(i) * dp_regul * fac_rho;
+            secmem(f, d) += nf(f, d) * pf(f) * sgn(i) * fac_regul_ * fac_rho;
     }
   else
     {
