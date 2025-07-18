@@ -176,7 +176,7 @@ public:
    * @param count_increment is the count increment. If not specified, then it is equal to 1
    * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
    */
-  void end_count(const std::string& custom_count_name, int count_increment=1, int quantity_increment=0);
+  void end_count(const std::string& custom_count_name, int count_increment=1, long int quantity_increment=0);
 
   /*! @brief End the count of a counter and update the counter values
    *
@@ -184,7 +184,7 @@ public:
    * @param count_increment is the count increment. If not specified, then it is equal to 1
    * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
    */
-  void end_count(const STD_COUNTERS& std_cnt, int count_increment=1, int quantity_increment=0);
+  void end_count(const STD_COUNTERS& std_cnt, int count_increment=1, long int quantity_increment=0);
 
   /*! @brief Stop all counters, has to be called on every processor simultaneously
    *

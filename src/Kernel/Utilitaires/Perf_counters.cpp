@@ -59,7 +59,7 @@ struct Counter
 
   void begin_count_(int counter_level, time_point t);
 
-  void end_count_(int count_increment, int quantity_increment, time_point t_stop);
+  void end_count_(int count_increment, long int quantity_increment, time_point t_stop);
 
   inline void set_parent(Counter * parent_counter) { parent_ = parent_counter;}
 
@@ -131,7 +131,7 @@ void Counter::begin_count_(int counter_level, time_point t)
     }
 }
 
-void Counter::end_count_(int count_increment, int quantity_increment, time_point t_stop)
+void Counter::end_count_(int count_increment, long int quantity_increment, time_point t_stop)
 {
   if (!is_running_)
     Process::exit("Last open_time was not properly set"+ description_);
@@ -221,8 +221,8 @@ public:
   void create_custom_counter_impl(std::string counter_description, int counter_level, std::string counter_family, bool is_comm, bool is_gpu);
   void begin_count_impl(const STD_COUNTERS& std_cnt, int counter_lvl);
   void begin_count_impl(const std::string& custom_count_name, int counter_lvl);
-  void end_count_impl(const STD_COUNTERS& std_cnt, int count_increment, int quantity_increment);
-  void end_count_impl(const std::string& custom_count_name, int count_increment, int quantity_increment);
+  void end_count_impl(const STD_COUNTERS& std_cnt, int count_increment, long int quantity_increment);
+  void end_count_impl(const std::string& custom_count_name, int count_increment, long int quantity_increment);
   void stop_counters_impl();
   void restart_counters_impl();
   void reset_counters_impl();
@@ -671,7 +671,7 @@ void Perf_counters::Impl::print_performance_to_csv(const std::string& message)
   int level; ///< Level of details of the counter
   bool is_comm; ///< Equal to 1 if the counter is a communication counter, 0 otherwise
   int count;  ///< number of time the counter is open and closed
-  int quantity, min_quantity=0, max_quantity=0; ///< A custom quantity which depends on the counter. Used for example to compute the bandwidth
+  long int quantity, min_quantity=0, max_quantity=0; ///< A custom quantity which depends on the counter. Used for example to compute the bandwidth
   double time,time_alone,min_time_alone=0.,max_time_alone=0.,SD_time_alone=0.0;
   double percent_time=0., min_time=0.0, max_time=0.0; ///< Percent of the total time used in the method tracked by the counter
   double SD_time=0.0, SD_quantity=0.0; ///< the standard dev of all the prev vars
@@ -875,7 +875,7 @@ void Perf_counters::Impl::print_performance_to_csv(const std::string& message)
  * The three parameters are updated by their mean value over the processors
  * @return an array of array that contains the min, max, average and standard deviation over the processors of the three parameters of the function
  */
-inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time, int& quantity, int& count)
+inline std::array< std::array<double,4> ,3> compute_min_max_avg_sd(double& time, long int& quantity, int& count)
 {
   double qty,cnt,min,max,avg,sd ;
   qty=static_cast<double>(quantity);
@@ -940,7 +940,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   int nb_procs =  Process::nproc();
   double allreduce_peak_perf = compute_allreduce_peak();
   double comm_allreduce_t = 0.0, comm_sendrecv_t = 0.0;
-  int comm_allreduce_q = 0.0,comm_sendrecv_q = 0.0,comm_allreduce_c = 0,comm_sendrecv_c = 0;
+  long int comm_allreduce_q = 0.0,comm_sendrecv_q = 0.0;
+  int comm_allreduce_c = 0,comm_sendrecv_c = 0;
   std::array< std::array<double,4> ,3> min_max_avg_sd_t_q_c_sendrecv_comm ;
   for (std::array<double,4>& arr: min_max_avg_sd_t_q_c_sendrecv_comm)
     for (double & d : arr)
@@ -1067,14 +1068,14 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   // Estimates bandwidth
   double bandwidth = 1.1e30;
   if (c_mpi_sendrecv.total_time_.count()>0)
-    bandwidth = c_mpi_sendrecv.quantity_/ (c_mpi_sendrecv.total_time_.count() + MINFLOAT);
+    bandwidth = static_cast<double>(c_mpi_sendrecv.quantity_)/ (c_mpi_sendrecv.total_time_.count() + MINFLOAT);
 
   double max_bandwidth = Process::mp_max(bandwidth);
   // Compute wait time due to synch
   // We take the total communication time and we substract the theoretical tume computed with allreduce_peak_perf and max bandwidth
   double theoric_comm_time = 0.0;
   if(max_bandwidth)
-    theoric_comm_time = comm_allreduce_c * allreduce_peak_perf + comm_sendrecv_c / max_bandwidth;
+    theoric_comm_time = static_cast<double>(comm_allreduce_c) * allreduce_peak_perf + static_cast<double>(comm_sendrecv_c) / max_bandwidth;
   // Je suppose que le temps minimum pour realiser les communications sur un proc
   //  depend du processeur qui a le plus de donnees a envoyer:
   theoric_comm_time = Process::mp_max(theoric_comm_time);
@@ -1255,7 +1256,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
         double max_time = c_.total_time_.count();
         double calls = c_.count_/nb_ts;
         double t_ts = max_time/nb_ts;
-        double bw = c_.quantity_/(1024.*1024.*1024*max_time);
+        double bw = static_cast<double>(c_.quantity_)/(1024.*1024.*1024*max_time);
         double percent = 100*max_time/time_tl;
         perfs_GPU << std::left << std::setw(counter_description_width) << str <<separator << std::setw(time_per_step_width) << t_ts<<separator  << std::setw(percent_loop_time_width) <<  percent <<separator<< std::setw(count_per_ts_width) << calls <<separator;
         if (bw >1.0e-10)
@@ -1338,10 +1339,10 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                 perfs_IO <<  std::left <<std::setw(number_width) << allreduce_peak_perf << std::endl;
               perfs_IO <<  std::left <<std::setw(text_width) << "Network maximum bandwidth on all processors: "  <<  std::left <<std::setw(number_width) << max_bandwidth * 1.e-6 << "MB/s"  << std::endl ;
               if (nb_ts>0)
-                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc() / nb_ts * 1e-6 << "MB/time step"  << std::endl;
+                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << static_cast<double>(comm_sendrecv_q) * Process::nproc() / nb_ts * 1e-6 << "MB/time step"  << std::endl;
               else
-                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q * Process::nproc()* 1e-6 << "MB"  << std::endl;
-              perfs_IO <<  std::left <<std::setw(text_width) << "Average message size: " <<  std::left <<std::setw(number_width) << comm_sendrecv_q / comm_sendrecv_c* 1e-3 << "kB" << std::endl;
+                perfs_IO <<  std::left <<std::setw(text_width) << "Total network traffic: " <<  std::left <<std::setw(number_width) << static_cast<double>(comm_sendrecv_q) * Process::nproc()* 1e-6 << "MB"  << std::endl;
+              perfs_IO <<  std::left <<std::setw(text_width) << "Average message size: " <<  std::left <<std::setw(number_width) << static_cast<double>(comm_sendrecv_q) / static_cast<double>(comm_sendrecv_c)* 1e-3 << "kB" << std::endl;
               perfs_IO <<  std::left <<std::setw(text_width) << "Min waiting time: "  <<  std::left <<std::setw(number_width) << min_wait_fraction << "% of total time"<< std::endl;;
               perfs_IO <<  std::left <<std::setw(text_width) << "Max waiting time: "  <<  std::left <<std::setw(number_width) << max_wait_fraction<< "% of total time"<< std::endl;;
               perfs_IO <<  std::left <<std::setw(text_width) << "Avg waiting time: " <<  std::left <<std::setw(number_width) << avg_wait_fraction<< "% of total time"<< std::endl;;
@@ -1418,7 +1419,7 @@ void Perf_counters::Impl::begin_count_impl(const std::string& custom_count_name,
  * @param count_increment is the count increment. If not specified, then it is equal to 1
  * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
  */
-void Perf_counters::Impl::end_count_impl(const STD_COUNTERS& std_cnt, int count_increment, int quantity_increment)
+void Perf_counters::Impl::end_count_impl(const STD_COUNTERS& std_cnt, int count_increment, long int quantity_increment)
 {
   if (!counters_stop_)
     {
@@ -1438,7 +1439,7 @@ void Perf_counters::Impl::end_count_impl(const STD_COUNTERS& std_cnt, int count_
  * @param count_increment is the count increment. If not specified, then it is equal to 1
  * @param quantity_increment is the increment of custom variable quantity. If not specified, it is set to 0.
  */
-void Perf_counters::Impl::end_count_impl(const std::string& custom_count_name, int count_increment, int quantity_increment)
+void Perf_counters::Impl::end_count_impl(const std::string& custom_count_name, int count_increment, long int quantity_increment)
 {
   if (!counters_stop_)
     {
@@ -1769,12 +1770,12 @@ void Perf_counters::begin_count(const std::string& custom_count_name, int counte
   pimpl_->begin_count_impl(custom_count_name,counter_lvl);
 }
 
-void Perf_counters::end_count(const std::string& custom_count_name, int count_increment, int quantity_increment)
+void Perf_counters::end_count(const std::string& custom_count_name, int count_increment, long int quantity_increment)
 {
   pimpl_->end_count_impl(custom_count_name,count_increment,quantity_increment);
 }
 
-void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, int quantity_increment)
+void Perf_counters::end_count(const STD_COUNTERS& std_cnt, int count_increment, long int quantity_increment)
 {
   pimpl_->end_count_impl(std_cnt,count_increment,quantity_increment);
 }
