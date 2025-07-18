@@ -22,7 +22,7 @@
 #include <MD_Vector_std.h>
 #include <MD_Vector_composite.h>
 #include <Device.h>
-#include <stat_counters.h>
+#include <Perf_counters.h>
 #include <Array_tools.h>
 #include <TRUSTTrav.h>
 
@@ -171,7 +171,7 @@ int Solv_cuDSS::resoudre_systeme(const Matrice_Base& a, const DoubleVect& bvect,
     }
 
   /* analysis and facto can be only done when the matrix changes */
-  statistiques().begin_count(gpu_library_counter_);
+  statistics().begin_count(STD_COUNTERS::gpu_library);
   if ((nouvelle_matrice()||first_solve))
     {
       /* Symbolic factorization x, and b are unused*/
@@ -203,7 +203,7 @@ int Solv_cuDSS::resoudre_systeme(const Matrice_Base& a, const DoubleVect& bvect,
   CUDSS_CALL_AND_CHECK(cudssExecute(handle, CUDSS_PHASE_SOLVE, solverConfig, solverData,
                                     A, x, b), status, "cudssExecute for solve");
   cudaStreamSynchronize(nullptr); // Important factorization and solve phases are asynchronous
-  statistiques().end_count(gpu_library_counter_);
+  statistics().end_count(STD_COUNTERS::gpu_library);
 
   /*compute error in debug mode */
 #ifndef NDEBUG
