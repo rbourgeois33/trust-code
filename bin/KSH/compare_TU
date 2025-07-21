@@ -36,27 +36,29 @@ check()
       ecart=`echo $ref $new | awk '// {printf("%2.1f%\n",-2*($1-$2)/($1+$2)*100)}'`
       if [ $OK = 0 ]
       then
-         sdiff $1.TU.ref_$2 $1.TU
+         sdiff -w 200 $1.TU.ref_$2 $1.TU
          echo "================================"
          echo "Performance is KO ($ecart) $new s > $ref s (reference) for $1 on $2"
          echo "================================"
-         exit -1
       elif [ $OK = 1 ]
       then
          echo "Performance is OK ($ecart) $new s - $ref s (reference) for $1 on $2"
       else
          echo "Performance reference isn't up to date ($ecart) $new s < $ref s (reference) for $1 on $2"
-         #echo "With: cp `pwd`/$1.TU `find $project_directory/tests/Reference -name $1.TU.ref_$2`"
+         UPDATE_REFERENCE=1
+      fi
+      if [ "$UPDATE_REFERENCE" = 1 ]
+      then
          if [ "$project_directory" != "" ]
          then
             cp `pwd`/$1.TU `find $project_directory/tests/Reference -name $1.TU.ref_$2`
          else
             cp `pwd`/$1.TU `find $TRUST_ROOT/tests/Reference -name $1.TU.ref_$2`
          fi
-         echo "$1.TU.ref_$2" updated !
-         exit 0
+         echo "$1.TU.ref_$2" updated !      
       fi
-   done
+      [ $OK = 0 ] && exit -1
+   done   
 }
 # ToDo: prevoir dans le script trust un lock avant le lancement
 # On compare les performances avec le fichier jdd.TU.ref_$HOST_BUILD
