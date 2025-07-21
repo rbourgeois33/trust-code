@@ -38,7 +38,7 @@ cas=$1
 host=`hostname`
 sys=`uname | awk '{print $1}'`
 
-par_pdt=`grep "Secondes / pas de temps" $1.TU 2>/dev/null | awk '{print $NF}'`
+par_pdt=`grep "Average time per time step:" $1.TU 2>/dev/null | awk '{print $NF}'`
 [ "$par_pdt" = "" ] && par_pdt="?"  # on accepte que l'on est pas cette info
 nb_elem=`grep -E "Nombre total d'elements|Total number of elements"  $1.err| awk '{print $NF}'`
 [ "$nb_elem" = "" ] && nb_elem="-"
