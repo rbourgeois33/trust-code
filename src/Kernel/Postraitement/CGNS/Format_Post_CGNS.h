@@ -70,9 +70,11 @@ public:
   int ecrire_entete(const double, const int, const int) override;
   int ecrire_temps(const double) override;
   int finir(const int) override;
+  int finir_sans_iters(const int, const std::string& fn );
   int finir_ecriture(double) override;
 
-  int ecrire_domaine_dis(const Domaine& domaine,const OBS_PTR(Domaine_dis_base)& domaine_dis_base,const int est_le_premier_post) override;
+  void ecrire_domaine_dual(const Domaine& , const int ) override;
+  int ecrire_domaine_dis(const Domaine& ,const OBS_PTR(Domaine_dis_base)& ,const int ) override;
   int ecrire_domaine(const Domaine&, const int) override;
   int ecrire_domaine_low_level(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   int ecrire_item_int(const Nom&, const Nom&, const Nom&, const Nom&, const Nom&, const IntVect&, const int) override { return 1; }

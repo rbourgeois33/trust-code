@@ -130,6 +130,24 @@ int Format_Post_CGNS::finir(const int est_le_dernier_post)
   return 1;
 }
 
+int Format_Post_CGNS::finir_sans_iters(const int est_le_dernier_post, const std::string& fn )
+{
+  if (est_le_dernier_post)
+    {
+#ifdef HAS_CGNS
+      cgns_writer_.cgns_finir_sans_iters(fn);
+#endif
+    }
+  return 1;
+}
+
+void Format_Post_CGNS::ecrire_domaine_dual(const Domaine& domaine, const int est_le_premier_post)
+{
+#ifdef HAS_CGNS
+  cgns_writer_.cgns_write_domaine_dual(domaine, est_le_premier_post);
+#endif
+}
+
 int Format_Post_CGNS::ecrire_domaine_low_level(const Domaine * dom,const Nom& nom_dom, const DoubleTab& som, const IntTab& elem, const Motcle& type_e)
 {
 #ifdef HAS_CGNS

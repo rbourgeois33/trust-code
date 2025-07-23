@@ -13,9 +13,14 @@
 *
 *****************************************************************************/
 
+#include <Format_Post_CGNS.h>
 #include <Comm_Group_MPI.h>
 #include <communications.h>
+#include <TRUST_2_MED.h>
 #include <Ecrire_CGNS.h>
+#include <Domaine_VF.h>
+#include <Polyedre.h>
+#include <Polygone.h>
 #include <Domaine.h>
 #include <unistd.h>
 
@@ -143,6 +148,17 @@ void Ecrire_CGNS::cgns_finir()
   /* dernier truc a faire ! */
   if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
     cgns_write_link_file_for_multiple_files();
+}
+
+void Ecrire_CGNS::cgns_finir_sans_iters(const std::string& fn)
+{
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+    return; /* All done */
+
+  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
+  else
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
 }
 
 void Ecrire_CGNS::cgns_add_time(const double t)
@@ -957,6 +973,171 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
 void Ecrire_CGNS::cgns_write_iters_par_in_zone()
 {
   cgns_write_iters_seq();
+}
+
+/*
+ * *************** *
+ * Write Dual Mesh *
+ * *************** *
+ */
+void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_le_premier_post)
+{
+  Cerr << "Writing the Dual mesh of " << domaine.le_nom() << " in a CGNS format ..." << finl;
+  assert(domaine_dis_.non_nul());
+  if (Objet_U::dimension==0)
+    Process::exit("Dimension is not defined. Check your data file.");
+  const Domaine_VF& dom_vf = ref_cast(Domaine_VF, domaine_dis_.valeur());
+  const auto& dual_m = dom_vf.get_mc_dual_mesh();
+
+  // Check the mesh
+#ifndef NDEBUG
+  dual_m->checkConsistency();
+#endif
+
+  const Nom dom_dual_nom(dual_m->getName());
+  Domaine dom_dual;
+  dom_dual.nommer(dom_dual_nom);
+
+  DoubleTab sommets;
+
+  // Get the nodes: size and fill sommets
+  int nnodes = static_cast<int>(dual_m->getNumberOfNodes());
+  const double *coord = dual_m->getCoords()->begin();
+  sommets.resize(nnodes, Objet_U::dimension);
+  std::copy(coord, coord+sommets.size_array(), sommets.addr());
+
+  // Get cell connectivity
+  int ncells = static_cast<int>(dual_m->getNumberOfCells());
+
+  ArrOfInt conn, connIndex;
+  int conn_size = static_cast<int>(dual_m->getNodalConnectivity()->getNbOfElems()),
+      conn_indx_size= static_cast<int>(dual_m->getNodalConnectivityIndex()->getNbOfElems());
+
+  const auto *c  = dual_m->getNodalConnectivity()->begin(),
+              *cI = dual_m->getNodalConnectivityIndex()->begin();
+
+  conn.resize(conn_size);
+  std::copy(c, c + conn_size, conn.addr());
+  connIndex.resize(conn_indx_size);
+  std::copy(cI, cI + conn_indx_size, connIndex.addr());
+
+  int mesh_type_cell = static_cast<int>(conn[connIndex[0]]);  // type is always an int.
+  Nom type_cell;
+
+  if (mesh_type_cell == INTERP_KERNEL::NORM_TRI3)
+    type_cell = "Triangle";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_TETRA4)
+    type_cell = "Tetraedre";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_PENTA6)
+    type_cell = "Prisme";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_POLYHED)
+    type_cell = "Polyedre";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_PYRA5)
+    type_cell = "Pyramide";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_POLYGON)
+    type_cell = "Polygone";
+  else if (mesh_type_cell == INTERP_KERNEL::NORM_HEXGP12)
+    type_cell = "Prisme_hexag";
+  else
+    {
+      Cerr << "Cell type " << mesh_type_cell << " is not supported yet." << finl;
+      Process::exit();
+    }
+
+  Elem_geom type_elem;
+  type_elem.typer(type_cell);
+
+  IntTab les_elems;
+  // Fill les_elem : Different treatment according type_elem:
+  if (sub_type(Polyedre, type_elem.valeur()))
+    {
+      int marker = 0;
+      for (int i = 0; i < conn_size; i++)
+        if (conn[i]<0) marker++;
+      int num_nodes = conn_size - ncells - marker;
+      int nfaces = ncells + marker;
+      ArrOfInt nodes(num_nodes), facesIndex(nfaces+1), polyhedronIndex(ncells+1);
+      int face=0, node = 0;
+      for (int i = 0; i < ncells; i++)
+        {
+          polyhedronIndex[i] = face; // Index des polyedres
+
+          int index = connIndex[i] + 1;
+          int nb_som = static_cast<int>(connIndex[i + 1] - index);
+          for (int j = 0; j < nb_som; j++)
+            {
+              if (j==0 || conn[index + j]<0)
+                facesIndex[face++] = node; // Index des faces:
+              if (conn[index + j]>=0)
+                nodes[node++] = conn[index + j]; // Index local des sommets de la face
+            }
+        }
+      facesIndex[nfaces] = node;
+      polyhedronIndex[ncells] = face;
+      ref_cast(Polyedre,type_elem.valeur()).affecte_connectivite_numero_global(nodes, facesIndex, polyhedronIndex, les_elems);
+    }
+  else if (sub_type(Polygone, type_elem.valeur()))
+    {
+      int facesIndexSize = conn_size - ncells;
+      ArrOfInt facesIndex(facesIndexSize), polygonIndex(ncells+1);
+      int face=0;
+      for (int i = 0; i < ncells; i++)
+        {
+          polygonIndex[i] = face;   // Index des polygones
+
+          int index = connIndex[i] + 1;
+          int nb_som = static_cast<int>(connIndex[i + 1] - index);
+          for (int j = 0; j < nb_som; j++)
+            facesIndex[face++] = conn[index + j];
+        }
+      polygonIndex[ncells] = face;
+      ref_cast(Polygone,type_elem.valeur()).affecte_connectivite_numero_global(facesIndex, polygonIndex, les_elems);
+    }
+  else // Tous les autres types
+    {
+      for (int i = 0; i < ncells; i++)
+        {
+          int index = connIndex[i] + 1;
+          int nb_som = static_cast<int>(connIndex[i + 1] - index);
+          if (i==0) les_elems.resize(ncells, nb_som); // Size les_elems2
+          for (int j = 0; j < nb_som; j++)
+            les_elems(i, j) = conn[index + j];
+        }
+    }
+
+  // Converting from MED to TRUST connectivity
+  conn_trust_to_med(les_elems,type_elem->que_suis_je(),false);
+
+  dom_dual.les_sommets() = sommets; // fill sommets
+  dom_dual.type_elem() = type_elem;
+
+  dom_dual.type_elem()->associer_domaine(dom_dual);
+  dom_dual.les_elems() = les_elems;
+
+  // write dual_mesh
+  std::string fn = baseFile_name_ + "_dual"; // file name
+
+  Format_Post_CGNS cgns;
+  cgns.set_postraiter_domain();
+  cgns.initialize(Nom(fn), 0, "SIMPLE");
+
+  cgns.ecrire_entete(0., 0, est_le_premier_post);
+  cgns.ecrire_domaine(dom_dual, est_le_premier_post);
+  cgns.finir_sans_iters(1, fn);
+
+//  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+//    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
+//  else
+//    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+//
+//  cgns_write_domaine(&dom_dual, dom_dual_nom, sommets, les_elems, Motcle(type_elem->que_suis_je()));
+//
+//  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+//    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
+//  else
+//    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+//
+//  fileId_--;
 }
 
 #endif /* HAS_CGNS */
