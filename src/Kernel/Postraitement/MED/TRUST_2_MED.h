@@ -23,6 +23,7 @@
 #include <medcoupling++.h>
 #ifdef MEDCOUPLING_
 #   include <NormalizedGeometricTypes>
+#   include <MEDCouplingUMesh.hxx>
 #endif
 
 
@@ -52,6 +53,9 @@ med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem_,med_axis_type&
 
 #ifdef MEDCOUPLING_
 INTERP_KERNEL::NormalizedCellType type_geo_trio_to_type_medcoupling(const Nom& type_elem_, int& mesh_dimension);
+
+void fill_connectivity_from_mc_mesh(const MEDCoupling::MEDCouplingUMesh * mc_mesh, IntTab& face_sommet, IntTab& elem_face);
+
 #endif
 
 #endif

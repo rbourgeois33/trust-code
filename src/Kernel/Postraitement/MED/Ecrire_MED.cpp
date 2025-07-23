@@ -251,6 +251,7 @@ void Ecrire_MED_32_64<int>::ecrire_domaine_dual(bool append)
     mfu->write40(nom_fichier_.getString(), option);
   else
     mfu->write(nom_fichier_.getString(), option);
+
 #endif
 }
 

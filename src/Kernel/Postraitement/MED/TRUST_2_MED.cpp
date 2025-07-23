@@ -23,6 +23,7 @@
 
 #include <medcoupling++.h>
 #ifdef MEDCOUPLING_
+#include <MCAuto.hxx>
 #include <MEDLoader.hxx>
 #endif
 
@@ -188,7 +189,7 @@ void read_med_field_names(const Nom& nom_fic, Noms& noms_chps, ArrOfDouble& temp
 #endif
 }
 
-#ifdef MED_
+//#ifdef MED_
 // renvoit le type med a partir du type trio
 med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem_i,med_axis_type& rep)
 {
@@ -259,7 +260,7 @@ med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem)
   return type_geo_trio_to_type_med(type_elem,rep);
 }
 
-#ifdef MEDCOUPLING_
+//#ifdef MEDCOUPLING_
 /*! @brief Return MEDCoupling type from TRUST type
  * See file NormalizedGeometricTypes in MEDCoupling includes.
  */
@@ -338,10 +339,53 @@ INTERP_KERNEL::NormalizedCellType type_geo_trio_to_type_medcoupling(const Nom& t
   assert(mesh_dimension>=0);
   return type_cell;
 }
-#endif
+
+void fill_connectivity_from_mc_mesh(const MEDCoupling::MEDCouplingUMesh * mc_mesh, IntTab& face_sommet, IntTab& elem_face)
+{
+  using namespace MEDCoupling;
+  using DAI = MCAuto<DataArrayIdType>;
+
+  DAI desc(DataArrayIdType::New()), descIndx(DataArrayIdType::New()), revDesc(DataArrayIdType::New()), revDescIndx(DataArrayIdType::New());
+  MCAuto<MEDCoupling::MEDCouplingUMesh> mc_desc(mc_mesh->buildDescendingConnectivity(desc, descIndx, revDesc, revDescIndx));
+
+  DataArrayIdType* c(mc_desc->getNodalConnectivity()), *cI(mc_desc->getNodalConnectivityIndex());
+  const mcIdType *cP(c->getConstPointer()), *cIP(cI->getConstPointer());
+
+  // Fill face_sommet
+  int nb_faces = Process::check_int_overflow(mc_desc->getNumberOfCells());
+  DAI dsi = cI->deltaShiftIndex();
+  const mcIdType* dsiP = dsi->getConstPointer();
+  mcIdType idx_dnu;
+  int max_pts = static_cast<int>(dsi->getMaxValue(idx_dnu));
+  face_sommet.resize(nb_faces, max_pts-1);
+  face_sommet = -1;
+
+  for (auto i = 0; i < nb_faces; i++)
+    {
+      auto nb_pts = dsiP[i] - 1;
+      for (auto j = 0; j < nb_pts; j++)
+        face_sommet(i,j) = static_cast<int>(cP[cIP[i]+1+j]); // +1 to skip type information (NORM_xxx)
+    }
+
+  // Filling elem_face
+  int nb_elem = Process::check_int_overflow(mc_mesh->getNumberOfCells());
+  DAI dsi2 = descIndx->deltaShiftIndex();
+  int max_nb_of_fac = static_cast<int>(dsi2->getMaxValue(idx_dnu));
+  elem_face.resize(nb_elem, max_nb_of_fac);
+  elem_face = -1;
+  const mcIdType *descP(desc->getConstPointer()), *descIndxP(descIndx->getConstPointer());
+
+  for (auto i = 0; i < nb_elem; i++)
+    for (auto j = 0; j < descIndxP[i+1]-descIndxP[i]; j++)
+      elem_face(i, j) = static_cast<int>(descP[descIndxP[i]+j]);
+}
 
 
-#endif
+//#endif
+
+//#endif
+
+
 
 /*! @brief Passage de la connectivite TRUST a MED si toMED=true de MED a trio si toMED=false
  */
