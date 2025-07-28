@@ -127,9 +127,15 @@ void Op_Conv_EF_Stab_PolyVEF_Elem::dimensionner_blocs(matrices_t mats, const tab
       }
 }
 
+void Op_Conv_EF_Stab_PolyVEF_Elem::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
+{
+  const DoubleTab& vit = vitesse_->valeurs();
+  ajouter_blocs_gen(mats, secmem, vit, semi_impl);
+}
+
 // ajoute la contribution de la convection au second membre resu
 // renvoie resu
-void Op_Conv_EF_Stab_PolyVEF_Elem::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
+void Op_Conv_EF_Stab_PolyVEF_Elem::ajouter_blocs_gen(matrices_t mats, DoubleTab& secmem, const DoubleTab& vit, const tabs_t& semi_impl) const
 {
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Inc_base& cc = le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().champ_convecte(), &ch_vit = ref_cast(Champ_Inc_base, vitesse_.valeur());
@@ -137,7 +143,7 @@ void Op_Conv_EF_Stab_PolyVEF_Elem::ajouter_blocs(matrices_t mats, DoubleTab& sec
   const DoubleVect& pf = equation().milieu().porosite_face();
   const Conds_lim& cls_v = ch_vit.domaine_Cl_dis().les_conditions_limites();
   const std::string& nom_cc = cc.le_nom().getString();
-  const DoubleTab& vit = vitesse_->valeurs(), &vcc = semi_impl.count(nom_cc) ? semi_impl.at(nom_cc) : cc.valeurs(), bcc = cc.valeur_aux_bords(), &nf = domaine.face_normales();
+  const DoubleTab& vcc = semi_impl.count(nom_cc) ? semi_impl.at(nom_cc) : cc.valeurs(), bcc = cc.valeur_aux_bords(), &nf = domaine.face_normales();
   int i, j, e, eb, f, n, m, d, D = dimension, N = vcc.line_size(), Mv = vit.line_size() / D, M;
 
   Matrice_Morse *m_vit = mats.count("vitesse") ? mats.at("vitesse") : nullptr;
