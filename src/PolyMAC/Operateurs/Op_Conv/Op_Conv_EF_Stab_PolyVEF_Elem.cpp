@@ -61,10 +61,15 @@ Entree& Op_Conv_Centre_PolyVEF_Elem::readOn(Entree& is) { return Op_Conv_EF_Stab
 
 double Op_Conv_EF_Stab_PolyVEF_Elem::calculer_dt_stab() const
 {
+  const DoubleTab& vit = vitesse_->valeurs();
+  return calculer_dt_stab_gen(vit);
+}
+double Op_Conv_EF_Stab_PolyVEF_Elem::calculer_dt_stab_gen(const DoubleTab& vit) const
+{
   double dt = 1e10, fv;
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const DoubleVect& pf = equation().milieu().porosite_face(), &ve = domaine.volumes(), &pe = equation().milieu().porosite_elem();
-  const DoubleTab& vit = vitesse_->valeurs(), &nf = domaine.face_normales(),
+  const DoubleTab& nf = domaine.face_normales(),
                    *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
   const IntTab& e_f = domaine.elem_faces(), &f_e = domaine.face_voisins(), &fcl = ref_cast(Champ_Elem_PolyMAC, equation().inconnue()).fcl();
   int i, e, f, d, D = dimension, n, N = std::min(vit.line_size() / D, equation().inconnue().valeurs().line_size());

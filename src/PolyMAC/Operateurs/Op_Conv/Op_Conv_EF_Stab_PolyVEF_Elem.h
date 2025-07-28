@@ -31,6 +31,7 @@ class Op_Conv_EF_Stab_PolyVEF_Elem : public Op_Conv_EF_Stab_PolyMAC_P0P1NC_Elem
   Declare_instanciable( Op_Conv_EF_Stab_PolyVEF_Elem ) ;
 public :
   double calculer_dt_stab() const override;
+  double calculer_dt_stab_gen(const DoubleTab& vit) const;
 
   /* interface ajouter_blocs */
   void dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl = {}) const override;
