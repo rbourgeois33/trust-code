@@ -489,45 +489,31 @@ Nom Discretisation_base::get_name_of_type_for(const Nom& class_operateur, const 
     }
   else if (class_operateur == "Operateur_Conv")
     {
-      if (Motcle(type_operateur) == Motcle("ALE"))
+      type = "Op_Conv_";
+      type += type_operateur;
+      Nom tiret = "_";
+      type += tiret;
+      Nom discr = que_suis_je();
+
+      // les operateurs de diffusion sont communs aux discretisations VEF et VEFP1B
+      if (discr == "VEFPreP1B") discr = "VEF";
+
+      type += discr;
+      if (Motcle(type_operateur) == Motcle("ALE")) return type;
+      if (type_operateur != "KEps_Comp")
         {
-          type = "Op_Conv_";
-          type += type_operateur;
-          Nom tiret = "_";
           type += tiret;
-          Nom discr = que_suis_je();
+          Nom type_inco = eqn.inconnue().que_suis_je();
+          if (type_inco == "Champ_Q1NC") type_inco = "Champ_P1NC";
+          if (type_inco.debute_par("Champ_P0_VDF")) type_inco = "Champ_P0_VDF";
+          if (type_inco.debute_par("Champ_Face")) type_inco = "Champ_Face";
 
-          if (discr == "VEFPreP1B") discr = "VEF";
-          type += discr;
-          return type;
+          type += (type_inco.suffix("Champ_"));
+
+          if (axi == 1)
+            if (type_operateur == "quick") type += "_Axi";
         }
-      else
-        {
-          type = "Op_Conv_";
-          type += type_operateur;
-          Nom tiret = "_";
-          type += tiret;
-          Nom discr = que_suis_je();
-
-          // les operateurs de diffusion sont communs aux discretisations VEF et VEFP1B
-          if (discr == "VEFPreP1B") discr = "VEF";
-
-          type += discr;
-          if (type_operateur != "KEps_Comp")
-            {
-              type += tiret;
-              Nom type_inco = eqn.inconnue().que_suis_je();
-              if (type_inco == "Champ_Q1NC") type_inco = "Champ_P1NC";
-              if (type_inco.debute_par("Champ_P0_VDF")) type_inco = "Champ_P0_VDF";
-              if (type_inco.debute_par("Champ_Face")) type_inco = "Champ_Face";
-
-              type += (type_inco.suffix("Champ_"));
-
-              if (axi == 1)
-                if (type_operateur == "quick") type += "_Axi";
-            }
-          return type;
-        }
+      return type;
     }
   else if (class_operateur == "Operateur_Evanescence")
     {
