@@ -35,6 +35,11 @@
 #include <EcrFicPartage.h>
 #include <memory>
 #include <iomanip>
+#ifdef TRUST_USE_CUDA
+// See https://nvidia.github.io/NVTX/
+// See https://stackoverflow.com/questions/23230003/something-between-func-and-pretty-function/29856690#29856690
+#include <nvtx3/nvToolsExt.h>
+#endif
 
 #define MINFLOAT 1.e-34  // smth small!
 
@@ -129,6 +134,11 @@ void Counter::begin_count_(int counter_level, time_point t)
       parent_->time_alone_ +=duration (t - last_open_time_alone_);
       parent_->last_open_time_alone_ =  time_point();
     }
+#ifdef TRUST_USE_CUDA
+  if (!is_comm_)
+    nvtxRangePush(description_.c_str());
+#endif
+
 }
 
 void Counter::end_count_(int count_increment, long int quantity_increment, time_point t_stop)
@@ -150,6 +160,9 @@ void Counter::end_count_(int count_increment, long int quantity_increment, time_
   last_open_time_ = time_point();
   last_open_time_alone_ = time_point();
   open_time_ts_ = time_point();
+#ifdef TRUST_USE_CUDA
+  if (!is_comm_) nvtxRangePop();
+#endif
 }
 
 std::array< std::array<double,4> ,4> Counter::compute_min_max_avg_sd_() const
@@ -249,6 +262,8 @@ public:
   void add_to_gpu_timer_counter_impl(int to_add=1) ;
   int get_gpu_timer_counter_impl() const ;
   bool get_use_gpu_impl() const {return use_gpu_;}
+  bool get_gpu_fence_impl() const {return gpu_fence_;}
+  void set_gpu_fence_impl(bool fence) {gpu_fence_=fence;}
   bool running_impl(const STD_COUNTERS name) { return get_counter(name).running_(); }
 
 private:
@@ -279,6 +294,7 @@ private:
   bool init_device_ = false;
   bool gpu_timer_ = false;
   bool use_gpu_=false;
+  bool gpu_fence_=true;
   time_point gpu_timer_start_;
   int gpu_timer_count_=0;
   int max_str_length_=118;
@@ -1916,3 +1932,7 @@ double Perf_counters::stop_gpu_timer_and_compute_gpu_time()
 }
 
 bool Perf_counters::get_use_gpu() const {return pimpl_->get_use_gpu_impl();}
+
+bool Perf_counters::get_gpu_fence() const {return pimpl_->get_gpu_fence_impl();}
+
+void Perf_counters::set_gpu_fence(bool fence) {return pimpl_->set_gpu_fence_impl(fence);}

@@ -75,7 +75,7 @@ void init_device()
   if (statistics().get_init_device()) return;
   statistics().set_init_device(true);
   if (getenv("TRUST_CLOCK_ON")!= nullptr) statistics().set_gpu_verbose(true);
-  if (getenv("TRUST_DISABLE_FENCE")!=nullptr) fence = false;
+  if (getenv("TRUST_DISABLE_FENCE")!=nullptr) statistics().set_gpu_fence(false);
   Process::imprimer_ram_totale(); // Impression avant copie des donnees sur GPU
 }
 #endif
@@ -504,6 +504,9 @@ template void copyFromDevice<double, trustIdType>(const TRUSTArray<double,trustI
 std::string start_gpu_timer(std::string str, int bytes)
 {
 #ifdef TRUST_USE_GPU
+  if (statistics().get_gpu_timer())
+    Process::exit("A GPU KERNEL is still running, you can't open a new one yet");
+  statistics().start_gpu_timer();
   if (statistics().get_init_device())
     {
       statistics().add_to_gpu_timer_counter(1);
@@ -512,9 +515,8 @@ std::string start_gpu_timer(std::string str, int bytes)
         Cerr << "[Kokkos] timer_counter=" << statistics().get_gpu_timer_counter() << " : start_gpu_timer() not closed by end_gpu_timer() !" << finl;
       //Process::exit("Error, start_gpu_timer() not closed by end_gpu_timer() !");
 #endif
-      if (statistics().is_gpu_clock_on()) statistics().start_gpu_clock();
-      if (bytes == -1) statistics().begin_count(STD_COUNTERS::gpu_kernel,statistics().get_last_opened_counter_level()+1);
-
+      if (bytes == -1)
+        statistics().begin_count(STD_COUNTERS::gpu_kernel,statistics().get_last_opened_counter_level()+1);
 #ifdef TRUST_USE_CUDA
       if (!str.empty()) nvtxRangePush(str.c_str());
 #endif
@@ -540,14 +542,15 @@ void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in
           cudaDeviceSynchronize();
 #endif
 #ifdef KOKKOS
-          if (fence) Kokkos::fence();  // Barrier for real time
+          if (statistics().get_gpu_fence()) Kokkos::fence();  // Barrier for real time
 #endif
         }
-      if (bytes == -1) statistics().end_count(STD_COUNTERS::gpu_kernel,onDevice);
-      if (statistics().is_gpu_clock_on() && Process::je_suis_maitre()) // Affichage
+      if (bytes == -1)
+        statistics().end_count(STD_COUNTERS::gpu_kernel,onDevice);
+      if (statistics().is_gpu_verbose_on() && Process::je_suis_maitre()) // Affichage
         {
           std::string clock(Process::is_parallel() ? "[clock]#" + std::to_string(Process::me()) : "[clock]  ");
-          double ms = 1000 * statistics().stop_gpu_clock_and_compute_gpu_time();
+          double ms = 1000 * statistics().stop_gpu_timer_and_compute_gpu_time();
           if (bytes == -1)
             {
               if (!str.empty())
@@ -565,6 +568,9 @@ void end_gpu_timer(const std::string& str, int onDevice, int bytes) // Return in
             }
           fflush(stdout);
         }
+      else
+        statistics().stop_gpu_timer();
+
 #ifdef TRUST_USE_CUDA
       if (!str.empty()) nvtxRangePop();
 #endif

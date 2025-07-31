@@ -264,5 +264,8 @@ int Solv_AMG::resoudre_systeme(const Matrice_Base& mat, const DoubleVect& b, Dou
       solveur_->set_save_matrix(save_matrix());
       solveur_->set_read_matrix(read_matrix());
     }
-  return solveur_.resoudre_systeme(mat, b, x);
+  statistics().end_count(STD_COUNTERS::system_solver,-1,0);
+  int res = solveur_.resoudre_systeme(mat, b, x);
+  statistics().begin_count(STD_COUNTERS::system_solver,statistics().get_last_opened_counter_level()+1);
+  return res;
 }

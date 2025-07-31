@@ -287,6 +287,10 @@ public:
 
   bool get_use_gpu() const;
 
+  bool get_gpu_fence() const;
+
+  void set_gpu_fence(bool fence);
+
 //// end of GPU features
 
   Perf_counters(const Perf_counters&) = delete;
