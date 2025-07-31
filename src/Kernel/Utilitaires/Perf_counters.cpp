@@ -339,8 +339,8 @@ Perf_counters::Impl::Impl()
   //Parallel meshing
   std_counters_[static_cast<int>(STD_COUNTERS::parallel_meshing)] = std::make_unique<Counter>(0, "Parallel meshing");
   //IO
-  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageBin)] = std::make_unique<Counter>(2, "write", "IO",true);
-  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageMPIIO)] = std::make_unique<Counter>(2,"MPI_File_write_all", "IO",true);
+  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageBin)] = std::make_unique<Counter>(2, "write", "IO");
+  std_counters_[static_cast<int>(STD_COUNTERS::IO_EcrireFicPartageMPIIO)] = std::make_unique<Counter>(2,"MPI_File_write_all", "IO");
   if (nb_steps_elapsed_==0)
     end_cache_=true;
 #ifdef TRUST_USE_GPU
@@ -976,6 +976,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
   double total_comm_time=0.;
   int solver_calls=  Process::mp_max(c_system_solver.count_);
   nb_ts = Process::mp_max(nb_ts);
+  double cpu_time=0.;
   double nb_it_per_solver_calls= solver_calls>0 ? static_cast<double>(Process::mp_max(c_system_solver.quantity_)) /solver_calls : static_cast<double>(Process::mp_max(c_system_solver.quantity_)) ;
   if (max_nb_backup>0)
     {
@@ -1041,6 +1042,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
                   }
                 total_comm_time += c_com.time_alone_.count();
               }
+            else if (!c_com.is_gpu_)
+              cpu_time+=c_com.time_alone_.count();
           }
       }
     }
@@ -1063,6 +1066,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
             }
           total_comm_time += c_com.time_alone_.count();
         }
+      else if (!c_com.is_gpu_)
+        cpu_time+=c_com.time_alone_.count();
     }
   // IO part
   // Estimates bandwidth
@@ -1251,9 +1256,9 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           perfs_TU <<  std::left <<std::setw(text_width) << "Average number of iteration of the linear solver per call: " <<  std::left <<std::setw(number_width) <<  nb_it_per_solver_calls << std::endl <<std::endl;
         }
       // GPU part of the TU :
-      auto compute_percent_and_write_tabular_line = [& perfs_GPU, & nb_ts, & time_tl, & counter_description_width, & time_per_step_width, & percent_loop_time_width, & count_per_ts_width, & bandwith_width, & separator] (const Counter& c_, const std::string str)
+      auto compute_percent_and_write_tabular_line = [& perfs_GPU, & nb_ts, & time_tl, &separator] (const Counter& c_, const std::string str)
       {
-        double max_time = c_.total_time_.count();
+        double max_time = c_.time_alone_.count();
         double calls = c_.count_/nb_ts;
         double t_ts = max_time/nb_ts;
         double bw = static_cast<double>(c_.quantity_)/(1024.*1024.*1024*max_time);
@@ -1278,8 +1283,8 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
           double ratio_gpu = ratio_gpu_kernel+ratio_gpu_library;
           double ratio_copy = compute_percent_and_write_tabular_line(c_todevice,"Copy host to device: ");
           ratio_copy += compute_percent_and_write_tabular_line(c_fromdevice,"Copy device to host: ");
-          double ratio_comm = 100.0 * (comm_sendrecv_t+ comm_allreduce_t)/c_timeloop.max_time_per_step_;
-          double ratio_cpu = 100 - ratio_copy - ratio_gpu - ratio_comm;
+          double ratio_comm = 100.0 * (total_comm_time)/time_tl;
+          double ratio_cpu = 100 * cpu_time/time_tl;
           double ratio_allocfree = compute_percent_and_write_tabular_line(c_allocfree,"Alloc/Free on device: ");
           perfs_GPU << std::setprecision(3) << "GPU: " << ratio_gpu << "% Copy H<->D: " << ratio_copy << "% Alloc/free:" << ratio_allocfree << "% Comm: "<< ratio_comm << "% CPU & other: " << ratio_cpu << std::setprecision(6)<<"%"<<std::endl;
           if (ratio_gpu<50)
