@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,6 +19,7 @@
 #include <Pb_Multiphase.h>
 #include <TPPI_tools.h>
 #include <Discretisation_base.h>
+#include <TRUSTTab_parts.h>
 
 Implemente_base(Saturation_base, "Saturation_base", Interface_base);
 // XD saturation_base Interface_base saturation_base -1 fluide-gas interface with phase change (used in pb_multiphase)
@@ -44,7 +45,8 @@ void Saturation_base::mettre_a_jour(double temps)
 {
   DoubleTab& sigma_tab = ch_sigma_->valeurs(), &Tsat_tab = ch_Tsat_->valeurs();
   const Pb_Multiphase& pbm = ref_cast(Pb_Multiphase, pb_.valeur());
-  const DoubleTab& press = ref_cast(QDM_Multiphase, pbm.equation_qdm()).pression().valeurs();
+  ConstDoubleTab_parts press_parts(ref_cast(QDM_Multiphase, pbm.equation_qdm()).pression().valeurs());
+  const DoubleTab& press = press_parts[0];
 
   // on suppose pour le moment que le champ de pression a 1 comp.
   assert(press.line_size() == 1);
