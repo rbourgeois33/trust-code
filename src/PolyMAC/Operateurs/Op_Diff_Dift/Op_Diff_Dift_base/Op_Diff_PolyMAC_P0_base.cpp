@@ -125,11 +125,11 @@ void Op_Diff_PolyMAC_P0_base::update_nu() const
 
 void Op_Diff_PolyMAC_P0_base::update_phif(int full_stencil) const
 {
-  if (!full_stencil && phif_a_jour_)
+  const Domaine_PolyMAC_P0& domaine = ref_cast(Domaine_PolyMAC_P0, le_dom_poly_.valeur());
+  if (!domaine.domaine().mesh_update_required() && !full_stencil && phif_a_jour_)
     return; //deja fait, sauf si on demande tout le stencil
   const Champ_Inc_base& ch = equation().inconnue();
   const IntTab& fcl = sub_type(Champ_Face_PolyMAC_P0, ch) ? ref_cast(Champ_Face_PolyMAC_P0, ch).fcl() : ref_cast(Champ_Elem_PolyMAC_P0, ch).fcl();
-  const Domaine_PolyMAC_P0& domaine = ref_cast(Domaine_PolyMAC_P0, le_dom_poly_.valeur());
   domaine.fgrad(ch.valeurs().line_size(), 0, 0, la_zcl_poly_->les_conditions_limites(), fcl, &nu(), &som_ext, sub_type(Champ_Face_PolyMAC_P0, ch), full_stencil, phif_d, phif_e, phif_c);
   phif_a_jour_ = 1;
 }

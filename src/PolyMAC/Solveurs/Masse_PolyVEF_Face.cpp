@@ -198,7 +198,7 @@ void Masse_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, d
             for (n = 0; n < N; n++)
               secmem(f, N * d + n) = p0p1 ? secmem(f, N * d + n) + (p_cl(n) - p_eq(n)) * nfu(d) : cl(d, n) + (p_eq(n) - p_cl(n)) * nfu(d);
           for (auto &&kv : matrices)
-            if (kv.second->nb_colonnes())
+            if (kv.second != nullptr && kv.second->nb_colonnes())
               {
                 /* projection des lignes de mat */
                 for (i = N * D * f, n = 0; n < N; n++, i += N)

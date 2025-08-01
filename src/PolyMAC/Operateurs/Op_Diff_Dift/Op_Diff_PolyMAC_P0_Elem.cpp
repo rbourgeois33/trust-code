@@ -183,7 +183,7 @@ void Op_Diff_PolyMAC_P0_Elem::init_op_ext() const
 void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
 {
   init_op_ext();
-  update_phif(!nu_constant_); //calcul de (nf.nu.grad T) : si nu variable, stencil complet
+  update_phif(!nu_constant_ or equation().domaine_dis().domaine().mesh_update_required()); //calcul de (nf.nu.grad T) : si nu variable, stencil complet
 
   const std::string nom_inco = equation().inconnue().le_nom().getString();
   if (semi_impl.count(nom_inco))

@@ -51,7 +51,7 @@ int  Assembleur_P_PolyVEF_P0::assembler_mat(Matrice& la_matrice,const DoubleVect
 
   const Domaine_PolyVEF& dom = ref_cast(Domaine_PolyVEF, le_dom_PolyMAC.valeur());
   const Op_Grad_PolyVEF_P0_Face& grad = ref_cast(Op_Grad_PolyVEF_P0_Face, ref_cast(Navier_Stokes_std, equation()).operateur_gradient().valeur());
-  grad.update_grad();
+  grad.update_grad(equation().domaine_dis().domaine().mesh_update_required());
   const DoubleTab& fgrad_c = grad.fgrad_c, &nf = dom.face_normales();
   const IntTab& f_e = dom.face_voisins(), &fgrad_d = grad.fgrad_d, &fgrad_e = grad.fgrad_e, &fcl = ref_cast(Champ_Face_PolyMAC, equation().inconnue()).fcl();
   const DoubleVect& pf = equation().milieu().porosite_face();
