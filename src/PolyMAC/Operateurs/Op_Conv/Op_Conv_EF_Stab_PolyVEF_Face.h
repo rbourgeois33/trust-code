@@ -17,6 +17,7 @@
 #define Op_Conv_EF_Stab_PolyVEF_Face_included
 
 #include <Op_Conv_EF_Stab_PolyMAC_P0_Face.h>
+#include <Domaine_Poly_base.h>
 
 /*! @brief : class Op_Conv_EF_Stab_PolyVEF_Face
  *
@@ -44,9 +45,10 @@ public :
 protected :
   double calculer_dt_stab_gen(const DoubleTab& vit) const;
   void ajouter_blocs_gen(matrices_t matrices, DoubleTab& secmem, const DoubleTab& vit, const tabs_t& semi_impl = {}) const;
+  void construire_e_fa(const Domaine_Poly_base& dom) const;
   double alpha = -1e8; //alpha = 0 -> centre, alpha = 1 -> amont
-  IntTab e_fa_d, e_fa_f; //paires de faces reliees par un sommet (2D) / arete (3D) dans chaque element : e_fa_f([e_fa_d(e, 0), e_fa_d(e, 0) + 1[, 0/1)
-  DoubleTab e_fa_c;      //coefficients du flux a la facette en fonction des flux aux faces de l'element, stockes a partir de e_fa_d(e, 1)
+  mutable IntTab e_fa_d, e_fa_f; //paires de faces reliees par un sommet (2D) / arete (3D) dans chaque element : e_fa_f([e_fa_d(e, 0), e_fa_d(e, 0) + 1[, 0/1)
+  mutable DoubleTab e_fa_c;      //coefficients du flux a la facette en fonction des flux aux faces de l'element, stockes a partir de e_fa_d(e, 1)
 };
 
 class Op_Conv_Amont_PolyVEF_Face : public Op_Conv_EF_Stab_PolyVEF_Face

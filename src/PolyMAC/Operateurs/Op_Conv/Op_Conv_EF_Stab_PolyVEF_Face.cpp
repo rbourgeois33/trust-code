@@ -16,7 +16,6 @@
 #include <Op_Conv_EF_Stab_PolyVEF_Face.h>
 #include <Pb_Multiphase.h>
 #include <Schema_Temps_base.h>
-#include <Domaine_Poly_base.h>
 #include <Domaine_Cl_PolyMAC.h>
 #include <TRUSTLists.h>
 #include <Dirichlet.h>
@@ -69,7 +68,11 @@ void Op_Conv_EF_Stab_PolyVEF_Face::completer()
   porosite_f.ref(equation().milieu().porosite_face());
   porosite_e.ref(equation().milieu().porosite_elem());
 
-  /* construction de e_fa_d / e_fa_f / e_fa_c */
+  construire_e_fa(dom);
+}
+
+void Op_Conv_EF_Stab_PolyVEF_Face::construire_e_fa(const Domaine_Poly_base& dom) const
+{
   const IntTab& f_e = dom.face_voisins(), &e_f = dom.elem_faces(), &f_s = dom.face_sommets();
   const DoubleTab& vfd = dom.volumes_entrelaces_dir();
   const DoubleVect& ve = dom.volumes();
@@ -164,6 +167,7 @@ double Op_Conv_EF_Stab_PolyVEF_Face::calculer_dt_stab_gen(const DoubleTab& vit) 
 void Op_Conv_EF_Stab_PolyVEF_Face::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
 {
   const Domaine_Poly_base& dom = le_dom_poly_.valeur();
+  if (dom.domaine().mesh_update_required()) construire_e_fa(dom);
   const Champ_Face_PolyVEF& ch = ref_cast(Champ_Face_PolyVEF, equation().inconnue());
   const std::string& nom_inco = ch.le_nom().getString();
   if (!matrices.count(nom_inco) || semi_impl.count(nom_inco)) return; //pas de bloc diagonal ou semi-implicite -> rien a faire
