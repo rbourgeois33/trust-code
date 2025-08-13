@@ -16,7 +16,9 @@
 #ifndef Domaine_base_included
 #define Domaine_base_included
 
+#include <Champs_compris_interface.h>
 #include <Bords_Internes.h>
+#include <Champs_compris.h>
 #include <Groupes_Faces.h>
 #include <Sous_Domaine.h>
 
@@ -39,7 +41,7 @@ class Domaine_dis_base;
  *
  * @sa Domaine class which inherits from Domaine_base and is templatized on entity index size (32 / 64b)
  */
-class Domaine_base : public Objet_U
+class Domaine_base : public Champs_compris_interface, public Objet_U
 {
   Declare_base_sans_constructeur(Domaine_base);
 
@@ -50,7 +52,12 @@ public:
   inline const Nom& le_nom() const override   {   return nom_; }
   inline void nommer(const Nom& nom) override {  nom_ = nom; }
   inline double epsilon() const { return epsilon_; }
-
+  void creer_champ(const Motcle& motlu) override { Process::exit("No, call creer_champ(const Motcle&, const Probleme_base&)"); };
+  virtual void creer_champ(const Motcle&, const Probleme_base&) {}
+  void get_noms_champs_postraitables(Noms& nom,Option opt=NONE) const override {}
+  const Champ_base& get_champ(const Motcle&) const override { throw; }
+  bool has_champ(const Motcle& nom, OBS_PTR(Champ_base) &ref_champ) const override { return false; }
+  bool has_champ(const Motcle& nom) const override { return false; }
   //
   // Time-dependency
   //
@@ -100,6 +107,7 @@ protected:
 
   /// Volume total du domaine (somme sur tous les processeurs)
   double volume_total_;
+  Champs_compris champs_compris_;
 };
 
 

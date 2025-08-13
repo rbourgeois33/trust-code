@@ -769,6 +769,7 @@ Equation_base& Probleme_base::equation(const Nom& type)
 
 void Probleme_base::creer_champ(const Motcle& motlu)
 {
+  domaine().creer_champ(motlu, *this);
   domaine_dis().creer_champ(motlu, *this);
   milieu().creer_champ(motlu);
 
@@ -781,6 +782,9 @@ void Probleme_base::creer_champ(const Motcle& motlu)
 
 bool Probleme_base::has_champ(const Motcle& un_nom, OBS_PTR(Champ_base) &ref_champ) const
 {
+  if (domaine().has_champ(un_nom, ref_champ))
+    return true;
+
   if (domaine_dis().has_champ(un_nom, ref_champ))
     return true;
 
@@ -806,6 +810,9 @@ bool Probleme_base::has_champ(const Motcle& un_nom, OBS_PTR(Champ_base) &ref_cha
 
 bool Probleme_base::has_champ(const Motcle& un_nom) const
 {
+  if (domaine().has_champ(un_nom))
+    return true;
+
   if (domaine_dis().has_champ(un_nom))
     return true;
 
@@ -832,6 +839,9 @@ bool Probleme_base::has_champ(const Motcle& un_nom) const
 const Champ_base& Probleme_base::get_champ(const Motcle& un_nom) const
 {
   OBS_PTR(Champ_base) ref_champ;
+
+  if (domaine().has_champ(un_nom, ref_champ))
+    return ref_champ;
 
   if (domaine_dis().has_champ(un_nom, ref_champ))
     return ref_champ;
@@ -868,6 +878,7 @@ const Champ_base& Probleme_base::get_champ(const Motcle& un_nom) const
 
 void Probleme_base::get_noms_champs_postraitables(Noms& noms,Option opt) const
 {
+  domaine().get_noms_champs_postraitables(noms, opt);
   domaine_dis().get_noms_champs_postraitables(noms, opt);
   milieu().get_noms_champs_postraitables(noms,opt);
   int nb_eq = nombre_d_equations();
