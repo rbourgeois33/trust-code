@@ -145,6 +145,7 @@ void Masse_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, d
   DoubleTrav masse(N, N), masse_e(N, N), p_eq(N), p_cl(N), cl(D, N), nfu(D); //masse alpha * rho, contribution
   for (f = 0; f < dom.nb_faces(); f++) //faces reelles
     {
+      const double fac_ale = equation().domaine_dis().domaine().deformable() ? dom.domaine().old_volumes_entrelaces()(f) / vf(f) : 1.0;
       /* calcul de la masse */
       if (!pbm)
         for (masse = 0, n = 0; n < N; n++) masse(n, n) = 1; //pas Pb_Multiphase -> pas de alpha * rho
@@ -161,7 +162,7 @@ void Masse_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, d
       for (d = 0; d < D; d++)
         for (n = 0; n < N; n++)
           {
-            for (m = 0; m < N; m++) secmem(f, N * d + n) += masse(n, m) * (passe(f, N * d + m) - resoudre_en_increments * inco(f, N * d + m));
+            for (m = 0; m < N; m++) secmem(f, N * d + n) += masse(n, m) * (fac_ale * passe(f, N * d + m) - resoudre_en_increments * inco(f, N * d + m));
             if (fi) secmem(f, N * d + n) -= fs(f) * fi->coefficient_frottement(fcl(f, 2), n) * inco(f, N * d + n);
             if (mat)
               for (m = 0; m < N; m++)
@@ -174,7 +175,7 @@ void Masse_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, d
         {
           for (d = 0; d < D; d++)
             for (n = 0; n < N; n++)
-              secmem(f, N * d + n) = masse(n, n) * ((fcl(f, 0) == 3 ? ref_cast(Dirichlet, cls[fcl(f, 1)].valeur()).val_imp(fcl(f, 2), N * d + n) : 0) - resoudre_en_increments * inco(f, N * d + n));
+              secmem(f, N * d + n) = masse(n, n) * ((fcl(f, 0) == 3 ? ref_cast(Dirichlet, cls[fcl(f, 1)].valeur()).val_imp(fcl(f, 2), N * d + n) : 0) * fac_ale - resoudre_en_increments * inco(f, N * d + n));
           for (auto &&kv : matrices)
             if (kv.second != nullptr && kv.second->nb_colonnes())
               for (i = N * D * f, d = 0; d < D; d++)
@@ -192,7 +193,7 @@ void Masse_PolyVEF_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, d
           /* CL */
           for (cl = 0, p_cl = 0, d = 0; d < D; d++)
             for (n = 0; n < N; n++)
-              cl(d, n) = masse(n, n) * ((fcl(f, 0) == 3 ? ref_cast(Dirichlet, cls[fcl(f, 1)].valeur()).val_imp(fcl(f, 2), N * d + n) : 0) - resoudre_en_increments * inco(f, N * d + n)), p_cl(n) += cl(d, n) * nfu(d);
+              cl(d, n) = masse(n, n) * ((fcl(f, 0) == 3 ? ref_cast(Dirichlet, cls[fcl(f, 1)].valeur()).val_imp(fcl(f, 2), N * d + n) : 0) * fac_ale - resoudre_en_increments * inco(f, N * d + n)), p_cl(n) += cl(d, n) * nfu(d);
           /* projection de secmem */
           for (d = 0; d < D; d++)
             for (n = 0; n < N; n++)
