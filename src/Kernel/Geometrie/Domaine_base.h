@@ -68,7 +68,7 @@ public:
   int mesh_update_required() const { return mesh_update_required_; }
   virtual const DoubleVect& old_volumes_entrelaces() const { throw; }
   virtual const DoubleVect& old_volumes() const { throw; }
-  virtual void apply_old_to_new_volume_scaling(DoubleTab& tab) { }
+  virtual void apply_old_to_new_volume_scaling(DoubleTab& tab) const { }
   virtual bool getUpdateTheGrid() {return true;}
   virtual void setUpdateTheGrid(bool) {}
 

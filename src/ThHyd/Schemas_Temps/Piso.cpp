@@ -171,9 +171,6 @@ void Piso::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pression,
 
   le_solveur_->reinit();
 
-  //sometimes we need a second special treatement like for ALE for example
-  second_special_treatment( eqn, current, resu, matrice );
-
   //Construction de matrice_en_pression_2 = BD-1Bt[Un]
   //Assemblage reeffectue seulement pour algorithme Piso (avancement_crank_==0)
   Matrice& matrice_en_pression_2 = eqnNS.matrice_pression();
@@ -449,11 +446,6 @@ void Piso::iterer_NS_PolyMAC(Navier_Stokes_std& eqn, DoubleTab& current, DoubleT
   current = v_new;
 }
 
-void Piso::second_special_treatment(Equation_base& eqn,DoubleTab& current, DoubleTrav& resu, Matrice_Morse& matrice)
-{
-  //nothing to do
-}
-
 void Piso::add_penality_term(Navier_Stokes_std& eqnNS, DoubleTrav& resu , DoubleTrav& gradP)
 {
   // <IBM> Taking into account penality term for Immersed Boundary Method
@@ -536,10 +528,3 @@ void Piso::correct_pressure(Navier_Stokes_std& eqnNS, DoubleTab& pression, Doubl
   else
     pression += correction_en_pression;
 }
-
-void Implicite::second_special_treatment(Equation_base& eqn,DoubleTab& current, DoubleTrav& resu, Matrice_Morse& matrice)
-{
-  //nothing to do
-}
-
-
