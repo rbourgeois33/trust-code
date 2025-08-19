@@ -63,7 +63,8 @@ public:
   //
   virtual void initialiser (double temps, Domaine_dis_base&, Probleme_base&) {}
   virtual void set_dt(double& dt_) {}
-  virtual void mettre_a_jour(double temps, Domaine_dis_base&, Probleme_base&) {}
+  virtual bool solveTimeStep(Probleme_base& pb) { return true; }
+  virtual void abortTimeStep() { }
   virtual void update_after_post(double temps) {}
   int mesh_update_required() const { return mesh_update_required_; }
   virtual const DoubleVect& old_volumes_entrelaces() const { throw; }

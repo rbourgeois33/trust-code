@@ -87,7 +87,10 @@ bool Probleme_base_interface_proto::solveTimeStep_impl(Probleme_base& pb)
 
   Debog::set_nom_pb_actuel(pb.le_nom());
 
-  bool ok = pb.solveTimeStep_pbU(); // call mother's method
+  // Update the domain
+  bool ok = pb.domaine().solveTimeStep(pb);
+
+  ok &= pb.solveTimeStep_pbU(); // call mother's method
 
   // Calculs coeffs echange sur l'instant sur lequel doivent agir les operateurs.
   double tps = pb.schema_temps().temps_defaut();
@@ -179,6 +182,7 @@ void Probleme_base_interface_proto::abortTimeStep_impl(Probleme_base& pb)
 
   pb.schema_temps().abortTimeStep();
   pb.milieu().abortTimeStep();
+  pb.domaine().abortTimeStep();
   dt_defined = false;
 }
 
