@@ -23,7 +23,7 @@
 
 // This file contains all of the needed for the description of the counter associated with the tracking of performance in the TRUST code.
 
-enum class STD_COUNTERS : unsigned int
+enum class STD_COUNTERS : int
 {
   total_execution_time , ///< Lowest level counter that track the total time of the computation
   computation_start_up , ///< Track the time before the Resoudre loop
@@ -256,9 +256,9 @@ public:
    *
    * @param tstep is the current time step number
    */
-  void end_time_step(unsigned int tstep);
+  void end_time_step(long int tstep);
 
-  void set_nb_time_steps_elapsed(unsigned int n) ;
+  void set_nb_time_steps_elapsed(int n) ;
 
   int get_last_opened_counter_level() const ;
 

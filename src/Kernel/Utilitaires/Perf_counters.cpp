@@ -248,7 +248,7 @@ public:
   void start_timeloop_impl();
   void end_timeloop_impl();
   void start_time_step_impl();
-  void end_time_step_impl(unsigned int tstep);
+  void end_time_step_impl(long int tstep);
   int get_last_opened_counter_level_impl() const;
   void print_TU_files_impl(const std::string& message);
   void start_gpu_timer_impl();
@@ -287,7 +287,7 @@ private:
   duration computation_time_=duration::zero();      ///< Used to compute the total time of the simulation.
   duration time_skipped_ts_=duration::zero();       ///< the duration in seconds of the cache. If cache is too long, use function set_three_first_steps_elapsed in oder to include the stats of the cache in your stats
   Counter* last_opened_counter_=nullptr;   ///< pointer to the last opened counter. Each counter has a parent attribute, which also give the pointer of the counter open before them.
-  unsigned int nb_steps_elapsed_=0;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
+  int nb_steps_elapsed_=0;  ///< By default, we consider that the two first time steps are used to file the cache, so they are not taken into account in the stats.
   int total_nb_backup_=0;
   double total_data_exchange_per_backup_=0.;
   bool gpu_verbose_ =false;
@@ -383,6 +383,12 @@ void Perf_counters::Impl::check_begin(Counter& c, int counter_lvl, time_point t)
     {
       if (c.is_running_)
         Process::exit("The counter that you are trying to start is already running:" + c.description_);
+      /*
+      if (last_opened_counter_->is_comm_)
+        Process::exit("The last open_counter is a communication counter, you should close the communication counter first:" + last_opened_counter_->description_);
+      if (last_opened_counter_->is_gpu_)
+        Process::exit("The last open_counter is a gpu counter, you should close the gpu counter first:" + last_opened_counter_->description_);
+      */
       int expected_lvl = last_opened_counter_->level_ +1;
       if (c.is_comm_)
         {
@@ -568,8 +574,8 @@ std::string Perf_counters::Impl::get_date() const
 static void build_line_csv(std::ostringstream& lines, const std::array<std::string,24>& line_items, const std::array<int,24>& item_size)
 {
   int size_of_str_to_add = 50;
-  long unsigned int len_line = line_items.size();
-  for (long unsigned int i=0 ; i<len_line ; i++)
+  long long int len_line = line_items.size();
+  for (long long int i=0 ; i<len_line ; i++)
     {
       size_of_str_to_add = item_size[i];
       lines << std::setw(size_of_str_to_add) ; ///< Ensure that each item of a column has the same size
@@ -830,9 +836,9 @@ void Perf_counters::Impl::print_performance_to_csv(const std::string& message)
             min_time = table[0][0];
             max_time = table[0][1];
             SD_time = table[0][3];
-            quantity = static_cast <int>(std::floor(table[1][2]));
-            min_quantity = static_cast <int>(std::floor(table[1][0]));
-            max_quantity = static_cast <int>(std::floor(table[1][1]));
+            quantity = static_cast <long int>(std::floor(table[1][2]));
+            min_quantity = static_cast <long int>(std::floor(table[1][0]));
+            max_quantity = static_cast <long int>(std::floor(table[1][1]));
             SD_quantity = table[1][3];
             time_alone = table[3][2];
             min_time_alone = table[3][0];
@@ -1035,8 +1041,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
         line << separator <<std::setw(level_width) << c_to_print_.level_ << std::endl;
       }
   };
-
-  for (int i =0 ; i< static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER); i++)
+  for (int i =static_cast<int>(STD_COUNTERS::backup_file); i< static_cast<int>(STD_COUNTERS::NB_OF_STD_COUNTER); i++)
     {
       Counter& c_com = *std_counters_[i];
       {
@@ -1213,7 +1218,7 @@ void Perf_counters::Impl::print_global_TU(const std::string& message)
       else
         Process::exit("You are trying to get stats of an unknown computation step");
 
-      if(message == "Time loop statistics")
+      if(message == "Time loop statistics" && c_total_time.total_time_.count()>1.0e-12 && c_timeloop.total_time_.count()>1.0e-12)
         {
           perfs_TU<<std::endl;
           perfs_TU << std::left <<std::setw(counter_description_width) << "Standard counter description" << separator << std::setw(time_per_step_width) << "Time/step" << separator << std::setw(percent_loop_time_width) << "% loop time" << separator << std::setw(count_per_ts_width) << "Call(s)/step"<<std::endl;
@@ -1635,14 +1640,14 @@ void Perf_counters::Impl::start_time_step_impl()
  *
  * Nota : if the counter is called before the time step loop, it is not accounted for in the computation.
  */
-void Perf_counters::Impl::end_time_step_impl(unsigned int tstep)
+void Perf_counters::Impl::end_time_step_impl(long int tstep)
 {
   stop_counters_impl(); ///< stop_counters already updated c->tim_ts_
   if (last_opened_counter_ == nullptr)
     Process::exit("You are trying to compute the statistics of a time steps but have not open any counter");
   if (!time_loop_)
     Process::exit("You are trying to compute time loop statistics outside of the time loop");
-  int step = tstep - nb_steps_elapsed_;
+  double step = static_cast<double>(tstep) - static_cast<double>(nb_steps_elapsed_);
   auto compute = [step](Counter& c)
   {
     if (c.level_>=0 && step>0 && c.count_>0)
@@ -1866,12 +1871,12 @@ void Perf_counters::start_time_step()
   pimpl_->start_time_step_impl();
 }
 
-void Perf_counters::end_time_step(unsigned int tstep)
+void Perf_counters::end_time_step(long int tstep)
 {
   pimpl_->end_time_step_impl(tstep);
 }
 
-void Perf_counters::set_nb_time_steps_elapsed(unsigned int n)
+void Perf_counters::set_nb_time_steps_elapsed(int n)
 {
   pimpl_->set_time_steps_elapsed_impl(n);
 }

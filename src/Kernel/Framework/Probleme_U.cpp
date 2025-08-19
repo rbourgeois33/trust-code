@@ -242,6 +242,7 @@ bool  Probleme_U::updateGivenFields()
 bool Probleme_U::run()
 {
   // Force the post process task at the beginning of the run
+  std::cout << std::endl << "Stop 0" << std::endl<< std::endl;
   Cerr<<"First postprocessing, this can take some minutes"<<finl;
   postraiter(1);
   Cerr<<"First postprocessing OK"<<finl;
@@ -261,7 +262,7 @@ bool Probleme_U::run()
   VT_USER_START("Resolution");
 #endif
   // Time step loop
-  unsigned int tstep = 0;
+  long int tstep = 0;
   statistics().start_timeloop();
   while(!stop)
     {
@@ -293,7 +294,11 @@ bool Probleme_U::run()
             validateTimeStep();
         }
       if (!ok) // Impossible to solve the next time step, the Problem has given up
-        break;
+        {
+          statistics().end_count(STD_COUNTERS::timeloop);
+          statistics().end_time_step(tstep);
+          break;
+        }
 
       // Compute the next time step length
       dt=computeTimeStep(stop);

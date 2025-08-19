@@ -135,7 +135,7 @@ int main(int argc,char **argv) {
 
     TrioField vit_chaude;
 
-    Perf_counters::time_point clock0= Perf_counters::start_clock();
+    Perf_counters::time_point clock0= statistics().start_clock();
     int compti=0;
 
     bool init=true; // first time step ??
@@ -145,7 +145,7 @@ int main(int argc,char **argv) {
     while (!stop) {
 
         compti++;
-        cout << compti << " CLOCK " << Perf_counters::compute_time(clock0) << endl;
+        cout << compti << " CLOCK " << statistics().compute_time(clock0) << endl;
 
         ok=false; // Is the time interval successfully solved ?
 
@@ -274,12 +274,12 @@ int main(int argc,char **argv) {
 
             }	// destruction des champs et des tableaux associ�s
 
-            Perf_counters::time_point clock_avt_resolution= Perf_counters::start_clock();
+            Perf_counters::time_point clock_avt_resolution= statistics().start_clock();
 
             // Solve the next time step
             ok=T->solveTimeStep();
 
-            cout << compti << " TEMPS DE RESOLUTION DU PB (s) :  " << Perf_counters::compute_time(clock_avt_resolution) << endl;
+            cout << compti << " TEMPS DE RESOLUTION DU PB (s) :  " << statistics().compute_time(clock_avt_resolution) << endl;
 
             init=false;
 

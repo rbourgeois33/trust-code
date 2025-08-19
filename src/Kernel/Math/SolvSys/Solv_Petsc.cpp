@@ -1982,8 +1982,6 @@ int Solv_Petsc::resoudre_systeme(const Matrice_Base& la_matrice, const DoubleVec
 {
 
 #ifdef PETSCKSP_H
-  Perf_counters & statistics = Perf_counters::getInstance();
-
   // Create solver now just before solve if not created:
   if (SolveurPetsc_==nullptr) create_solver();
   std::fenv_t fenv;
