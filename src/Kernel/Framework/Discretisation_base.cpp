@@ -271,8 +271,7 @@ void Discretisation_base::volume_maille(const Schema_Temps_base& sch, const Doma
   const Domaine_VF& domaine_VF = ref_cast(Domaine_VF, z);
   discretiser_champ("champ_elem", domaine_VF, "volume_maille", "m3", 1, sch.temps_courant(), ch);
   Champ_Fonc_base& ch_fonc = ref_cast(Champ_Fonc_base, ch.valeur());
-  DoubleVect& tab = ch_fonc.valeurs();
-  tab = domaine_VF.volumes();
+  ch_fonc.valeurs().ref(domaine_VF.volumes());
 }
 
 void Discretisation_base::mesh_numbering(const Schema_Temps_base& sch, const Domaine_dis_base& z, OWN_PTR(Champ_Fonc_base)& ch) const
