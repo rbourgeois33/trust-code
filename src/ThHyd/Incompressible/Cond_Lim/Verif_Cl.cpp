@@ -94,7 +94,7 @@ int tester_compatibilite_hydr_thermique(const Domaine_Cl_dis_base& domaine_Cl_hy
               message_erreur_therm(la_cl_hydr, la_cl_th, num_Cl);
             }
         }
-      else if (sub_type(Entree_fluide_vitesse_imposee, la_cl_hydr.valeur()))
+      else if (sub_type(Entree_fluide_vitesse_imposee, la_cl_hydr.valeur()) && (la_cl_hydr->que_suis_je() != "Frontiere_ouverte_vitesse_imposee_ALE"))
         {
           if (sub_type(Entree_fluide_temperature_imposee, la_cl_th.valeur()))
             { /* Do nothing */ }
@@ -105,7 +105,7 @@ int tester_compatibilite_hydr_thermique(const Domaine_Cl_dis_base& domaine_Cl_hy
               message_erreur_therm(la_cl_hydr, la_cl_th, num_Cl);
             }
         }
-      else if ((sub_type(Dirichlet_paroi_fixe, la_cl_hydr.valeur())) || (sub_type(Dirichlet_paroi_defilante, la_cl_hydr.valeur())))
+      else if ((sub_type(Dirichlet_paroi_fixe, la_cl_hydr.valeur())) || (sub_type(Dirichlet_paroi_defilante, la_cl_hydr.valeur())) || (la_cl_hydr->que_suis_je() == "Frontiere_ouverte_vitesse_imposee_ALE"))
         {
           if ((sub_type(Neumann_paroi_adiabatique, la_cl_th.valeur())) || (sub_type(Neumann_paroi, la_cl_th.valeur())) || (sub_type(Echange_global_impose, la_cl_th.valeur()))
               || (sub_type(Echange_externe_impose, la_cl_th.valeur())) || (sub_type(Scalaire_impose_paroi, la_cl_th.valeur())))
