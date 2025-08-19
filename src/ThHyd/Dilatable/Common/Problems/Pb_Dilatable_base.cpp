@@ -86,7 +86,6 @@ void Pb_Dilatable_base::mettre_a_jour(double temps)
     equation(i).mettre_a_jour(temps);
 
   les_postraitements_.mettre_a_jour(temps);
-  domaine().mettre_a_jour(temps,domaine_dis(),*this);
   for (auto& itr : liste_loi_fermeture_)
     {
       Loi_Fermeture_base& loi=itr.valeur();
