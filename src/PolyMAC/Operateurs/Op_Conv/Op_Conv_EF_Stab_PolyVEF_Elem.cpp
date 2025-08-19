@@ -168,7 +168,12 @@ void Op_Conv_EF_Stab_PolyVEF_Elem::ajouter_blocs_gen(matrices_t mats, DoubleTab&
         if (fcl_v(f, 0) < 2 || fcl_v(f, 0) == 3)
           for (d = 0; d < D; d++)
             for (m = 0; m < Mv; m++)
-              fvn(m) += nf(f, d) * (fcl_v(f, 0) == 3 ? ref_cast(Dirichlet, cls_v[fcl_v(f, 1)].valeur()).val_imp(fcl_v(f, 2), Mv * d + m) : vit(f, Mv * d + m));
+              {
+                double vn = vit(f, Mv * d + m);
+                if (cls_v[fcl_v(f, 1)]->que_suis_je() == "Frontiere_ouverte_vitesse_imposee_ALE") vn = 0.0;
+                else if (fcl_v(f, 0) == 3) vn = ref_cast(Dirichlet, cls_v[fcl_v(f, 1)].valeur()).val_imp(fcl_v(f, 2), Mv * d + m);
+                fvn(m) += nf(f, d) * vn;
+              }
 
         for (dv_flux = 0, dc_flux = 0, i = 0; i < 2; i++)
           for (e = f_e(f, i), n = 0, m = 0; n < N; n++, m += (Mv > 1))
