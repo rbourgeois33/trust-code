@@ -555,7 +555,7 @@ void Champ_Generique_Reduction_0D::extraire(double& val_extraite,const DoubleVec
         {
           // Calcul des volumes de controle a chaque face
           int nb_face = zvf.nb_faces();
-          if (!volume_controle_.size())
+          if (!volume_controle_.size() || zvf.domaine().deformable())
             {
               volume_controle_.resize(nb_face);
               volume_controle_=0;
