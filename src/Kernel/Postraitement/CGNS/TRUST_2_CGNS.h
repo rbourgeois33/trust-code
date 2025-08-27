@@ -33,6 +33,7 @@ class TRUST_2_CGNS
 public:
   TRUST_2_CGNS() { }
   void associer_domaine_TRUST(const Domaine *, const Domaine_dis_base*, const DoubleTab&, const IntTab&, const bool);
+  void associer_connec_pour_dual(const IntTab&, const IntTab&);
   void fill_coords(std::vector<double>&, std::vector<double>&, std::vector<double>&);
   CGNS_TYPE convert_elem_type(const Motcle&);
 
@@ -107,6 +108,9 @@ private:
   OBS_PTR(Domaine) dom_trust_;
   OBS_PTR(DoubleTab) sommets_;
   OBS_PTR(IntTab) elems_;
+
+  // specifique maillage dual pour faces
+  OBS_PTR(IntTab) fs_dual_, ef_dual_;
 
   bool par_in_zone_ = false, all_procs_write_ = true, postraiter_domaine_ = false;
   int ns_tot_ = -123, ne_tot_ = -123, nb_procs_writing_ = -123;

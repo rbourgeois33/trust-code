@@ -80,6 +80,10 @@ public:
   int ecrire_item_int(const Nom&, const Nom&, const Nom&, const Nom&, const Nom&, const IntVect&, const int) override { return 1; }
   int ecrire_champ(const Domaine&, const Noms&, const Noms&, int, double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&) override;
 
+  // pour simplifier la vie
+  inline Ecrire_CGNS& get_cgns_writer() { return cgns_writer_; }
+  inline const Ecrire_CGNS& get_cgns_writer() const { return cgns_writer_; }
+
 private:
   Nom cgns_basename_;
 #ifdef HAS_CGNS

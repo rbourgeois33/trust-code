@@ -124,6 +124,12 @@ void TRUST_2_CGNS::associer_domaine_TRUST(const Domaine * dom, const Domaine_dis
   postraiter_domaine_ = post_dom;
 }
 
+void TRUST_2_CGNS::associer_connec_pour_dual(const IntTab& fs, const IntTab& ef)
+{
+  fs_dual_ = fs;
+  ef_dual_ = ef;
+}
+
 void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>& yCoords, std::vector<double>& zCoords)
 {
   const int dim = sommets_->dimension(1), nb_som = sommets_->dimension(0);
@@ -559,12 +565,25 @@ CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
 int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::vector<cgsize_t>& eoff, int decal)
 {
   assert (dom_trust_.non_nul());
-  const Nom polym("Domaine_PolyMAC");
-  const Domaine_dis_base& domaine_dis = domaine_dis_.non_nul() ? domaine_dis_.valeur() :
-                                        Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur());
 
-  const Domaine_VF& vf = ref_cast (Domaine_VF, domaine_dis);
-  const IntTab& ef = vf.elem_faces();
+  Domaine_dis_base* domaine_dis = nullptr;
+  Domaine_VF* vf = nullptr;
+
+  if (fs_dual_.est_nul() && ef_dual_.est_nul())
+    {
+      const Nom polym("Domaine_PolyMAC");
+      domaine_dis = domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) :
+                    &(Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur()));
+
+      vf = &(ref_cast (Domaine_VF, *domaine_dis));
+    }
+  else
+    {
+      assert(domaine_dis_.est_nul());
+    }
+
+
+  const IntTab& ef = vf ? (*vf).elem_faces() : ef_dual_.valeur();
 
   eoff.push_back(0); // first index = > 0 !
 
@@ -604,12 +623,24 @@ int TRUST_2_CGNS::convert_connectivity_ngon(std::vector<cgsize_t>& econ, std::ve
   assert (dom_trust_.non_nul());
   if (is_polyedre)
     {
-      const Nom polym("Domaine_PolyMAC");
-      const Domaine_dis_base& domaine_dis = domaine_dis_.non_nul() ? domaine_dis_.valeur() :
-                                            Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur());
+      Domaine_dis_base* domaine_dis = nullptr;
+      Domaine_VF* vf = nullptr;
 
-      const Domaine_VF& vf = ref_cast(Domaine_VF, domaine_dis);
-      const IntTab& fs = vf.face_sommets();
+      if (fs_dual_.est_nul() && ef_dual_.est_nul())
+        {
+          const Nom polym("Domaine_PolyMAC");
+          domaine_dis = domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) :
+                        &(Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur()));
+
+          vf = &(ref_cast (Domaine_VF, *domaine_dis));
+        }
+      else
+        {
+          assert(domaine_dis_.est_nul());
+        }
+
+
+      const IntTab& fs = vf ? (*vf).face_sommets() : fs_dual_.valeur();
 
       eoff.push_back(0); // first index = > 0 !
 

@@ -327,6 +327,12 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   /* 1 : Instance of TRUST_2_CGNS */
   TRUST_2_CGNS TRUST2CGNS;
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
+  if (is_dual_ && Objet_U::dimension == 3)
+    {
+      assert(fs_dual_.size() > 0 && ef_dual_.size() > 0);
+      TRUST2CGNS.associer_connec_pour_dual(fs_dual_, ef_dual_);
+    }
+
   doms_written_.push_back(nom_dom);
 
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
@@ -480,6 +486,11 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
   T2CGNS_.push_back(TRUST_2_CGNS());
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_.back();
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr,les_som, les_elem, postraiter_domaine_);
+  if (is_dual_ && Objet_U::dimension == 3)
+    {
+      assert(fs_dual_.size() > 0 && ef_dual_.size() > 0);
+      TRUST2CGNS.associer_connec_pour_dual(fs_dual_, ef_dual_);
+    }
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
 
   /* 2 : Fill coords */
@@ -752,6 +763,11 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   T2CGNS_.push_back(TRUST_2_CGNS());
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_.back();
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
+  if (is_dual_ && Objet_U::dimension == 3)
+    {
+      assert(fs_dual_.size() > 0 && ef_dual_.size() > 0);
+      TRUST2CGNS.associer_connec_pour_dual(fs_dual_, ef_dual_);
+    }
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
 
   /* 2 : Fill coords */
@@ -1026,21 +1042,11 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
 
   if (mesh_type_cell == INTERP_KERNEL::NORM_TRI3)
     type_cell = "Triangle";
-  else if (mesh_type_cell == INTERP_KERNEL::NORM_TETRA4)
-    type_cell = "Tetraedre";
-  else if (mesh_type_cell == INTERP_KERNEL::NORM_PENTA6)
-    type_cell = "Prisme";
   else if (mesh_type_cell == INTERP_KERNEL::NORM_POLYHED)
     type_cell = "Polyedre";
-  else if (mesh_type_cell == INTERP_KERNEL::NORM_PYRA5)
-    type_cell = "Pyramide";
-  else if (mesh_type_cell == INTERP_KERNEL::NORM_POLYGON)
-    type_cell = "Polygone";
-  else if (mesh_type_cell == INTERP_KERNEL::NORM_HEXGP12)
-    type_cell = "Prisme_hexag";
   else
     {
-      Cerr << "Cell type " << mesh_type_cell << " is not supported yet." << finl;
+      Cerr << "Cell type " << mesh_type_cell << " is not supported yet. It should be only triangle (2D) and polyedre (3D). Call the 911 !!" << finl;
       Process::exit();
     }
 
@@ -1062,8 +1068,8 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
         {
           polyhedronIndex[i] = face; // Index des polyedres
 
-          int index = connIndex[i] + 1;
-          int nb_som = static_cast<int>(connIndex[i + 1] - index);
+          const int index = connIndex[i] + 1;
+          const int nb_som = static_cast<int>(connIndex[i + 1] - index);
           for (int j = 0; j < nb_som; j++)
             {
               if (j==0 || conn[index + j]<0)
@@ -1076,29 +1082,12 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
       polyhedronIndex[ncells] = face;
       ref_cast(Polyedre,type_elem.valeur()).affecte_connectivite_numero_global(nodes, facesIndex, polyhedronIndex, les_elems);
     }
-  else if (sub_type(Polygone, type_elem.valeur()))
-    {
-      int facesIndexSize = conn_size - ncells;
-      ArrOfInt facesIndex(facesIndexSize), polygonIndex(ncells+1);
-      int face=0;
-      for (int i = 0; i < ncells; i++)
-        {
-          polygonIndex[i] = face;   // Index des polygones
-
-          int index = connIndex[i] + 1;
-          int nb_som = static_cast<int>(connIndex[i + 1] - index);
-          for (int j = 0; j < nb_som; j++)
-            facesIndex[face++] = conn[index + j];
-        }
-      polygonIndex[ncells] = face;
-      ref_cast(Polygone,type_elem.valeur()).affecte_connectivite_numero_global(facesIndex, polygonIndex, les_elems);
-    }
   else // Tous les autres types
     {
       for (int i = 0; i < ncells; i++)
         {
-          int index = connIndex[i] + 1;
-          int nb_som = static_cast<int>(connIndex[i + 1] - index);
+          const int index = connIndex[i] + 1;
+          const int nb_som = static_cast<int>(connIndex[i + 1] - index);
           if (i==0) les_elems.resize(ncells, nb_som); // Size les_elems2
           for (int j = 0; j < nb_som; j++)
             les_elems(i, j) = conn[index + j];
@@ -1115,29 +1104,23 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
   dom_dual.les_elems() = les_elems;
 
   // write dual_mesh
-  std::string fn = baseFile_name_ + "_dual"; // file name
+  std::string fn = baseFile_name_ + "_dual.grid"; // file name
 
   Format_Post_CGNS cgns;
   cgns.set_postraiter_domain();
+  cgns.get_cgns_writer().cgns_set_is_dual_domain();
+
+  // we fill face/som & elem faces conn ET seulement si poly !!!
+  if (Objet_U::dimension == 3)
+    fill_connectivity_from_mc_mesh(dual_m,
+                                   cgns.get_cgns_writer().get_fs_dual(),
+                                   cgns.get_cgns_writer().get_ef_dual());
+
   cgns.initialize(Nom(fn), 0, "SIMPLE");
 
   cgns.ecrire_entete(0., 0, est_le_premier_post);
   cgns.ecrire_domaine(dom_dual, est_le_premier_post);
   cgns.finir_sans_iters(1, fn);
-
-//  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-//    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
-//  else
-//    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
-//
-//  cgns_write_domaine(&dom_dual, dom_dual_nom, sommets, les_elems, Motcle(type_elem->que_suis_je()));
-//
-//  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-//    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
-//  else
-//    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
-//
-//  fileId_--;
 }
 
 #endif /* HAS_CGNS */

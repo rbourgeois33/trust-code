@@ -29,6 +29,7 @@ public:
   void cgns_associer_domaine_dis(const Domaine_dis_base& );
   void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
+  void cgns_set_is_dual_domain() { is_dual_ = true; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
   void cgns_finir();
@@ -65,6 +66,15 @@ private:
   std::vector<int> vec_proc_maitre_local_comm_, unique_vec_proc_maitre_local_comm_;
   std::vector<cgsize_t> sizeId_som_local_comm_, sizeId_elem_local_comm_;
 
+  // specifique maillage dual pour faces
+  IntTab fs_dual_, ef_dual_;
+  bool is_dual_ = false;
+  inline IntTab& get_fs_dual() { return fs_dual_;}
+  inline const IntTab& get_fs_dual() const { return fs_dual_;}
+  inline IntTab& get_ef_dual() { return ef_dual_;}
+  inline const IntTab& get_ef_dual() const { return ef_dual_;}
+
+  // gestion elem/som/faces
   void cgns_fill_field_loc_map(const Domaine&, const std::string&);
 
   // Methodes pour LINK
