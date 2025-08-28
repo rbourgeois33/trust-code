@@ -1538,7 +1538,13 @@ void Postraitement::init()
             const Noms nom = champ->get_property("nom");
             const Noms composantes = champ->get_property("composantes");
 
-            if (Motcle(loc_post) == "FACES" && Motcle(format_).debute_par("lata")==0 && Motcle(format_).debute_par("med")==0 && Motcle(format_).debute_par("xyz")==0)
+            const bool can_not_post_at_faces = Motcle(loc_post) == "FACES" &&
+                                               Motcle(format_).debute_par("lata") == 0 &&
+                                               Motcle(format_).debute_par("med") == 0 &&
+                                               Motcle(format_) != "CGNS" &&
+                                               Motcle(format_).debute_par("xyz") == 0;
+
+            if (can_not_post_at_faces)
               {
                 Cerr<<"The field "<<nom[0]<<" can not be postprocessed to the faces in the format "<<format_<<finl;
                 Cerr<<"The postprocessing to the faces is allowed only in the format lata or med"<<finl;
