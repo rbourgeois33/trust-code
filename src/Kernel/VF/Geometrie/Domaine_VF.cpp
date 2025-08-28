@@ -1454,16 +1454,18 @@ void Domaine_VF::build_mc_dual_mesh() const
         {
           if (e==-1 || e >= nb_elem) continue;  // skip boundary or virtual
           if (dim == 2)  // easy, just triangles to build
-            totSz += 3 + 1; // will add a triangle
+            totSz += 3 + 1; // will add a triangle = 1 (type) + 3 sommets
           else // 3D
             {
               mcIdType nb_pts = fcI[f+1]-fcI[f]-1;  // nb of points in face f (-1 to skip type)
+
               // Increase size of c to fit for the next poyhedron to be inserted:
-              // +1 : for the type
-              // (nb_pts-1)=nb of segs in face,
-              // (nb_pts-1)*(3+1)=nb of points for all triangles (segs in 2D) built on top of those segments
-              //    +1 : to account for the '-1' separator between face in polyhedr conn,
-              totSz += 1 + nb_pts + (nb_pts-1)*(3+1);
+              // +1 : for the type POLYHED
+              // nb_pts : original face
+              // nb_pts*(3+1) : nb_pts triangular lateral faces (3 sommets + separateur -1)
+              totSz += 1                // type
+                       + nb_pts           // original face
+                       + nb_pts*(3+1);     // lateral faces
             }
         }
     }
@@ -1474,7 +1476,7 @@ void Domaine_VF::build_mc_dual_mesh() const
 
   for(int f=0; f<nb_fac; f++)    // For all the (real) faces
     {
-      int e1=face_voisins_(f, 0), e2=face_voisins(f, 1);
+      int e1 = face_voisins_(f, 0), e2 = face_voisins(f, 1);
       for (int e: {e1, e2})
         {
           if (e==-1 || e >= nb_elem) continue;  // skip boundary or virtual
@@ -1491,12 +1493,14 @@ void Domaine_VF::build_mc_dual_mesh() const
             {
               mcIdType nb_pts = fcI[f+1]-fcI[f]-1;  // nb of points in face f (-1 to skip type)
               cP[c_sz++] = INTERP_KERNEL::NormalizedCellType::NORM_POLYHED;
-              // Add the face itself:
+
+              // 1) Add the face itself: (original face)
               for(const mcIdType *p = fc + fcI[f] + 1; p < fc+fcI[f + 1]; p++)
                 cP[c_sz++] = *p;
-              // Add the new faces containing the barycenter:
+
+              // 2) Add the new triangular lateral faces containing the barycenter:
               const mcIdType *p2 = fc + fcI[f] + 1;
-              for (mcIdType i = 0; i<nb_pts-1; i++)  // loop on all segs of the face - in 2D this will loop once only
+              for (mcIdType i = 0; i<nb_pts; i++)  // loop on all segs of the face - in 2D this will loop once only
                 {
                   cP[c_sz++] = -1; // -1 to separate from the prev face in the polyhedron
                   cP[c_sz++] = e+nb_coo; // index of the barycenter in the final coord array
@@ -1525,6 +1529,28 @@ void Domaine_VF::build_mc_dual_mesh() const
   mc_dual_mesh_->setConnectivity(c,cI);
   mc_dual_mesh_ready_ = true;
 
+#ifndef NDEBUG
+  /*
+   * Final testing : Only in debug mode
+   *
+   *  - nb_faces_bords does not change between primal (TRUST) mesh and dual mesh
+   *  - nb_faces per polyedron has at least 4 faces (case of tetra)
+   */
+  MCAuto<MEDCouplingUMesh> skin_dual =  mc_dual_mesh_->computeSkin();
+  mcIdType nb_faces_bd = skin_dual->getNumberOfCells();
+
+  if (nb_faces_bd != domaine().nb_faces_bord())
+    Process::exit("Something wrong with dual mesh computation #1 !!!! \n");
+
+  DAId desc(DataArrayIdType::New()), descIndx(DataArrayIdType::New()), revDesc(DataArrayIdType::New()), revDescIndx(DataArrayIdType::New());
+  MCAuto<MEDCoupling::MEDCouplingUMesh> mc_dual_desc(mc_dual_mesh_->buildDescendingConnectivity(desc, descIndx, revDesc, revDescIndx));
+
+
+  DAId dsi = descIndx->deltaShiftIndex();
+  DAId res = dsi->findIdsLowerOrEqualTo(3) ;
+  if (res->getNumberOfTuples() > 0)
+    Process::exit("Something wrong with dual mesh computation #2 !!!! \n");
+#endif
+
 #endif // MEDCOUPLING_
 }
-

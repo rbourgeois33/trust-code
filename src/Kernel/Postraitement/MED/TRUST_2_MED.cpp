@@ -189,7 +189,7 @@ void read_med_field_names(const Nom& nom_fic, Noms& noms_chps, ArrOfDouble& temp
 #endif
 }
 
-//#ifdef MED_
+#ifdef MED_
 // renvoit le type med a partir du type trio
 med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem_i,med_axis_type& rep)
 {
@@ -260,7 +260,7 @@ med_geometry_type type_geo_trio_to_type_med(const Nom& type_elem)
   return type_geo_trio_to_type_med(type_elem,rep);
 }
 
-//#ifdef MEDCOUPLING_
+#ifdef MEDCOUPLING_
 /*! @brief Return MEDCoupling type from TRUST type
  * See file NormalizedGeometricTypes in MEDCoupling includes.
  */
@@ -380,12 +380,8 @@ void fill_connectivity_from_mc_mesh(const MEDCoupling::MEDCouplingUMesh * mc_mes
       elem_face(i, j) = static_cast<int>(descP[descIndxP[i]+j]);
 }
 
-
-//#endif
-
-//#endif
-
-
+#endif /* MEDCOUPLING_ */
+#endif /* MED_ */
 
 /*! @brief Passage de la connectivite TRUST a MED si toMED=true de MED a trio si toMED=false
  */
