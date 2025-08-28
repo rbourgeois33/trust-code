@@ -17,6 +17,7 @@
 #include <communications.h>
 #include <Comm_Group_MPI.h>
 #include <TRUST_2_CGNS.h>
+#include <unordered_set>
 #include <Domaine_VF.h>
 #include <Domaine.h>
 #include <cstring>
@@ -271,6 +272,25 @@ void TRUST_2_CGNS::fill_global_infos()
 #endif
 }
 
+void TRUST_2_CGNS::get_domaine_dis_vf_if_poly(Domaine_dis_base*& domaine_dis, Domaine_VF*& vf)
+{
+  domaine_dis = nullptr;
+  vf = nullptr;
+
+  if (fs_dual_.est_nul() && ef_dual_.est_nul())
+    {
+      const Nom polym("Domaine_PolyMAC");
+      domaine_dis = domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) :
+                    &(Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur()));
+
+      vf = &(ref_cast (Domaine_VF, *domaine_dis));
+    }
+  else
+    {
+      assert(domaine_dis_.est_nul());
+    }
+}
+
 void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
 {
 #ifdef MPI_
@@ -286,11 +306,12 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
 
   if (is_polyedre)
     {
-      const Nom dom_poly("Domaine_PolyMAC");
-      const Domaine_dis_base& domaine_dis = Domaine_dis_cache::Build_or_get_poly_post(dom_poly, dom_trust_.valeur());
-      const Domaine_VF& vf = ref_cast(Domaine_VF, domaine_dis);
-      const IntTab& fs = vf.face_sommets(), &ef = vf.elem_faces();
+      Domaine_dis_base* domaine_dis = nullptr;
+      Domaine_VF* vf = nullptr;
+      get_domaine_dis_vf_if_poly(domaine_dis, vf);
 
+      const IntTab& fs = vf ? (*vf).face_sommets() : fs_dual_.valeur();
+      const IntTab& ef = vf ? (*vf).elem_faces() : ef_dual_.valeur();
       const int nb_fs = fs.dimension(0), nb_ef = ef.dimension(0);
 
       global_nb_face_som_.assign(nb_procs, -123 /* default */);
@@ -307,7 +328,6 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
           MPI_Allgather(&nb_fs, 1, MPI_ENTIER, global_nb_face_som_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
           MPI_Allgather(&nb_ef, 1, MPI_ENTIER, global_nb_elem_face_.data(), 1, MPI_ENTIER, MPI_COMM_WORLD);
         }
-
 
       if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
         {
@@ -568,20 +588,7 @@ int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::v
 
   Domaine_dis_base* domaine_dis = nullptr;
   Domaine_VF* vf = nullptr;
-
-  if (fs_dual_.est_nul() && ef_dual_.est_nul())
-    {
-      const Nom polym("Domaine_PolyMAC");
-      domaine_dis = domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) :
-                    &(Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur()));
-
-      vf = &(ref_cast (Domaine_VF, *domaine_dis));
-    }
-  else
-    {
-      assert(domaine_dis_.est_nul());
-    }
-
+  get_domaine_dis_vf_if_poly(domaine_dis, vf);
 
   const IntTab& ef = vf ? (*vf).elem_faces() : ef_dual_.valeur();
 
@@ -604,15 +611,27 @@ int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::v
     }
 
   // multiply by -1 repeated faces
-  for (int i = static_cast<int>(econ.size()) -1; i >0; i-- )
+  /* for (int i = static_cast<int>(econ.size()) -1; i >0; i-- )
+     {
+       int val = static_cast<int>(econ[i]);
+       for (int j = i-1; j > 0; j--)
+         if (econ[j] == val)
+           {
+             econ[i] *= -1;
+             break;
+           }
+     }
+     */
+
+  // XXX Elie Saikali ... was too slow : O(n^2)
+  // lets go !
+  std::unordered_set<int> seen;
+  for (auto& itr : econ)
     {
-      int val = static_cast<int>(econ[i]);
-      for (int j = i-1; j > 0; j--)
-        if (econ[j] == val)
-          {
-            econ[i] *= -1;
-            break;
-          }
+      if (seen.find(itr) != seen.end())
+        itr *= -1; // already seen -> times -1 !!!
+      else
+        seen.insert(itr);
     }
 
   return ef.dimension(0);
@@ -625,20 +644,7 @@ int TRUST_2_CGNS::convert_connectivity_ngon(std::vector<cgsize_t>& econ, std::ve
     {
       Domaine_dis_base* domaine_dis = nullptr;
       Domaine_VF* vf = nullptr;
-
-      if (fs_dual_.est_nul() && ef_dual_.est_nul())
-        {
-          const Nom polym("Domaine_PolyMAC");
-          domaine_dis = domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) :
-                        &(Domaine_dis_cache::Build_or_get_poly_post(polym, dom_trust_.valeur()));
-
-          vf = &(ref_cast (Domaine_VF, *domaine_dis));
-        }
-      else
-        {
-          assert(domaine_dis_.est_nul());
-        }
-
+      get_domaine_dis_vf_if_poly(domaine_dis, vf);
 
       const IntTab& fs = vf ? (*vf).face_sommets() : fs_dual_.valeur();
 

@@ -111,6 +111,7 @@ private:
 
   // specifique maillage dual pour faces
   OBS_PTR(IntTab) fs_dual_, ef_dual_;
+  void get_domaine_dis_vf_if_poly(Domaine_dis_base*& , Domaine_VF*& );
 
   bool par_in_zone_ = false, all_procs_write_ = true, postraiter_domaine_ = false;
   int ns_tot_ = -123, ne_tot_ = -123, nb_procs_writing_ = -123;
