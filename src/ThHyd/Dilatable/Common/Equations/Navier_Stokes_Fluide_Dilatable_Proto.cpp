@@ -212,7 +212,8 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_avec_inertie_impl(const Nav
   eqn.solv_masse().ajouter_masse(dt,mat_morse,0);
 
   rho_vitesse_impl(tab_rho_face_n,eqn.inconnue().passe(),rhovitesse);
-  eqn.solv_masse().ajouter_masse(dt,tab_secmem,rhovitesse,0);
+  const bool use_old_volumes = eqn.domaine_dis().domaine().deformable();
+  eqn.solv_masse().ajouter_masse(dt, tab_secmem, rhovitesse, 0, use_old_volumes);
 
   // blocage_cl faux si dirichlet u!=0 !!!!!! manque multiplication par rho
   for (int op=0; op< eqn.nombre_d_operateurs(); op++) eqn.operateur(op).l_op_base().modifier_pour_Cl(mat_morse,tab_secmem);
@@ -307,7 +308,8 @@ void Navier_Stokes_Fluide_Dilatable_Proto::assembler_blocs_avec_inertie(const Na
   const double dt=eqn.schema_temps().pas_de_temps();
   eqn.solv_masse().ajouter_masse(dt,*mat,0);
   rho_vitesse_impl(tab_rho_face_n,eqn.inconnue().passe(),rhovitesse);
-  eqn.solv_masse().ajouter_masse(dt,tab_secmem,rhovitesse,0);
+  const bool use_old_volumes = eqn.domaine_dis().domaine().deformable();
+  eqn.solv_masse().ajouter_masse(dt,tab_secmem,rhovitesse,0, use_old_volumes);
 
   // blocage_cl faux si dirichlet u!=0 !!!!!! manque multiplication par rho
   for (int op=0; op< eqn.nombre_d_operateurs(); op++) eqn.operateur(op).l_op_base().modifier_pour_Cl(*mat,tab_secmem);
