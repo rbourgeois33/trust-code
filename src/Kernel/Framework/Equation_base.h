@@ -308,6 +308,12 @@ private :
   virtual void derivee_en_temps_inco_sources(DoubleTrav& ) { /* Don nothing */ }
   virtual void verify_scheme() { /* Don nothing */ }
 
+  // Helpers to simplify derivee_en_temps_inco implementation
+  bool is_calcul_explicite();
+  void assemble_operator_terms(DoubleTrav& secmem, DoubleTab& derivee, bool calcul_explicite);
+  void handle_implicite_zero(DoubleTrav& secmem, DoubleTab& derivee, bool calcul_explicite);
+  void handle_implicite_positive(DoubleTrav& secmem, DoubleTab& derivee);
+
   Ecrire_fichier_xyz_valeur xyz_field_values_file_;
 
   //!SC: passage en protected (surcharge de get_champ dans Equation_Diphasique_base)

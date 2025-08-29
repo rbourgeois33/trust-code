@@ -716,16 +716,14 @@ DoubleTab& Navier_Stokes_std::corriger_derivee_impl(DoubleTab& derivee)
       derivee2/=dt;
       divergence.calculer(derivee2, secmemP); // Div(M-1(F - BtP))
     }
-  else
+  else if (is_ALE)
     {
-      if (is_ALE)
-        {
-          DoubleTab derivee2(derivee);
-          probleme().domaine().ajouter_correctif_volumique(la_vitesse->valeurs(), derivee, dt, derivee2);
-          divergence.calculer(derivee2, secmemP);
-        }
-      else divergence.calculer(derivee, secmemP); // Div(M-1(F - BtP))
+      DoubleTab derivee2(derivee);
+      probleme().domaine().ajouter_correctif_volumique(la_vitesse->valeurs(), derivee, dt, derivee2);
+      divergence.calculer(derivee2, secmemP);
     }
+  else
+    divergence.calculer(derivee, secmemP); // Div(M-1(F - BtP))
 
   secmemP *= -1; // car div =-B
   // Correction du second membre d'apres les conditions aux limites :

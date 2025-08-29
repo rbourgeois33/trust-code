@@ -525,47 +525,89 @@ void Equation_base::imprimer(Sortie& os) const
 DoubleTab& Equation_base::derivee_en_temps_inco(DoubleTab& derivee)
 {
   derivee = 0.;
-
   DoubleTrav secmem(derivee);
   // secmem = sum(operators) + sources + equation specific terms
 
-
   derivee_en_temps_inco_sources(secmem);
-  const double time_factor = get_time_factor();
 
-  bool calcul_explicite = false;
+  const bool calcul_explicite = is_calcul_explicite();
+
+  assemble_operator_terms(secmem, derivee, calcul_explicite);
+  les_sources.ajouter(secmem);
+
+  if (calculate_time_derivative())
+    {
+      // Store dI/dt(n) = M-1 secmem :
+      derivee_en_temps().valeurs() = secmem;
+      solveur_masse->appliquer(derivee_en_temps().valeurs());
+      schema_temps().modifier_second_membre((*this), secmem); // Change secmem for some schemes (eg: Adams_Bashforth)
+    }
+
+  corriger_derivee_expl(secmem); // Add specific term for an equation (eg: -gradP for Navier Stokes)
+
+  // handle implicitness cases
+  if (implicite_ == 0)
+    {
+      handle_implicite_zero(secmem, derivee, calcul_explicite);
+      return derivee;
+    }
+  else if (implicite_ > 0)
+    {
+      // TRUST support notices that this part has never been covered...
+      //implicite
+      // M dU/dt + AU* = f -BUn;
+      // U* = Un+dt dU/dt
+      // (M/dt + A) U* = f -BUn + M/dt Un
+      handle_implicite_positive(secmem, derivee);
+      return derivee;
+    }
+
+  // invalid implicite_ value
+  Cerr << "Error in Equation_base::derivee_en_temps_inco" << finl;
+  Cerr << "implicite_ = " << implicite_ << " has not been initialized!" << finl;
+  Cerr << "May be " << que_suis_je() << "::completer() method doesn't call Equation_base::completer()" << finl;
+  Cerr << "Contact TRUST support." << finl;
+  Process::exit();
+  return derivee;
+}
+
+bool Equation_base::is_calcul_explicite()
+{
   if (parametre_equation_.non_nul() && sub_type(Parametre_implicite, parametre_equation_.valeur()))
     {
       Parametre_implicite& param2 = ref_cast(Parametre_implicite, parametre_equation_.valeur());
-      calcul_explicite = param2.calcul_explicite();
+      return param2.calcul_explicite();
     }
+  return false;
+}
 
+void Equation_base::assemble_operator_terms(DoubleTrav& secmem, DoubleTab& derivee, bool calcul_explicite)
+{
+  const double time_factor = get_time_factor();
   if (schema_temps().diffusion_implicite() && !calcul_explicite)
     {
       // Add convection operator only if equation has one
-      derivee=inconnue().valeurs();
-      if (nombre_d_operateurs()>1)
+      derivee = inconnue().valeurs();
+      if (nombre_d_operateurs() > 1)
         {
           derivee_en_temps_conv(secmem, derivee);
           if (has_time_factor_)
-            {
-              secmem *= time_factor;
-            }
+            secmem *= time_factor;
         }
     }
   else
     {
       verify_scheme();
-
       // Add all explicit operators
-      for(int i=0; i<nombre_d_operateurs(); i++)
-        if(operateur(i).l_op_base().get_decal_temps()!=1)
+      for (int i = 0; i < nombre_d_operateurs(); i++)
+        if (operateur(i).l_op_base().get_decal_temps() != 1)
           {
             if (has_time_factor_)
               {
                 DoubleTrav secmem_tmp(secmem);
                 operateur(i).ajouter(secmem_tmp);
-                if (i == 1) secmem_tmp *= time_factor;
+                if (i == 1)
+                  secmem_tmp *= time_factor;
                 secmem += secmem_tmp;
               }
             else
@@ -574,118 +616,79 @@ DoubleTab& Equation_base::derivee_en_temps_inco(DoubleTab& derivee)
               }
           }
     }
-  les_sources.ajouter(secmem);
-  if (calculate_time_derivative())
+}
+
+void Equation_base::handle_implicite_zero(DoubleTrav& secmem, DoubleTab& derivee, bool calcul_explicite)
+{
+  solveur_masse->appliquer(secmem); // M-1 * secmem
+  if (schema_temps().diffusion_implicite() && !calcul_explicite)
     {
-      // Store dI/dt(n) = M-1 secmem :
-      derivee_en_temps().valeurs()=secmem;
-      solveur_masse->appliquer(derivee_en_temps().valeurs());
-      schema_temps().modifier_second_membre((*this),secmem); // Change secmem for some schemes (eg: Adams_Bashforth)
-    }
-
-  corriger_derivee_expl(secmem); // Add specific term for an equation (eg: -gradP for Navier Stokes)
-
-  if (implicite_==0)
-    {
-      solveur_masse->appliquer(secmem); // M-1 * secmem
-      if (schema_temps().diffusion_implicite() && !calcul_explicite)
-        {
-          // Solve: (1/dt + M-1*A)*dI = M-1 * secmem
-          // where A is the diffusion
-          Equation_base::Gradient_conjugue_diff_impl(secmem, derivee);
-        }
-      else
-        {
-          derivee = secmem;
-          derivee.echange_espace_virtuel();
-        }
-      corriger_derivee_impl(derivee);  // Solve specific implicit term for an equation (eg: pressure for Navier Stokes)
-
-    }
-  else if (implicite_>0)
-    {
-      // TRUST support notices that this part has never been covered...
-      //implicite
-      // M dU/dt + AU* = f -BUn;
-      // U* = Un+dt dU/dt
-      // (M/dt + A) U* = f -BUn + M/dt Un
-      //
-      double dt=schema_temps().pas_de_temps();
-      for(int i=0; i<nombre_d_operateurs(); i++)
-        {
-          //boucle sur les operateurs
-          Operateur_base& op=operateur(i).l_op_base();
-          if(op.get_matrice().est_nul())
-            op.set_matrice().typer("Matrice_Morse");
-          if(op.get_decal_temps()==1)
-            {
-              //if (op.set_matrice()->nb_lignes()<2)
-              {
-                Matrice_Morse& matrice=ref_cast(Matrice_Morse,op.set_matrice().valeur());
-                op.dimensionner(matrice);
-                sys_invariant_=0;
-              }
-              if(!sys_invariant_)
-                {
-                  Matrice_Morse& matrice=ref_cast(Matrice_Morse, op.set_matrice().valeur());
-                  op.contribuer_a_avec(inconnue().valeurs(), matrice);
-                  solv_masse().ajouter_masse(dt, op.set_matrice().valeur());
-
-                  if(
-                    (op.get_solveur()->que_suis_je()=="Solv_Cholesky")
-                    ||
-                    (op.get_solveur()->que_suis_je()=="Solv_GCP")
-                  )
-                    {
-                      Matrice_Morse_Sym new_mat(matrice);
-                      new_mat.set_est_definie(1);
-                      op.set_matrice()=new_mat;
-                      ref_cast_non_const(SolveurSys,op.get_solveur())->reinit();
-                    }
-                }
-            }
-        }
-      if(implicite_==1)
-        {
-          // Un seul operateur implicite.
-          // On suppose que c'est le premier (la diffusion !!)
-          Operateur_base& op=operateur(0).l_op_base();
-          Matrice_Base& matrice=op.set_matrice().valeur();
-          // DoubleTrav secmem(derivee);
-          secmem=derivee;
-          solv_masse().ajouter_masse(dt, secmem, inconnue().valeurs());
-          op.contribuer_au_second_membre(secmem );
-          op.set_solveur().resoudre_systeme(matrice,
-                                            secmem,
-                                            derivee
-                                           );
-          solv_masse().corriger_solution(derivee,inconnue().valeurs());
-
-          derivee-=inconnue().valeurs();
-          derivee/=dt;
-
-          //Sert uniquement a calculer les flux sur les bords quand la diffusion est implicitee !
-          DoubleTab resu;
-          resu=derivee;
-          operateur(0).calculer(inconnue().valeurs(), resu);
-        }
-      else
-        {
-          // plusieurs operateurs implicites ...
-          Cerr << "Must be coded ... " << finl;
-          exit();
-        }
+      // Solve: (1/dt + M-1*A)*dI = M-1 * secmem
+      // where A is the diffusion
+      Equation_base::Gradient_conjugue_diff_impl(secmem, derivee);
     }
   else
     {
-      Cerr << "Error in Equation_base::derivee_en_temps_inco" << finl;
-      Cerr << "implicite_ = " << implicite_ << " has not been initialized!" << finl;
-      Cerr << "May be " << que_suis_je() << "::completer() method doesn't call Equation_base::completer()" << finl;
-      Cerr << "Contact TRUST support." << finl;
-      Process::exit();
+      derivee = secmem;
+      derivee.echange_espace_virtuel();
+    }
+  corriger_derivee_impl(derivee);  // Solve specific implicit term for an equation (eg: pressure for Navier Stokes)
+}
+
+void Equation_base::handle_implicite_positive(DoubleTrav& secmem, DoubleTab& derivee)
+{
+  double dt = schema_temps().pas_de_temps();
+  for (int i = 0; i < nombre_d_operateurs(); i++)
+    {
+      Operateur_base& op = operateur(i).l_op_base();
+      if (op.get_matrice().est_nul())
+        op.set_matrice().typer("Matrice_Morse");
+      if (op.get_decal_temps() == 1)
+        {
+          Matrice_Morse& matrice = ref_cast(Matrice_Morse, op.set_matrice().valeur());
+          op.dimensionner(matrice);
+          sys_invariant_ = 0;
+          if (!sys_invariant_)
+            {
+              op.contribuer_a_avec(inconnue().valeurs(), matrice);
+              solv_masse().ajouter_masse(dt, op.set_matrice().valeur());
+
+              if ((op.get_solveur()->que_suis_je() == "Solv_Cholesky") || (op.get_solveur()->que_suis_je() == "Solv_GCP"))
+                {
+                  Matrice_Morse_Sym new_mat(matrice);
+                  new_mat.set_est_definie(1);
+                  op.set_matrice() = new_mat;
+                  ref_cast_non_const(SolveurSys, op.get_solveur())->reinit();
+                }
+            }
+        }
     }
 
-  return derivee;
+  if (implicite_ == 1)
+    {
+      // Un seul operateur implicite.
+      // On suppose que c'est le premier (la diffusion !!)
+      Operateur_base& op = operateur(0).l_op_base();
+      Matrice_Base& matrice = op.set_matrice().valeur();
+      secmem = derivee;
+      solv_masse().ajouter_masse(dt, secmem, inconnue().valeurs());
+      op.contribuer_au_second_membre(secmem);
+      op.set_solveur().resoudre_systeme(matrice, secmem, derivee);
+      solv_masse().corriger_solution(derivee, inconnue().valeurs());
+
+      derivee -= inconnue().valeurs();
+      derivee /= dt;
+
+      //Sert uniquement a calculer les flux sur les bords quand la diffusion est implicitee !
+      DoubleTab resu;
+      resu = derivee;
+      operateur(0).calculer(inconnue().valeurs(), resu);
+      return;
+    }
+
+  // plusieurs operateurs implicites ...
+  Cerr << "Must be coded ... " << finl;
+  exit();
 }
 
 /*! @brief Renvoie le probleme associe a l'equation.
