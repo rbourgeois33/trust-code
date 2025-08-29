@@ -1534,7 +1534,7 @@ void Domaine_VF::build_mc_dual_mesh() const
    * Final testing : Only in debug mode
    *
    *  - nb_faces_bords does not change between primal (TRUST) mesh and dual mesh
-   *  - nb_faces per polyedron has at least 4 faces (case of tetra)
+   *  - nb_faces per polyedron has at least 4 faces (case of tetra) : Only 3D !
    */
   MCAuto<MEDCouplingUMesh> skin_dual =  mc_dual_mesh_->computeSkin();
   mcIdType nb_faces_bd = skin_dual->getNumberOfCells();
@@ -1542,14 +1542,16 @@ void Domaine_VF::build_mc_dual_mesh() const
   if (nb_faces_bd != domaine().nb_faces_bord())
     Process::exit("Something wrong with dual mesh computation #1 !!!! \n");
 
-  DAId desc(DataArrayIdType::New()), descIndx(DataArrayIdType::New()), revDesc(DataArrayIdType::New()), revDescIndx(DataArrayIdType::New());
-  MCAuto<MEDCoupling::MEDCouplingUMesh> mc_dual_desc(mc_dual_mesh_->buildDescendingConnectivity(desc, descIndx, revDesc, revDescIndx));
+  if (Objet_U::dimension == 3) /* Only polyhedron case !*/
+    {
+      DAId desc(DataArrayIdType::New()), descIndx(DataArrayIdType::New()), revDesc(DataArrayIdType::New()), revDescIndx(DataArrayIdType::New());
+      MCAuto<MEDCoupling::MEDCouplingUMesh> mc_dual_desc(mc_dual_mesh_->buildDescendingConnectivity(desc, descIndx, revDesc, revDescIndx));
 
-
-  DAId dsi = descIndx->deltaShiftIndex();
-  DAId res = dsi->findIdsLowerOrEqualTo(3) ;
-  if (res->getNumberOfTuples() > 0)
-    Process::exit("Something wrong with dual mesh computation #2 !!!! \n");
+      DAId dsi = descIndx->deltaShiftIndex();
+      DAId res = dsi->findIdsLowerOrEqualTo(3) ;
+      if (res->getNumberOfTuples() > 0)
+        Process::exit("Something wrong with dual mesh computation #2 !!!! \n");
+    }
 #endif
 
 #endif // MEDCOUPLING_
