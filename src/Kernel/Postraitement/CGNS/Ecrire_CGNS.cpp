@@ -1038,7 +1038,7 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
   std::copy(cI, cI + conn_indx_size, connIndex.addr());
 
   int mesh_type_cell = static_cast<int>(conn[connIndex[0]]);  // type is always an int.
-  Nom type_cell;
+  Motcle type_cell;
 
   if (mesh_type_cell == INTERP_KERNEL::NORM_TRI3)
     type_cell = "Triangle";
@@ -1104,23 +1104,35 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
   dom_dual.les_elems() = les_elems;
 
   // write dual_mesh
-  std::string fn = baseFile_name_ + "_dual.grid"; // file name
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+    {
+      std::string fn = baseFile_name_ + ".grid_dual"; // file name
 
-  Format_Post_CGNS cgns;
-  cgns.set_postraiter_domain();
-  cgns.get_cgns_writer().cgns_set_is_dual_domain();
+      Format_Post_CGNS cgns;
+      cgns.set_postraiter_domain();
+      cgns.get_cgns_writer().cgns_set_is_dual_domain();
 
-  // we fill face/som & elem faces conn ET seulement si poly !!!
-  if (Objet_U::dimension == 3)
-    fill_connectivity_from_mc_mesh(dual_m,
-                                   cgns.get_cgns_writer().get_fs_dual(),
-                                   cgns.get_cgns_writer().get_ef_dual());
+      // we fill face/som & elem faces conn ET seulement si poly !!!
+      if (Objet_U::dimension == 3)
+        fill_connectivity_from_mc_mesh(dual_m,
+                                       cgns.get_cgns_writer().get_fs_dual(),
+                                       cgns.get_cgns_writer().get_ef_dual());
 
-  cgns.initialize(Nom(fn), 0, "SIMPLE");
+      cgns.initialize(Nom(fn), 0, "SIMPLE");
 
-  cgns.ecrire_entete(0., 0, est_le_premier_post);
-  cgns.ecrire_domaine(dom_dual, est_le_premier_post);
-  cgns.finir_sans_iters(1, fn);
+      cgns.ecrire_entete(0., 0, est_le_premier_post);
+      cgns.ecrire_domaine(dom_dual, est_le_premier_post);
+      cgns.finir_sans_iters(1, fn);
+    }
+  else // APPEND
+    {
+      is_dual_ = true;
+      // we fill face/som & elem faces conn ET seulement si poly !!!
+      if (Objet_U::dimension == 3)
+        fill_connectivity_from_mc_mesh(dual_m, fs_dual_, ef_dual_);
+
+      cgns_write_domaine(&dom_dual, dom_dual_nom, sommets, les_elems, type_cell);
+    }
 }
 
 #endif /* HAS_CGNS */
