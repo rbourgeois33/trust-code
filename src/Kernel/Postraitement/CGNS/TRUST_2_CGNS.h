@@ -97,9 +97,9 @@ public:
   void clear_vectors();
 
   /* methods statiques utiles */
-  static Motcle modify_field_name_for_post(const Nom&, const Nom&, const std::string&, True_int&, True_int&);
+  static Motcle modify_field_name_for_post(const Nom&, const Nom&, const std::string&, int&, int&);
   static std::string modify_domaine_name_for_post(const Nom& );
-  static void modify_fileId_for_post(const std::map<std::string, Nom>&, const std::string&, const True_int, True_int&);
+  static void modify_fileId_for_post(const std::map<std::string, Nom>&, const std::string&, const int, int&);
   static int get_index_nom_vector(const std::vector<Nom>&, const Nom&);
   static std::string remove_slash_linkfile(std::string&);
 

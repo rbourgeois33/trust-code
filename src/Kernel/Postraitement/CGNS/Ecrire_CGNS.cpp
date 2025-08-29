@@ -342,7 +342,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
   const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension, nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
-  True_int coordsId;
+  int coordsId;
 
   /* 3 : Base write */
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
@@ -373,7 +373,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
                                                                        zoneId_, xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
 
       /* 5.2 : Set element connectivity */
-      True_int sectionId;
+      int sectionId;
       cgsize_t start = 1, end;
 
       if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
@@ -423,7 +423,7 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
   const int nb_vals = valeurs.dimension(0);
 
   /* quel fileID ?? */
-  True_int fileId = fileId_;
+  int fileId = fileId_;
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     TRUST_2_CGNS::modify_fileId_for_post(fld_loc_map_, LOC, fileId2_, fileId);
 
@@ -521,7 +521,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
    *  - All processors THAT HAVE nb_elem > 0 write the same information.
    *  - Only zone meta-data is written to the library at this stage ... So no worries ^^
    */
-  std::vector<True_int> coordsIdx, coordsIdy, coordsIdz, sectionId, sectionId2;
+  std::vector<int> coordsIdx, coordsIdy, coordsIdz, sectionId, sectionId2;
   std::string zonename;
 
   int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
@@ -812,7 +812,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   if (Option_CGNS::USE_LINKS)
     cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, ns_tot, ne_tot, is_polyedre);
 
-  True_int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
+  int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
 
   cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
@@ -944,7 +944,7 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   Nom& id_champ = id_du_champ_modifie;
 
   /* quel fileID ?? */
-  True_int fileId = fileId_;
+  int fileId = fileId_;
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     TRUST_2_CGNS::modify_fileId_for_post(fld_loc_map_, LOC, fileId2_, fileId);
 

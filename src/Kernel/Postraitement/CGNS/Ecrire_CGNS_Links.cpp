@@ -108,7 +108,7 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
 void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std::string& fn, bool is_cerr)
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
-  const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
+  const int fileId = (ind == 0 ? fileId_ : fileId2_);
 
   if (Process::is_parallel())
     {
@@ -132,7 +132,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   const bool enter_group_comm = Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group();
 
   std::string fn;
-  True_int& fileId = (ind == 0 ? fileId_ : fileId2_); // XXX : ref
+  int& fileId = (ind == 0 ? fileId_ : fileId2_); // XXX : ref
 
   if (is_link)
     fn = !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns"; // file name
@@ -338,7 +338,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
           const std::string& LOC = itr->first;
           cgns_open_solution_link_file(ind, LOC, -123., true /* dernier fichier => link */);
 
-          const True_int fileId = (ind == 0 ? fileId_ : fileId2_);
+          const int fileId = (ind == 0 ? fileId_ : fileId2_);
 
           // link solutions
           for (auto& itr_t : time_post_)
@@ -373,9 +373,9 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
       std::string fn = baseFile_name_ + ".cgns"; // file name
       Cerr << "Option_CGNS::MULTIPLE_FILES is used ... so we write a unique link file " << fn << " ..." << finl;
 
-      True_int fileId_l = -123, baseId_l = -123, zoneId_l = -123;
-      True_int fileId = -123, baseId = 1, zoneId = 1, cell_dim = -123, phys_dim = -123;
-      True_int nbndry = -123, iparent_flag = -123, nsols = -123, nsections = -123;
+      int fileId_l = -123, baseId_l = -123, zoneId_l = -123;
+      int fileId = -123, baseId = 1, zoneId = 1, cell_dim = -123, phys_dim = -123;
+      int nbndry = -123, iparent_flag = -123, nsols = -123, nsections = -123;
       char basename[CGNS_STR_SIZE], zonename[CGNS_STR_SIZE], sectionname[CGNS_STR_SIZE], solname[CGNS_STR_SIZE];
 
       cgsize_t isize[3][1], istart, iend;

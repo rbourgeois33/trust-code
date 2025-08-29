@@ -44,22 +44,22 @@ private:
   // Attributes
   OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.
 
-  bool solname_elem_written_ = false, solname_som_written_ = false;
+  bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
   bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
-  std::string solname_elem_ = "", solname_som_ = "", baseFile_name_ = "", baseZone_name_ = "";
+  std::string solname_elem_ = "", solname_som_ = "", solname_faces_ = "", baseFile_name_ = "", baseZone_name_ = "";
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
   std::vector<Nom> doms_written_;
   std::vector<Nom> fieldName_dumped_; /* filed just once to see what fields are already written ! */
   std::vector<std::string> connectname_;
   std::vector<double> time_post_;
-  std::vector<True_int> baseId_, zoneId_;
+  std::vector<int> baseId_, zoneId_;
   std::vector<cgsize_t> sizeId_;
-  std::vector<std::vector<True_int>> zoneId_par_; /* par ordre d'ecriture du domaine */
+  std::vector<std::vector<int>> zoneId_par_; /* par ordre d'ecriture du domaine */
   std::vector<TRUST_2_CGNS> T2CGNS_;
   Ecrire_CGNS_helper cgns_helper_;
-  True_int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, cellDim_ = -123;
-  True_int fileId2_ = -123; /* cas ou on a 2 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
+  int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, flowId_faces_ = 0, fieldId_faces_ = 0, cellDim_ = -123;
+  int fileId2_ = -123; /* cas ou on a 2 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
 
   // specifique FILE_PER_COMM_GROUP
   int proc_maitre_local_comm_ = -123;

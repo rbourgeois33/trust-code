@@ -85,9 +85,9 @@ inline void Ecrire_CGNS_helper::cgns_close_file(const std::string& fn, const int
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
-inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, const True_int fileId, const std::vector<True_int>& baseId, const char *zonename, const cgsize_t *isize, std::vector<True_int>& zoneId,
+inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, const int fileId, const std::vector<int>& baseId, const char *zonename, const cgsize_t *isize, std::vector<int>& zoneId,
                                                            const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords,
-                                                           True_int& coordsIdx, True_int& coordsIdy, True_int& coordsIdz)
+                                                           int& coordsIdx, int& coordsIdy, int& coordsIdz)
 {
   constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ);
 
@@ -109,7 +109,7 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
   else
     {
 #ifdef MPI_
-      True_int gridId = -123;
+      int gridId = -123;
       if (cg_grid_write(fileId, baseId.back(), zoneId.back(), "GridCoordinates", &gridId) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_grid_write !" << finl, TRUST_CGNS_ERROR();
 
@@ -128,8 +128,8 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const True_int fileId, const std::vector<True_int>& baseId, const True_int zoneId,
-                                               const True_int coordsIdx, const True_int coordsIdy, const True_int coordsIdz, const cgsize_t min, const cgsize_t max,
+Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const int fileId, const std::vector<int>& baseId, const int zoneId,
+                                               const int coordsIdx, const int coordsIdy, const int coordsIdz, const cgsize_t min, const cgsize_t max,
                                                const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords)
 {
 #ifdef MPI_
@@ -146,8 +146,8 @@ Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const True_in
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
-inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const double temps, const std::vector<True_int>& zoneId, const std::string& LOC,
-                                               std::string& solname_som, std::string& solname_elem, bool& solname_som_written, bool& solname_elem_written, True_int& flowId_som, True_int& flowId_elem)
+inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const double temps, const std::vector<int>& zoneId, const std::string& LOC,
+                                               std::string& solname_som, std::string& solname_elem, bool& solname_som_written, bool& solname_elem_written, int& flowId_som, int& flowId_elem)
 {
   // uen fois par dt !!
   constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ), is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
@@ -197,8 +197,8 @@ inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, cons
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId, const std::string& LOC,
-                                     const True_int flowId_som, const True_int flowId_elem, const char * id_champ, True_int& fieldId_som, True_int& fieldId_elem)
+Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId, const std::string& LOC,
+                                     const int flowId_som, const int flowId_elem, const char * id_champ, int& fieldId_som, int& fieldId_elem)
 {
 #ifdef MPI_
   constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
@@ -220,9 +220,9 @@ Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const True_int
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ == TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
-                                          const std::string& LOC, const True_int flowId_som, const True_int flowId_elem, const int comp,
-                                          const char * id_champ, const DoubleTab& valeurs, True_int& fieldId_som, True_int& fieldId_elem)
+Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
+                                          const std::string& LOC, const int flowId_som, const int flowId_elem, const int comp,
+                                          const char * id_champ, const DoubleTab& valeurs, int& fieldId_som, int& fieldId_elem)
 {
   if (valeurs.dimension(1) == 1) /* No stride ! */
     {
@@ -259,9 +259,9 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
-                                          const std::string& LOC, const True_int flowId_som, const True_int flowId_elem, const True_int fieldId_som,
-                                          const True_int fieldId_elem, const int comp, const cgsize_t min, const cgsize_t max, const DoubleTab& valeurs)
+Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
+                                          const std::string& LOC, const int flowId_som, const int flowId_elem, const int fieldId_som,
+                                          const int fieldId_elem, const int comp, const cgsize_t min, const cgsize_t max, const DoubleTab& valeurs)
 {
 #ifdef MPI_
   if (valeurs.dimension(1) == 1) /* No stride ! */
@@ -299,7 +299,7 @@ Ecrire_CGNS_helper::cgns_field_write_data(const True_int fileId, const True_int 
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
-inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int nb_zones_to_write, const True_int fileId, const True_int baseId, const int ind, const std::vector<True_int>& zoneId,
+inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
                                                  const std::string& LOC, const std::string& solname_som, const std::string& solname_elem, const std::vector<double>& time_post)
 {
   const int nsteps = static_cast<int>(time_post.size());

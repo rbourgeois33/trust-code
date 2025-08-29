@@ -32,7 +32,7 @@ std::string TRUST_2_CGNS::remove_slash_linkfile(std::string& linkfile)
   return linkfile;
 }
 
-Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const Nom& id_du_domaine, const std::string& LOC, True_int& fieldId_som, True_int& fieldId_elem)
+Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const Nom& id_du_domaine, const std::string& LOC, int& fieldId_som, int& fieldId_elem)
 {
   Motcle id_du_champ_modifie(id_du_champ), iddomaine(id_du_domaine);
 
@@ -93,7 +93,7 @@ std::string TRUST_2_CGNS::modify_domaine_name_for_post(const Nom& nom_dom)
   return nom_dom_modifie;
 }
 
-void TRUST_2_CGNS::modify_fileId_for_post(const std::map<std::string, Nom>& fld_loc_map, const std::string& LOC, const True_int fileId2, True_int& fileId)
+void TRUST_2_CGNS::modify_fileId_for_post(const std::map<std::string, Nom>& fld_loc_map, const std::string& LOC, const int fileId2, int& fileId)
 {
   const bool mult_loc = (static_cast<int>(fld_loc_map.size()) > 1);
   if (mult_loc)
