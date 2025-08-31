@@ -146,8 +146,11 @@ Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const int fil
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
-inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const double temps, const std::vector<int>& zoneId, const std::string& LOC,
-                                               std::string& solname_som, std::string& solname_elem, bool& solname_som_written, bool& solname_elem_written, int& flowId_som, int& flowId_elem)
+inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, const int fileId, const int baseId, const int ind,
+                                               const double temps, const std::vector<int>& zoneId, const std::string& LOC,
+                                               std::string& solname_som, std::string& solname_elem, std::string& solname_faces,
+                                               bool& solname_som_written, bool& solname_elem_written, bool& solname_faces_written,
+                                               int& flowId_som, int& flowId_elem, int& flowId_faces)
 {
   // uen fois par dt !!
   constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ), is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
@@ -162,11 +165,11 @@ inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, cons
       for (int ii = 0; ii != nb_zones_to_write; ii++)
         {
           if (cg_sol_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], solname.c_str(), CGNS_ENUMV(Vertex), &flowId_som) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_sol_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_sol_write -- SOM !" << finl, TRUST_CGNS_ERROR();
 
           if (!is_SEQ)
             if (cg_goto(fileId, baseId, "Zone_t", zoneId[is_PAR_OVER ? ii : ind], "FlowSolution_t", flowId_som, "end") != CG_OK)
-              Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_goto !" << finl, TRUST_CGNS_ERROR();
+              Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_goto -- SOM !" << finl, TRUST_CGNS_ERROR();
 
         }
 
@@ -183,22 +186,44 @@ inline void Ecrire_CGNS_helper::cgns_sol_write(const int nb_zones_to_write, cons
       for (int ii = 0; ii != nb_zones_to_write; ii++)
         {
           if (cg_sol_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], solname.c_str(), CGNS_ENUMV(CellCenter), &flowId_elem) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_sol_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_sol_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
 
           if (!is_SEQ)
             if (cg_goto(fileId, baseId, "Zone_t", zoneId[is_PAR_OVER ? ii : ind], "FlowSolution_t", flowId_elem, "end") != CG_OK)
-              Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_goto !" << finl, TRUST_CGNS_ERROR();
+              Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_goto  -- ELEM !" << finl, TRUST_CGNS_ERROR();
 
         }
 
       solname_elem_written = true;
+    }
+
+  if (!solname_faces_written && LOC == "FACES")
+    {
+      std::string solname = "FlowSolution" + convert_double_to_string(temps) + "_" + LOC;
+      solname.resize(CGNS_STR_SIZE, ' ');
+      solname_faces += solname;
+
+      // on boucle seulement sur les procs qui n'ont pas des nb_elem 0
+      for (int ii = 0; ii != nb_zones_to_write; ii++)
+        {
+          if (cg_sol_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], solname.c_str(), CGNS_ENUMV(CellCenter), &flowId_faces) != CG_OK)
+            Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_sol_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
+
+          if (!is_SEQ)
+            if (cg_goto(fileId, baseId, "Zone_t", zoneId[is_PAR_OVER ? ii : ind], "FlowSolution_t", flowId_faces, "end") != CG_OK)
+              Cerr << "Error Ecrire_CGNS_helper::cgns_sol_write : cg_goto  -- FACES !" << finl, TRUST_CGNS_ERROR();
+
+        }
+
+      solname_faces_written = true;
     }
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId, const std::string& LOC,
-                                     const int flowId_som, const int flowId_elem, const char * id_champ, int& fieldId_som, int& fieldId_elem)
+                                     const int flowId_som, const int flowId_elem, const int flowId_faces,
+                                     const char * id_champ, int& fieldId_som, int& fieldId_elem, int& fieldId_faces)
 {
 #ifdef MPI_
   constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
@@ -207,13 +232,20 @@ Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const int file
       if (LOC == "SOM")
         {
           if (cgp_field_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], flowId_som, CGNS_DOUBLE_TYPE, id_champ, &fieldId_som) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write  -- SOM !" << finl, TRUST_CGNS_ERROR();
         }
       else if (LOC == "ELEM")
         {
           if (cgp_field_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], flowId_elem, CGNS_DOUBLE_TYPE, id_champ, &fieldId_elem) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
         }
+      else if (LOC == "FACES")
+        {
+          if (cgp_field_write(fileId, baseId, zoneId[is_PAR_OVER ? ii : ind], flowId_faces, CGNS_DOUBLE_TYPE, id_champ, &fieldId_faces) != CG_OK)
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
+        }
+      else
+        throw;
     }
 #endif
 }
@@ -221,21 +253,28 @@ Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const int file
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ == TYPE_ECRITURE_CGNS::SEQ, void>
 Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
-                                          const std::string& LOC, const int flowId_som, const int flowId_elem, const int comp,
-                                          const char * id_champ, const DoubleTab& valeurs, int& fieldId_som, int& fieldId_elem)
+                                          const std::string& LOC, const int flowId_som, const int flowId_elem, const int flowId_faces, const int comp,
+                                          const char * id_champ, const DoubleTab& valeurs, int& fieldId_som, int& fieldId_elem, int& fieldId_faces)
 {
   if (valeurs.dimension(1) == 1) /* No stride ! */
     {
       if (LOC == "SOM")
         {
           if (cg_field_write(fileId, baseId, zoneId[ind], flowId_som, CGNS_DOUBLE_TYPE, id_champ, valeurs.addr(), &fieldId_som) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- SOM !" << finl, TRUST_CGNS_ERROR();
         }
-      else // ELEM // TODO FIXME FACES
+      else if (LOC == "ELEM")
         {
           if (cg_field_write(fileId, baseId, zoneId[ind], flowId_elem, CGNS_DOUBLE_TYPE, id_champ, valeurs.addr(), &fieldId_elem) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
         }
+      else if (LOC == "FACES")
+        {
+          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_faces, CGNS_DOUBLE_TYPE, id_champ, valeurs.addr(), &fieldId_faces) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
+        }
+      else
+        throw;
     }
   else
     {
@@ -247,21 +286,29 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
       if (LOC == "SOM")
         {
           if (cg_field_write(fileId, baseId, zoneId[ind], flowId_som, CGNS_DOUBLE_TYPE, id_champ, field_cgns.addr(), &fieldId_som) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- SOM !" << finl, TRUST_CGNS_ERROR();
         }
-      else // ELEM // TODO FIXME FACES
+      else if (LOC == "ELEM")
         {
           if (cg_field_write(fileId, baseId, zoneId[ind], flowId_elem, CGNS_DOUBLE_TYPE, id_champ, field_cgns.addr(), &fieldId_elem) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
         }
+      else if (LOC == "FACES")
+        {
+          if (cg_field_write(fileId, baseId, zoneId[ind], flowId_faces, CGNS_DOUBLE_TYPE, id_champ, field_cgns.addr(), &fieldId_faces) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
+        }
+      else
+        throw;
     }
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
-                                          const std::string& LOC, const int flowId_som, const int flowId_elem, const int fieldId_som,
-                                          const int fieldId_elem, const int comp, const cgsize_t min, const cgsize_t max, const DoubleTab& valeurs)
+Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId, const std::string& LOC,
+                                          const int flowId_som, const int flowId_elem, const int flowId_faces,
+                                          const int fieldId_som, const int fieldId_elem, const int fieldId_faces,
+                                          const int comp, const cgsize_t min, const cgsize_t max, const DoubleTab& valeurs)
 {
 #ifdef MPI_
   if (valeurs.dimension(1) == 1) /* No stride ! */
@@ -269,13 +316,20 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
       if (LOC == "SOM")
         {
           if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_som, fieldId_som, &min, &max, valeurs.addr()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- SOM !" << finl, TRUST_CGNS_ERROR();
         }
-      else
+      else if (LOC == "ELEM")
         {
           if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_elem, fieldId_elem, &min, &max, valeurs.addr()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl,  TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- ELEM !" << finl,  TRUST_CGNS_ERROR();
         }
+      else if (LOC == "FACES")
+        {
+          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_faces, fieldId_faces, &min, &max, valeurs.addr()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- FACES !" << finl,  TRUST_CGNS_ERROR();
+        }
+      else
+        throw;
     }
   else
     {
@@ -287,20 +341,27 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
       if (LOC == "SOM")
         {
           if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_som, fieldId_som, &min, &max, field_cgns.addr()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl,  TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- SOM !" << finl,  TRUST_CGNS_ERROR();
         }
-      else
+      else if (LOC == "ELEM")
         {
           if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_elem, fieldId_elem, &min, &max, field_cgns.addr()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data !" << finl,  TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- ELEM !" << finl,  TRUST_CGNS_ERROR();
         }
+      else if (LOC == "FACES")
+        {
+          if (cgp_field_write_data(fileId, baseId, zoneId[ind], flowId_faces, fieldId_faces, &min, &max, field_cgns.addr()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- FACES !" << finl,  TRUST_CGNS_ERROR();
+        }
+      else
+        throw;
     }
 #endif
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int nb_zones_to_write, const int fileId, const int baseId, const int ind, const std::vector<int>& zoneId,
-                                                 const std::string& LOC, const std::string& solname_som, const std::string& solname_elem, const std::vector<double>& time_post)
+                                                 const std::string& LOC, const std::string& solname_som, const std::string& solname_elem, const std::string& solname_faces,const std::vector<double>& time_post)
 {
   const int nsteps = static_cast<int>(time_post.size());
   constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
@@ -336,13 +397,20 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
             if (LOC == "SOM")
               {
                 if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_som.c_str()) != CG_OK)
-                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write !" << finl, TRUST_CGNS_ERROR();
+                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- SOM !" << finl, TRUST_CGNS_ERROR();
               }
             else if (LOC == "ELEM")
               {
                 if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_elem.c_str()) != CG_OK)
-                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write !" << finl, TRUST_CGNS_ERROR();
+                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
               }
+            else if (LOC == "FACES")
+              {
+                if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_faces.c_str()) != CG_OK)
+                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
+              }
+            else
+              throw;
           }
       }
 

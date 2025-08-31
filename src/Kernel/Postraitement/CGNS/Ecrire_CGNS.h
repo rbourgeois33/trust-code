@@ -35,7 +35,7 @@ public:
   void cgns_finir();
   void cgns_finir_sans_iters(const std::string&);
   void cgns_add_time(const double );
-  void cgns_write_domaine_dual(const Domaine& , const int );
+  void cgns_write_domaine_dual(const Domaine& , const int , const Nom& nom_dom = "??");
   void cgns_write_domaine(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field(const Domaine&, const Noms&, double, const Nom&, const Nom&, const Nom&, const DoubleTab&);
   void finir_ecriture(double);

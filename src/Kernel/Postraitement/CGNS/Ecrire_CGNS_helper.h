@@ -71,26 +71,30 @@ struct Ecrire_CGNS_helper
                              const std::vector<double>&, const std::vector<double>&, const std::vector<double>&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
-  inline void cgns_sol_write(const int, const int, const int, const int, const double, const std::vector<int>&, const std::string&,
-                             std::string&, std::string&, bool&, bool&, int&, int&);
+  inline void cgns_sol_write(const int, const int, const int, const int, const double, const std::vector<int>&,
+                             const std::string&, std::string&, std::string&, std::string&,
+                             bool&, bool&, bool&, int&, int&, int&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
   inline std::enable_if_t< _TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-  cgns_field_write(const int, const int, const int, const int, const std::vector<int>&, const std::string&, const int, const int, const char*, int&, int&);
+  cgns_field_write(const int, const int, const int, const int, const std::vector<int>&, const std::string&,
+                   const int, const int, const int, const char*, int&, int&, int&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
   inline std::enable_if_t<_TYPE_ == TYPE_ECRITURE_CGNS::SEQ, void>
-  cgns_field_write_data(const int, const int, const int, const std::vector<int>&, const std::string&, const int, const int, const int,
-                        const char * , const DoubleTab& , int& , int& );
+  cgns_field_write_data(const int, const int, const int, const std::vector<int>&, const std::string&,
+                        const int, const int, const int, const int,
+                        const char * , const DoubleTab& , int& , int& , int&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
   inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-  cgns_field_write_data(const int, const int, const int, const std::vector<int>&, const std::string&, const int, const int, const int, const int, const int,
+  cgns_field_write_data(const int, const int, const int, const std::vector<int>&, const std::string&,
+                        const int, const int, const int, const int, const int, const int, const int,
                         const cgsize_t, const cgsize_t, const DoubleTab&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
   inline void cgns_write_iters(const bool, const int, const int , const int, const int, const std::vector<int>&,
-                               const std::string&, const std::string&, const std::string&, const std::vector<double>&);
+                               const std::string&, const std::string&, const std::string&, const std::string&, const std::vector<double>&);
 
   std::string convert_double_to_string(const double t)
   {

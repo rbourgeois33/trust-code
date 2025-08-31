@@ -187,6 +187,8 @@ public :
 
   void build_mc_face_mesh() const;
   void build_mc_dual_mesh() const;
+  inline const IntTab& get_face_voisins_dual() const { return face_dual_; }
+  inline int get_face_voisins_dual(const int i, const int j) const { return face_dual_(i,j); }
 
 #ifdef MEDCOUPLING_
   inline const MEDCouplingUMesh* get_mc_face_mesh() const;

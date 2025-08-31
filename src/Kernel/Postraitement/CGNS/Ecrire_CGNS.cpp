@@ -169,9 +169,9 @@ void Ecrire_CGNS::cgns_add_time(const double t)
 
   time_post_.push_back(t); // add time_post
   fieldName_dumped_.clear();
-  flowId_elem_++, flowId_som_++; // increment
-  fieldId_elem_ = 0, fieldId_som_ = 0; // reset
-  solname_elem_written_ = false, solname_som_written_ = false; // reset
+  flowId_elem_++, flowId_som_++, flowId_faces_++; // increment
+  fieldId_elem_ = 0, fieldId_som_ = 0, fieldId_faces_ = 0; // reset
+  solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false; // reset
 }
 
 void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, const DoubleTab& som, const IntTab& elem, const Motcle& type_e)
@@ -202,18 +202,18 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
 {
   const std::string LOC = Motcle(localisation).getString();
 
-  if (LOC == "FACES")
-    {
-      Cerr << "THE FACE FIELD " << Motcle(id_du_champ) << " WILL NOT BE WRITTEN ... " << finl; // throw;
-      return;
-    }
-
   /* 1 : if first time called ... build different supports for mixed locations */
   cgns_fill_field_loc_map(domaine, LOC);
 
   /* 2 : on ecrit */
   const int nb_cmp = valeurs.dimension(1);
 
+//  if (LOC == "FACES")
+//    {
+//
+//    }
+//  else /* SOM/ELEM */
+//    {
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
       for (int i = 0; i < nb_cmp; i++)
@@ -245,6 +245,7 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
         else
           Cerr << "Field " << field_name << " is already written => we skip it ..." << finl;
       }
+//    }
 }
 
 /*
@@ -259,7 +260,7 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
     {
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_)
         {
-          if (static_cast<int>(fld_loc_map_.size()) == 0)
+          if (static_cast<int>(fld_loc_map_.size()) == 0 && LOC != "FACES")
             fld_loc_map_.insert( { LOC, domaine.le_nom() });/* ici on utilise le 1er support */
           else
             {
@@ -270,16 +271,22 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
                   nom_dom += "_";
                   nom_dom += LOC;
                   Cerr << "Building new CGNS zone to host the field located at : " << LOC << " !" << finl;
-                  Motcle type_e = domaine.type_elem()->que_suis_je();
-                  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-                    {
-                      if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
-                        cgns_write_domaine_par_over_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
-                      else
-                        cgns_write_domaine_par_in_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
-                    }
+
+                  if (LOC == "FACES")
+                    cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
                   else
-                    cgns_write_domaine_seq(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e); // XXX Attention
+                    {
+                      Motcle type_e = domaine.type_elem()->que_suis_je();
+                      if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+                        {
+                          if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
+                            cgns_write_domaine_par_over_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
+                          else
+                            cgns_write_domaine_par_in_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
+                        }
+                      else
+                        cgns_write_domaine_seq(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e); // XXX Attention
+                    }
 
                   fld_loc_map_.insert( { LOC, nom_dom });
                 }
@@ -287,6 +294,9 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
         }
       else // Option_CGNS::USE_LINKS
         {
+          if (LOC == "FACES")
+            Process::exit("TODO FIXME -- Ecrire_CGNS::cgns_fill_field_loc_map !! \n");
+
           assert (Option_CGNS::USE_LINKS);
 
           if (grid_file_opened_)
@@ -413,7 +423,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
 void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const Nom& id_du_champ, const Nom& id_du_domaine, const Nom& localisation, const Nom& nom_dom, const DoubleTab& valeurs)
 {
   std::string LOC = Motcle(localisation).getString();
-  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_);
+  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_, fieldId_faces_);
   Nom& id_champ = id_du_champ_modifie;
 
   /* 2 : Get corresponding domain index */
@@ -430,12 +440,27 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
   if (nb_vals)
     {
       /* 3 : Write solution names for iterative data later */
-      cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::SEQ>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
-                                                           solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+      cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::SEQ>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC,
+                                                           solname_som_, solname_elem_, solname_faces_,
+                                                           solname_som_written_, solname_elem_written_, solname_faces_written_,
+                                                           flowId_som_, flowId_elem_, flowId_faces_);
 
-      /* 4 : Fill field values & dump to cgns file */
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_, comp,
-                                                                  id_champ, valeurs, fieldId_som_, fieldId_elem_);
+      if(LOC == "FACES")
+        {
+          const Domaine_VF& dom_vf = ref_cast(Domaine_VF, domaine_dis_.valeur());
+          DoubleTrav new_vals;
+          TRUST_2_CGNS::map_face_values(dom_vf, valeurs, new_vals);
+
+          cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                      flowId_som_, flowId_elem_, flowId_faces_, comp,
+                                                                      id_champ, new_vals, fieldId_som_, fieldId_elem_, fieldId_faces_);
+
+        }
+      else
+        /* 4 : Fill field values & dump to cgns file */
+        cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                    flowId_som_, flowId_elem_, flowId_faces_, comp,
+                                                                    id_champ, valeurs, fieldId_som_, fieldId_elem_, fieldId_faces_);
     }
 }
 
@@ -453,7 +478,8 @@ void Ecrire_CGNS::cgns_write_iters_seq()
       ind_doms_dumped.push_back(ind);
       assert(ind > -1);
 
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, LOC, solname_som_, solname_elem_, time_post_);
+      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, LOC,
+                                                             solname_som_, solname_elem_, solname_faces_, time_post_);
     }
 
   /* 2 : on iter sur les autres domaines; ie: domaine dis */
@@ -465,7 +491,8 @@ void Ecrire_CGNS::cgns_write_iters_seq()
           const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
           assert(ind > -1);
 
-          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(false /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, "rien", solname_som_, solname_elem_, time_post_);
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(false /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, "rien",
+                                                                 solname_som_, solname_elem_,solname_faces_, time_post_);
         }
       else { /* Do Nothing */ }
     }
@@ -663,7 +690,7 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
 #ifdef MPI_
   assert (!Option_CGNS::USE_LINKS);
   std::string LOC = Motcle(localisation).getString();
-  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_);
+  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_, fieldId_faces_);
   Nom& id_champ = id_du_champ_modifie;
 
   /* 2 : Get corresponding domain index */
@@ -682,11 +709,14 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
   const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
   const bool all_write = TRUST2CGNS.all_procs_write(); // all procs will write !
 
-  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, temps, zoneId_par_[ind], LOC, solname_som_, solname_elem_,
-                                                            solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, temps, zoneId_par_[ind], LOC,
+                                                            solname_som_, solname_elem_, solname_faces_,
+                                                            solname_som_written_, solname_elem_written_, solname_faces_written_,
+                                                            flowId_som_, flowId_elem_, flowId_faces_);
 
   cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_OVER>(nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC,
-                                                              flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+                                                              flowId_som_, flowId_elem_, flowId_faces_, id_champ.getChar(),
+                                                              fieldId_som_, fieldId_elem_, fieldId_faces_);
 
   /* 4 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
@@ -703,8 +733,10 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
               break;
             }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC, flowId_som_, flowId_elem_,
-                                                                       fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
+      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC,
+                                                                       flowId_som_, flowId_elem_, flowId_faces_,
+                                                                       fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                       comp, min, max, valeurs);
     }
 #endif
 }
@@ -727,7 +759,8 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
       const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
       const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
-      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(true /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC, solname_som_, solname_elem_, time_post_);
+      cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(true /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC,
+                                                                  solname_som_, solname_elem_, solname_faces_, time_post_);
     }
 
   /* 2 : on iter sur les autres domaines; ie: domaine dis */
@@ -742,7 +775,8 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
           const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
           const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
-          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(false /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], "rien", solname_som_, solname_elem_, time_post_);
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(false /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], "rien",
+                                                                      solname_som_, solname_elem_, solname_faces_, time_post_);
         }
       else { /* Do Nothing */ }
     }
@@ -940,7 +974,7 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   assert(ind > -1);
 
   std::string LOC = Motcle(localisation).getString();
-  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_);
+  Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_, fieldId_faces_);
   Nom& id_champ = id_du_champ_modifie;
 
   /* quel fileID ?? */
@@ -954,11 +988,14 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
    *  - Only field meta-data is written to the library at this stage ... So no worries ^^
    *  - And just once per dt !
    */
-  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC, solname_som_, solname_elem_,
-                                                          solname_som_written_, solname_elem_written_, flowId_som_, flowId_elem_);
+  cgns_helper_.cgns_sol_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, temps, zoneId_, LOC,
+                                                          solname_som_, solname_elem_, solname_faces_,
+                                                          solname_som_written_, solname_elem_written_, solname_faces_written_,
+                                                          flowId_som_, flowId_elem_, flowId_faces_);
 
   cgns_helper_.cgns_field_write<TYPE_ECRITURE_CGNS::PAR_IN>(1 /* nb_zones_to_write */, fileId, baseId_[ind], ind, zoneId_, LOC,
-                                                            flowId_som_, flowId_elem_, id_champ.getChar(), fieldId_som_, fieldId_elem_);
+                                                            flowId_som_, flowId_elem_,flowId_faces_,
+                                                            id_champ.getChar(), fieldId_som_, fieldId_elem_, fieldId_faces_);
 
   /* 2 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
@@ -980,8 +1017,10 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
           min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
         }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC, flowId_som_, flowId_elem_,
-                                                                     fieldId_som_, fieldId_elem_, comp, min, max, valeurs);
+      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                     flowId_som_, flowId_elem_, flowId_faces_,
+                                                                     fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                     comp, min, max, valeurs);
     }
 #endif
 }
@@ -996,7 +1035,7 @@ void Ecrire_CGNS::cgns_write_iters_par_in_zone()
  * Write Dual Mesh *
  * *************** *
  */
-void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_le_premier_post)
+void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_le_premier_post, const Nom& nom_dom_faces)
 {
   Cerr << "Writing the Dual mesh of " << domaine.le_nom() << " in a CGNS format ..." << finl;
   assert(domaine_dis_.non_nul());
@@ -1010,7 +1049,7 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
   dual_m->checkConsistency();
 #endif
 
-  const Nom dom_dual_nom(dual_m->getName());
+  const Nom dom_dual_nom = (nom_dom_faces != "??") ? nom_dom_faces : Nom(dual_m->getName());
   Domaine dom_dual;
   dom_dual.nommer(dom_dual_nom);
 

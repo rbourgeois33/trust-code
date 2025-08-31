@@ -32,7 +32,7 @@ std::string TRUST_2_CGNS::remove_slash_linkfile(std::string& linkfile)
   return linkfile;
 }
 
-Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const Nom& id_du_domaine, const std::string& LOC, int& fieldId_som, int& fieldId_elem)
+Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const Nom& id_du_domaine, const std::string& LOC, int& fieldId_som, int& fieldId_elem, int& fieldId_faces)
 {
   Motcle id_du_champ_modifie(id_du_champ), iddomaine(id_du_domaine);
 
@@ -48,8 +48,14 @@ Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const No
       id_du_champ_modifie.prefix(iddomaine);
       id_du_champ_modifie.prefix("_ELEM_");
     }
+  else if (LOC == "FACES")
+    {
+      id_du_champ_modifie.prefix(id_du_domaine);
+      id_du_champ_modifie.prefix(iddomaine);
+      id_du_champ_modifie.prefix("_FACES_");
+    }
 
-  (LOC == "SOM") ? fieldId_som++ : fieldId_elem++; // TODO FIXME FACES
+  (LOC == "SOM") ? fieldId_som++ : ( (LOC == "ELEM") ? fieldId_elem++ : fieldId_faces++);
 
   /*
    * XXX Elie Saikali : dans CGNS on est limite a char de taille 32 max ! sinon pas supporte (regarde la methode cgi_check_strlen ...)
@@ -114,6 +120,31 @@ int TRUST_2_CGNS::get_index_nom_vector(const std::vector<Nom>& vect, const Nom& 
     ind = static_cast<int>(it - vect.begin()); // XXX sinon utilse std::distance ...
 
   return ind;
+}
+
+void TRUST_2_CGNS::map_face_values(const Domaine_VF& dom_vf, const DoubleTab& val_src, DoubleTrav& val_trgt)
+{
+  const auto& dual_m = dom_vf.get_mc_dual_mesh();
+  const int nb_cells = static_cast<int>(dual_m->getNumberOfCells());
+  const auto& face_voisins = dom_vf.get_face_voisins_dual();
+
+  assert (val_src.nb_dim() == 2);
+  const int nb_j = val_src.dimension(1);
+//  nb_j ? val_trgt.resize(nb_cells, nb_j) : val_trgt.resize(nb_cells);
+  val_trgt.resize(nb_cells, nb_j);
+
+  for (int f = 0; f < val_src.dimension(0); f++)
+    {
+      const int e1 = face_voisins(f, 0), e2 = face_voisins(f, 1);
+      for (int e: {e1, e2})
+        {
+          if (e < 0) continue;
+
+//          for (int comp = 0; comp < nb_j; comp++)
+//            val_trgt(e, comp) = val_src(f, comp);
+          std::copy_n(&val_src(f, 0), nb_j, &val_trgt(e, 0));
+        }
+    }
 }
 
 void TRUST_2_CGNS::associer_domaine_TRUST(const Domaine * dom, const Domaine_dis_base* dom_dis, const DoubleTab& som, const IntTab& elem, const bool post_dom)
