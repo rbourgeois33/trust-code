@@ -1856,7 +1856,6 @@ int Postraitement::postraiter(const Domaine& dom,const Noms& unites,const Noms& 
                               Nom nom_post,const Nom& localisation,const Nom& nature,const DoubleTab& valeurs,int tenseur)
 
 {
-
   if (!tenseur)
     postraiter_tableau(dom,unites,noms_compo,ncomp,temps,nom_post,localisation,nature,valeurs);
   else
@@ -2058,14 +2057,12 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
       Process::exit();
     }
   //if ((le_domaine->le_nom()!=mon_probleme->domaine().le_nom()) && ((motlu2!="natif"))) {
-  {
-    if (sub_type(Champ_Generique_Interpolation,champ.valeur()))
-      {
-        Champ_Generique_Interpolation& champ_interp = ref_cast(Champ_Generique_Interpolation,champ.valeur());
-        champ_interp.set_domaine(le_domaine_->le_nom());
-        // champ_interp.discretiser_domaine(*this);
-      }
-  }
+  if (sub_type(Champ_Generique_Interpolation,champ.valeur()))
+    {
+      Champ_Generique_Interpolation& champ_interp = ref_cast(Champ_Generique_Interpolation,champ.valeur());
+      champ_interp.set_domaine(le_domaine_->le_nom());
+      // champ_interp.discretiser_domaine(*this);
+    }
 
   Nom nom_champ_ref;
   Noms composantes;
@@ -2079,9 +2076,7 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
       composantes = champ_ref->noms_compo();
       source_syno = champ_ref->get_synonyms();
       if ((source_compos.size()==1) && (source_compos[0]==motlu1))
-        {
-          nom_champ_ref=motlu1;
-        }
+        nom_champ_ref=motlu1;
       for (int i=0; i<source_syno.size(); i++)
         if (source_syno[i]==motlu1)
           nom_champ_ref=motlu1;
@@ -2096,35 +2091,38 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
       composantes =source_compos;
     }
 
-
   nom_champ = Motcle(nom_champ_ref)+"_"+motlu2+"_"+le_domaine_->le_nom();
   champ->nommer(nom_champ);
 
   //On nomme la source d un Champ_Generique_Interpolation cree par macro
-  if (sub_type(Champ_Generique_Interpolation,champ.valeur()))
+  if (sub_type(Champ_Generique_Interpolation,champ.valeur()) || (motlu2 == "FACES" && Motcle(format_) == "CGNS") /* XXX Elie SAIKALI => pour CGNS */)
     {
+      if (motlu2 != "FACES")
+        {
+          Champ_Generique_Interpolation& champ_post = ref_cast(Champ_Generique_Interpolation, champ.valeur());
+          champ_post.nommer_sources(*this);
+        }
 
-      Champ_Generique_Interpolation& champ_post = ref_cast(Champ_Generique_Interpolation,champ.valeur());
-      champ_post.nommer_sources(*this);
-
-      const Nom& nom_dom = champ_post.get_ref_domain().le_nom();
-      int nb_comp = source_compos.size();
+      const Nom& nom_dom = champ->get_ref_domain().le_nom();
+      const int nb_comp = source_compos.size();
       Noms compo(nb_comp);
       Nom loc;
-      if (motlu2=="ELEM")
-        loc = "elem";
-      else if (motlu2=="SOM")
-        loc = "som";
 
-      for (int i=0; i<nb_comp; i++)
-        compo[i] = source_compos[i] +"_"+loc+"_"+nom_dom;
-      champ_post.fixer_noms_compo(compo);
-      {
-        Noms les_synonyms(source_syno.size());
-        for (int i=0; i<source_syno.size(); i++)
-          les_synonyms[i] = source_syno[i] +"_"+loc+"_"+nom_dom;
-        champ_post.fixer_noms_synonyms(les_synonyms);
-      }
+      if (motlu2 == "ELEM")
+        loc = "elem";
+      else if (motlu2 == "SOM")
+        loc = "som";
+      else if (motlu2 == "FACES")
+        loc = "faces";
+
+      for (int i = 0; i < nb_comp; i++)
+        compo[i] = source_compos[i] + "_" + loc + "_" + nom_dom;
+      champ->fixer_noms_compo(compo);
+
+      Noms les_synonyms(source_syno.size());
+      for (int i = 0; i < source_syno.size(); i++)
+        les_synonyms[i] = source_syno[i] + "_" + loc + "_" + nom_dom;
+      champ->fixer_noms_synonyms(les_synonyms);
     }
 
   OWN_PTR(Champ_Generique_base)& champ_a_completer = champs_post_complet_.add_if_not(champ);
@@ -2134,8 +2132,7 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
     {
       if (motlu2!="faces")
         nom_champ_a_post = motlu1+"_"+motlu2+"_"+le_domaine_->le_nom();
-      else
-        //Dans le cas d une localisation aux faces on test s il s agit d une composante ou du champ
+      else //Dans le cas d une localisation aux faces on test s il s agit d une composante ou du champ
         {
           int ncomp = Champ_Generique_base::composante(motlu1,nom_champ_ref,composantes,source_syno);
           if (ncomp==-1)
@@ -2157,8 +2154,6 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
         noms_champs_a_post_.add(nom_champ_a_post);
     }
 }
-
-
 
 //Creation d un champ generique en fonction des parametres qui sont passes a la methode
 //Cette methode a pour objectif de pouvoir utiliser l ancienne syntaxe dans le jeu de donnees
