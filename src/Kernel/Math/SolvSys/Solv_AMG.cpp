@@ -89,6 +89,7 @@ Entree& Solv_AMG::readOn(Entree& is)
 
 void Solv_AMG::create_block_amg(int n, Nom precond)
 {
+  if (getenv("TRUST_AMG")!=nullptr) precond = getenv("TRUST_AMG");
   // ToDo: not efficient on P0P1Pa (n==3)
   chaine_lue_="cli { -ksp_type ";
   chaine_lue_+=petsc_cg_issue_ ? "bcgs" : "cg";
