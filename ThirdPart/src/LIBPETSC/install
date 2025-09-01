@@ -781,7 +781,7 @@ echo "Leaving install PETSc, it seems OK."
 
 # On supprime la doc et autres dossiers de petsc si trust a ete configure avec l'option -without-doc
 # Ceci permet de reduire le nombre de fichiers dans l'installation TRUST
-if [ $TRUST_WITHOUT_DOC -eq 1 ]
+if [ $TRUST_WITHOUT_DOC -eq 1 ] || [ "$TRUST_WITHOUT_HOST" = 0 ]
 then
    (cd $PETSC_ROOT/$TRUST_ARCH"_opt" ; rm -rf docs share src)
 fi
