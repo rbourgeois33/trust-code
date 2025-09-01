@@ -133,6 +133,17 @@ public:
     identifiant_appel_ = identifiant;
   }
 
+  virtual const Noms& fixer_noms_compo(const Noms& noms)
+  {
+    Cerr << "The method " << __func__ << " is not overloaded in " << que_suis_je() << finl;
+    throw;
+  }
+  virtual const Noms& fixer_noms_synonyms(const Noms& noms)
+  {
+    Cerr << "The method " << __func__ << " is not overloaded in " << que_suis_je() << finl;
+    throw;
+  }
+
 protected:
   static void               assert_parallel(int);
 

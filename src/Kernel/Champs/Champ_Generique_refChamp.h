@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -75,7 +75,13 @@ public:
   void nommer_source(const Postraitement_base& post);
   int get_info_type_post() const override;
 
+  //L attribut compo_ de Champ_Generique_refChamp n est rempli que pour CGNS
+  //crees par macro et cela afin de reproduire les noms de composantes pour les champs aux faces
+  const Noms& fixer_noms_compo(const Noms& noms) override;
+  const Noms& fixer_noms_synonyms(const Noms& noms) override;
+
 protected:
+  Noms compo_,syno_;
 
   OBS_PTR(Champ_base) ref_champ_;
   mutable OWN_PTR(Champ_base) ptr_champ_; /* XXX Elie Saikali : sais pas quoi faire */

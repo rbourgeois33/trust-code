@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -71,8 +71,8 @@ public:
   const   Motcle            get_directive_pour_discr() const override;
   void discretiser_domaine();
 
-  const Noms& fixer_noms_compo(const Noms& noms);
-  const Noms& fixer_noms_synonyms(const Noms& noms);
+  const Noms& fixer_noms_compo(const Noms& noms) override;
+  const Noms& fixer_noms_synonyms(const Noms& noms) override;
   //L attribut compo_ de Champ_Generique_Interpolation n est rempli que pour les Champ_Generique_Interpolation
   //crees par macro et cela afin de reproduire les noms de composantes dans les lml
   Noms compo_,syno_;

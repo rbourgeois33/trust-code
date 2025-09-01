@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -32,21 +32,14 @@ Implemente_instanciable(Champ_Generique_refChamp,"refChamp",Champ_Generique_base
 
 Add_synonym(Champ_Generique_refChamp,"Champ_Post_refChamp");
 
-/*! @brief Imprime sur un flot de sortie.
- *
- * @param (Sortie& os) un flot de sortie
- * @return (Sortie&) le flot de sortie modifie
- */
 Sortie& Champ_Generique_refChamp::printOn(Sortie& os) const
 {
   return os;
 }
 
-//cf Champ_Generique_base::readOn
 Entree& Champ_Generique_refChamp::readOn(Entree& is)
 {
-  Champ_Generique_base::readOn(is);
-  return is;
+  return Champ_Generique_base::readOn(is);
 }
 
 /*! @brief pb_champ :   declenche la lecture du nom du probleme (nom_pb_) auquel appartient le champ discret et le nom de ce champ discret (nom_champ_)
@@ -177,26 +170,28 @@ const Noms Champ_Generique_refChamp::get_property(const Motcle& query) const
       }
     case 4 :
       {
+        if (syno_.size()>0)
+          return syno_;
+
         const Noms mots = get_ref_champ_base().get_synonyms();
 
         return mots;
       }
     case 3 :
       {
+        if (compo_.size()>1)
+          return compo_;
 
-        {
-          const Noms mots = get_ref_champ_base().noms_compo();
-          int nb_comp = mots.size();
+        const Noms mots = get_ref_champ_base().noms_compo();
+        int nb_comp = mots.size();
 
-          Noms compo(nb_comp);
-          for (int i=0; i<nb_comp; i++)
-            {
-              Nom nume(i);
-              compo[i] = nom_post_+nume;
-            }
-          return compo;
-        }
-
+        Noms compo(nb_comp);
+        for (int i=0; i<nb_comp; i++)
+          {
+            Nom nume(i);
+            compo[i] = nom_post_+nume;
+          }
+        return compo;
       }
     default :
       {
@@ -555,4 +550,13 @@ void Champ_Generique_refChamp::nommer_source(const Postraitement_base& post)
 int Champ_Generique_refChamp::get_info_type_post() const
 {
   return 0;
+}
+
+const Noms& Champ_Generique_refChamp::fixer_noms_synonyms(const Noms& noms)
+{
+  return syno_ = noms;
+}
+const Noms& Champ_Generique_refChamp::fixer_noms_compo(const Noms& noms)
+{
+  return compo_ = noms;
 }
