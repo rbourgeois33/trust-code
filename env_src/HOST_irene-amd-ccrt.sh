@@ -27,22 +27,11 @@ define_modules_config()
    # Load modules
    if [ "$TRUST_USE_CUDA" = 1 ]
    then
-      module="gnu/8.3.0 mpi/openmpi/4.0.5 nvhpc/21.3" # TRUST 1.9.2. Cuda 11.2 mais c-amg crash (sur topaze aussi...)
-      module="gnu/8.3.0 mpi/openmpi/4.0.5 cuda/11.0 nvhpc/22.7" # Comme sur topaze
-      module="gnu/8.3.0 cuda/11.7 nvhpc/22.7 mpi/openmpi/4.1.4" # Comme sur topaze (passage a 11.7)
-      #module="gnu/8.3.0 cuda/11.8 nvhpc/22.11 mpi/openmpi/4.1.4" # cuda/11.7 nvhpc/22.7 plus dispo suite maj 04/2024
       module="gnu/8.3.0 nvhpc/23.7 mpi/openmpi/4.1.4" # Passage a Cuda 11.8 et NVHPC 23.7 OK
+      # Contact support pour regler des crashes MPI sur 80 GPUs:
+      module="gnu/8.3.0 nvhpc/23.7 mpi/openmpi/4.1.4 flavor/hcoll/cuda-12.2" && sw="hcoll/4.8.3221"
       [ "$TRUST_CUDA_CC" = "" ] && TRUST_CUDA_CC=70 # V100
    else
-      # module="intel/19.0.5.281 mpi/intelmpi/2019.0.5.281" # Desactive car performances meilleures sur grands nombre de procs avec OpenMPI vs IntelMPI 
-      # module="intel/19.0.5.281 mpi/openmpi/4.0.2 feature/openmpi/io/collective_buffering" # openmpi/io/collective_buffering recommendation CCRT pour IO paralleles
-      # module="intel/20.0.4 feature/openmpi/net/ib/ucx-nocma mpi/openmpi/4.0.5 feature/openmpi/net/ib/ucx-nocma mpi/openmpi/4.0.2 feature/openmpi/io/collective_buffering" # Recommendations CCRT debut 2021 (bcp de coeurs)
-      # sw="feature/hcoll/multicast/disable" # Pour supprimer un warning aleatoire au demarrage de GAMELAN (ne gene pas ensuite)
-      # 09/02/23 : ND : ajout de gnu/7.3.0 car gcc 4.8.5 natif rhel7 ne supporte pas c++14
-      #module="intel/20.0.4 gnu/7.3.0 mpi/openmpi/4.0.2" # PL: Retour a OpenMPI/4.0.2 sans rien d'autre car "node failure" sur le calcul GAMELAN a 50K coeurs avec les conseils precedents 
-      # passage a redhat 8.4, openmpi 4.0.2 n'existe plus, remplace par 4.0.5
-      #module="intel/20.0.0 mpi/openmpi/4.0.5"
-      # passage a gnu pour v1.9.2
       module="gnu/11 mpi/openmpi/4.0.5 mkl/20.0.0"
    fi
    # depuis v1.9.2, install sans conda, on prend python+swig+cmake module

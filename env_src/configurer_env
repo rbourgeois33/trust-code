@@ -1211,6 +1211,7 @@ then
    ################
    e="`cherche_file TRUST_NVCC nvcc`";eval $e
    NVHPC_ROOT=${TRUST_NVCC%/compilers/bin/nvcc}
+   [ ! -d $NVHPC_ROOT ] && echo "Error, NVHPC_ROOT=$NVHPC_ROOT not found." 
    echo "NVHPC_ROOT=\"$NVHPC_ROOT\" && export NVHPC_ROOT # Path to Nvidia HPC SDK" >> $env
    m="# Wrapper to CUDA compiler";CUDA_NVCC=$TRUST_NVCC;configure_compilateur_ccache
    ecrit $m"|"$e"|"$env;eval $e
