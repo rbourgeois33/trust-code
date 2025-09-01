@@ -1539,8 +1539,8 @@ void Domaine_VF::build_mc_dual_mesh() const
   MCAuto<MEDCouplingUMesh> skin_dual =  mc_dual_mesh_->computeSkin();
   mcIdType nb_faces_bd = skin_dual->getNumberOfCells();
 
-  if (nb_faces_bd != domaine().nb_faces_bord())
-    Process::exit("Something wrong with dual mesh computation #1 !!!! \n");
+  if (nb_faces_bd != (domaine().nb_faces_bord() + domaine().nb_faces_joint()))
+    Process::exit("Something wrong with dual mesh computation #1 -- boundary faces !!!! \n");
 
   if (Objet_U::dimension == 3) /* Only polyhedron case !*/
     {
@@ -1550,7 +1550,7 @@ void Domaine_VF::build_mc_dual_mesh() const
       DAId dsi = descIndx->deltaShiftIndex();
       DAId res = dsi->findIdsLowerOrEqualTo(3) ;
       if (res->getNumberOfTuples() > 0)
-        Process::exit("Something wrong with dual mesh computation #2 !!!! \n");
+        Process::exit("Something wrong with dual mesh computation #2 -- polyhedron faces !!!! \n");
     }
 #endif
 

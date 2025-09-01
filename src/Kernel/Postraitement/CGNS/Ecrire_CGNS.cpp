@@ -445,7 +445,8 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
                                                            solname_som_written_, solname_elem_written_, solname_faces_written_,
                                                            flowId_som_, flowId_elem_, flowId_faces_);
 
-      if(LOC == "FACES")
+      /* 4 : Fill field values & dump to cgns file */
+      if (LOC == "FACES")
         {
           const Domaine_VF& dom_vf = ref_cast(Domaine_VF, domaine_dis_.valeur());
           DoubleTrav new_vals;
@@ -457,7 +458,6 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
 
         }
       else
-        /* 4 : Fill field values & dump to cgns file */
         cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::SEQ>(fileId, baseId_[ind], ind, zoneId_, LOC,
                                                                     flowId_som_, flowId_elem_, flowId_faces_, comp,
                                                                     id_champ, valeurs, fieldId_som_, fieldId_elem_, fieldId_faces_);
@@ -733,10 +733,24 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
               break;
             }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC,
-                                                                       flowId_som_, flowId_elem_, flowId_faces_,
-                                                                       fieldId_som_, fieldId_elem_, fieldId_faces_,
-                                                                       comp, min, max, valeurs);
+      if (LOC == "FACES")
+        {
+          const Domaine_VF& dom_vf = ref_cast(Domaine_VF, domaine_dis_.valeur());
+          DoubleTrav new_vals;
+          TRUST_2_CGNS::map_face_values(dom_vf, valeurs, new_vals);
+
+          max = new_vals.dimension(0); // XXX
+
+          cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC,
+                                                                           flowId_som_, flowId_elem_, flowId_faces_,
+                                                                           fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                           comp, min, max, new_vals);
+        }
+      else
+        cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_OVER>(fileId_, baseId_[ind], indx /* XXX */, zoneId_par_[ind], LOC,
+                                                                         flowId_som_, flowId_elem_, flowId_faces_,
+                                                                         fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                         comp, min, max, valeurs);
     }
 #endif
 }
@@ -1017,10 +1031,22 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
           min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
         }
 
-      cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC,
-                                                                     flowId_som_, flowId_elem_, flowId_faces_,
-                                                                     fieldId_som_, fieldId_elem_, fieldId_faces_,
-                                                                     comp, min, max, valeurs);
+      if (LOC == "FACES")
+        {
+          const Domaine_VF& dom_vf = ref_cast(Domaine_VF, domaine_dis_.valeur());
+          DoubleTrav new_vals;
+          TRUST_2_CGNS::map_face_values(dom_vf, valeurs, new_vals);
+
+          cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                         flowId_som_, flowId_elem_, flowId_faces_,
+                                                                         fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                         comp, min, max, new_vals);
+        }
+      else
+        cgns_helper_.cgns_field_write_data<TYPE_ECRITURE_CGNS::PAR_IN>(fileId, baseId_[ind], ind, zoneId_, LOC,
+                                                                       flowId_som_, flowId_elem_, flowId_faces_,
+                                                                       fieldId_som_, fieldId_elem_, fieldId_faces_,
+                                                                       comp, min, max, valeurs);
     }
 #endif
 }
