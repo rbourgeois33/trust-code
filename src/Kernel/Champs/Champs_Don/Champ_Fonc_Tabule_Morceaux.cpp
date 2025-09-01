@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -114,7 +114,12 @@ int Champ_Fonc_Tabule_Morceaux::initialiser(const double tps)
   /* remplissage de ch_param (pointeurs vers les champs) et des i_ch (champs utilises par chaque morceau) */
   std::vector<std::array<std::string, 3>> v_pb_ch(s_pb_ch.begin(), s_pb_ch.end()); //set -> vector
   for (auto &&pb_ch : v_pb_ch) /* (probleme, champ) -> pointeurs */
-    ch_param.push_back(&ref_cast(Probleme_base, Interprete::objet(Nom(pb_ch[0]))).get_champ(Nom(pb_ch[1])));
+    {
+      const Nom pb_nom = Nom(pb_ch[0]);
+      const Probleme_base& pb = ref_cast(Probleme_base, Interprete::objet(pb_nom));
+      const Champ_base& ch = pb.has_champ(Nom(pb_ch[1])) ? pb.get_champ(Nom(pb_ch[1])) : pb.get_champ_post(Nom(pb_ch[1])).get_champ(espace_stockage_);
+      ch_param.push_back(&ch);
+    }
   for (int i = 0; i < (int) m_pb_ch.size(); i++)
     for (auto && pb_ch : m_pb_ch[i]) /* indices */
       morceaux[i].i_ch.push_back((int)(std::lower_bound(v_pb_ch.begin(), v_pb_ch.end(), pb_ch) - v_pb_ch.begin()));
