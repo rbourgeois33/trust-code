@@ -574,7 +574,7 @@ then
       #hypre_configure="--enable-unified-memory"
 
       # Enable MPI GPU awareness for Hypre (plantage encore sur adastra). Pour re-essayer, forcer avec ./configure -force_mpi_gpu_aware
-      [ "$TRUST_FORCE_MPI_GPU_AWARE" = 1 ] && [ "$TRUST_MPI_GPU_AWARE" = 1 ] && hypre_configure=$hypre_configure" --enable-gpu-aware-mpi"
+      [ "$TRUST_MPI_GPU_AWARE" = 1 ] && hypre_configure=$hypre_configure" --enable-gpu-aware-mpi"
       
       # Hack pour Hypre car --download-hypre-configure-arguments difficile a faire marcher avec plusieurs arguments...
       sed -i "1,$ s?--with-MPI-libs?$hypre_configure --with-MPI-libs?g" config/BuildSystem/config/packages/hypre.py || exit -1
