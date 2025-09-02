@@ -103,6 +103,12 @@ public:
   virtual DoubleTab& valeur_aux_faces(DoubleTab& result) const;
   virtual DoubleTab valeur_aux_bords() const;
 
+  // XXX Elie SAIKALI : ajout pour CGNS => utile pour champs faces vdf ...
+  virtual DoubleTab& valeur_aux_faces_post(DoubleTab& result) const
+  {
+    return valeur_aux_faces(result); // par defaut => valeur_aux_faces
+  }
+
   void calculer_valeurs_som_post(DoubleTab& valeurs, int nbsom, Nom& nom_post, const Domaine& dom) const;
   void calculer_valeurs_som_compo_post(DoubleTab& valeurs, int ncomp, int nbsom, Nom& nom_post, const Domaine& dom, int appliquer_cl=0) const;
   void calculer_valeurs_elem_post(DoubleTab& valeurs, int nbelem, Nom& nom_post, const Domaine& dom) const;

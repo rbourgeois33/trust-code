@@ -77,6 +77,11 @@ public:
   void calculer_dercov_axi(const Domaine_Cl_VDF&);
 
   // methodes inlines
+  inline DoubleTab& valeur_aux_faces_post(DoubleTab& result) const override
+  {
+    return Champ_Face_VDF_implementation::valeur_aux_faces_post_impl(domaine_vdf(), result);
+  }
+
   inline DoubleVect& valeur_a_elem(const DoubleVect& position, DoubleVect& val, int le_poly) const override
   {
     return Champ_Face_VDF_implementation::valeur_a_elem(position, val, le_poly);

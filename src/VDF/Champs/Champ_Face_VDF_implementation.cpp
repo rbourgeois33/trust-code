@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -58,6 +58,30 @@ DoubleTab& Champ_Face_VDF_implementation::valeur_aux_elems_(const DoubleTab& val
     }
 
   return val_elem;
+}
+
+/* Elie SAIKALI : utilise pour CGNS => passer champ face a un champ vect aux faces ! */
+DoubleTab& Champ_Face_VDF_implementation::valeur_aux_faces_post_impl(const Domaine_VDF& vdf,  DoubleTab& result) const
+{
+  const Champ_base& cha = le_champ();
+  const DoubleTab& val = cha.valeurs();
+  const int nb_compo = cha.nb_comp(), N = val.line_size(), D = Objet_U::dimension;
+
+  if (nb_compo == 1)
+    Process::exit("TRUST error in Champ_Face_VDF_implementation::valeur_aux_faces_post_impl : A scalar field cannot be of Champ_Face type !");
+
+  const int nb_faces = vdf.nb_faces();
+
+  assert(nb_faces == val.dimension(0));
+
+  result.resize(nb_faces, N * D);
+
+  for (int f = 0; f < nb_faces; f++)
+    for (int d = 0; d < D; d++)
+      for (int n = 0; n < N; n++)
+        result(f, N * d + n) = val(f, n) * vdf.face_normales(f, d) / vdf.face_surfaces(f);
+
+  return result;
 }
 
 DoubleVect& Champ_Face_VDF_implementation::valeur_a_elem_(const DoubleTab& val_face, const DoubleVect& position, DoubleVect& val, int e) const

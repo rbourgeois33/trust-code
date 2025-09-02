@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -35,6 +35,8 @@ public:
   DoubleTab& remplir_coord_noeuds(DoubleTab& positions) const override;
   int remplir_coord_noeuds_et_polys(DoubleTab& positions, IntVect& polys) const override;
   int imprime_Face(Sortie&, int) const;
+
+  DoubleTab& valeur_aux_faces_post_impl(const Domaine_VDF&,  DoubleTab& result) const;
 
 protected:
   virtual const Domaine_VDF& domaine_vdf() const = 0;

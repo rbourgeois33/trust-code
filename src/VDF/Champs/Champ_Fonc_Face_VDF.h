@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -76,6 +76,11 @@ public:
   inline int remplir_coord_noeuds_et_polys(DoubleTab& positions, IntVect& polys) const override
   {
     return Champ_Face_VDF_implementation::remplir_coord_noeuds_et_polys(positions, polys);
+  }
+
+  inline DoubleTab& valeur_aux_faces_post(DoubleTab& result) const override
+  {
+    return Champ_Face_VDF_implementation::valeur_aux_faces_post_impl(domaine_vdf(), result);
   }
 
 private :
