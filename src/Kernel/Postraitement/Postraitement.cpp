@@ -255,17 +255,11 @@ int Postraitement::champ_fonc(Motcle& nom_champ, OBS_PTR(Champ_base)& mon_champ,
   return 0;
 }
 
-/*! @brief Imprime le type de l'objet sur un flot de sortie.
- *
- * @param (Sortie& s) un flot de sortie
- * @return (Sortie&) le flot de sortie modifie
- */
 Sortie& Postraitement::printOn(Sortie& s ) const
 {
   s << que_suis_je() << finl;
   return s << finl;
 }
-
 
 /*! @brief Lit les directives de postraitement sur un flot d'entree.
  *
@@ -1726,13 +1720,23 @@ void Postraitement::postprocess_field_values()
 
       OWN_PTR(Champ_base) espace_stockage;
       const Champ_base& champ_ecriture = champ.get_champ(espace_stockage);
-      DoubleTab val_vec;
-      bool isChamp_Face_PolyMAC = (champ_ecriture.que_suis_je().debute_par("Champ_Face_PolyMAC") || champ_ecriture.que_suis_je().debute_par("Champ_Fonc_Face_PolyMAC"));
-      if (isChamp_Face_PolyMAC)
-        champ_ecriture.valeur_aux_faces(val_vec);
-      const DoubleTab& valeurs_post = isChamp_Face_PolyMAC ? val_vec : champ_ecriture.valeurs();
-      //Etape de recuperation des informations specifiques au champ a postraiter
 
+      DoubleTab val_vec;
+
+      const bool isChamp_Face_PolyMAC = (champ_ecriture.que_suis_je().debute_par("Champ_Face_PolyMAC") ||
+                                         champ_ecriture.que_suis_je().debute_par("Champ_Fonc_Face_PolyMAC"));
+
+      /* XXX Elie SAIKALI : champ vect aux faces seulement pour post et si CGNS */
+      const bool isChamp_Face_VDF_CGNS = (Motcle(format_) == "CGNS") &&
+                                         (champ_ecriture.que_suis_je() == ("Champ_Face") ||
+                                          champ_ecriture.que_suis_je() == ("Champ_Fonc_Face"));
+
+      if (isChamp_Face_VDF_CGNS || isChamp_Face_PolyMAC)
+        champ_ecriture.valeur_aux_faces_post(val_vec); /* valeur_aux_faces pour Polys */
+
+      const DoubleTab& valeurs_post = (isChamp_Face_VDF_CGNS || isChamp_Face_PolyMAC) ? val_vec : champ_ecriture.valeurs();
+
+      //Etape de recuperation des informations specifiques au champ a postraiter
       Entity loc = champ.get_localisation();
       const Nom localisation = get_nom_localisation(loc);
       const Noms nom_post = champ.get_property("nom");
@@ -1788,8 +1792,6 @@ int Postraitement::postraiter_tableaux()
 
       ++itr2;
     }
-
-
   return 1;
 }
 
@@ -1813,7 +1815,6 @@ int Postraitement::traiter_champs()
           dt_post_ = fdt_post_.eval();
         }
     }
-
   return 1;
 }
 
@@ -1826,7 +1827,6 @@ int Postraitement::traiter_tableaux()
   return 1;
 }
 
-
 /*! @brief Effectue le postraitement lie au sondes de facon imperative.
  *
  * @return (int) renvoie toujours 1
@@ -1837,7 +1837,6 @@ int Postraitement::postraiter_sondes()
   les_sondes_int_.postraiter(mon_probleme->schema_temps().temps_courant());
   return 1;
 }
-
 
 /*! @brief Mets a jour (en temps) le sondes.
  *
@@ -2094,8 +2093,8 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
   nom_champ = Motcle(nom_champ_ref)+"_"+motlu2+"_"+le_domaine_->le_nom();
   champ->nommer(nom_champ);
 
-  //On nomme la source d un Champ_Generique_Interpolation cree par macro
-  if (sub_type(Champ_Generique_Interpolation,champ.valeur()) || (motlu2 == "FACES" && Motcle(format_) == "CGNS") /* XXX Elie SAIKALI => pour CGNS */)
+  //On nomme la source d un Champ_Generique_Interpolation cree par macro (/* XXX Elie SAIKALI : aussi si champ aux faces et format CGNS */)
+  if (sub_type(Champ_Generique_Interpolation,champ.valeur()) || (motlu2 == "FACES" && Motcle(format_) == "CGNS"))
     {
       if (motlu2 != "FACES")
         {
