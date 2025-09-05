@@ -355,6 +355,9 @@ Entree& Postraitement::readOn(Entree& s)
   if (is_single_lata)
     format_post_->set_single_lata_option(is_single_lata);
 
+  if (Motcle(format_) == "CGNS" && needs_dual_support_)
+    format_post_->set_needs_dual_support();
+
   Nom base_name(nom_fich_);
   base_name.prefix(format_);
   base_name.prefix(".");
@@ -2033,6 +2036,10 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
 
   //Le postraitement aux faces concerne actuellement les champs dont la discretisation "natif" est aux faces
   //On construit dans ce cas la un Champ_Generique_refChamp
+
+  // XXX Elie SAIKALI : besoin maillage dual ?
+  if (Motcle(format_) == "CGNS" && motlu2 == "FACES" && !needs_dual_support_)
+    needs_dual_support_ = true;
 
   // on essaye avant dans les champs_posts...
   int trouve=comprend_champ_post(motlu1);

@@ -103,6 +103,13 @@ void Format_Post_CGNS::set_postraiter_domain()
 #endif
 }
 
+void Format_Post_CGNS::set_needs_dual_support()
+{
+#ifdef HAS_CGNS
+  cgns_writer_.cgns_set_needs_dual_support();
+#endif
+}
+
 int Format_Post_CGNS::ecrire_temps(const double t)
 {
 #ifdef HAS_CGNS
@@ -125,17 +132,6 @@ int Format_Post_CGNS::finir(const int est_le_dernier_post)
     {
 #ifdef HAS_CGNS
       cgns_writer_.cgns_finir();
-#endif
-    }
-  return 1;
-}
-
-int Format_Post_CGNS::finir_sans_iters(const int est_le_dernier_post, const std::string& fn )
-{
-  if (est_le_dernier_post)
-    {
-#ifdef HAS_CGNS
-      cgns_writer_.cgns_finir_sans_iters(fn);
 #endif
     }
   return 1;

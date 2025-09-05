@@ -150,17 +150,6 @@ void Ecrire_CGNS::cgns_finir()
     cgns_write_link_file_for_multiple_files();
 }
 
-void Ecrire_CGNS::cgns_finir_sans_iters(const std::string& fn)
-{
-  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    return; /* All done */
-
-  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
-  else
-    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
-}
-
 void Ecrire_CGNS::cgns_add_time(const double t)
 {
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
@@ -208,12 +197,6 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
   /* 2 : on ecrit */
   const int nb_cmp = valeurs.dimension(1);
 
-//  if (LOC == "FACES")
-//    {
-//
-//    }
-//  else /* SOM/ELEM */
-//    {
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
       for (int i = 0; i < nb_cmp; i++)
@@ -245,7 +228,6 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
         else
           Cerr << "Field " << field_name << " is already written => we skip it ..." << finl;
       }
-//    }
 }
 
 /*
@@ -294,10 +276,15 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
         }
       else // Option_CGNS::USE_LINKS
         {
-          if (LOC == "FACES")
-            Process::exit("TODO FIXME -- Ecrire_CGNS::cgns_fill_field_loc_map !! \n");
-
           assert (Option_CGNS::USE_LINKS);
+
+          if (needs_dual_support_ && !is_dual_) /* faut ecrire avant de fermer ... */
+            {
+              Nom nom_dom = domaine.le_nom();
+              nom_dom += "_FACES";
+              Cerr << "Building new CGNS zone to host the fields located at FACES !" << finl;
+              cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
+            }
 
           if (grid_file_opened_)
             {
@@ -308,9 +295,16 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               grid_file_opened_ = false;
             }
 
+          Nom nom_dom = domaine.le_nom();
+          if (LOC == "FACES")
+            {
+              nom_dom += "_";
+              nom_dom += LOC;
+            }
+
           if (static_cast<int>(fld_loc_map_.size()) == 0)
             {
-              fld_loc_map_.insert( { LOC, domaine.le_nom() });
+              fld_loc_map_.insert( { LOC, nom_dom });
               cgns_open_solution_link_file(0, LOC, time_post_.back()); // 1st sol file to open here !!
             }
           else
@@ -318,8 +312,8 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               const bool in_map = (fld_loc_map_.count(LOC) != 0);
               if (!in_map)
                 {
-                  fld_loc_map_.insert( { LOC, domaine.le_nom() });
-                  Cerr << "A second CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
+                  fld_loc_map_.insert( { LOC, nom_dom });
+                  Cerr << "A new CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
                   cgns_open_solution_link_file(1, LOC, time_post_.back());  // 2nd sol file to open here !!
                 }
             }
@@ -1169,35 +1163,12 @@ void Ecrire_CGNS::cgns_write_domaine_dual(const Domaine& domaine, const int est_
   dom_dual.les_elems() = les_elems;
 
   // write dual_mesh
-  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    {
-      std::string fn = baseFile_name_ + ".grid_dual"; // file name
+  is_dual_ = true;
+  // we fill face/som & elem faces conn ET seulement si poly !!!
+  if (Objet_U::dimension == 3)
+    fill_connectivity_from_mc_mesh(dual_m, fs_dual_, ef_dual_);
 
-      Format_Post_CGNS cgns;
-      cgns.set_postraiter_domain();
-      cgns.get_cgns_writer().cgns_set_is_dual_domain();
-
-      // we fill face/som & elem faces conn ET seulement si poly !!!
-      if (Objet_U::dimension == 3)
-        fill_connectivity_from_mc_mesh(dual_m,
-                                       cgns.get_cgns_writer().get_fs_dual(),
-                                       cgns.get_cgns_writer().get_ef_dual());
-
-      cgns.initialize(Nom(fn), 0, "SIMPLE");
-
-      cgns.ecrire_entete(0., 0, est_le_premier_post);
-      cgns.ecrire_domaine(dom_dual, est_le_premier_post);
-      cgns.finir_sans_iters(1, fn);
-    }
-  else // APPEND
-    {
-      is_dual_ = true;
-      // we fill face/som & elem faces conn ET seulement si poly !!!
-      if (Objet_U::dimension == 3)
-        fill_connectivity_from_mc_mesh(dual_m, fs_dual_, ef_dual_);
-
-      cgns_write_domaine(&dom_dual, dom_dual_nom, sommets, les_elems, type_cell);
-    }
+  cgns_write_domaine(&dom_dual, dom_dual_nom, sommets, les_elems, type_cell);
 }
 
 #endif /* HAS_CGNS */

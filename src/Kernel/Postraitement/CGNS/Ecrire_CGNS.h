@@ -30,10 +30,10 @@ public:
   void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_is_dual_domain() { is_dual_ = true; }
+  void cgns_set_needs_dual_support() { needs_dual_support_ = true; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
   void cgns_finir();
-  void cgns_finir_sans_iters(const std::string&);
   void cgns_add_time(const double );
   void cgns_write_domaine_dual(const Domaine& , const int , const Nom& nom_dom = "??");
   void cgns_write_domaine(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
@@ -47,19 +47,22 @@ private:
   bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
   bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
-  std::string solname_elem_ = "", solname_som_ = "", solname_faces_ = "", baseFile_name_ = "", baseZone_name_ = "";
+  std::string solname_elem_ = "", solname_som_ = "", solname_faces_ = "", baseFile_name_ = "";
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
   std::vector<Nom> doms_written_;
   std::vector<Nom> fieldName_dumped_; /* filed just once to see what fields are already written ! */
-  std::vector<std::string> connectname_;
+  std::vector<std::string> baseZone_name_;
+  std::vector<std::vector<std::string>> connectname_;
   std::vector<double> time_post_;
   std::vector<int> baseId_, zoneId_;
-  std::vector<cgsize_t> sizeId_;
+  std::vector<std::vector<cgsize_t>> sizeId_;
   std::vector<std::vector<int>> zoneId_par_; /* par ordre d'ecriture du domaine */
   std::vector<TRUST_2_CGNS> T2CGNS_;
   Ecrire_CGNS_helper cgns_helper_;
-  int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, flowId_faces_ = 0, fieldId_faces_ = 0, cellDim_ = -123;
-  int fileId2_ = -123; /* cas ou on a 2 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
+  int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, flowId_faces_ = 0, fieldId_faces_ = 0;
+  int fileId2_ = -123, fileId3_ = -123; /* cas ou on a 2/3 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
+
+  std::vector<int> cellDim_;
 
   // specifique FILE_PER_COMM_GROUP
   int proc_maitre_local_comm_ = -123;
@@ -68,7 +71,7 @@ private:
 
   // specifique maillage dual pour faces
   IntTab fs_dual_, ef_dual_;
-  bool is_dual_ = false;
+  bool is_dual_ = false, needs_dual_support_ = false;
   inline IntTab& get_fs_dual() { return fs_dual_;}
   inline const IntTab& get_fs_dual() const { return fs_dual_;}
   inline IntTab& get_ef_dual() { return ef_dual_;}

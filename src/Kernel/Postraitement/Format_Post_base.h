@@ -138,6 +138,7 @@ public:
   }
 
   virtual void set_postraiter_domain() { /* Do nothing */ }
+  virtual void set_needs_dual_support() { /* Do nothing */ }
 
 protected:
   OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.

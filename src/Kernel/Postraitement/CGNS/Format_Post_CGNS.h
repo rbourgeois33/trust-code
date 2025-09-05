@@ -61,6 +61,7 @@ public:
   void reset() override;
   void set_param(Param& param) override;
   void set_postraiter_domain() override;
+  void set_needs_dual_support() override;
   int initialize_by_default(const Nom&) override;
   int initialize(const Nom&, const int, const Nom&) override;
 
@@ -70,7 +71,6 @@ public:
   int ecrire_entete(const double, const int, const int) override;
   int ecrire_temps(const double) override;
   int finir(const int) override;
-  int finir_sans_iters(const int, const std::string& fn );
   int finir_ecriture(double) override;
 
   void ecrire_domaine_dual(const Domaine& , const int ) override;
