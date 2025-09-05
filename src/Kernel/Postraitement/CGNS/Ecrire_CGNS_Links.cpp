@@ -30,24 +30,20 @@
 
 void Ecrire_CGNS::cgns_open_solution_link_files(const double t)
 {
-  for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
-    {
-      const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-      cgns_open_solution_link_file(ind, itr->first, t);
-    }
+  for (auto& itr : fld_loc_map_)
+    cgns_open_solution_link_file(itr.first, t);
 }
 
 void Ecrire_CGNS::cgns_close_solution_link_files(const double t)
 {
-  for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
+  std::string fn;
+  for (auto& itr : fld_loc_map_)
     {
-      const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-      std::string fn;
       if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
-        fn = baseFile_name_ + "_XXXX_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+        fn = baseFile_name_ + "_XXXX_" + itr.first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
       else
-        fn = baseFile_name_ + "_" + itr->first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
-      cgns_close_grid_or_solution_link_file(ind, fn);
+        fn = baseFile_name_ + "_" + itr.first + ".solution." + cgns_helper_.convert_double_to_string(t) + ".cgns"; // file name
+      cgns_close_grid_or_solution_link_file(itr.first, fn);
     }
 }
 
@@ -85,10 +81,10 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
     }
 }
 
-void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const int ind, const std::string& fn, bool is_cerr)
+void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const std::string& loc, const std::string& fn, bool is_cerr)
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
-  const int fileId = (ind == 0 ? fileId_ : fileId2_);
+  int& fileId = (loc == "GRID") ? fileId_ : fileId_links_.at(loc);
 
   if (Process::is_parallel())
     {
@@ -121,7 +117,7 @@ void Ecrire_CGNS::cgns_fill_info_grid_link_file(const char* basename, const CGNS
     connectname_.push_back({ "Elem" });
 }
 
-void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string& LOC, const double t, bool is_link)
+void Ecrire_CGNS::cgns_open_solution_link_file(const std::string& LOC, const double t, bool is_link)
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
 
@@ -129,7 +125,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const int ind, const std::string&
   const bool enter_group_comm = Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group();
 
   std::string fn;
-  int& fileId = (ind == 0 ? fileId_ : fileId2_); // XXX : ref
+  int& fileId = fileId_links_.at(LOC); // XXX : ref
 
   if (is_link)
     fn = !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns"; // file name
@@ -236,11 +232,9 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
       const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
       const int nb_grps = static_cast<int>(unique_vec_proc_maitre_local_comm_.size());
 
-      for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
+      for (auto& itr : fld_loc_map_)
         {
-          const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-          const std::string& LOC = itr->first;
-
+          const std::string& LOC = itr.first;
           /*
            * Quel ind a linker avec ??
            */
@@ -251,7 +245,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
               ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
             }
 
-          int& fileId = (ind == 0 ? fileId_ : fileId2_);
+          int& fileId = fileId_links_.at(LOC);
           std::string fn = !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns";
 
           unlink(fn.c_str());
@@ -347,13 +341,11 @@ void Ecrire_CGNS::cgns_write_final_link_file()
     {
       const bool mult_loc = (static_cast<int>(fld_loc_map_.size()) > 1);
 
-      for (auto itr = fld_loc_map_.begin(); itr != fld_loc_map_.end(); ++itr)
+      for (auto& itr : fld_loc_map_)
         {
-          const int ind = static_cast<int>(std::distance(fld_loc_map_.begin(), itr));
-
           // Fichier link maintenant
-          const std::string& LOC = itr->first;
-          cgns_open_solution_link_file(ind, LOC, -123., true /* dernier fichier => link */);
+          const std::string& LOC = itr.first;
+          cgns_open_solution_link_file(LOC, -123., true /* dernier fichier => link */);
 
           /*
            * Quel ind a linker avec ??
@@ -365,7 +357,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
               ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
             }
 
-          const int fileId = (ind == 0 ? fileId_ : fileId2_);
+          int& fileId = fileId_links_.at(LOC);
 
           // link solutions
           for (auto& itr_t : time_post_)
@@ -384,7 +376,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
           cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(true /* has_field */, 1 /* nb_zones_to_write */, fileId, baseId_[ind_base], ind_base /* 1st Zone */,
                                                                  zoneId_, LOC, solname_som_, solname_elem_, solname_faces_, time_post_);
 
-          cgns_close_grid_or_solution_link_file(ind, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
+          cgns_close_grid_or_solution_link_file(LOC, !mult_loc ? baseFile_name_ + ".cgns" : baseFile_name_ + "_" + LOC + ".cgns", true); // on ferme
         }
     }
 

@@ -16,10 +16,10 @@
 #ifndef Ecrire_CGNS_included
 #define Ecrire_CGNS_included
 
+#include <Domaine_forward.h>
 #include <TRUST_2_CGNS.h>
 #include <map>
 
-#include <Domaine_forward.h>
 class Nom;
 
 class Ecrire_CGNS
@@ -41,28 +41,36 @@ public:
   void finir_ecriture(double);
 
 private:
-  // Attributes
-  OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.
+
+  Ecrire_CGNS_helper cgns_helper_;
+  OBS_PTR(Domaine_dis_base) domaine_dis_;
+  std::vector<TRUST_2_CGNS> T2CGNS_;
+
+  std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
+  std::vector<Nom> doms_written_;
+  std::vector<Nom> fieldName_dumped_; /* filled just once to see what fields are already written ! */
+  std::string solname_elem_ = "", solname_som_ = "", solname_faces_ = "", baseFile_name_ = "";
+  std::vector<double> time_post_;
+  std::vector<int> baseId_, zoneId_;
 
   bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
-  bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
-  std::string solname_elem_ = "", solname_som_ = "", solname_faces_ = "", baseFile_name_ = "";
-  std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
-  std::vector<Nom> doms_written_;
-  std::vector<Nom> fieldName_dumped_; /* filed just once to see what fields are already written ! */
+
+  int fileId_ = -123;
+  int flowId_elem_ = 0, fieldId_elem_ = 0;
+  int flowId_som_ = 0, fieldId_som_ = 0;
+  int flowId_faces_ = 0, fieldId_faces_ = 0;
+
+  // specifique pour link
+  bool grid_file_opened_ = false; /* Management of link files */
+  std::map<std::string, int> fileId_links_ = { {"ELEM" , -123 } , {"FACES" , -123} , {"SOM" , -123} };
   std::vector<std::string> baseZone_name_;
   std::vector<std::vector<std::string>> connectname_;
-  std::vector<double> time_post_;
-  std::vector<int> baseId_, zoneId_;
   std::vector<std::vector<cgsize_t>> sizeId_;
-  std::vector<std::vector<int>> zoneId_par_; /* par ordre d'ecriture du domaine */
-  std::vector<TRUST_2_CGNS> T2CGNS_;
-  Ecrire_CGNS_helper cgns_helper_;
-  int fileId_ = -123, flowId_elem_ = 0, fieldId_elem_ = 0, flowId_som_ = 0, fieldId_som_ = 0, flowId_faces_ = 0, fieldId_faces_ = 0;
-  int fileId2_ = -123, fileId3_ = -123; /* cas ou on a 2/3 fichiers ouvert en meme temps : utiliser seulement pour Option_CGNS::USE_LINKS */
-
   std::vector<int> cellDim_;
+
+  // specifique par in zone
+  std::vector<std::vector<int>> zoneId_par_; /* par ordre d'ecriture du domaine */
 
   // specifique FILE_PER_COMM_GROUP
   int proc_maitre_local_comm_ = -123;
@@ -85,11 +93,11 @@ private:
   void cgns_open_solution_link_files(const double);
   void cgns_close_solution_link_files(const double);
   void cgns_open_grid_base_link_file();
-  void cgns_open_solution_link_file(const int, const std::string&, const double, bool is_link = false);
+  void cgns_open_solution_link_file(const std::string&, const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_final_link_file_comm_group();
   void cgns_write_link_file_for_multiple_files();
-  void cgns_close_grid_or_solution_link_file(const int, const std::string&, bool is_cerr = true);
+  void cgns_close_grid_or_solution_link_file(const std::string&, const std::string&, bool is_cerr = true);
 
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );

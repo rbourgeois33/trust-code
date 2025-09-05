@@ -289,9 +289,9 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
           if (grid_file_opened_)
             {
               if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
-                cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + "_XXXX.grid.cgns", false);
+                cgns_close_grid_or_solution_link_file(std::string("GRID"), baseFile_name_ + "_XXXX.grid.cgns", false);
               else
-                cgns_close_grid_or_solution_link_file(0 /* only one index here */, baseFile_name_ + ".grid.cgns", true);
+                cgns_close_grid_or_solution_link_file(std::string("GRID"), baseFile_name_ + ".grid.cgns", true);
               grid_file_opened_ = false;
             }
 
@@ -302,20 +302,13 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               nom_dom += LOC;
             }
 
-          if (static_cast<int>(fld_loc_map_.size()) == 0)
+          if (!fld_loc_map_.count(LOC))
             {
+              if (static_cast<int>(fld_loc_map_.size()) > 0)
+                Cerr << "A new CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
+
               fld_loc_map_.insert( { LOC, nom_dom });
-              cgns_open_solution_link_file(0, LOC, time_post_.back()); // 1st sol file to open here !!
-            }
-          else
-            {
-              const bool in_map = (fld_loc_map_.count(LOC) != 0);
-              if (!in_map)
-                {
-                  fld_loc_map_.insert( { LOC, nom_dom });
-                  Cerr << "A new CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
-                  cgns_open_solution_link_file(1, LOC, time_post_.back());  // 2nd sol file to open here !!
-                }
+              cgns_open_solution_link_file(LOC, time_post_.back());  // 2nd sol file to open here !!
             }
         }
     }
@@ -429,7 +422,7 @@ void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const
   /* quel fileID ?? */
   int fileId = fileId_;
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    TRUST_2_CGNS::modify_fileId_for_post(fld_loc_map_, LOC, fileId2_, fileId);
+    fileId = fileId_links_.at(LOC);
 
   if (nb_vals)
     {
@@ -988,7 +981,7 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   /* quel fileID ?? */
   int fileId = fileId_;
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    TRUST_2_CGNS::modify_fileId_for_post(fld_loc_map_, LOC, fileId2_, fileId);
+    fileId = fileId_links_.at(LOC);
 
   /* 1 : CREATION OF FILE STRUCTURE
    *
