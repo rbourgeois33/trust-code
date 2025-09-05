@@ -1894,7 +1894,7 @@ void Domaine_32_64<int>::init_faces_virt_bord(const MD_Vector& md_vect_faces, MD
       md_vect_faces_front.copy(mdseq);
 
       // Constructrion des MD_Vector_seq de chaque frontiere:
-      const int nb_frontieres = nb_front_Cl();
+      const int nb_frontieres = nb_front_Cl() + nb_groupes_faces();
       for (int i_frontiere = 0; i_frontiere < nb_frontieres; i_frontiere++)
         {
           Frontiere& front = frontiere(i_frontiere);
