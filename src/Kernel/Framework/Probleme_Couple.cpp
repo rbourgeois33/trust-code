@@ -74,6 +74,16 @@ double Probleme_Couple::computeTimeStep(bool& stop) const
 
 bool Probleme_Couple::solveTimeStep()
 {
+  // Trigger domain-specific time step logic at most once per distinct domain,
+  // even if several problems share it.
+  std::set<const Domaine*> processed_domains;
+  for (int i = 0; i < nb_problemes(); i++)
+    {
+      Probleme_base& pb = ref_cast(Probleme_base, probleme(i));
+      Domaine& dom = pb.domaine();
+      if (processed_domains.insert(&dom).second)
+        dom.solveTimeStep(pb);
+    }
   // WEC : A changer !!!!
   if (sch_clones.size())
     if (sub_type(Schema_Euler_Implicite,schema_temps()))
@@ -405,4 +415,3 @@ void Probleme_Couple::sauver() const
     ref_cast(Probleme_base,probleme(i)).sauver();
 
 }
-
