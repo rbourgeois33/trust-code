@@ -240,35 +240,38 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
 {
   if (static_cast<int>(time_post_.size()) == 1)
     {
+      /* pour les champs aux faces, il faut un support ! */
+      if (needs_dual_support_ && !is_dual_)
+        {
+          Nom nom_dom = domaine.le_nom();
+          nom_dom += "_FACES";
+          Cerr << "###  Building a new CGNS zone to host the fields located at FACES !" << finl;
+          cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
+        }
+
+      Nom nom_dom = domaine.le_nom();
+      if (LOC == "FACES")
+        {
+          nom_dom += "_";
+          nom_dom += LOC;
+        }
+
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_)
         {
-          if (static_cast<int>(fld_loc_map_.size()) == 0 && LOC != "FACES")
-            fld_loc_map_.insert( { LOC, domaine.le_nom() });/* ici on utilise le 1er support */
+          if (LOC == "FACES" || ( !fld_loc_map_.count("ELEM") && !fld_loc_map_.count("SOM")))
+            {
+              if (!fld_loc_map_.count(LOC)) /* plusieur faces ! */
+                fld_loc_map_.insert( { LOC, nom_dom });/* ici on utilise le 1er support */
+            }
           else
             {
-              const bool in_map = (fld_loc_map_.count(LOC) != 0);
-              if (!in_map) // XXX here we need a new support ... sorry
+              if (!fld_loc_map_.count(LOC)) // XXX here we need a new support ... sorry
                 {
-                  Nom nom_dom = domaine.le_nom();
                   nom_dom += "_";
                   nom_dom += LOC;
-                  Cerr << "Building new CGNS zone to host the field located at : " << LOC << " !" << finl;
+                  Cerr << "###  Building a new CGNS zone to host the field located at : " << LOC << " !" << finl;
 
-                  if (LOC == "FACES")
-                    cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
-                  else
-                    {
-                      Motcle type_e = domaine.type_elem()->que_suis_je();
-                      if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
-                        {
-                          if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
-                            cgns_write_domaine_par_over_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
-                          else
-                            cgns_write_domaine_par_in_zone(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e);
-                        }
-                      else
-                        cgns_write_domaine_seq(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), type_e); // XXX Attention
-                    }
+                  cgns_write_domaine(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), Motcle(domaine.type_elem()->que_suis_je()));
 
                   fld_loc_map_.insert( { LOC, nom_dom });
                 }
@@ -277,15 +280,6 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
       else // Option_CGNS::USE_LINKS
         {
           assert (Option_CGNS::USE_LINKS);
-
-          if (needs_dual_support_ && !is_dual_) /* faut ecrire avant de fermer ... */
-            {
-              Nom nom_dom = domaine.le_nom();
-              nom_dom += "_FACES";
-              Cerr << "Building new CGNS zone to host the fields located at FACES !" << finl;
-              cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
-            }
-
           if (grid_file_opened_)
             {
               if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
@@ -295,20 +289,13 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               grid_file_opened_ = false;
             }
 
-          Nom nom_dom = domaine.le_nom();
-          if (LOC == "FACES")
-            {
-              nom_dom += "_";
-              nom_dom += LOC;
-            }
-
           if (!fld_loc_map_.count(LOC))
             {
               if (static_cast<int>(fld_loc_map_.size()) > 0)
-                Cerr << "A new CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
+                Cerr << "###  A new CGNS file will be written to host the fields located at : " << LOC << " !" << finl;
 
               fld_loc_map_.insert( { LOC, nom_dom });
-              cgns_open_solution_link_file(LOC, time_post_.back());  // 2nd sol file to open here !!
+              cgns_open_solution_link_file(LOC, time_post_.back());
             }
         }
     }

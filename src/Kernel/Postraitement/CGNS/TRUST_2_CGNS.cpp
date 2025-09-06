@@ -54,6 +54,8 @@ Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const No
       id_du_champ_modifie.prefix(iddomaine);
       id_du_champ_modifie.prefix("_FACES_");
     }
+  else
+    throw;
 
   (LOC == "SOM") ? fieldId_som++ : ( (LOC == "ELEM") ? fieldId_elem++ : fieldId_faces++);
 
@@ -118,7 +120,6 @@ void TRUST_2_CGNS::map_face_values(const Domaine_VF& dom_vf, const DoubleTab& va
 
   assert (val_src.nb_dim() == 2);
   const int nb_j = val_src.dimension(1);
-//  nb_j ? val_trgt.resize(nb_cells, nb_j) : val_trgt.resize(nb_cells);
   val_trgt.resize(nb_cells, nb_j);
 
   for (int f = 0; f < val_src.dimension(0); f++)
