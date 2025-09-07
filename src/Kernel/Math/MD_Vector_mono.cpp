@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -42,3 +42,44 @@ Sortie& MD_Vector_mono::printOn(Sortie& os) const
   return os;
 }
 
+void flatten(const ArrOfInt& blocs_items, ArrOfInt& items)
+{
+  // Build from blocs_items_to_sum_
+  //const ArrOfInt& blocs_items_to_sum = get_blocs_items_to_sum();
+  const int nblocs = blocs_items.size_array() >> 1;
+  const int *bloc_itr = blocs_items.addr();
+  int size = 0;
+  for (int bloc=0; bloc<nblocs; bloc++)
+    {
+      const int begin_bloc = (*(bloc_itr++));
+      const int end_bloc = (*(bloc_itr++));
+      size += end_bloc - begin_bloc;
+    }
+  items.resize(size);
+  int item = 0;
+  bloc_itr = blocs_items.addr();
+  for (int bloc=0; bloc<nblocs; bloc++)
+    {
+      const int begin_bloc = (*(bloc_itr++));
+      const int end_bloc = (*(bloc_itr++));
+      for (int i=begin_bloc; i<end_bloc; i++)
+        {
+          items(item) = i;
+          item++;
+        }
+    }
+}
+
+const ArrOfInt& MD_Vector_mono::get_items_to_sum() const
+{
+  if (items_to_sum_.size_array()==0)
+    flatten(get_blocs_items_to_sum(), items_to_sum_);
+  return items_to_sum_;
+}
+
+const ArrOfInt& MD_Vector_mono::get_items_to_compute() const
+{
+  if (items_to_compute_.size_array()==0)
+    flatten(get_blocs_items_to_compute(), items_to_compute_);
+  return items_to_compute_;
+}

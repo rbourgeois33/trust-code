@@ -62,7 +62,9 @@ void local_max_abs_tab_kernel(const TRUSTTab<_TYPE_>& tableau, TRUSTArray<_TYPE_
 
   auto tableau_view= tableau.template view_ro<2, ExecSpace>();
   auto max_colonne_view= max_colonne.template view_rw<1, ExecSpace>();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       const int begin_bloc = (*(bloc_itr++)), end_bloc = (*(bloc_itr++));

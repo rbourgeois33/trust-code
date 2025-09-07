@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,7 @@ extern void remplir_items_non_calcules_(TRUSTVect<_TYPE_>& v, _TYPE_ valeur);
 
 /*! @brief Remplit les "items non calcules" du tableau avec une valeur invalide.
  *
- * Ce sont tous les items qui ne sont pas repertories dans v.get_md_vector().valeurs().get_items_to_compute(). (items non calcules par les operations par defaut sur les vecteurs, en general ce sont les items virtuels)
+ * Ce sont tous les items qui ne sont pas repertories dans v.get_md_vector().valeurs().get_blocs_items_to_compute(). (items non calcules par les operations par defaut sur les vecteurs, en general ce sont les items virtuels)
  *   Il est conseille d'appliquer cette methode a la fin des fonctions qui ne renvoient pas un espace virtuel a jour avec declare_espace_virtuel_invalide(...))
  *   de sorte a provoquer une erreur si l'espace virtuel est utilise.
  *

@@ -1,3 +1,4 @@
+XX/XX/25 (TRUST) GPU          : Fix huge launch of kernels during parallel calculation which degraded performance with possible slowdown
 XX/XX/25 (TRUST) GPU          : AMD rocALUTION solvers are removed
 --------------------------------------------------------------------------------------------------
 Release notes version 1.9.7_beta : Enhancements, modifications and corrected bugs since version 1.9.6 :

@@ -39,7 +39,7 @@ std::string ptrToString(const void* adr);
 
 #ifdef TRUST_USE_GPU
 #define ToDo_Kokkos(str)                              \
-        if (Process::je_suis_maitre()) fprintf(stderr, "[Kokkos %s] Warning, code running slow cause not ported yet: line %d in %s \n", str, __LINE__, __FILE__);
+        Cerr << "[Kokkos " << str << "] Warning, code running slow cause not ported yet: line " << __LINE__ << " in " << __FILE__ << finl;
 #else
 #define ToDo_Kokkos(str)
 #endif

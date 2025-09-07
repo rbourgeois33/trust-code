@@ -19,6 +19,7 @@
 #ifdef MICROSOFT
 #define HUGE_VALL 1e99
 #endif
+#include <TRUST_Ref.h>
 
 /*! Small iterator class to scan blocks of a MD vector (blocks described by integer indices) or scan a single big block (trustIdType).
  * The important point: the operator*() always returns a trustIdType (TID), whether internal data is int* or trustIdType* :
@@ -31,7 +32,11 @@ struct Block_Iter
   Block_Iter() = default;
   Block_Iter(const Block_Iter& other) = default;  // default copy ctor, will copy all members
   Block_Iter& operator=(const Block_Iter& other) = default; // default copy operator
-  Block_Iter(const int * p) : int_ptr(p) {}
+  Block_Iter(const ArrOfInt& items_blocs, const ArrOfInt& items) : int_ptr(items_blocs.addr())
+  {
+    items_ = items;
+  }
+  Block_Iter(const ArrOfInt& items_blocs) : int_ptr(items_blocs.addr()) {}
   Block_Iter(_SIZE_ s, _SIZE_ e) : start(s), end(e) {}
 
   _SIZE_ operator*() const
@@ -48,6 +53,7 @@ struct Block_Iter
   bool empty() const { return int_ptr == nullptr && start == -1; }
 
   const int * int_ptr=nullptr;
+  OBS_PTR(ArrOfInt) items_;
   _SIZE_ start=-1;
   _SIZE_ end=-1;
 };

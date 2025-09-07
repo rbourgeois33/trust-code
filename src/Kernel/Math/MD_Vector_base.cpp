@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -135,7 +135,7 @@ void MD_Vector_base::append_items(ArrOfInt& dest, const ArrOfInt& src, int offse
 int MD_Vector_base::get_seq_flags_impl(ArrOfBit& flags, int line_size) const
 {
   int count = 0;
-  const ArrOfInt& itm_sum = get_items_to_sum();
+  const ArrOfInt& itm_sum = get_blocs_items_to_sum();
   const int nblocs = itm_sum.size_array() >> 1;
   const int *ptr = itm_sum.addr();
   int j = 0;

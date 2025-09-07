@@ -762,10 +762,10 @@ inline void TRUSTTab<_TYPE_,_SIZE_>::ajoute_produit_tensoriel(_T_ alpha, const T
   int nblocs_left = 0;
   if (v.get_md_vector().non_nul() && v.get_md_vector()->use_blocks())
     {
-      const ArrOfInt& items_blocs = v.get_md_vector()->get_items_to_compute();
+      const ArrOfInt& items_blocs = v.get_md_vector()->get_blocs_items_to_compute();
       assert(items_blocs.size_array() % 2 == 0);
       nblocs_left = items_blocs.size_array() >> 1;
-      bloc_itr = Block_Iter<_SIZE_>(items_blocs.addr());
+      bloc_itr = Block_Iter<_SIZE_>(items_blocs);
     }
   else
     {

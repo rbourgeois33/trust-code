@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -222,8 +222,8 @@ void MD_Vector_composite::add_part(const MD_Vector& part, int shape, Nom name)
   // Update the block information - in sequential (MD_Vector_seq) nothing will be changed (since underlying arrays
   // remain empty), but this is OK because all algorithsm using this data (determine_blocks() in TRUSTVect_tools for
   // example, or get_sequential_items_flags()) are overriden for sequential cases.
-  append_blocs(global_md_->blocs_items_to_sum_, part->get_items_to_sum(), offset, multiplier);
-  append_blocs(global_md_->blocs_items_to_compute_, part->get_items_to_compute(), offset, multiplier);
+  append_blocs(global_md_->blocs_items_to_sum_, part->get_blocs_items_to_sum(), offset, multiplier);
+  append_blocs(global_md_->blocs_items_to_compute_, part->get_blocs_items_to_compute(), offset, multiplier);
 }
 
 void MD_Vector_composite::fill_md_vect_renum(const IntVect& renum, MD_Vector& md_vect) const

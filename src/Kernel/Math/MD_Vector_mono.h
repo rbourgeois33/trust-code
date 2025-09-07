@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -32,8 +32,10 @@ class MD_Vector_mono : public MD_Vector_base
   Declare_base(MD_Vector_mono);
 
 public:
-  const ArrOfInt& get_items_to_sum() const override { return blocs_items_to_sum_; }
-  const ArrOfInt& get_items_to_compute() const override { return blocs_items_to_compute_; }
+  const ArrOfInt& get_blocs_items_to_sum() const override { return blocs_items_to_sum_; }
+  const ArrOfInt& get_items_to_sum() const override;
+  const ArrOfInt& get_blocs_items_to_compute() const override { return blocs_items_to_compute_; }
+  const ArrOfInt& get_items_to_compute() const override;
 
 protected:
   // MD_Vector_composite needs to see inside MD_Vector_mono because of its global_md_ member:
@@ -53,13 +55,13 @@ protected:
   //  (fin_bloc est l'indice du dernier element + 1)
   //  (structure utilisee pour les sauvegardes sequentielles (xyz ou debog), les calculs de normes de vecteurs, etc)
   ArrOfInt blocs_items_to_sum_;
+  mutable ArrOfInt items_to_sum_; // All items (more suitable for TRUSTVect_tools kernels on GPU)
   // Indices de tous les items pour lesquels il faut calculer une valeur
   //  (utilise par DoubleTab::operator+=(const DoubleTab &) par exemple)
   // En theorie, il suffirait de prendre blocs_items_to_sum_, mais ce dernier est
   //  plein de trous et peut etre inefficace. En pratique, on calcule toutes les valeurs
   //  reeles.
   ArrOfInt blocs_items_to_compute_;
-
-
+  mutable ArrOfInt items_to_compute_; // All items (more suitable for TRUSTVect_tools kernels on GPU)
 };
 #endif

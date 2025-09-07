@@ -42,7 +42,9 @@ public:
   virtual trustIdType nb_items_seq_tot() const { return nb_items_seq_tot_; }
   virtual int nb_items_seq_local() const { return nb_items_seq_local_; }
 
+  virtual const ArrOfInt& get_blocs_items_to_compute() const = 0;
   virtual const ArrOfInt& get_items_to_compute() const = 0;
+  virtual const ArrOfInt& get_blocs_items_to_sum() const = 0;
   virtual const ArrOfInt& get_items_to_sum() const = 0;
 
   int get_sequential_items_flags(ArrOfBit& flags, int line_size=1) const;

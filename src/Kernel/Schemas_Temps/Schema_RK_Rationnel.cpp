@@ -69,6 +69,7 @@ int RRK2::faire_un_pas_de_temps_eqn_base(Equation_base& eqn)
 
   // g2=b2"g2" + b1g1
   g2.ajoute(b1, g1);
+  // g2.axpby(b2*dt_, g2, b1, g1); to fuse 2 kernels
 
   // normeg2=("g2","g2")
   double normeg2 = mp_carre_norme_vect(g2) + DMINFLOAT;
@@ -78,15 +79,18 @@ int RRK2::faire_un_pas_de_temps_eqn_base(Equation_base& eqn)
   double psc1 = 2.0 * mp_prodscal(g1, g2);
 
   // y1=y0+(2g1(g1,"g2")-("g2")(g1,g1)/("g2","g2")
+  // ToDo: implement axpby(a, x, b, y, result);
+  //futur.axpby(psc1/(normeg2*dt), g1, normeg1, g2/(normeg2*dt)); to fuse 4 kernels
   futur = g1;
   futur *= psc1;
   futur.ajoute(normeg1, g2);
-  futur /= normeg2;
+  futur /= (normeg2 * dt_);
+  // futur = (g1 * psc1 + g2 * normeg1)/(normeg2 * dt_)
   present = sauv;
-  futur /= dt_;
   update_critere_statio(futur, eqn);
   futur *= dt_;
   futur += sauv;
+  // futur = sauv + (g1 * psc1 + g2 * normeg1)/normeg2
   eqn.domaine_Cl_dis().imposer_cond_lim(eqn.inconnue(), temps_courant() + pas_de_temps());
   futur.echange_espace_virtuel();
 

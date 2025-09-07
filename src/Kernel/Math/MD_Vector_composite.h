@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -58,8 +58,10 @@ public:
   void process_recv_data(const Echange_EV_Options& opt, Schema_Comm_Vecteurs& c, TIDVect& v) const override  { global_md_->process_recv_data(opt, c, v); }
 #endif
 
-  const ArrOfInt& get_items_to_sum() const override { assert(global_md_ != nullptr); return global_md_->blocs_items_to_sum_; }
-  const ArrOfInt& get_items_to_compute() const override { assert(global_md_ != nullptr); return global_md_->blocs_items_to_compute_; }
+  const ArrOfInt& get_blocs_items_to_sum() const override { assert(global_md_ != nullptr); return global_md_->blocs_items_to_sum_; }
+  const ArrOfInt& get_items_to_sum() const override { assert(global_md_ != nullptr); return global_md_->get_items_to_sum(); }
+  const ArrOfInt& get_blocs_items_to_compute() const override { assert(global_md_ != nullptr); return global_md_->blocs_items_to_compute_; }
+  const ArrOfInt& get_items_to_compute() const override { assert(global_md_ != nullptr); return global_md_->get_items_to_compute(); }
 
   const MD_Vector_mono& global_md() const { assert(global_md_ != nullptr); return *global_md_; }
   inline int nb_parts() const { return data_.size(); }

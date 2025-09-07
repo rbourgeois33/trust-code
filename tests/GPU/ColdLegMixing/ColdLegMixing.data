@@ -32,6 +32,7 @@ Partition dom
     Partition_tool metis { nb_parts 8 }
     Larg_joint 2
     zones_name DOM
+    single_hdf
 }
 End
 END PARTITION #

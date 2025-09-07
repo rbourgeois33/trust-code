@@ -18,6 +18,7 @@
 #include <TRUSTTabs.h>
 #include <View_Types.h>
 #include <MD_Vector_seq.h>
+#include <TRUSTTrav.h>
 
 /**************************************************************************************/
 /* Warning ! This kernels are critical for performance into several TRUST applications !
@@ -47,10 +48,11 @@ Block_Iter<_SIZE_> determine_blocks(Mp_vect_options opt, const MD_Vector& md, co
       // Should never use parallel patterns in 64b:
       assert( (!std::is_same<_SIZE_,std::int64_t>::value) );
 #endif
-      const ArrOfInt& items_blocs = (opt == VECT_SEQUENTIAL_ITEMS) ? md->get_items_to_sum() : md->get_items_to_compute();
+      const ArrOfInt& items_blocs = (opt == VECT_SEQUENTIAL_ITEMS) ? md->get_blocs_items_to_sum() : md->get_blocs_items_to_compute();
+      const ArrOfInt& items = (opt == VECT_SEQUENTIAL_ITEMS) ? md->get_items_to_sum() : md->get_items_to_compute();
       assert(items_blocs.size_array() % 2 == 0);
       nblocs_left = items_blocs.size_array() >> 1;
-      return Block_Iter<_SIZE_>(items_blocs.addr());  // iterator on int, but operator*() will cast and return a _SIZE_
+      return Block_Iter<_SIZE_>(items_blocs, items);  // iterator on int, but operator*() will cast and return a _SIZE_
     }
   else
 #endif
@@ -139,7 +141,9 @@ void operation_speciale_tres_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, con
 {
   auto vx_view= vx.template view_ro<1, ExecSpace>().data();
   auto resu_view= resu.template view_rw<1, ExecSpace>().data();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
@@ -232,7 +236,9 @@ void operation_speciale_generic_kernel(TRUSTVect<_TYPE_, _SIZE_>& resu, const TR
 {
   auto vx_view= vx.template view_ro<1, ExecSpace>().data();
   auto resu_view= resu.template view_rw<1, ExecSpace>().data();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
@@ -315,7 +321,9 @@ void operator_vect_vect_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const TRU
 #ifdef TRUST_USE_GPU
   auto vx_view= vx.template view_ro<1, ExecSpace>().data();
   auto resu_view= resu.template view_rw<1, ExecSpace>().data();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
@@ -426,6 +434,9 @@ void operator_vect_single_generic_kernel(TRUSTVect<_TYPE_,_SIZE_>& resu, const _
                         IS_SQRT = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::SQRT_), IS_SQUARE = (_TYPE_OP_ == TYPE_OPERATOR_SINGLE::SQUARE_);
 
   auto resu_view= resu.template view_rw<1, ExecSpace>().data();
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
@@ -562,7 +573,9 @@ void local_extrema_vect_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, int n
   if (not(IS_MAXS || IS_MINS)) {Process::exit("Wrong operation type in local_extrema_vect_generic_kernel");}
 
   auto vx_view= vx.template view_ro<1, ExecSpace>().data();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
@@ -683,35 +696,53 @@ void local_operations_vect_bis_generic_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx
   static constexpr bool IS_SQUARE = (_TYPE_OP_ == TYPE_OPERATION_VECT_BIS::SQUARE_), IS_SUM = (_TYPE_OP_ == TYPE_OPERATION_VECT_BIS::SOMME_);
   // Performance important point for TRUSTArray dynamic kernel to have serial mode performance:
   // Use pointer access into Kokkos loop with [] and getting raw pointer to view with .data() !
-  auto vx_view= vx.template view_ro<1, ExecSpace>().data();
-  for (; nblocs_left; nblocs_left--)
+  auto vx_view = vx.template view_ro<1, ExecSpace>().data();
+  if (nblocs_left>3)
     {
-      // Get index of next bloc start:
-      const _SIZE_ begin_bloc = (*(bloc_itr++)) * line_size;
-      const _SIZE_ end_bloc = (*(bloc_itr++)) * line_size;
-
-      //Asserts
-      assert(begin_bloc >= 0 && end_bloc <= vect_size_tot && end_bloc >= begin_bloc);
-
-      //Define Policy
-      Kokkos::RangePolicy<ExecSpace> policy(begin_bloc, end_bloc);
-
-      // Define the bloc sum
-      _TYPE_ bloc_sum=0;
-
-      //Reduction
+      // We use flattened items_blocs cause possible huge number in parallel of nblocs_left/kernel launch (e.g. during moyenne(Ps))
+      auto items = bloc_itr.items_->template view_ro<1, ExecSpace>().data();
+      // Reduction
       if (timer) start_gpu_timer(__KERNEL_NAME__);
-      Kokkos::parallel_reduce(policy, KOKKOS_LAMBDA(const _SIZE_ i, _TYPE_& local_sum)
+      Kokkos::parallel_reduce(__KERNEL_NAME__,
+                              Kokkos::RangePolicy<ExecSpace>(0, bloc_itr.items_->size_array()),
+                              KOKKOS_LAMBDA(const int i, _TYPE_& local_sum)
       {
-        const _TYPE_ x = vx_view[i];
+        _SIZE_ item = items[i] * line_size;
+        const _TYPE_ x = vx_view[item];
         if (IS_SQUARE) local_sum += x * x;
         if (IS_SUM) local_sum += x;
-      }
-      ,bloc_sum); //Reduce in bloc_sum
+      },sum);
       if (timer) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
+    }
+  else
+    {
+      for (; nblocs_left; nblocs_left--)
+        {
+          // Get index of next bloc start:
+          const _SIZE_ begin_bloc = (*(bloc_itr++)) * line_size;
+          const _SIZE_ end_bloc = (*(bloc_itr++)) * line_size;
+          //Asserts
+          assert(begin_bloc >= 0 && end_bloc <= vect_size_tot && end_bloc >= begin_bloc);
+          //Define Policy
+          Kokkos::RangePolicy <ExecSpace> policy(begin_bloc, end_bloc);
+          // Define the bloc sum
+          _TYPE_ bloc_sum = 0;
+          //Reduction
+          if (timer) start_gpu_timer(__KERNEL_NAME__);
+          Kokkos::parallel_reduce(policy, KOKKOS_LAMBDA(
+                                    const _SIZE_ i, _TYPE_
+                                    &local_sum)
+          {
+            const _TYPE_ x = vx_view[i];
+            if (IS_SQUARE) local_sum += x * x;
+            if (IS_SUM) local_sum += x;
+          }
+          ,bloc_sum); //Reduce in bloc_sum
+          if (timer) end_gpu_timer(__KERNEL_NAME__, is_default_exec_space<ExecSpace>);
 
-      //Bloc-level reduction
-      sum += bloc_sum;
+          //Bloc-level reduction
+          sum += bloc_sum;
+        }
     }
 }
 }
@@ -816,7 +847,7 @@ void invalidate_data(TRUSTVect<_TYPE_,_SIZE_>& resu, Mp_vect_options opt)
   const int line_size = resu.line_size();
   if (opt == VECT_ALL_ITEMS || (!md.non_nul())) return; // no invalid values
   assert(opt == VECT_SEQUENTIAL_ITEMS || opt == VECT_REAL_ITEMS);
-  const ArrOfInt& items_blocs = (opt == VECT_SEQUENTIAL_ITEMS) ? md->get_items_to_sum() : md->get_items_to_compute();
+  const ArrOfInt& items_blocs = (opt == VECT_SEQUENTIAL_ITEMS) ? md->get_blocs_items_to_sum() : md->get_blocs_items_to_compute();
   const int blocs_size = items_blocs.size_array();
 
   bool kernelOnDevice = resu.checkDataOnDevice();
@@ -847,7 +878,9 @@ void local_prodscal_kernel(const TRUSTVect<_TYPE_,_SIZE_>& vx, const TRUSTVect<_
 {
   auto vx_view= vx.template view_ro<1, ExecSpace>().data();
   auto vy_view= vy.template view_ro<1, ExecSpace>().data();
-
+#ifdef TRUST_USE_GPU
+  if (nblocs_left>3) ToDo_Kokkos("nblocs_left too high, optimize by rewriting as local_operations_vect_bis_generic_kernel");
+#endif
   for (; nblocs_left; nblocs_left--)
     {
       // Get index of next bloc start:
