@@ -832,7 +832,10 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
   if (Option_CGNS::USE_LINKS)
-    cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, ns_tot, ne_tot, is_polyedre);
+    cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim,
+                                  (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot,
+                                  (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot,
+                                  is_polyedre);
 
   int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);

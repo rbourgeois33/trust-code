@@ -207,23 +207,73 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
         if (seen.insert(val).second)
           unique_vec_proc_maitre_local_comm_.push_back(val); // si val pas dedans
 
-      std::vector<cgsize_t> sizeId_som_local_comm_tmp, sizeId_elem_local_comm_tmp;
+      const bool has_elem_field = fld_loc_map_.count("ELEM");
+      const bool has_som_field = fld_loc_map_.count("SOM");
+      const bool has_faces_field = fld_loc_map_.count("FACES");
 
-      sizeId_som_local_comm_tmp.assign(Process::nproc(), -123 /* default */);
-      sizeId_elem_local_comm_tmp.assign(Process::nproc(), -123 /* default */);
+      // Attention : ind 0 => ELEM et SOM, ind 1 => FACES (si besoin pour faces) !
+      std::vector<std::vector<cgsize_t>> sizeId_som_local_comm_tmp, sizeId_elem_local_comm_tmp;
 
-      MPI_Allgather(&sizeId_[0], 1, MPI_LONG, sizeId_som_local_comm_tmp.data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-      MPI_Allgather(&sizeId_[1], 1, MPI_LONG, sizeId_elem_local_comm_tmp.data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>());
+      sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>());
+
+      if (has_elem_field || has_som_field)
+        {
+          sizeId_som_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
+          sizeId_elem_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
+
+          int ind_base = -1; // par defaut c'est la base 0
+          if (has_elem_field)
+            ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("ELEM"));
+          else
+            ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("SOM"));
+
+          MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+          MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+        }
+
+      if (has_faces_field)
+        {
+          sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+          sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+
+          const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("FACES"));
+
+          MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+          MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+        }
 
       const int nb_grps = static_cast<int>(unique_vec_proc_maitre_local_comm_.size());
-      sizeId_som_local_comm_.assign(nb_grps, -123 /* default */);
-      sizeId_elem_local_comm_.assign(nb_grps, -123 /* default */);
 
-      for (int i = 0; i < nb_grps; i++)
+      // pour elem/som => ind 0
+      sizeId_som_local_comm_.push_back(std::vector<cgsize_t>());
+      sizeId_elem_local_comm_.push_back(std::vector<cgsize_t>());
+
+      if (has_elem_field || has_som_field)
         {
-          int proc_grp = unique_vec_proc_maitre_local_comm_[i];
-          sizeId_som_local_comm_[i] = sizeId_som_local_comm_tmp[proc_grp];
-          sizeId_elem_local_comm_[i] = sizeId_elem_local_comm_tmp[proc_grp];
+          sizeId_som_local_comm_.back().assign(nb_grps, -123 /* default */);
+          sizeId_elem_local_comm_.back().assign(nb_grps, -123 /* default */);
+
+          for (int i = 0; i < nb_grps; i++)
+            {
+              int proc_grp = unique_vec_proc_maitre_local_comm_[i];
+              sizeId_som_local_comm_[0][i] = sizeId_som_local_comm_tmp[0][proc_grp];
+              sizeId_elem_local_comm_[0][i] = sizeId_elem_local_comm_tmp[0][proc_grp];
+            }
+        }
+
+      // pour faces et si ca existe => ind 1
+      if (has_faces_field)
+        {
+          sizeId_som_local_comm_.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+          sizeId_elem_local_comm_.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+
+          for (int i = 0; i < nb_grps; i++)
+            {
+              int proc_grp = unique_vec_proc_maitre_local_comm_[i];
+              sizeId_som_local_comm_[1][i] = sizeId_som_local_comm_tmp[1][proc_grp];
+              sizeId_elem_local_comm_[1][i] = sizeId_elem_local_comm_tmp[1][proc_grp];
+            }
         }
     }
 
@@ -277,8 +327,9 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
               std::string linkfile = file_group_id + ".grid.cgns";
 
               cgsize_t isize[3][1];
-              isize[0][0] = sizeId_som_local_comm_[gid];
-              isize[1][0] = sizeId_elem_local_comm_[gid];
+              const int ind_som_elem_local_comm = (LOC == "FACES") ? 1 : 0;
+              isize[0][0] = sizeId_som_local_comm_[ind_som_elem_local_comm][gid];
+              isize[1][0] = sizeId_elem_local_comm_[ind_som_elem_local_comm][gid];
               isize[2][0] = 0;
 
               int zoneId_tmp = -1;

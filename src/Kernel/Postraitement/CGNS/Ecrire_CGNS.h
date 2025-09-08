@@ -75,7 +75,7 @@ private:
   // specifique FILE_PER_COMM_GROUP
   int proc_maitre_local_comm_ = -123;
   std::vector<int> vec_proc_maitre_local_comm_, unique_vec_proc_maitre_local_comm_;
-  std::vector<cgsize_t> sizeId_som_local_comm_, sizeId_elem_local_comm_;
+  std::vector<std::vector<cgsize_t>> sizeId_som_local_comm_, sizeId_elem_local_comm_; // Attention : ind 0 => ELEM et SOM, ind 1 => FACES !
 
   // specifique maillage dual pour faces
   IntTab fs_dual_, ef_dual_;
