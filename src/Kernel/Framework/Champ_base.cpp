@@ -734,6 +734,9 @@ void Champ_base::calculer_valeurs_som_post(DoubleTab& les_valeurs,int nb_som,Nom
                       for(int num_som=0; num_som<nb_som_faces; num_som++)
                         {
                           int sommet=faces.sommet(num_face, num_som);
+
+                          if (sommet < 0) continue;
+
                           for(int compo=0; compo<nb_compo_; compo++)
                             {
                               if (compteur(sommet) == 0)
@@ -751,6 +754,9 @@ void Champ_base::calculer_valeurs_som_post(DoubleTab& les_valeurs,int nb_som,Nom
                       for(int num_som=0; num_som<nb_som_faces; num_som++)
                         {
                           int sommet=faces.sommet(num_face, num_som);
+
+                          if (sommet < 0) continue;
+
                           for(int compo=0; compo<nb_compo_; compo++)
                             {
                               if (compteur(sommet) == 0)
@@ -776,6 +782,9 @@ void Champ_base::calculer_valeurs_som_post(DoubleTab& les_valeurs,int nb_som,Nom
                             for (int k=1; k<dimension; k++)
                               {
                                 int sommet=faces.sommet(num_face, k);
+
+                                if (sommet < 0) continue;
+
                                 for(int compo=0; compo<dimension; compo++)
                                   delta(k-1,compo)=coord_sommets(sommet,compo)-coord_sommets(sommet0,compo);
                               }
@@ -799,6 +808,9 @@ void Champ_base::calculer_valeurs_som_post(DoubleTab& les_valeurs,int nb_som,Nom
                             for(int num_som=0; num_som<nb_som_faces; num_som++)
                               {
                                 int sommet=faces.sommet(num_face, num_som);
+
+                                if (sommet < 0) continue;
+
                                 if (sommet<dom.nb_som()) // Sommet reel
                                   {
                                     double psc=0;

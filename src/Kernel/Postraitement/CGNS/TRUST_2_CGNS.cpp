@@ -305,10 +305,6 @@ void TRUST_2_CGNS::get_domaine_dis_vf_if_poly(Domaine_dis_base*& domaine_dis, Do
 
       vf = &(ref_cast (Domaine_VF, *domaine_dis));
     }
-  else
-    {
-      assert(domaine_dis_.est_nul());
-    }
 }
 
 void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
@@ -645,7 +641,7 @@ int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::v
 
   // XXX Elie Saikali ... was too slow : O(n^2)
   // lets go !
-  std::unordered_set<int> seen;
+  std::unordered_set<cgsize_t> seen;
   for (auto& itr : econ)
     {
       if (seen.find(itr) != seen.end())
