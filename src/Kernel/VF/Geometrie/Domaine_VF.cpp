@@ -1520,7 +1520,7 @@ void Domaine_VF::build_mc_dual_mesh() const
   // Prepare final coords - no choice here (sticking coords and xp_ together on TRUST side is a bad idea because of virtuals)
   // TODO - save/use coords for other (primal) meshes too
   DAD coo2 = mc_face_mesh->getCoords()->deepCopy();
-  coo2->reAlloc(nb_coo+xp_.dimension(0));
+  coo2->reAlloc(nb_coo+nb_elem);
   std::copy(xp_.addr(), xp_.addr() + nb_elem*dim, coo2->getPointer()+nb_coo*dim);
 
   const std::string dual_nam = domaine().get_mc_mesh()->getName() + "_dual";
