@@ -51,6 +51,9 @@ public :
     result = valeurs();
     return result;
   }
+  DoubleTab& valeur_aux_sommets(const Domaine& dom, DoubleTab& ch_som) const override;
+  DoubleVect& valeur_a_elem(const DoubleVect& position, DoubleVect& result, int poly) const override;
+
   DoubleTab& trace(const Frontiere_dis_base& , DoubleTab& , double, int distant ) const override;
 
   Champ_base& affecter_(const Champ_base& ) override;

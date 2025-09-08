@@ -96,29 +96,61 @@ Champ_base& Champ_Face_PolyVEF::affecter_(const Champ_base& ch)
 
 DoubleTab& Champ_Face_PolyVEF::valeur_aux_elems(const DoubleTab& positions, const IntVect& les_polys, DoubleTab& val) const
 {
-  const Domaine_PolyVEF& dom = domaine_PolyVEF();
-  const DoubleTab& src = valeurs(), &nf = dom.face_normales(), &xp = dom.xp(), &xv = dom.xv(), &vf_dir = dom.volumes_entrelaces_dir();
-  const DoubleVect& ve = dom.volumes(), *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : nullptr, *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : nullptr;
-  const IntTab& e_f = dom.elem_faces(), &f_e = dom.face_voisins();
-  int i, j, e, f, d, db, D = dimension, n, N = valeurs().line_size() / D;
+  const int D = dimension;
+  const int N = valeurs().line_size() / D;
+  DoubleTrav pos(D), res(D * N);
 
-  if (Option_PolyVEF::interp_postraitement_no_poro)  // Cas sans porosite : on fait une moyenne volumique
-    for (val = 0, i = 0; i < les_polys.size(); i++) //element
-      for (e = les_polys(i), j = 0; j < e_f.dimension(1) && (f = e_f(e, j)) >= 0; j++) //face de l'element
-        for (d = 0; d < D; d++)
-          for (n = 0; n < N; n++)
-            val(i, N * d + n) += src(f, N * d + n) * vf_dir(f, e == f_e(f, 0) ? 0 : 1) / ve(e);
-
-  else
-    // Cas general : on utilise que les normales de vitesse aux faces
-    for (val = 0, i = 0; i < les_polys.size(); i++) //element
-      for (e = les_polys(i), j = 0; j < e_f.dimension(1) && (f = e_f(e, j)) >= 0; j++) //face de l'element
-        for (d = 0; d < D; d++)
-          for (db = 0; db < D; db++)
-            for (n = 0; n < N; n++)
-              val(i, N * d + n) += src(f, N * db + n) * (pf ? (*pf)(f) : 1) * (e == f_e(f, 0) ? 1 : -1) * nf(f, db) * (xv(f, d) - xp(e, d)) / (ve(e) * (pe ? (*pe)(e) : 1));
+  for (int i = 0; i < les_polys.size(); i++)
+    {
+      const int e = les_polys(i);
+      for (int d = 0; d < D; d++) pos(d) = positions(i, d);
+      valeur_a_elem(pos, res, e);
+      for (int k = 0; k < D * N; k++) val(i, k) = res(k);
+    }
 
   return val;
+}
+
+DoubleVect& Champ_Face_PolyVEF::valeur_a_elem(const DoubleVect& position, DoubleVect& result, int poly) const
+{
+  const Domaine_PolyVEF& dom = domaine_PolyVEF();
+  const DoubleTab& src = valeurs(), &nf = dom.face_normales(), &xp = dom.xp(), &xv = dom.xv(), &vf_dir = dom.volumes_entrelaces_dir();
+  const DoubleVect& ve = dom.volumes();
+  const DoubleVect *pe = mon_equation_non_nul() ? &equation().milieu().porosite_elem() : nullptr;
+  const DoubleVect *pf = mon_equation_non_nul() ? &equation().milieu().porosite_face() : nullptr;
+  const IntTab& e_f = dom.elem_faces(), &f_e = dom.face_voisins();
+
+  const int D = dimension;
+  const int N = valeurs().line_size() / D;
+
+  result = 0;
+
+  if (Option_PolyVEF::interp_postraitement_no_poro)  // Cas sans porosite : moyenne volumique
+    {
+      for (int j = 0; j < e_f.dimension(1); j++)
+        {
+          const int f = e_f(poly, j);
+          if (f < 0) break;
+          for (int d = 0; d < D; d++)
+            for (int n = 0; n < N; n++)
+              result(N * d + n) += src(f, N * d + n) * vf_dir(f, (poly == f_e(f, 0)) ? 0 : 1) / ve(poly);
+        }
+    }
+  else // Cas general : utilise les normales de vitesse aux faces
+    {
+      for (int j = 0; j < e_f.dimension(1); j++)
+        {
+          const int f = e_f(poly, j);
+          if (f < 0) break;
+          const double sgn = (poly == f_e(f, 0)) ? 1.0 : -1.0;
+          for (int d = 0; d < D; d++)
+            for (int db = 0; db < D; db++)
+              for (int n = 0; n < N; n++)
+                result(N * d + n) += src(f, N * db + n) * (pf ? (*pf)(f) : 1.0) * sgn * nf(f, db) * (xv(f, d) - xp(poly, d)) / (ve(poly) * (pe ? (*pe)(poly) : 1.0));
+        }
+    }
+
+  return result;
 }
 
 DoubleVect& Champ_Face_PolyVEF::valeur_aux_elems_compo(const DoubleTab& positions, const IntVect& les_polys, DoubleVect& val, int ncomp) const
@@ -144,6 +176,40 @@ DoubleVect& Champ_Face_PolyVEF::valeur_aux_elems_compo(const DoubleTab& position
             val(i) += src(f, N * db + n) * (pf ? (*pf)(f) : 1) * (e == f_e(f, 0) ? 1 : -1) * nf(f, db) * (xv(f, d) - xp(e, d)) / (ve(e) * (pe ? (*pe)(e) : 1));
 
   return val;
+}
+
+DoubleTab& Champ_Face_PolyVEF::valeur_aux_sommets(const Domaine& dom, DoubleTab& ch_som) const
+{
+  const int nb_elem_tot = dom.nb_elem_tot(), nb_som = dom.nb_som(), nb_som_elem = dom.nb_som_elem();
+  const int D = dimension;
+  const int N = valeurs().line_size() / D;
+  IntVect compteur(nb_som);
+  ch_som = 0, compteur = 0;
+
+  DoubleVect position(D), val_e(N * D);
+  for (int e = 0; e < nb_elem_tot; e++)
+    for (int j = 0; j < nb_som_elem; j++)
+      {
+        const int s = dom.sommet_elem(e, j);
+        if (s < nb_som && s > -1)
+          {
+            for(int d = 0; d < D; d++)
+              position(d) = dom.coord(s, d);
+
+            compteur[s]++;
+            valeur_a_elem(position, val_e, e);
+            for (int n = 0; n < N; n++)
+              for (int d = 0; d < D; d++)
+                ch_som(s, N * d + n) += val_e(N * d + n);
+          }
+      }
+
+  for (int s = 0; s < nb_som; s++)
+    for (int n = 0; n < N; n++)
+      for (int d = 0; d < D; d++)
+        ch_som(s, N * d + n) /= compteur[s];
+
+  return ch_som;
 }
 
 DoubleTab& Champ_Face_PolyVEF::trace(const Frontiere_dis_base& fr, DoubleTab& x, double t, int distant) const
@@ -311,4 +377,3 @@ void Champ_Face_PolyVEF::update_vf2(DoubleTab& val, int incr) const
       }
   val.echange_espace_virtuel();
 }
-
