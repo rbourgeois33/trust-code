@@ -146,7 +146,7 @@ void Ecrire_CGNS::cgns_finir()
     }
 
   /* dernier truc a faire ! */
-  if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
+  if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_)
     cgns_write_link_file_for_multiple_files();
 }
 
@@ -344,7 +344,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
 
   const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
 
-  if (Option_CGNS::USE_LINKS)
+  if (Option_CGNS::USE_LINKS || (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_))
     cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
   zoneId_.push_back(-123);
