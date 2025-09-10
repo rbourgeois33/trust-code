@@ -98,6 +98,7 @@ private:
   void cgns_write_final_link_file_comm_group();
   void cgns_write_link_file_for_multiple_files();
   void cgns_close_grid_or_solution_link_file(const std::string&, const std::string&, bool is_cerr = true);
+  void gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& , std::vector<std::vector<cgsize_t>>& ) const ;
 
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );

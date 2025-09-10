@@ -194,6 +194,43 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const std::string& LOC, const dou
     }
 }
 
+// Attention : ind 0 => ELEM et SOM, ind 1 => FACES (si besoin pour faces) !
+void Ecrire_CGNS::gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& sizeId_som_local_comm_tmp, std::vector<std::vector<cgsize_t>>& sizeId_elem_local_comm_tmp) const
+{
+  const bool has_elem_field = fld_loc_map_.count("ELEM");
+  const bool has_som_field = fld_loc_map_.count("SOM");
+  const bool has_faces_field = fld_loc_map_.count("FACES");
+
+  sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>());
+  sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>());
+
+  if (has_elem_field || has_som_field)
+    {
+      sizeId_som_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
+      sizeId_elem_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
+
+      int ind_base = -1;
+      if (has_elem_field)
+        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("ELEM"));
+      else
+        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("SOM"));
+
+      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+    }
+
+  if (has_faces_field)
+    {
+      sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+      sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
+
+      const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("FACES"));
+
+      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+    }
+}
+
 void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
 {
   if (vec_proc_maitre_local_comm_.empty())
@@ -213,35 +250,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
 
       // Attention : ind 0 => ELEM et SOM, ind 1 => FACES (si besoin pour faces) !
       std::vector<std::vector<cgsize_t>> sizeId_som_local_comm_tmp, sizeId_elem_local_comm_tmp;
-
-      sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>());
-      sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>());
-
-      if (has_elem_field || has_som_field)
-        {
-          sizeId_som_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
-          sizeId_elem_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
-
-          int ind_base = -1; // par defaut c'est la base 0
-          if (has_elem_field)
-            ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("ELEM"));
-          else
-            ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("SOM"));
-
-          MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-          MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-        }
-
-      if (has_faces_field)
-        {
-          sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
-          sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
-
-          const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("FACES"));
-
-          MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-          MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-        }
+      gather_local_sizeId_multi_loc(sizeId_som_local_comm_tmp, sizeId_elem_local_comm_tmp);
 
       const int nb_grps = static_cast<int>(unique_vec_proc_maitre_local_comm_.size());
 
@@ -440,38 +449,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
 
   // Attention : ind 0 => ELEM et SOM, ind 1 => FACES (si besoin pour faces) !
   std::vector<std::vector<cgsize_t>> sizeId_som_local, sizeId_elem_local;
-  sizeId_som_local.push_back(std::vector<cgsize_t>());
-  sizeId_elem_local.push_back(std::vector<cgsize_t>());
-
-  const bool has_elem_field = fld_loc_map_.count("ELEM");
-  const bool has_som_field = fld_loc_map_.count("SOM");
-  const bool has_faces_field = fld_loc_map_.count("FACES");
-
-  if (has_elem_field || has_som_field)
-    {
-      sizeId_som_local.back().assign(Process::nproc(), -123 /* default */);
-      sizeId_elem_local.back().assign(Process::nproc(), -123 /* default */);
-
-      int ind_base = -1; // par defaut c'est la base 0
-      if (has_elem_field)
-        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("ELEM"));
-      else
-        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("SOM"));
-
-      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-    }
-
-  if (has_faces_field)
-    {
-      sizeId_som_local.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
-      sizeId_elem_local.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
-
-      const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("FACES"));
-
-      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-    }
+  gather_local_sizeId_multi_loc(sizeId_som_local, sizeId_elem_local);
 
   if (!Process::me()) // Only master proc writes !
     {
