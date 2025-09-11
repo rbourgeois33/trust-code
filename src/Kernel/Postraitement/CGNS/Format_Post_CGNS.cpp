@@ -103,10 +103,10 @@ void Format_Post_CGNS::set_postraiter_domain()
 #endif
 }
 
-void Format_Post_CGNS::set_needs_dual_support()
+void Format_Post_CGNS::set_loc_vector(const std::vector<std::string>& vec)
 {
 #ifdef HAS_CGNS
-  cgns_writer_.cgns_set_needs_dual_support();
+  cgns_writer_.cgns_set_loc_vector(vec);
 #endif
 }
 

@@ -30,7 +30,7 @@ public:
   void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_is_dual_domain() { is_dual_ = true; }
-  void cgns_set_needs_dual_support() { needs_dual_support_ = true; }
+  void cgns_set_loc_vector(const std::vector<std::string>& vec) { loc_vect_ = vec; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
   void cgns_finir();
@@ -42,8 +42,10 @@ public:
 
 private:
 
+  void fill_infos_loc();
   Ecrire_CGNS_helper cgns_helper_;
   OBS_PTR(Domaine_dis_base) domaine_dis_;
+  OBS_PTR(std::vector<std::string>) loc_vect_;
   std::vector<TRUST_2_CGNS> T2CGNS_;
 
   std::map<std::string, Nom> fld_loc_map_; /* { Loc , Nom_dom } */
@@ -53,6 +55,7 @@ private:
   std::vector<double> time_post_;
   std::vector<int> baseId_, zoneId_;
 
+  bool has_elem_field_ = false, has_faces_field_ = false, has_som_field_ = false, has_multi_loc_ = false;
   bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
 
@@ -78,7 +81,7 @@ private:
 
   // specifique maillage dual pour faces
   IntTab fs_dual_, ef_dual_;
-  bool is_dual_ = false, needs_dual_support_ = false;
+  bool is_dual_ = false;
   inline IntTab& get_fs_dual() { return fs_dual_;}
   inline const IntTab& get_fs_dual() const { return fs_dual_;}
   inline IntTab& get_ef_dual() { return ef_dual_;}

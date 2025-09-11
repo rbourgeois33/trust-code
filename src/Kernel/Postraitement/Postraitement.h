@@ -206,7 +206,7 @@ protected:
   LIST(Nom) noms_tableaux_;
 
   OWN_PTR(Format_Post_base) format_post_;
-  bool needs_dual_support_ = false;
+  std::vector<std::string> locs_required_;
 
   static LIST(Nom) noms_fichiers_sondes_;
   bool sondes_demande_, champs_demande_, stat_demande_, stat_demande_definition_champs_, tableaux_demande_;

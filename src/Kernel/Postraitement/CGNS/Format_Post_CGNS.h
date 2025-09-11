@@ -61,7 +61,7 @@ public:
   void reset() override;
   void set_param(Param& param) override;
   void set_postraiter_domain() override;
-  void set_needs_dual_support() override;
+  void set_loc_vector(const std::vector<std::string>&) override;
   int initialize_by_default(const Nom&) override;
   int initialize(const Nom&, const int, const Nom&) override;
 

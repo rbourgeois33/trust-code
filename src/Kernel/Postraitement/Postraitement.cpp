@@ -355,8 +355,8 @@ Entree& Postraitement::readOn(Entree& s)
   if (is_single_lata)
     format_post_->set_single_lata_option(is_single_lata);
 
-  if (Motcle(format_) == "CGNS" && needs_dual_support_)
-    format_post_->set_needs_dual_support();
+  if (Motcle(format_) == "CGNS")
+    format_post_->set_loc_vector(locs_required_);
 
   Nom base_name(nom_fich_);
   base_name.prefix(format_);
@@ -2037,9 +2037,15 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
   //Le postraitement aux faces concerne actuellement les champs dont la discretisation "natif" est aux faces
   //On construit dans ce cas la un Champ_Generique_refChamp
 
-  // XXX Elie SAIKALI : besoin maillage dual ?
-  if (Motcle(format_) == "CGNS" && motlu2 == "FACES" && !needs_dual_support_)
-    needs_dual_support_ = true;
+  // XXX Elie SAIKALI : its better to know what we will have as locations
+  if (Motcle(format_) == "CGNS")
+    {
+      if (motlu2 != "FACES" && motlu2 != "SOM" && motlu2 != "ELEM")
+        Process::exit("What ??? Error in Postraitement::creer_champ_post -- CGNS understands only ELEM, SOM or FACES !!! \n ");
+
+      if(std::find(locs_required_.begin(), locs_required_.end(), motlu2.getString()) == locs_required_.end())
+        locs_required_.push_back(motlu2.getString()); // add only if not inside
+    }
 
   // on essaye avant dans les champs_posts...
   int trouve=comprend_champ_post(motlu1);

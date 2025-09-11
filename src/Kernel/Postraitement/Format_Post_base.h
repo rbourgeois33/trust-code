@@ -138,11 +138,10 @@ public:
   }
 
   virtual void set_postraiter_domain() { /* Do nothing */ }
-  virtual void set_needs_dual_support() { /* Do nothing */ }
+  virtual void set_loc_vector(const std::vector<std::string>&) { /* Do nothing */ }
 
 protected:
   OBS_PTR(Domaine_dis_base) domaine_dis_; ///< Reference to the discretized domain - used for face fields.
-
 };
 
 #endif /* Format_Post_base_included */

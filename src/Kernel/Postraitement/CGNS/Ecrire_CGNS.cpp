@@ -94,6 +94,8 @@ void Ecrire_CGNS::cgns_open_file()
 {
   if (Process::is_parallel()) cgns_init_MPI(); // 1er truc a faire
 
+  fill_infos_loc();
+
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     return; /* rien a faire si USE_LINKS ou FILE_PER_COMM_GROUP */
 
@@ -107,6 +109,23 @@ void Ecrire_CGNS::cgns_open_file()
         fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
 
       cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
+    }
+}
+
+void Ecrire_CGNS::fill_infos_loc()
+{
+  assert (loc_vect_.non_nul());
+  assert (static_cast<int>(loc_vect_->size()) <= 3 && static_cast<int>(loc_vect_->size()) > 0);
+
+  if (static_cast<int>(loc_vect_->size()) > 1)
+    has_multi_loc_ = true;
+
+  for (auto& itr : loc_vect_.valeur())
+    {
+      if (itr == "FACES") has_faces_field_ = true;
+      else if (itr == "SOM") has_som_field_ = true;
+      else if (itr == "ELEM") has_elem_field_ = true;
+      else throw;
     }
 }
 
@@ -241,7 +260,7 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
   if (static_cast<int>(time_post_.size()) == 1)
     {
       /* pour les champs aux faces, il faut un support ! */
-      if (needs_dual_support_ && !is_dual_)
+      if (has_faces_field_ && !is_dual_)
         {
           Nom nom_dom = domaine.le_nom();
           nom_dom += "_FACES";
