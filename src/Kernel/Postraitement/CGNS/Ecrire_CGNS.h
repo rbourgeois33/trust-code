@@ -62,8 +62,7 @@ private:
   int flowId_faces_ = 0, fieldId_faces_ = 0;
 
   // specifique pour link
-  bool grid_file_opened_ = false; /* Management of link files */
-  std::map<std::string, int> fileId_links_ = { {"ELEM" , -123 } , {"FACES" , -123} , {"SOM" , -123} };
+  bool grid_file_opened_ = false, solution_file_opened_ = false; /* Management of link files */
   std::vector<std::string> baseZone_name_;
   std::vector<std::vector<std::string>> connectname_;
   std::vector<std::vector<cgsize_t>> sizeId_;
@@ -90,14 +89,12 @@ private:
 
   // Methodes pour LINK
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
-  void cgns_open_solution_link_files(const double);
-  void cgns_close_solution_link_files(const double);
   void cgns_open_grid_base_link_file();
-  void cgns_open_solution_link_file(const std::string&, const double, bool is_link = false);
+  void cgns_open_solution_link_file(const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_final_link_file_comm_group();
   void cgns_write_link_file_for_multiple_files();
-  void cgns_close_grid_or_solution_link_file(const std::string&, const std::string&, bool is_cerr = true);
+  void cgns_close_grid_or_solution_link_file(const double, const TYPE_LINK_CGNS,  bool is_cerr = true);
   void gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& , std::vector<std::vector<cgsize_t>>& ) const ;
 
   // Version sequentielle
