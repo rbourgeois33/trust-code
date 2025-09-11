@@ -22,7 +22,7 @@ if [ "$debug_mode" = "0" ]; then
     rm -fr $build_dir
     mkdir -p $build_dir
 fi
-curr_dir=`dirname -- $( readlink -f -- "$0"; )`
+curr_dir="$(cd "$(dirname "$0")" && pwd -P)"
 
 # Path to library install
 install_dir=$TRUST_PDI_ROOT
@@ -68,6 +68,7 @@ fi
 # configuration (we use the hdf5 of TRUST)
 options="-DBUILD_BENCHMARKING=OFF -DBUILD_FORTRAN=OFF -DBUILD_DECL_NETCDF_PLUGIN=OFF"
 options=$options" -DBUILD_NETCDF_PARALLEL=OFF -DBUILD_TEST_PLUGIN=OFF -DBUILD_TESTING=OFF -DUSE_yaml=EMBEDDED -DUSE_spdlog=EMBEDDED"
+options=$options" -DHDF5_USE_STATIC_LIBRARIES=ON -DHDF5_PREFER_PARALLEL=ON -DHDF5_C_COMPILER_EXECUTABLE=$TRUST_HDF5_ROOT/bin/h5pcc"
 
 # ND: force install in lib directory instead of lib64. If you want to set lib64 instead of lib, you should fix patches
 # in this script for pdi/CMakeLists.txt and vendor/paraconf-1.0.0/paraconf/CMakeLists.txt
@@ -79,7 +80,7 @@ if [ "$debug_mode" != "0" ]; then
    options="$options -DCMAKE_BUILD_TYPE=Debug"
 fi
 
-env CC=$CC FC=$FC cmake .. -DCMAKE_PREFIX_PATH=$TRUST_HDF5_ROOT -DCMAKE_INSTALL_PREFIX=$install_dir $options
+env CC=$CC FC=$FC cmake .. -DCMAKE_PREFIX_PATH="$TRUST_HDF5_ROOT;$TRUST_ROOT/lib/src/LIBMPI" -DCMAKE_INSTALL_PREFIX=$install_dir $options
 
 # make & install
 $TRUST_MAKE
