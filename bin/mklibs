@@ -209,7 +209,14 @@ fi
 ######
 if [ "$TRUST_DISABLE_PDI" != 1 ]; then
     ALL_P=$ALL_P" \$ENV{TRUST_ROOT}/lib/src/LIBPDI/lib"
-    ALL_L=$ALL_L" paraconf pdi pdi_decl_hdf5_plugin "
+    # Link against core PDI libs. The HDF5 plugin is a runtime-loaded module
+    # and must not be linked into the main executable, especially on macOS
+    # where it is built as a Mach-O bundle (.so) rejected by the linker.
+    ALL_L=$ALL_L" paraconf pdi "
+    # Keep legacy behavior on non-macOS platforms if needed:
+    if [ "`uname -s`" != "Darwin" ]; then
+        ALL_L=$ALL_L" pdi_decl_hdf5_plugin "
+    fi
 fi
 
 ########
