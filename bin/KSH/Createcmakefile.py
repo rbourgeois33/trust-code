@@ -340,7 +340,7 @@ if(NOT VISUAL)
     # Find external (pre-requisite) libraries
     #
     foreach(liba ${list_libs})
-        find_library( lib${liba} NAMES lib${liba}.a lib${liba}.so PATHS ${list_path_libs} NO_DEFAULT_PATH )
+        find_library( lib${liba} NAMES lib${liba}.a lib${liba}.so lib${liba}.dylib PATHS ${list_path_libs} NO_DEFAULT_PATH )
         if (${lib${liba}} STREQUAL lib${liba}-NOTFOUND)
            find_library( lib${liba} NAMES ${liba} PATHS ${list_path_sys} REQUIRED)
         endif(${lib${liba}} STREQUAL lib${liba}-NOTFOUND)
