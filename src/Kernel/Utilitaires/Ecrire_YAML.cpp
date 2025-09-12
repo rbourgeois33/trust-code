@@ -479,6 +479,9 @@ void Ecrire_YAML::set_data()
     {
       const Probleme_base& pb = pbs_[i_pb].pb.valeur();
       std::vector<YAML_data>& data = pbs_[i_pb].data;
+      // domain fields
+      std::vector<YAML_data> dom = pb.domaine().data_a_sauvegarder();
+      data.insert(data.end(), dom.begin(), dom.end());
       // equations unknowns
       for(int i_eq=0; i_eq<pb.nombre_d_equations(); i_eq++)
         {
