@@ -338,7 +338,8 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension, nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
+  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension,
+            nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
   int coordsId;
 
   /* 3 : Base write */
@@ -534,13 +535,14 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
   std::vector<int> coordsIdx, coordsIdy, coordsIdz, sectionId, sectionId2;
   std::string zonename;
 
-  int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
+  const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
   const bool all_write = TRUST2CGNS.all_procs_write(); // all procs will write !
 
   // on boucle seulement sur les procs qui n'ont pas des nb_elem 0
   zoneId_.clear(); // XXX commencons par ca
-  const std::vector<int>& global_nb_elem = TRUST2CGNS.get_global_nb_elem(), global_nb_som = TRUST2CGNS.get_global_nb_som();
-  const std::vector<int>& proc_non_zero_elem = TRUST2CGNS.get_proc_non_zero_elem();
+  const std::vector<int>& global_nb_elem = TRUST2CGNS.get_global_nb_elem(),
+                          &global_nb_som = TRUST2CGNS.get_global_nb_som(),
+                           &proc_non_zero_elem = TRUST2CGNS.get_proc_non_zero_elem();
 
   for (int i = 0; i != nb_zones_to_write; i++)
     {
@@ -633,13 +635,17 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         {
           if (is_polyedre) // Pas pour polygone
             {
-              const std::vector<cgsize_t>& fs = TRUST2CGNS.get_local_fs(), fs_offset = TRUST2CGNS.get_local_fs_offset();
+              const std::vector<cgsize_t>& fs = TRUST2CGNS.get_local_fs(),
+                                           &fs_offset = TRUST2CGNS.get_local_fs_offset();
+
               max = min + TRUST2CGNS.get_nb_fs() - 1;
 
               if (cgp_poly_elements_write_data(fileId_, baseId_.back(), zoneId_par_.back()[indx], sectionId[indx], min, max, fs.data(), fs_offset.data()) != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_over_zone : cgp_poly_elements_write_data !" << finl, TRUST_CGNS_ERROR();
 
-              const std::vector<cgsize_t> ef = TRUST2CGNS.get_local_ef(), ef_offset = TRUST2CGNS.get_local_ef_offset();
+              const std::vector<cgsize_t>& ef = TRUST2CGNS.get_local_ef(),
+                                           &ef_offset = TRUST2CGNS.get_local_ef_offset();
+
               min = max + 1, max = min + TRUST2CGNS.get_nb_ef() - 1;
 
               if (cgp_poly_elements_write_data(fileId_, baseId_.back(), zoneId_par_.back()[indx], sectionId2[indx], min, max, ef.data(), ef_offset.data()) != CG_OK)
@@ -647,7 +653,9 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
             }
           else
             {
-              const std::vector<cgsize_t>& es = TRUST2CGNS.get_local_es(), es_offset = TRUST2CGNS.get_local_es_offset();
+              const std::vector<cgsize_t>& es = TRUST2CGNS.get_local_es(),
+                                           &es_offset = TRUST2CGNS.get_local_es_offset();
+
               max = min + TRUST2CGNS.get_nb_es() -1;
 
               if (cgp_poly_elements_write_data(fileId_, baseId_.back(), zoneId_par_.back()[indx], sectionId[indx], min, max, es.data(), es_offset.data()) != CG_OK)
@@ -681,13 +689,20 @@ void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double te
   const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
   assert(ind > -1);
 
+  int ind_new = ind;
+  if (ind > (static_cast<int>(T2CGNS_.size()) -1) )
+    {
+      const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
+      ind_new = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
+    }
+
   /* 3 : CREATION OF FILE STRUCTURE
    *
    *  - All processors THAT HAVE nb_vals > 0 write the same information.
    *  - Only field meta-data is written to the library at this stage ... So no worries ^^
    *  - And just once per dt !
    */
-  const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+  const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind_new];
 
   const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
   const bool all_write = TRUST2CGNS.all_procs_write(); // all procs will write !
@@ -753,7 +768,14 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
       ind_doms_dumped.push_back(ind);
       assert(ind > -1);
 
-      const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+      int ind_new = ind;
+      if (ind > (static_cast<int>(T2CGNS_.size()) -1) )
+        {
+          const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
+          ind_new = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
+        }
+
+      const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind_new];
       const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
       cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(true /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], LOC,
@@ -769,7 +791,19 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
           const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
           assert(ind > -1);
 
-          const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+          int ind_new = ind;
+          if (ind > (static_cast<int>(T2CGNS_.size()) -1) )
+            {
+              Nom nom_dom_mod = nom_dom;
+              if (nom_dom.finit_par("_ELEM"))
+                nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, "ELEM");
+              else if (nom_dom.finit_par("_SOM"))
+                nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, "SOM");
+
+              ind_new = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
+            }
+
+          const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind_new];
           const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
 
           cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::PAR_OVER>(false /* has_field */, nb_zones_to_write, fileId_, baseId_[ind], ind, zoneId_par_[ind], "rien",
@@ -825,7 +859,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   TRUST2CGNS.fill_global_infos(); // XXX
 
   const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
-  int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
+  const int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
 
   if (cgns_type_elem == CGNS_ENUMV(NGON_n)) /*cas polygone/polyedre */
     TRUST2CGNS.fill_global_infos_poly(is_polyedre);
@@ -905,7 +939,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   /* 5 : Write grid coordinates & set connectivity */
   if (nb_elem > 0) // seulement si le proc a qlq chose a ecrire
     {
-      const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(), incr_min_som = TRUST2CGNS.get_global_incr_min_som();
+      const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(),
+                              &incr_min_som = TRUST2CGNS.get_global_incr_min_som();
 
       cgsize_t min = incr_min_som[proc_me], max = incr_max_som[proc_me];
       assert (min < max);
@@ -919,16 +954,24 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
         {
           if (is_polyedre)
             {
-              const std::vector<cgsize_t>& fs = TRUST2CGNS.get_local_fs(), fs_offset = TRUST2CGNS.get_local_fs_offset();
-              const std::vector<int>& incr_min_face_som = TRUST2CGNS.get_global_incr_min_face_som(), incr_max_face_som = TRUST2CGNS.get_global_incr_max_face_som();
+              const std::vector<cgsize_t>& fs = TRUST2CGNS.get_local_fs(),
+                                           &fs_offset = TRUST2CGNS.get_local_fs_offset();
+
+              const std::vector<int>& incr_min_face_som = TRUST2CGNS.get_global_incr_min_face_som(),
+                                      &incr_max_face_som = TRUST2CGNS.get_global_incr_max_face_som();
+
               min = incr_min_face_som[proc_me], max = incr_max_face_som[proc_me];
               assert (min < max);
 
               if (cgp_poly_elements_write_data(fileId_, baseId_.back(), zoneId_.back(), sectionId, min, max, fs.data(), fs_offset.data()) != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_in_zone : cgp_poly_elements_write_data !" << finl, TRUST_CGNS_ERROR();
 
-              const std::vector<cgsize_t> ef = TRUST2CGNS.get_local_ef(), ef_offset = TRUST2CGNS.get_local_ef_offset();
-              const std::vector<int>& incr_min_elem_face = TRUST2CGNS.get_global_incr_min_elem_face(), incr_max_elem_face = TRUST2CGNS.get_global_incr_max_elem_face();
+              const std::vector<cgsize_t>& ef = TRUST2CGNS.get_local_ef(),
+                                           &ef_offset = TRUST2CGNS.get_local_ef_offset();
+
+              const std::vector<int>& incr_min_elem_face = TRUST2CGNS.get_global_incr_min_elem_face(),
+                                      &incr_max_elem_face = TRUST2CGNS.get_global_incr_max_elem_face();
+
               min = incr_max_face_som.back() + incr_min_elem_face[proc_me]; // BOOM
               max = incr_max_face_som.back() + incr_max_elem_face[proc_me]; // BEEM
               assert (min <= max);
@@ -938,8 +981,12 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
             }
           else
             {
-              const std::vector<cgsize_t>& es = TRUST2CGNS.get_local_es(), es_offset = TRUST2CGNS.get_local_es_offset();
-              const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(), incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
+              const std::vector<cgsize_t>& es = TRUST2CGNS.get_local_es(),
+                                           &es_offset = TRUST2CGNS.get_local_es_offset();
+
+              const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(),
+                                      &incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
+
               min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
               assert (min <= max);
 
@@ -952,7 +999,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
           std::vector<cgsize_t> elems;
           TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
 
-          const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(), incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
+          const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(),
+                                  &incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
 
           min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
           assert (min <= max);
@@ -1010,12 +1058,16 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
 
       if (LOC == "SOM")
         {
-          const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(), incr_min_som = TRUST2CGNS.get_global_incr_min_som();
+          const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(),
+                                  &incr_min_som = TRUST2CGNS.get_global_incr_min_som();
+
           min = incr_min_som[proc_me], max = incr_max_som[proc_me];
         }
       else
         {
-          const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(), incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
+          const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(),
+                                  &incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();
+
           min = incr_min_elem[proc_me], max = incr_max_elem[proc_me];
         }
 

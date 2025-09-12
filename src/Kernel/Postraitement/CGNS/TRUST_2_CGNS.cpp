@@ -34,10 +34,15 @@ std::string TRUST_2_CGNS::remove_slash_linkfile(std::string& linkfile)
 
 Nom TRUST_2_CGNS::modify_domaine_name_for_link(const Nom& nom_dom, const std::string& LOC)
 {
-  Nom nom_dom_mod = nom_dom;
-  nom_dom_mod.prefix(LOC.c_str());
-  nom_dom_mod.prefix("_");
-  return nom_dom_mod;
+  if (LOC != "FACES")
+    {
+      Nom nom_dom_mod = nom_dom;
+      nom_dom_mod.prefix(LOC.c_str());
+      nom_dom_mod.prefix("_");
+      return nom_dom_mod;
+    }
+  else
+    return nom_dom;
 }
 
 Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const Nom& id_du_domaine, const std::string& LOC, int& fieldId_som, int& fieldId_elem, int& fieldId_faces)
@@ -186,10 +191,11 @@ void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>
 void TRUST_2_CGNS::clear_vectors()
 {
   if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
-    if (!proc_non_zero_elem_.empty()) proc_non_zero_elem_.clear(); // XXX a voir plus tard si utile pour garder
-
-  if (!global_nb_elem_.empty()) global_nb_elem_.clear();
-  if (!global_nb_som_.empty()) global_nb_som_.clear();
+    {
+      if (!proc_non_zero_elem_.empty()) proc_non_zero_elem_.clear(); // XXX a voir plus tard si utile pour garder
+      if (!global_nb_elem_.empty()) global_nb_elem_.clear();
+      if (!global_nb_som_.empty()) global_nb_som_.clear();
+    }
 
   if (!global_nb_face_som_.empty()) global_nb_face_som_.clear();
   if (!global_nb_face_som_offset_.empty()) global_nb_face_som_offset_.clear();

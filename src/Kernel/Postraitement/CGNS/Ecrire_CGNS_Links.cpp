@@ -114,13 +114,67 @@ void Ecrire_CGNS::cgns_fill_info_grid_link_file(const char* basename, const CGNS
         connectname_.push_back({ "NGON_n" });
     }
   else
-    connectname_.push_back({ "Elem" });
+    connectname_.push_back({ "Elem" }); // autre cas
+}
+
+void Ecrire_CGNS::add_new_linked_base_par_over_zone(const std::string& LOC, const Nom& nom_dom, const Nom& nom_dom_mod, const int ind_base)
+{
+  zoneId_.clear(); // XXX commencons par ca
+  TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind_base];
+  const std::vector<int>& global_nb_elem = TRUST2CGNS.get_global_nb_elem(),
+                          &global_nb_som = TRUST2CGNS.get_global_nb_som(),
+                           &proc_non_zero_elem = TRUST2CGNS.get_proc_non_zero_elem();
+
+  const int nb_zones_to_write = TRUST2CGNS.nb_procs_writing();
+  const bool all_write = TRUST2CGNS.all_procs_write(); // all procs will write !
+  std::string zonename, zonename_link;
+
+  for (int i = 0; i != nb_zones_to_write; i++)
+    {
+      const int indZ = all_write ? i : proc_non_zero_elem[i]; // procID
+      const int ne_loc = global_nb_elem[indZ], ns_loc = global_nb_som[indZ]; /* nb_elem & nb_som local */
+      assert (ne_loc > 0);
+
+      zoneId_.push_back(-123);
+      cgsize_t isize[3][1];
+      isize[0][0] = ns_loc;
+      isize[1][0] = ne_loc;
+      isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
+
+      zonename = nom_dom.nom_me(indZ).getString();
+//      zonename.resize(CGNS_STR_SIZE, ' ');
+
+      zonename_link = nom_dom_mod.nom_me(indZ).getString();
+
+      if (cg_zone_write(fileId_, baseId_.back(), zonename.c_str() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::add_new_linked_base_par_over_zone : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
+
+      // Lien vers maillage initial
+      std::string linkpath = "/" + nom_dom_mod.getString() + "/" + zonename_link + "/GridCoordinates/";
+
+      if (cg_goto(fileId_, baseId_.back(), "Zone_t", indZ + 1, "end") != CG_OK)
+        Cerr << "Error Ecrire_CGNS::add_new_linked_base_par_over_zone : cg_goto !" << finl, TRUST_CGNS_ERROR();
+
+      if (cg_link_write("GridCoordinates", "" /* rien => meme fichier !! */, linkpath.c_str()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::add_new_linked_base_par_over_zone : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+
+      for (auto &itr_conn : connectname_[ind_base])
+        {
+          linkpath = "/" + nom_dom_mod.getString() + "/" + zonename_link + "/" + itr_conn + "/";
+
+          if (cg_link_write(itr_conn.c_str(), "" /* rien => meme fichier !! */, linkpath.c_str()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::add_new_linked_base_par_over_zone : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+        }
+    }
+
+  zoneId_par_.push_back(zoneId_); // XXX : Dont touch
 }
 
 void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom)
 {
   assert (LOC == "ELEM" || LOC == "SOM");
   Cerr << "###  Building a new CGNS base with a linked zone to host the field located at : " << LOC << " !" << finl;
+
   doms_written_.push_back(nom_dom);
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
   char basename[CGNS_STR_SIZE];
@@ -132,6 +186,13 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
   if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
+  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_)))
+    if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
+      {
+        add_new_linked_base_par_over_zone(LOC, nom_dom, nom_dom_mod, ind_base);
+        return;
+      }
+
   zoneId_.push_back(-123);
   cgsize_t isize[3][1];
   isize[0][0] = sizeId_[ind_base][0];
@@ -139,7 +200,7 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
   isize[2][0] = 0;
 
   if (cg_zone_write(fileId_, baseId_.back(), basename /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
-    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
+    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
   // Lien vers maillage initial
   std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
