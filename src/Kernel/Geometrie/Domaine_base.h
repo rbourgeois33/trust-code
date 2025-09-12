@@ -24,6 +24,7 @@
 
 #include <TRUSTArrays.h>
 #include <TRUST_Deriv.h>
+#include <Ecrire_YAML.h>
 #include <TRUSTList.h>
 #include <Elem_geom.h>
 #include <TRUSTTabs.h>
@@ -58,6 +59,9 @@ public:
   const Champ_base& get_champ(const Motcle&) const override { throw; }
   bool has_champ(const Motcle& nom, OBS_PTR(Champ_base) &ref_champ) const override { return false; }
   bool has_champ(const Motcle& nom) const override { return false; }
+  int sauvegarder(Sortie& os) const override { return 0; }
+  virtual std::vector<YAML_data> data_a_sauvegarder() const { return std::vector<YAML_data>(); }
+
   //
   // Time-dependency
   //

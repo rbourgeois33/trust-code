@@ -486,6 +486,7 @@ int Probleme_base::sauvegarder(Sortie& os) const
 {
   Debog::set_nom_pb_actuel(le_nom());
   schema_temps().sauvegarder(os);
+  domaine().sauvegarder(os);
   Cerr << "Backup of problem " << le_nom() << finl;
   int bytes=0;
   for(int i=0; i<nombre_d_equations(); i++)
