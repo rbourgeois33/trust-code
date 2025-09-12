@@ -154,10 +154,13 @@ int Format_Post_CGNS::ecrire_domaine_low_level(const Domaine * dom,const Nom& no
 
 int Format_Post_CGNS::ecrire_domaine_dis(const Domaine& domaine,const OBS_PTR(Domaine_dis_base)& domaine_dis_base,const int est_le_premier_post)
 {
-  domaine_dis_ = domaine_dis_base;
+  if (domaine_dis_base.non_nul())
+    {
+      domaine_dis_ = domaine_dis_base;
 #ifdef HAS_CGNS
-  cgns_writer_.cgns_associer_domaine_dis(domaine_dis_base.valeur());
+      cgns_writer_.cgns_associer_domaine_dis(domaine_dis_base.valeur());
 #endif
+    }
   return ecrire_domaine(domaine, est_le_premier_post);
 }
 

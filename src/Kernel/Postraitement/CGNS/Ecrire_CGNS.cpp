@@ -114,11 +114,16 @@ void Ecrire_CGNS::cgns_open_file()
 
 void Ecrire_CGNS::fill_infos_loc()
 {
+  if (postraiter_domaine_)
+    {
+      has_elem_som_loc_ = true;
+      has_som_field_ = true;
+      has_elem_field_ = true;
+      return;
+    }
+
   assert (loc_vect_.non_nul());
   assert (static_cast<int>(loc_vect_->size()) <= 3 && static_cast<int>(loc_vect_->size()) > 0);
-
-  if (static_cast<int>(loc_vect_->size()) > 1)
-    has_multi_loc_ = true;
 
   for (auto& itr : loc_vect_.valeur())
     {
@@ -127,6 +132,9 @@ void Ecrire_CGNS::fill_infos_loc()
       else if (itr == "ELEM") has_elem_field_ = true;
       else throw;
     }
+
+  if (has_som_field_ && has_elem_field_)
+    has_elem_som_loc_ = true;
 }
 
 void Ecrire_CGNS::finir_ecriture(double temps)
@@ -269,7 +277,7 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
         }
 
       Nom nom_dom = domaine.le_nom();
-      if (LOC == "FACES")
+      if (LOC == "FACES" || has_elem_som_loc_)
         {
           nom_dom += "_";
           nom_dom += LOC;
@@ -277,23 +285,12 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
 
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_)
         {
-          if (LOC == "FACES" || ( !fld_loc_map_.count("ELEM") && !fld_loc_map_.count("SOM")))
+          if (!fld_loc_map_.count(LOC))
             {
-              if (!fld_loc_map_.count(LOC)) /* plusieur faces ! */
-                fld_loc_map_.insert( { LOC, nom_dom });/* ici on utilise le 1er support */
-            }
-          else
-            {
-              if (!fld_loc_map_.count(LOC)) // XXX here we need a new support ... sorry
-                {
-                  nom_dom += "_";
-                  nom_dom += LOC;
-                  Cerr << "###  Building a new CGNS zone to host the field located at : " << LOC << " !" << finl;
+              fld_loc_map_.insert( { LOC, nom_dom } );
 
-                  cgns_write_domaine(&domaine, nom_dom, domaine.les_sommets(), domaine.les_elems(), Motcle(domaine.type_elem()->que_suis_je()));
-
-                  fld_loc_map_.insert( { LOC, nom_dom });
-                }
+              if (LOC != "FACES" && has_elem_som_loc_)
+                add_new_linked_base(LOC, nom_dom);
             }
         }
       else // Option_CGNS::USE_LINKS
@@ -360,8 +357,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
 
   const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
 
-  if (Option_CGNS::USE_LINKS || (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_))
-    cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
+  cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
   zoneId_.push_back(-123);
 
@@ -522,6 +518,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
 
   /* 4 : We need global nb_elems/nb_soms => MPI_Allgather. Thats the only information required ! */
   const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+
+  cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
   TRUST2CGNS.fill_global_infos(); // XXX
 
@@ -842,11 +840,10 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   isize[1][0] = (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot; // si ne_tot = 0, on va juste creer une zone vide
   isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
-  if (Option_CGNS::USE_LINKS)
-    cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim,
-                                  (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot,
-                                  (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot,
-                                  is_polyedre);
+  cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim,
+                                (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot,
+                                (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot,
+                                is_polyedre);
 
   int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
@@ -997,7 +994,17 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
   /* 2 : Fill field values & dump to cgns file */
   if (nb_vals > 0) // this proc will write !
     {
-      const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+      int ind_new = ind;
+
+      if (ind > (static_cast<int>(T2CGNS_.size()) -1) )
+        {
+          Nom nom_dom_mod = nom_dom;
+          nom_dom_mod.prefix(LOC.c_str());
+          nom_dom_mod.prefix("_");
+          ind_new = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
+        }
+
+      const TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind_new];
       const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
       const int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
 

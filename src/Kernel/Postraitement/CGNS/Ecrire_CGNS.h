@@ -55,7 +55,7 @@ private:
   std::vector<double> time_post_;
   std::vector<int> baseId_, zoneId_;
 
-  bool has_elem_field_ = false, has_faces_field_ = false, has_som_field_ = false, has_multi_loc_ = false;
+  bool has_elem_field_ = false, has_faces_field_ = false, has_som_field_ = false, has_elem_som_loc_ = false;
   bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
 
@@ -99,6 +99,7 @@ private:
   void cgns_write_link_file_for_multiple_files();
   void cgns_close_grid_or_solution_link_file(const double, const TYPE_LINK_CGNS,  bool is_cerr = true);
   void gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& , std::vector<std::vector<cgsize_t>>& ) const ;
+  void add_new_linked_base(const std::string&, const Nom&);
 
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );

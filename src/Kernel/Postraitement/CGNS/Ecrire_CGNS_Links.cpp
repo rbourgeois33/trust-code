@@ -117,32 +117,82 @@ void Ecrire_CGNS::cgns_fill_info_grid_link_file(const char* basename, const CGNS
     connectname_.push_back({ "Elem" });
 }
 
+void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom)
+{
+  assert (LOC == "ELEM" || LOC == "SOM");
+  Cerr << "###  Building a new CGNS base with a linked zone to host the field located at : " << LOC << " !" << finl;
+  doms_written_.push_back(nom_dom);
+  baseId_.push_back(-123); // pour chaque dom, on a une baseId
+  char basename[CGNS_STR_SIZE];
+  strcpy(basename, nom_dom.getChar()); // dom name
+
+  Nom nom_dom_mod = nom_dom;
+  nom_dom_mod.prefix(LOC.c_str());
+  nom_dom_mod.prefix("_");
+
+  const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod); // get index of orig dom
+
+  if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_.back()) != CG_OK)
+    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_base_write !" << finl, TRUST_CGNS_ERROR();
+
+  zoneId_.push_back(-123);
+  cgsize_t isize[3][1];
+  isize[0][0] = sizeId_[ind_base][0];
+  isize[1][0] = sizeId_[ind_base][1];
+  isize[2][0] = 0;
+
+  if (cg_zone_write(fileId_, baseId_.back(), basename /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
+    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
+
+  // Lien vers maillage initial
+  std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
+
+  if (cg_goto(fileId_, baseId_.back(), "Zone_t", 1, "end") != CG_OK)
+    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_goto !" << finl, TRUST_CGNS_ERROR();
+
+  if (cg_link_write("GridCoordinates", "" /* rien => meme fichier !! */, linkpath.c_str()) != CG_OK)
+    Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+
+  for (auto &itr_conn : connectname_[ind_base])
+    {
+      linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/" + itr_conn + "/";
+
+      if (cg_link_write(itr_conn.c_str(), "" /* rien => meme fichier !! */, linkpath.c_str()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+    }
+}
+
 // Attention : ind 0 => ELEM et SOM, ind 1 => FACES (si besoin pour faces) !
 void Ecrire_CGNS::gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& sizeId_som_local_comm_tmp, std::vector<std::vector<cgsize_t>>& sizeId_elem_local_comm_tmp) const
 {
-  const bool has_elem_field = fld_loc_map_.count("ELEM");
-  const bool has_som_field = fld_loc_map_.count("SOM");
-  const bool has_faces_field = fld_loc_map_.count("FACES");
-
   sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>());
   sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>());
 
-  if (has_elem_field || has_som_field)
+  if (has_elem_field_ || has_som_field_)
     {
       sizeId_som_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
       sizeId_elem_local_comm_tmp.back().assign(Process::nproc(), -123 /* default */);
 
-      int ind_base = -1;
-      if (has_elem_field)
-        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("ELEM"));
+      Nom nom_dom;
+
+      if (has_elem_field_)
+        {
+          nom_dom = fld_loc_map_.at("ELEM");
+          nom_dom.prefix("_ELEM");
+        }
       else
-        ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("SOM"));
+        {
+          nom_dom = fld_loc_map_.at("SOM");
+          nom_dom.prefix("_SOM");
+        }
+
+      const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
 
       MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
       MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
     }
 
-  if (has_faces_field)
+  if (has_faces_field_)
     {
       sizeId_som_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
       sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
@@ -461,22 +511,38 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
       for (auto& itr : fld_loc_map_)
         {
           const std::string& LOC = itr.first;
-          const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at(LOC));
+          int ind_base = -123;
 
-          if (cg_base_write(fileId_, baseZone_name_[ind_base].c_str(), cellDim_[ind_base], Objet_U::dimension, &baseId_[ind_base]) != CG_OK)
+          Nom nom_dom = fld_loc_map_.at(LOC);
+          const int index_glob = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
+
+          if (has_elem_som_loc_ && LOC != "FACES")
+            {
+              Nom nom_dom_mod = nom_dom;
+              nom_dom_mod.prefix(LOC.c_str());
+              nom_dom_mod.prefix("_");
+              ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
+            }
+          else
+            ind_base = index_glob;
+
+          char basename[CGNS_STR_SIZE];
+          strcpy(basename, nom_dom.getChar()); // dom name
+
+          if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
-          if (cg_biter_write(fileId_, baseId_[ind_base], "TimeIterValues", static_cast<int>(time_post_.size())) != CG_OK)
+          if (cg_biter_write(fileId_, baseId_[index_glob], "TimeIterValues", static_cast<int>(time_post_.size())) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_biter_write !" << finl, TRUST_CGNS_ERROR();
 
-          if (cg_goto(fileId_, baseId_[ind_base], "BaseIterativeData_t", 1, "end") != CG_OK)
+          if (cg_goto(fileId_, baseId_[index_glob], "BaseIterativeData_t", 1, "end") != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
 
           cgsize_t nuse = static_cast<cgsize_t>(time_post_.size());
           if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nuse, time_post_.data()) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
 
-          if (cg_simulation_type_write(fileId_, baseId_[ind_base], CGNS_ENUMV(TimeAccurate)) != CG_OK)
+          if (cg_simulation_type_write(fileId_, baseId_[index_glob], CGNS_ENUMV(TimeAccurate)) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
 
           for (int proc = 0; proc < Process::nproc(); proc++)
@@ -492,12 +558,12 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
               isize[2][0] = 0;
 
               int zoneId_tmp = -1;
-              if (cg_zone_write(fileId_, baseId_[ind_base], zone_name.c_str(), isize[0], CGNS_ENUMV(Unstructured), &zoneId_tmp) != CG_OK)
+              if (cg_zone_write(fileId_, baseId_[index_glob], zone_name.c_str(), isize[0], CGNS_ENUMV(Unstructured), &zoneId_tmp) != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
               std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
 
-              if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", proc + 1, "end") != CG_OK)
+              if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", proc + 1, "end") != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
 
               if (cg_link_write("GridCoordinates", linkfile.c_str(), linkpath.c_str()) != CG_OK)
@@ -513,18 +579,17 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
               for (auto& itr_t : time_post_)
                 {
                   std::string solname = "FlowSolution" + cgns_helper_.convert_double_to_string(itr_t) + "_" + LOC;
-//                  linkfile = file_group_id + "_" + LOC + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns";
-                  linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/" + solname + "/";
+                  linkpath = "/" + nom_dom.getString() + "/" + nom_dom.getString() + "/" + solname + "/";
 
                   if (cg_link_write(solname.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
                     Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_link_write FlowSolution " << solname << finl, TRUST_CGNS_ERROR();
                 }
 
               cgsize_t idata[2] = {CGNS_STR_SIZE, static_cast<cgsize_t>(time_post_.size())};
-              if (cg_ziter_write(fileId_, baseId_[ind_base], zoneId_tmp, "ZoneIterativeData") != CG_OK)
+              if (cg_ziter_write(fileId_, baseId_[index_glob], zoneId_tmp, "ZoneIterativeData") != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_ziter_write !" << finl, TRUST_CGNS_ERROR();
 
-              if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", proc + 1, "ZoneIterativeData_t",  1, "end") != CG_OK)
+              if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", proc + 1, "ZoneIterativeData_t",  1, "end") != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
 
               const char* solname = (LOC == "SOM") ? solname_som_.c_str() : ( (LOC == "FACES") ? solname_faces_.c_str() : solname_elem_.c_str());
