@@ -31,7 +31,7 @@ void Probleme_base_interface_proto::initialize_impl(Probleme_base& pb)
 
   Debog::set_nom_pb_actuel(pb.le_nom());
   pb.preparer_calcul();
-  pb.domaine().initialiser(0, pb.domaine_dis(), pb); // Pour le cas de geometries variables (ex. ALE)
+  pb.domaine().initialiser(0, pb); // Pour le cas de geometries variables (ex. ALE)
   // on initialise le schema en temps avant le postraitement
   // ainsi les sources qui dependent du pas de temps fonctionnent
   pb.schema_temps().initialize();
