@@ -998,9 +998,7 @@ void Ecrire_CGNS::cgns_write_field_par_in_zone(const int comp, const double temp
 
       if (ind > (static_cast<int>(T2CGNS_.size()) -1) )
         {
-          Nom nom_dom_mod = nom_dom;
-          nom_dom_mod.prefix(LOC.c_str());
-          nom_dom_mod.prefix("_");
+          const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
           ind_new = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
         }
 

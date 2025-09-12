@@ -98,6 +98,7 @@ public:
 
   /* methods statiques utiles */
   static Motcle modify_field_name_for_post(const Nom&, const Nom&, const std::string&, int&, int&, int&);
+  static Nom modify_domaine_name_for_link(const Nom&, const std::string&);
   static std::string modify_domaine_name_for_post(const Nom& );
   static int get_index_nom_vector(const std::vector<Nom>&, const Nom&);
   static std::string remove_slash_linkfile(std::string&);

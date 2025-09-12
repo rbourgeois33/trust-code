@@ -126,10 +126,7 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
 
-  Nom nom_dom_mod = nom_dom;
-  nom_dom_mod.prefix(LOC.c_str());
-  nom_dom_mod.prefix("_");
-
+  const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
   const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod); // get index of orig dom
 
   if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_.back()) != CG_OK)
@@ -176,15 +173,9 @@ void Ecrire_CGNS::gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t
       Nom nom_dom;
 
       if (has_elem_field_)
-        {
-          nom_dom = fld_loc_map_.at("ELEM");
-          nom_dom.prefix("_ELEM");
-        }
+        nom_dom = TRUST_2_CGNS::modify_domaine_name_for_link(fld_loc_map_.at("ELEM"), "ELEM");
       else
-        {
-          nom_dom = fld_loc_map_.at("SOM");
-          nom_dom.prefix("_SOM");
-        }
+        nom_dom = TRUST_2_CGNS::modify_domaine_name_for_link(fld_loc_map_.at("SOM"), "SOM");
 
       const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
 
@@ -518,9 +509,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
 
           if (has_elem_som_loc_ && LOC != "FACES")
             {
-              Nom nom_dom_mod = nom_dom;
-              nom_dom_mod.prefix(LOC.c_str());
-              nom_dom_mod.prefix("_");
+              const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
               ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod);
             }
           else
