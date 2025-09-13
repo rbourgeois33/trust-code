@@ -93,6 +93,7 @@ private:
   // Methodes pour LINK
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
   void cgns_open_grid_base_link_file();
+  void cgns_init_solution_link_file(const std::string& , const Nom&);
   void cgns_open_solution_link_file(const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_final_link_file_comm_group();

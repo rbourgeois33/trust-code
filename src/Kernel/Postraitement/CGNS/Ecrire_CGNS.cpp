@@ -276,15 +276,15 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
           cgns_write_domaine_dual(domaine, 0 /* pas premier post ... mais inutile */, nom_dom);
         }
 
-      Nom nom_dom = domaine.le_nom();
-      if (LOC == "FACES" || has_elem_som_loc_)
-        {
-          nom_dom += "_";
-          nom_dom += LOC;
-        }
-
       if (!Option_CGNS::USE_LINKS || postraiter_domaine_)
         {
+          Nom nom_dom = domaine.le_nom();
+          if (LOC == "FACES" || has_elem_som_loc_)
+            {
+              nom_dom += "_";
+              nom_dom += LOC;
+            }
+
           if (!fld_loc_map_.count(LOC))
             {
               fld_loc_map_.insert( { LOC, nom_dom } );
@@ -302,11 +302,46 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               grid_file_opened_ = false;
             }
 
-          if (!fld_loc_map_.count(LOC))
-            fld_loc_map_.insert( { LOC, nom_dom });
-
           if (!solution_file_opened_)
             {
+              Nom nom_dom;
+              std::string loc_link;
+
+              if (has_elem_field_)
+                {
+                  loc_link = "ELEM";
+                  assert (!fld_loc_map_.count(loc_link));
+                  nom_dom = domaine.le_nom();
+                  if (has_elem_som_loc_)
+                    nom_dom += "_ELEM";
+                  fld_loc_map_.insert( { loc_link, nom_dom } );
+
+                  if (has_elem_som_loc_)
+                    cgns_init_solution_link_file(loc_link, nom_dom);
+                }
+
+              if (has_som_field_)
+                {
+                  loc_link = "SOM";
+                  assert (!fld_loc_map_.count(loc_link));
+                  nom_dom = domaine.le_nom();
+                  if (has_elem_som_loc_)
+                    nom_dom += "_SOM";
+                  fld_loc_map_.insert( { loc_link, nom_dom } );
+
+                  if (has_elem_som_loc_)
+                    cgns_init_solution_link_file(loc_link, nom_dom);
+                }
+
+              if (has_faces_field_)
+                {
+                  loc_link = "FACES";
+                  assert (!fld_loc_map_.count(loc_link));
+                  nom_dom = domaine.le_nom();
+                  nom_dom += "_FACES";
+                  fld_loc_map_.insert( { loc_link, nom_dom } );
+                }
+
               cgns_open_solution_link_file(time_post_.back()); // 1ere ouverture sol file ici ! puis dans cgns_add_time
               solution_file_opened_ = true;
             }
@@ -488,7 +523,7 @@ void Ecrire_CGNS::cgns_write_iters_seq()
 void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
 {
 #ifdef MPI_
-  assert (!Option_CGNS::USE_LINKS);
+  assert (!Option_CGNS::USE_LINKS || postraiter_domaine_);
   doms_written_.push_back(nom_dom);
 
   /* 1 : Instance of TRUST_2_CGNS */
@@ -679,7 +714,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
 void Ecrire_CGNS::cgns_write_field_par_over_zone(const int comp, const double temps, const Nom& id_du_champ, const Nom& id_du_domaine, const Nom& localisation, const Nom& nom_dom, const DoubleTab& valeurs)
 {
 #ifdef MPI_
-  assert (!Option_CGNS::USE_LINKS);
+  assert (!Option_CGNS::USE_LINKS || postraiter_domaine_);
   std::string LOC = Motcle(localisation).getString();
   Motcle id_du_champ_modifie = TRUST_2_CGNS::modify_field_name_for_post(id_du_champ, id_du_domaine, LOC, fieldId_som_, fieldId_elem_, fieldId_faces_);
   Nom& id_champ = id_du_champ_modifie;
