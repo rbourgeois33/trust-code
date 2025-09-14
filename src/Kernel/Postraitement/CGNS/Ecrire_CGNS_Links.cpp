@@ -142,8 +142,6 @@ void Ecrire_CGNS::add_new_linked_base_par_over_zone(const std::string& LOC, cons
       isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
       zonename = nom_dom.nom_me(indZ).getString();
-//      zonename.resize(CGNS_STR_SIZE, ' ');
-
       zonename_link = nom_dom_mod.nom_me(indZ).getString();
 
       if (cg_zone_write(fileId_, baseId_.back(), zonename.c_str() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
@@ -177,13 +175,11 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
 
   doms_written_.push_back(nom_dom);
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
-  char basename[CGNS_STR_SIZE];
-  strcpy(basename, nom_dom.getChar()); // dom name
 
   const Nom nom_dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(nom_dom, LOC);
   const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom_mod); // get index of orig dom
 
-  if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_.back()) != CG_OK)
+  if (cg_base_write(fileId_, nom_dom.getChar(), cellDim_[ind_base], Objet_U::dimension, &baseId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_)))
@@ -199,7 +195,7 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
   isize[1][0] = sizeId_[ind_base][1];
   isize[2][0] = 0;
 
-  if (cg_zone_write(fileId_, baseId_.back(), basename /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
+  if (cg_zone_write(fileId_, baseId_.back(), nom_dom.getChar() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
   // Lien vers maillage initial
@@ -467,9 +463,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       else
         ind_base = index_glob;
 
-      const std::string& BZname = nom_dom.getString();
-
-      if (cg_base_write(fileId_, BZname.c_str(), cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
+      if (cg_base_write(fileId_, nom_dom.getChar(), cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
       cgsize_t isize[3][1];
@@ -477,7 +471,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       isize[1][0] = sizeId_[ind_base][1];
       isize[2][0] = 0;
 
-      if (cg_zone_write(fileId_, baseId_[index_glob], BZname.c_str() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_[index_glob]) != CG_OK)
+      if (cg_zone_write(fileId_, baseId_[index_glob], nom_dom.getChar() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_[index_glob]) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
 
       std::string linkfile = baseFile_name_ + ".grid.cgns"; // file name
@@ -590,10 +584,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
           else
             ind_base = index_glob;
 
-          char basename[CGNS_STR_SIZE];
-          strcpy(basename, nom_dom.getChar()); // dom name
-
-          if (cg_base_write(fileId_, basename, cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
+          if (cg_base_write(fileId_, nom_dom.getChar(), cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
           if (cg_biter_write(fileId_, baseId_[index_glob], "TimeIterValues", static_cast<int>(time_post_.size())) != CG_OK)
