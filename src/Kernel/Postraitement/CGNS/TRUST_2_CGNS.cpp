@@ -515,7 +515,7 @@ int TRUST_2_CGNS::compute_shift(const std::vector<int>& vect_incr_max)
 #endif
 }
 
-int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type , std::vector<cgsize_t>& elems)
+int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type )
 {
   const int nb_elem = elems_->dimension(0);
   const IntTab& les_elems = elems_.valeur();
@@ -546,8 +546,8 @@ int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type , std::vector<cgsize
       return -100;
     }
 
-  elems.resize(nb_elem * nodes_per_elem); // allocation une fois
-  cgsize_t* data = elems.data();
+  conn_elem_.resize(nb_elem * nodes_per_elem); // allocation une fois
+  cgsize_t* data = conn_elem_.data();
 
   switch(type)
     {

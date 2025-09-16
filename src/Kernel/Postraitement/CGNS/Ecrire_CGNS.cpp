@@ -96,6 +96,9 @@ void Ecrire_CGNS::cgns_open_file()
 
   fill_infos_loc();
 
+  if (is_deformable_) /* Si deformable => force to use links ! */
+    Option_CGNS::USE_LINKS = true;
+
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     return; /* rien a faire si USE_LINKS ou FILE_PER_COMM_GROUP */
 
@@ -142,7 +145,12 @@ void Ecrire_CGNS::finir_ecriture(double temps)
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     {
       cgns_close_grid_or_solution_link_file(temps, TYPE_LINK_CGNS::SOLUTION);
-      cgns_write_final_link_file(); /* rewrite the link file so you can visualize during simulation !!! */
+
+      /* rewrite the link file so you can visualize during simulation !!! */
+      if (is_deformable_)
+        cgns_write_final_link_file_pb_deformable();
+      else
+        cgns_write_final_link_file();
     }
 }
 
@@ -179,8 +187,11 @@ void Ecrire_CGNS::cgns_finir()
 
 void Ecrire_CGNS::cgns_add_time(const double t)
 {
+  if (first_time_post_ && !time_post_.empty())
+    first_time_post_ = false;
+
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    if (!time_post_.empty()) /* 1er fois, on fais dans cgns_write_field => fill field_loc_map */
+    if (!time_post_.empty() || is_deformable_) /* Si pas deformable, la 1er fois dans cgns_write_field (fill field_loc_map) */
       cgns_open_solution_link_file(t);
 
   time_post_.push_back(t); // add time_post
@@ -194,7 +205,7 @@ void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, con
 {
   std::string nom_dom_modifie = TRUST_2_CGNS::modify_domaine_name_for_post(nom_dom);
 
-  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+  if (Option_CGNS::USE_LINKS && !postraiter_domaine_ && !is_deformable_)
     if (!grid_file_opened_)
       {
         cgns_open_grid_base_link_file();
@@ -218,8 +229,15 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
 {
   const std::string LOC = Motcle(localisation).getString();
 
+  if (is_deformable_ && LOC == "FACES")
+    {
+      has_faces_field_ = false;
+      Cerr << "Field " << id_du_champ << " located at " << LOC << " is skipped !! " << finl;
+      return; // TODO FIXME
+    }
+
   /* 1 : if first time called ... build different links to support mixed locations */
-  if (static_cast<int>(time_post_.size()) == 1)
+  if (first_time_post_)
     cgns_fill_field_loc_map(domaine, LOC);
 
   /* 2 : on ecrit */
@@ -266,7 +284,7 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
 
 void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::string& LOC)
 {
-  assert (static_cast<int>(time_post_.size()) == 1);
+  assert (static_cast<int>(time_post_.size()) == 1 && first_time_post_);
 
   /* pour les champs aux faces, il faut un support ! */
   if (has_faces_field_ && !is_dual_)
@@ -297,7 +315,7 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
   else // Option_CGNS::USE_LINKS
     {
       assert (Option_CGNS::USE_LINKS);
-      if (grid_file_opened_)
+      if (grid_file_opened_ && !is_deformable_)
         {
           cgns_close_grid_or_solution_link_file(0. /* inutile */, TYPE_LINK_CGNS::GRID, false);
           grid_file_opened_ = false;
@@ -343,7 +361,9 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
               fld_loc_map_.insert( { loc_link, nom_dom } );
             }
 
-          cgns_open_solution_link_file(time_post_.back()); // 1ere ouverture sol file ici ! puis dans cgns_add_time
+          if (!is_deformable_)
+            cgns_open_solution_link_file(time_post_.back()); // 1ere ouverture sol file ici ! puis dans cgns_add_time
+
           solution_file_opened_ = true;
         }
     }
@@ -356,8 +376,15 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
  */
 void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
 {
+  if (is_deformable_ && !first_time_post_)
+    {
+      cgns_write_domaine_deformable_seq(domaine, nom_dom, les_som, les_elem, type_elem);
+      return;
+    }
+
   /* 1 : Instance of TRUST_2_CGNS */
-  TRUST_2_CGNS TRUST2CGNS;
+  T2CGNS_.push_back(TRUST_2_CGNS());
+  TRUST_2_CGNS& TRUST2CGNS = T2CGNS_.back();
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
   if (is_dual_ && Objet_U::dimension == 3)
     {
@@ -431,15 +458,16 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
         }
       else
         {
-          std::vector<cgsize_t> elems;
+          const int nsom = TRUST2CGNS.convert_connectivity(cgns_type_elem);
+          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
 
-          int nsom = TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
           end = start + static_cast<cgsize_t>(elems.size()) / nsom - 1;
 
           if (cg_section_write(fileId_, baseId_.back(), zoneId_.back(), "Elem", cgns_type_elem, start, end, 0, elems.data(), &sectionId) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cg_section_write !" << finl, TRUST_CGNS_ERROR();
         }
     }
+  TRUST2CGNS.clear_vectors();
 }
 
 void Ecrire_CGNS::cgns_write_field_seq(const int comp, const double temps, const Nom& id_du_champ, const Nom& id_du_domaine, const Nom& localisation, const Nom& nom_dom, const DoubleTab& valeurs)
@@ -699,8 +727,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         }
       else
         {
-          std::vector<cgsize_t> elems;
-          TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
+          TRUST2CGNS.convert_connectivity(cgns_type_elem);
+          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
 
           max = nb_elem; /* now we need local elem */
           if (cgp_elements_write_data(fileId_, baseId_.back(), zoneId_par_.back()[indx], sectionId[indx], min, max, elems.data()) != CG_OK)
@@ -1031,8 +1059,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
         }
       else
         {
-          std::vector<cgsize_t> elems;
-          TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
+          TRUST2CGNS.convert_connectivity(cgns_type_elem);
+          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
 
           const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(),
                                   &incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();

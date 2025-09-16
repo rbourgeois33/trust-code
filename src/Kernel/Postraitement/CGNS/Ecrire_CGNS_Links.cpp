@@ -446,6 +446,8 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
   else
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_, true);
 
+  if (is_deformable_)
+    return; /* Stop here si deformable */
 
   for (auto &itr : fld_loc_map_)
     {
@@ -498,8 +500,6 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
         }
     }
 }
-
-
 
 void Ecrire_CGNS::cgns_write_final_link_file()
 {

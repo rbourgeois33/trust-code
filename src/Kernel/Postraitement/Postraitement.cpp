@@ -1501,6 +1501,11 @@ void Postraitement::init()
   const Nom& nom_du_domaine = dom.le_nom();
   Nom name=nom_fich().prefix(format_);
   name.prefix(".");
+
+  // XXX Elie Saikali : utile pour CGNS
+  if (dom.deformable())
+    format_post_->set_deformable_domain();
+
   if (besoin_postraiter_champs())
     {
       int reprise = mon_probleme->reprise_effectuee();

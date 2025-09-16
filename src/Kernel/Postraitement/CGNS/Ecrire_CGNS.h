@@ -30,6 +30,7 @@ public:
   void cgns_init_MPI(bool is_self = false);
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_is_dual_domain() { is_dual_ = true; }
+  void cgns_set_is_deformable_domain() { is_deformable_ = true; }
   void cgns_set_loc_vector(const std::vector<std::string>& vec) { loc_vect_ = vec; }
   void cgns_set_base_name(const Nom& );
   void cgns_open_file();
@@ -58,6 +59,7 @@ private:
   bool has_elem_field_ = false, has_faces_field_ = false, has_som_field_ = false, has_elem_som_loc_ = false;
   bool solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false;
   bool postraiter_domaine_ = false;
+  bool first_time_post_ = true;
 
   int fileId_ = -123;
   int flowId_elem_ = 0, fieldId_elem_ = 0;
@@ -90,6 +92,10 @@ private:
   // gestion elem/som/faces
   void cgns_fill_field_loc_map(const Domaine&, const std::string&);
 
+  // Methodes pour Domaine Deformable
+  void cgns_write_final_link_file_pb_deformable();
+  bool is_deformable_ = false;
+
   // Methodes pour LINK
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
   void cgns_open_grid_base_link_file();
@@ -105,6 +111,7 @@ private:
 
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
+  void cgns_write_domaine_deformable_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field_seq(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
   void cgns_write_iters_seq();
 
