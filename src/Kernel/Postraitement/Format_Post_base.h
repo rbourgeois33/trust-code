@@ -132,11 +132,7 @@ public:
 
   virtual int ecrire_item_int(const Nom& id_item, const Nom& id_du_domaine, const Nom& id_domaine, const Nom& localisation, const Nom& reference, const IntVect& data, const int reference_size);
 
-  virtual void set_single_lata_option(const bool )
-  {
-    Process::exit("Format_Post_base::set_single_lata_option is only available for lata post !");
-  }
-
+  virtual void set_single_lata_option(const bool ) { /* Do nothing */ }
   virtual void set_postraiter_domain() { /* Do nothing */ }
   virtual void set_deformable_domain() { /* Do nothing */ }
   virtual void set_loc_vector(const std::vector<std::string>&) { /* Do nothing */ }

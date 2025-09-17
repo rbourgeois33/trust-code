@@ -352,11 +352,8 @@ Entree& Postraitement::readOn(Entree& s)
   type_format += format_;
   format_post_.typer(type_format.getChar());
 
-  if (is_single_lata)
-    format_post_->set_single_lata_option(is_single_lata);
-
-  if (Motcle(format_) == "CGNS")
-    format_post_->set_loc_vector(locs_required_);
+  format_post_->set_single_lata_option(is_single_lata); // utile pour single_lata ...
+  format_post_->set_loc_vector(locs_required_); // utile pour CGNS pour le moment ...
 
   Nom base_name(nom_fich_);
   base_name.prefix(format_);
