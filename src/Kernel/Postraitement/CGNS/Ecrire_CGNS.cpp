@@ -163,10 +163,13 @@ void Ecrire_CGNS::cgns_finir()
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
-      if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
-        cgns_write_iters_par_over_zone();
-      else
-        cgns_write_iters_par_in_zone();
+      if (!postraiter_domaine_)
+        {
+          if (Option_CGNS::PARALLEL_OVER_ZONE)
+            cgns_write_iters_par_over_zone();
+          else
+            cgns_write_iters_par_in_zone();
+        }
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
     }
@@ -175,7 +178,8 @@ void Ecrire_CGNS::cgns_finir()
       if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
         fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
 
-      cgns_write_iters_seq();
+      if (!postraiter_domaine_)
+        cgns_write_iters_seq();
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
