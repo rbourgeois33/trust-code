@@ -199,6 +199,7 @@ void Ecrire_CGNS::cgns_add_time(const double t)
   flowId_elem_++, flowId_som_++, flowId_faces_++; // increment
   fieldId_elem_ = 0, fieldId_som_ = 0, fieldId_faces_ = 0; // reset
   solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false; // reset
+  multi_loc_deformable_support_linked_ = false; // reset
 }
 
 void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, const DoubleTab& som, const IntTab& elem, const Motcle& type_e)
@@ -239,6 +240,9 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
   /* 1 : if first time called ... build different links to support mixed locations */
   if (first_time_post_)
     cgns_fill_field_loc_map(domaine, LOC);
+
+  if (is_deformable_ && has_elem_som_loc_ && !multi_loc_deformable_support_linked_)
+    link_multi_loc_support_pb_deformable();
 
   /* 2 : on ecrit */
   const int nb_cmp = valeurs.dimension(1);

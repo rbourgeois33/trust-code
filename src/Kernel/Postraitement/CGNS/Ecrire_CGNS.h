@@ -94,7 +94,8 @@ private:
 
   // Methodes pour Domaine Deformable
   void cgns_write_final_link_file_pb_deformable();
-  bool is_deformable_ = false;
+  void link_multi_loc_support_pb_deformable();
+  bool is_deformable_ = false, multi_loc_deformable_support_linked_ = false;
 
   // Methodes pour LINK
   void cgns_fill_info_grid_link_file(const char*, const CGNS_TYPE&, const int, const int, const int, const bool);
