@@ -604,6 +604,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
             {
               std::string file_group_id = Nom(baseFile_name_).nom_me(proc).getString();
               std::string linkfile = file_group_id + ".cgns";
+              linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
               std::string zone_name = Nom("Zone").nom_me(proc).getString();
 
               const int ind_som_elem_local_comm = (LOC == "FACES") ? 1 : 0;
