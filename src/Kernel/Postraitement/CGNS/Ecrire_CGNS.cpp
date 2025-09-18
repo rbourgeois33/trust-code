@@ -466,8 +466,8 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
         }
       else
         {
-          const int nsom = TRUST2CGNS.convert_connectivity(cgns_type_elem);
-          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
+          std::vector<cgsize_t> elems;
+          const int nsom = TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
 
           end = start + static_cast<cgsize_t>(elems.size()) / nsom - 1;
 
@@ -735,8 +735,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         }
       else
         {
-          TRUST2CGNS.convert_connectivity(cgns_type_elem);
-          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
+          std::vector<cgsize_t> elems;
+          TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
 
           max = nb_elem; /* now we need local elem */
           if (cgp_elements_write_data(fileId_, baseId_.back(), zoneId_par_.back()[indx], sectionId[indx], min, max, elems.data()) != CG_OK)
@@ -1067,8 +1067,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
         }
       else
         {
-          TRUST2CGNS.convert_connectivity(cgns_type_elem);
-          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
+          std::vector<cgsize_t> elems;
+          TRUST2CGNS.convert_connectivity(cgns_type_elem, elems);
 
           const std::vector<int>& incr_max_elem = TRUST2CGNS.get_global_incr_max_elem(),
                                   &incr_min_elem = TRUST2CGNS.get_global_incr_min_elem();

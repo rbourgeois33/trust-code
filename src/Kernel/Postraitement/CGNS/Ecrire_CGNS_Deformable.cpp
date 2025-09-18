@@ -188,9 +188,7 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
   const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
-  CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
 
-  /* Fill coords */
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
@@ -199,86 +197,36 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
 
   int coordsId;
 
-  /* Base write */
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
 
   if (cg_base_write(fileId_, basename, icelldim, iphysdim, &baseId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
-  /* Vertex, cell & boundary vertex sizes */
   cgsize_t isize[3][1];
   isize[0][0] = nb_som;
   isize[1][0] = nb_elem;
   isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
-  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
-
-  /* Write all */
-  if (nb_elem) // XXX cas // mais MULTIPLE_FILES
+  if (nb_elem)
     {
       /* Create zone & grid coords */
       cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
                                                                        zoneId_, xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
 
       /* Set element connectivity */
-      int sectionId;
-      cgsize_t start = 1, end;
+      std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
+      linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
-      if (cgns_type_elem == CGNS_ENUMV(NGON_n)) // cas polyedre
+      for (auto &itr_conn : connectname_[ind])
         {
-          throw;
-          assert (domaine != nullptr);
-          std::vector<cgsize_t> sf, sf_offset;
+          std::string linkpath = "/" + baseZone_name_[ind] + "/" + baseZone_name_[ind] + "/" + itr_conn + "/";
 
-          end = start + static_cast<cgsize_t>(TRUST2CGNS.convert_connectivity_ngon(sf, sf_offset, is_polyedre)) -1;
+          if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
 
-          if (cg_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NGON_n", CGNS_ENUMV(NGON_n), start, end, 0, sf.data(), sf_offset.data(), &sectionId))
-            TRUST_CGNS_ERROR();
-
-          if (is_polyedre) // Pas pour polygone
-            {
-              std::vector<cgsize_t> ef, ef_offset;
-
-              start = end + 1;
-              end = start + static_cast<cgsize_t>(TRUST2CGNS.convert_connectivity_nface(ef, ef_offset)) -1;
-
-              if (cg_poly_section_write(fileId_, baseId_.back(), zoneId_.back(), "NFACE_n", CGNS_ENUMV(NFACE_n), start, end, 0, ef.data(), ef_offset.data(), &sectionId))
-                TRUST_CGNS_ERROR();
-            }
-        }
-      else
-        {
-          int nodes_per_elem = -1;
-
-          switch(cgns_type_elem)
-            {
-            case CGNS_ENUMV(HEXA_8):
-              nodes_per_elem = 8;
-              break;
-            case CGNS_ENUMV(QUAD_4):
-              nodes_per_elem = 4;
-              break;
-            case CGNS_ENUMV(TETRA_4):
-              nodes_per_elem = 4;
-              break;
-            case CGNS_ENUMV(TRI_3):
-              nodes_per_elem = 3;
-              break;
-            case CGNS_ENUMV(BAR_2):
-              nodes_per_elem = 2;
-              break;
-            default:
-              Cerr << "Type not yet coded in TRUST_2_CGNS::convert_connectivity ! Call the 911 !" << finl;
-              Process::exit();
-            }
-
-          const std::vector<cgsize_t>& elems = TRUST2CGNS.get_connectivity_elem();
-
-          end = start + static_cast<cgsize_t>(elems.size()) / nodes_per_elem - 1;
-
-          if (cg_section_write(fileId_, baseId_.back(), zoneId_.back(), "Elem", cgns_type_elem, start, end, 0, elems.data(), &sectionId) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cg_section_write !" << finl, TRUST_CGNS_ERROR();
+          if (cg_link_write(itr_conn.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
+            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_link_write connectivity !" << finl, TRUST_CGNS_ERROR();
         }
     }
 }

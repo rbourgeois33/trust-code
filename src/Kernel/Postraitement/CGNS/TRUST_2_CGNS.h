@@ -81,11 +81,7 @@ public:
 
   int get_nes_offset_tot() const { return nes_offset_tot_; }
 
-  /* pas poly */
-  int convert_connectivity(const CGNS_TYPE );
-  const std::vector<cgsize_t>& get_connectivity_elem() const { return conn_elem_; }
-
-  /* cas poly */
+  int convert_connectivity(const CGNS_TYPE, std::vector<cgsize_t>& );
   int convert_connectivity_ngon(std::vector<cgsize_t>&, std::vector<cgsize_t>&, const bool, int decal = 0);
   int convert_connectivity_nface(std::vector<cgsize_t>&, std::vector<cgsize_t>&, int decal = 0);
 
@@ -127,8 +123,6 @@ private:
   std::vector<int> global_incr_min_elem_, global_incr_max_elem_; // elem
 
   std::vector<int> global_incr_min_som_, global_incr_max_som_; //som
-
-  std::vector<cgsize_t> conn_elem_; /* pas poly */
 
   // pour polyedre
   int nb_fs_ = -123, nb_ef_ = -123, nb_es_ = -123, nfs_tot_ = -123, nef_tot_ = -123, nfs_offset_tot_ = -123, nef_offset_tot_ = -123, nes_offset_tot_ = -123;
