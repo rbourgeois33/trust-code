@@ -63,12 +63,12 @@ struct Ecrire_CGNS_helper
   inline void cgns_close_file(const std::string&, const int, const bool print = true);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
-  inline void cgns_write_zone_grid_coord(const int, const int, const std::vector<int>&, const char*, const cgsize_t*, std::vector<int>&,
+  inline void cgns_write_zone_grid_coord(const int, const int, const int, const char*, const cgsize_t*, int&,
                                          const std::vector<double>&, const std::vector<double>&, const std::vector<double>&, int&, int&, int&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>
   inline std::enable_if_t< _TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-  cgns_write_grid_coord_data(const int, const int, const std::vector<int>&, const int, const int, const int, const int, const cgsize_t, const cgsize_t,
+  cgns_write_grid_coord_data(const int, const int, const int, const int, const int, const int, const int, const cgsize_t, const cgsize_t,
                              const std::vector<double>&, const std::vector<double>&, const std::vector<double>&);
 
   template<TYPE_ECRITURE_CGNS _TYPE_>

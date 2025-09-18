@@ -85,42 +85,42 @@ inline void Ecrire_CGNS_helper::cgns_close_file(const std::string& fn, const int
 }
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
-inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, const int fileId, const std::vector<int>& baseId, const char *zonename, const cgsize_t *isize, std::vector<int>& zoneId,
+inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, const int fileId, const int baseId, const char *zonename, const cgsize_t *isize, int& zoneId,
                                                            const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords,
                                                            int& coordsIdx, int& coordsIdy, int& coordsIdz)
 {
   constexpr bool is_SEQ = (_TYPE_ == TYPE_ECRITURE_CGNS::SEQ);
 
-  if (cg_zone_write(fileId, baseId.back(), zonename, isize, CGNS_ENUMV(Unstructured), &zoneId.back()) != CG_OK)
+  if (cg_zone_write(fileId, baseId, zonename, isize, CGNS_ENUMV(Unstructured), &zoneId) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
   if (is_SEQ)
     {
-      if (cg_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateX", xCoords.data(), &coordsIdx) != CG_OK)
+      if (cg_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateX", xCoords.data(), &coordsIdx) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_coord_write - X !" << finl, TRUST_CGNS_ERROR();
 
-      if (cg_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateY", yCoords.data(), &coordsIdy) != CG_OK)
+      if (cg_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateY", yCoords.data(), &coordsIdy) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_coord_write - Y !" << finl, TRUST_CGNS_ERROR();
 
       if (icelldim > 2)
-        if (cg_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateZ", zCoords.data(), &coordsIdz) != CG_OK)
+        if (cg_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateZ", zCoords.data(), &coordsIdz) != CG_OK)
           Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_coord_write - Z !" << finl, TRUST_CGNS_ERROR();
     }
   else
     {
 #ifdef MPI_
       int gridId = -123;
-      if (cg_grid_write(fileId, baseId.back(), zoneId.back(), "GridCoordinates", &gridId) != CG_OK)
+      if (cg_grid_write(fileId, baseId, zoneId, "GridCoordinates", &gridId) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_grid_write !" << finl, TRUST_CGNS_ERROR();
 
-      if (cgp_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateX", &coordsIdx) != CG_OK)
+      if (cgp_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateX", &coordsIdx) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cgp_coord_write - X !" << finl, TRUST_CGNS_ERROR();
 
-      if (cgp_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateY", &coordsIdy) != CG_OK)
+      if (cgp_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateY", &coordsIdy) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cgp_coord_write - Y !" << finl, TRUST_CGNS_ERROR();
 
       if (icelldim > 2)
-        if (cgp_coord_write(fileId, baseId.back(), zoneId.back(), CGNS_DOUBLE_TYPE, "CoordinateZ", &coordsIdz) != CG_OK)
+        if (cgp_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateZ", &coordsIdz) != CG_OK)
           Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cgp_coord_write - Z !" << finl, TRUST_CGNS_ERROR();
 #endif
     }
@@ -128,19 +128,19 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
 
 template<TYPE_ECRITURE_CGNS _TYPE_>
 inline std::enable_if_t<_TYPE_ != TYPE_ECRITURE_CGNS::SEQ, void>
-Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const int fileId, const std::vector<int>& baseId, const int zoneId,
+Ecrire_CGNS_helper::cgns_write_grid_coord_data(const int icelldim, const int fileId, const int baseId, const int zoneId,
                                                const int coordsIdx, const int coordsIdy, const int coordsIdz, const cgsize_t min, const cgsize_t max,
                                                const std::vector<double>& xCoords, const std::vector<double>& yCoords, const std::vector<double>& zCoords)
 {
 #ifdef MPI_
-  if (cgp_coord_write_data(fileId, baseId.back(), zoneId, coordsIdx, &min, &max, xCoords.data()) != CG_OK)
+  if (cgp_coord_write_data(fileId, baseId, zoneId, coordsIdx, &min, &max, xCoords.data()) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_grid_coord_data : cgp_coord_write_data - X !" << finl, TRUST_CGNS_ERROR();
 
-  if (cgp_coord_write_data(fileId, baseId.back(), zoneId, coordsIdy, &min, &max, yCoords.data()) != CG_OK)
+  if (cgp_coord_write_data(fileId, baseId, zoneId, coordsIdy, &min, &max, yCoords.data()) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_grid_coord_data : cgp_coord_write_data - Y !" << finl, TRUST_CGNS_ERROR();
 
   if (icelldim > 2)
-    if (cgp_coord_write_data(fileId, baseId.back(), zoneId, coordsIdz, &min, &max, zCoords.data()) != CG_OK)
+    if (cgp_coord_write_data(fileId, baseId, zoneId, coordsIdz, &min, &max, zCoords.data()) != CG_OK)
       Cerr << "Error Ecrire_CGNS_helper::cgns_write_grid_coord_data : cgp_coord_write_data - Z !" << finl, TRUST_CGNS_ERROR();
 #endif
 }

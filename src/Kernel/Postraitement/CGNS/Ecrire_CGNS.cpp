@@ -436,8 +436,8 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   if (nb_elem) // XXX cas // mais MULTIPLE_FILES
     {
       /* 5.1 : Create zone & grid coords */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
-                                                                       zoneId_, xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize[0],
+                                                                       zoneId_.back(), xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
 
       /* 5.2 : Set element connectivity */
       int sectionId;
@@ -636,8 +636,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         coordsIdz.push_back(-123);
 
       /* 5.1 : Create zone & Construct the grid coordinates nodes */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_, zonename.c_str(), isize[0],
-                                                                            zoneId_, xCoords, yCoords, zCoords,
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_.back(), zonename.c_str(), isize[0],
+                                                                            zoneId_.back(), xCoords, yCoords, zCoords,
                                                                             coordsIdx.back(), coordsIdy.back(), coordsIdz.empty() ? coordsIdy.back() /* inutile */ : coordsIdz.back());
 
       /* 5.2 : Construct the sections to host connectivity later */
@@ -697,7 +697,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
             }
 
       /* 6.1 : Write grid coordinates */
-      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_, zoneId_par_.back()[indx],
+      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_.back(), zoneId_par_.back()[indx],
                                                                             coordsIdx[indx], coordsIdy[indx], coordsIdz.empty() ? -123 : coordsIdz[indx],
                                                                             min, max, xCoords, yCoords, zCoords);
 
@@ -953,8 +953,8 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
 
-  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, basename /* Dom name */, isize[0],
-                                                                      zoneId_, xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
+  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize[0],
+                                                                      zoneId_.back(), xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
 
   if (ne_tot == 0 && ns_tot == 0) return; // XXX Elie Saikali : zone vide creer, rien a faire de plus ... (cas FILE_PER_COMM_GROUP !!!)
 
@@ -1017,7 +1017,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
       assert (min < max);
 
       /* 5.1 : Write grid coordinates */
-      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_, zoneId_.back(),
+      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_.back(), zoneId_.back(),
                                                                           coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
 
       /* 5.2 : Set element connectivity */
