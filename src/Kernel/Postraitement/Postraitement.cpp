@@ -313,7 +313,7 @@ Entree& Postraitement::readOn(Entree& s)
     }
 
   bool is_supported = false, is_single_lata = false;
-  std::vector<Motcle> supported = { "CGNS" , "LATA", "SINGLE_LATA", "LATA_V2", "MED", "MED_MAJOR", "LML", "XYZ" };
+  std::vector<Motcle> supported = { "CGNS" , "LATA", "SINGLE_LATA", "LATA_V2", "MED", "MED_MAJOR", "LML" };
 
   for (auto &itr : supported)
     if (Motcle(format_) == itr)
@@ -1902,28 +1902,8 @@ int Postraitement::postraiter_tableau(const Domaine& dom,const Noms& unites,cons
         else
           val_post_ecrit(i, 0) = tab_valeurs(i, ncomp);
     }
-  if (Motcle(format_)=="XYZ")
-    {
-      if (localisation == "SOM")
-        {
-          const DoubleTab& coord = dom.coord_sommets();
-          format_post_->ecrire_champ2(dom,unites,noms_compo,ncomp,temps,id_champ_ecrit,id_du_domaine,localisation,nature,val_post_ecrit,coord);
-        }
-      else if (localisation == "ELEM")
-        {
-          DoubleTab coord;
-          dom.calculer_centres_gravite(coord);
-          format_post_->ecrire_champ2(dom,unites,noms_compo,ncomp,temps,id_champ_ecrit,id_du_domaine,localisation,nature,val_post_ecrit,coord);
-        }
-      else if (localisation == "FACES")
-        {
-          const Domaine_VF& domaine_vf = ref_cast(Domaine_VF, domaine_dis_pour_faces_.valeur());
-          const DoubleTab& coord = domaine_vf.xv();
-          format_post_->ecrire_champ2(dom,unites,noms_compo,ncomp,temps,id_champ_ecrit,id_du_domaine,localisation,nature,val_post_ecrit,coord);
-        }
-    }
-  else
-    format_post_->ecrire_champ(dom,unites,noms_compo,ncomp,temps,id_champ_ecrit,id_du_domaine,localisation,nature,val_post_ecrit);
+
+  format_post_->ecrire_champ(dom,unites,noms_compo,ncomp,temps,id_champ_ecrit,id_du_domaine,localisation,nature,val_post_ecrit);
   return 1;
 }
 

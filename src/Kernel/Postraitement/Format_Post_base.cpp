@@ -195,21 +195,6 @@ int Format_Post_base::ecrire_champ(const Domaine& domaine,const Noms& unite_,con
   return 0;
 }
 
-// Surcharge de la methode precedente pour le format XYZ : donner les coordonees de postraitement en argument
-int Format_Post_base::ecrire_champ2(const Domaine& domaine,const Noms& unite_,const Noms& noms_compo,
-                                    int ncomp, double temps_,
-                                    const Nom&   id_du_champ,
-                                    const Nom&         id_du_domaine,
-                                    const Nom&         localisation,
-                                    const Nom&   nature,
-                                    const DoubleTab&   data,
-                                    const DoubleTab&   coord)
-{
-  Cerr << "Format_Post_base::ecrire_champ2(...)\n"
-       << " method not coded for " << que_suis_je() << finl;
-  return 0;
-}
-
 /*! @brief Ecriture d'un tableau d'entiers dans le fichier de postraitement
  *
  * @sa ecrire_champ
