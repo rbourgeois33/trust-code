@@ -55,12 +55,8 @@ public :
 
   void set_file_name_and_dom(const Nom& file_name, const Domaine_t& dom, const Domaine_dis_base* dom_dis=nullptr);
 
-  ///! Set major mode for MED file writing. See major_mode member below.
-  void set_major_mode(bool majorMod) { major_mode_ = majorMod; }
-  bool get_major_mode() { return major_mode_; }
-
 #ifdef MED_
-  inline Nom version()  { return major_mode_ ? _MED_VERSION(MED_NUM_MAJEUR,0,0) : MED_VERSION_STR; }
+  inline Nom version()  { return MED_VERSION_STR; }
 #else
   inline Nom version()  { return "NOT INSTALLED"; }
 #endif
@@ -79,7 +75,6 @@ protected:
   void get_bords_infos(Noms& noms_bords_and_jnts, ArrOfInt_t& sz_bords_and_jnts) const;
   void fill_faces_and_boundaries();
 
-  bool major_mode_ = false;   ///< False by default. If true, the MED file will be written in the major mode of the release version (3.0 for example if current MED version is 3.2)
   Nom nom_fichier_;           ///< Name of the MED file to write
   OBS_PTR(Domaine_t) dom_;          ///< Domain that will be written
   std::map<std::string, int> timestep_;

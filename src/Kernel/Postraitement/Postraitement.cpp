@@ -313,7 +313,7 @@ Entree& Postraitement::readOn(Entree& s)
     }
 
   bool is_supported = false, is_single_lata = false;
-  std::vector<Motcle> supported = { "CGNS" , "LATA", "SINGLE_LATA", "LATA_V2", "MED", "MED_MAJOR", "LML" };
+  std::vector<Motcle> supported = { "CGNS" , "LATA", "SINGLE_LATA", "LATA_V2", "MED", "LML" };
 
   for (auto &itr : supported)
     if (Motcle(format_) == itr)
@@ -330,8 +330,6 @@ Entree& Postraitement::readOn(Entree& s)
     }
 
   if (Motcle(format_) == "MED") format_ = "med";
-
-  if (Motcle(format_) == "MED_MAJOR") format_ = "med_major";
 
   if (Motcle(format_) == "LATA_V2") format_ = "lata";
 
@@ -447,7 +445,7 @@ void Postraitement::set_param(Param& param)
 // XD attr expression_p_ana chaine expression_p_ana 1 not_set (for IJK)
 // XD attr interfaces interface_posts interfaces 1 Keyword to read all the caracteristics of the interfaces. Different kind of interfaces exist as well as different interface intitialisations.
   param.ajouter("Fichier",&nom_fich_); // XD_ADD_P chaine Name of file.
-  param.ajouter("Format",&format_); // XD_ADD_P chaine(into=["lml","lata","single_lata","lata_v2","med","med_major","cgns"]) This optional parameter specifies the format of the output file. The basename used for the output file is the basename of the data file. For the fmt parameter, choices are lml or lata. A short description of each format can be found below. The default value is lml.
+  param.ajouter("Format",&format_); // XD_ADD_P chaine(into=["lml","lata","single_lata","lata_v2","med","cgns"]) This optional parameter specifies the format of the output file. The basename used for the output file is the basename of the data file. For the fmt parameter, choices are lml or lata. A short description of each format can be found below. The default value is lml.
   param.ajouter_non_std("dt_post",(this)); // XD_ADD_P chaine Field\'s write frequency (as a time period) - can also be specified after the 'field' keyword.
   param.ajouter("nb_pas_dt_post",&nb_pas_dt_post_, Param::Nature::OPTIONAL); // XD_ADD_P entier Field\'s write frequency (as a number of time steps) - can also be specified after the 'field' keyword.
   param.ajouter_non_std("Domaine",(this)); // XD_ADD_P chaine This optional parameter specifies the domain on which the data should be interpolated before it is written in the output file. The default is to write the data on the domain of the current problem (no interpolation).

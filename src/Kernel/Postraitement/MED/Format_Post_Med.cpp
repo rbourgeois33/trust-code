@@ -49,7 +49,6 @@ Format_Post_Med::Format_Post_Med()
 void Format_Post_Med::reset()
 {
   med_basename_ = "??";
-  ecr_med_.set_major_mode(false);
 }
 
 /*! @brief erreur => exit
@@ -353,7 +352,6 @@ int Format_Post_Med::ecrire_domaine_med(const Domaine& domaine,const Nom& nom_fi
       s << "domaine: " << domaine.le_nom() << finl;
       s << "nb_proc: " << Process::nproc() << finl;
       Cerr << "Opening MED file " << nom_fic << " with " << ecr_med_.version() << " format. ";
-      if (!ecr_med_.get_major_mode()) Cerr << "Try using med_major format if you have issue when opening this file with older Salome versions.";
       Cerr << finl;
     }
   ecr_med_.set_file_name_and_dom(nom_fic, domaine, domaine_dis_.non_nul() ? &domaine_dis_.valeur() : nullptr);

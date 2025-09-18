@@ -67,7 +67,6 @@ Entree& Ecrire_MED_32_64<_SIZE_>::readOn(Entree& is)
 
 template <typename _SIZE_>
 Ecrire_MED_32_64<_SIZE_>::Ecrire_MED_32_64(const Nom& file_name, const Domaine_t& dom):
-  major_mode_(false),
   dom_(dom)
 #ifdef MEDCOUPLING_
   ,  mcumesh_(nullptr)
@@ -247,10 +246,7 @@ void Ecrire_MED_32_64<int>::ecrire_domaine_dual(bool append)
   // Write:
   int option = (append ? 1 : 2); /* 2: reset file. 1: append, 0: overwrite objects */
   Cerr<<"Writing file '" << nom_fichier_<<"' with mesh name '" << dual_m->getName() << "' (append=" << (append ? "true": "false") << ") ..."<<finl;
-  if (major_mode_)
-    mfu->write40(nom_fichier_.getString(), option);
-  else
-    mfu->write(nom_fichier_.getString(), option);
+  mfu->write(nom_fichier_.getString(), option);
 
 #endif
 }
@@ -417,10 +413,7 @@ void Ecrire_MED_32_64<_SIZE_>::ecrire_domaine_dis(bool append)
   // Write:
   int option = (append ? 1 : 2); /* 2: reset file. 1: append, 0: overwrite objects */
   Cerr<<"Writing file '" << nom_fichier_<<"' with mesh name '" << mfumesh_->getName() << "' (append=" << (append ? "true": "false") << ") ..."<<finl;
-  if (major_mode_)
-    mfumesh_->write40(nom_fichier_.getString(), option);
-  else
-    mfumesh_->write(nom_fichier_.getString(), option);
+  mfumesh_->write(nom_fichier_.getString(), option);
 #endif
 }
 
