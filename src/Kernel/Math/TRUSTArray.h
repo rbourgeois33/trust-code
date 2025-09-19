@@ -110,6 +110,8 @@ public:
   // Iterators
   inline Iterator_ begin() { return span_.begin(); }
   inline Iterator_ end() { return span_.end(); }
+  inline const Iterator_ begin() const { return span_.begin(); }
+  inline const Iterator_ end() const { return span_.end(); }
 
   inline virtual ~TRUSTArray();
 
