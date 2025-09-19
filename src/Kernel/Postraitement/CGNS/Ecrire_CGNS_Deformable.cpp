@@ -218,17 +218,77 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
       std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
       linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
+      if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
+        Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
+
       for (auto &itr_conn : connectname_[ind])
         {
           std::string linkpath = "/" + baseZone_name_[ind] + "/" + baseZone_name_[ind] + "/" + itr_conn + "/";
-
-          if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
 
           if (cg_link_write(itr_conn.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_link_write connectivity !" << finl, TRUST_CGNS_ERROR();
         }
     }
+}
+
+void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
+{
+#ifdef MPI_
+  const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
+  TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
+  TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
+
+  std::vector<double> xCoords, yCoords, zCoords;
+  TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
+
+  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension;
+  char basename[CGNS_STR_SIZE];
+  strcpy(basename, nom_dom.getChar()); // dom name
+
+  if (cg_base_write(fileId_, basename, icelldim, iphysdim, &baseId_[ind]) != CG_OK)
+    Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone : cg_base_write !" << finl, TRUST_CGNS_ERROR();
+
+  const int ns_tot = TRUST2CGNS.get_ns_tot(), ne_tot = TRUST2CGNS.get_ne_tot();
+  const bool enter_group_comm = Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_;
+  const int proc_me = enter_group_comm ? TRUST2CGNS.get_proc_me_local_comm() : Process::me();
+
+  cgsize_t isize[3][1];
+  isize[0][0] = (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot; // si ns_tot = 0, on va juste creer une zone vide
+  isize[1][0] = (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot; // si ne_tot = 0, on va juste creer une zone vide
+  isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
+
+  int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123;
+
+  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_[ind], basename /* Dom name */, isize[0],
+                                                                      zoneId_[ind], xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
+
+  if (ne_tot == 0 && ns_tot == 0) return; // XXX Elie Saikali : zone vide creer, rien a faire de plus ... (cas FILE_PER_COMM_GROUP !!!)
+
+  const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(),
+                          &incr_min_som = TRUST2CGNS.get_global_incr_min_som();
+
+  cgsize_t min = incr_min_som[proc_me], max = incr_max_som[proc_me];
+  assert (min < max);
+
+  cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_[ind], zoneId_[ind],
+                                                                      coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
+
+  /* Set element connectivity */
+  std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
+  linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+
+  if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
+    Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
+
+  for (auto &itr_conn : connectname_[ind])
+    {
+      std::string linkpath = "/" + baseZone_name_[ind] + "/" + baseZone_name_[ind] + "/" + itr_conn + "/";
+
+      if (cg_link_write(itr_conn.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone : cg_link_write connectivity !" << finl, TRUST_CGNS_ERROR();
+    }
+
+#endif /*MPI_*/
 }
 
 #endif /* HAS_CGNS */

@@ -123,6 +123,7 @@ private:
 
   // Version parallele in zone
   void cgns_write_domaine_par_in_zone(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
+  void cgns_write_domaine_deformable_par_in_zone(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field_par_in_zone(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
   void cgns_write_iters_par_in_zone();
 

@@ -560,6 +560,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
 {
 #ifdef MPI_
   assert (!Option_CGNS::USE_LINKS || postraiter_domaine_);
+  assert (!is_deformable_);
   doms_written_.push_back(nom_dom);
 
   /* 1 : Instance of TRUST_2_CGNS */
@@ -893,6 +894,13 @@ void Ecrire_CGNS::cgns_write_iters_par_over_zone()
 void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
 {
 #ifdef MPI_
+
+  if (is_deformable_ && !first_time_post_)
+    {
+      cgns_write_domaine_deformable_par_in_zone(domaine, nom_dom, les_som, les_elem, type_elem);
+      return;
+    }
+
   doms_written_.push_back(nom_dom);
 
   /* 1 : Instance of TRUST_2_CGNS */
