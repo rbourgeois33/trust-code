@@ -94,6 +94,7 @@ private:
 
   // Methodes pour Domaine Deformable
   void cgns_write_final_link_file_pb_deformable();
+  void cgns_write_final_link_file_comm_group_pb_deformable();
   void link_multi_loc_support_pb_deformable();
   void init_proc_maitre_local_comm();
   bool is_deformable_ = false, multi_loc_deformable_support_linked_ = false;

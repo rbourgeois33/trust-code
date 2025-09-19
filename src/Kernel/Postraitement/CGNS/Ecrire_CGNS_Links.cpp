@@ -30,7 +30,14 @@
 
 void Ecrire_CGNS::init_proc_maitre_local_comm()
 {
-
+  assert(is_deformable_ && Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group());
+  const auto& grp = PE_Groups::get_user_defined_group();
+  if (PE_Groups::enter_group(grp))
+    {
+      proc_maitre_local_comm_ = PE_Groups::groupe_TRUST().rank();
+      envoyer_broadcast(proc_maitre_local_comm_, 0); // XXX should do this !
+      PE_Groups::exit_group();
+    }
 }
 
 void Ecrire_CGNS::cgns_open_grid_base_link_file()
@@ -293,6 +300,9 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
             }
         }
 
+      if (is_deformable_) // TODO FIXME si faut postraiter aux faces un jour ...
+        return; /* Stop here si deformable */
+
       // pour faces et si ca existe => ind 1
       if (has_faces_field_)
         {
@@ -307,6 +317,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
             }
         }
     }
+
 
   if (!Process::me())
     {
