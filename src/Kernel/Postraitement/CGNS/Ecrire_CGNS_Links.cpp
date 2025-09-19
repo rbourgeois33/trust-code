@@ -28,6 +28,11 @@
  * ***************** *
  */
 
+void Ecrire_CGNS::init_proc_maitre_local_comm()
+{
+
+}
+
 void Ecrire_CGNS::cgns_open_grid_base_link_file()
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);

@@ -97,7 +97,12 @@ void Ecrire_CGNS::cgns_open_file()
   fill_infos_loc();
 
   if (is_deformable_) /* Si deformable => force to use links ! */
-    Option_CGNS::USE_LINKS = true;
+    {
+      if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
+        init_proc_maitre_local_comm();
+      else if (!Option_CGNS::USE_LINKS)
+        Option_CGNS::USE_LINKS = true; /* Si deformable et pas FILE_PER_COMM_GROUP/USE_LINKS => force to use links ! */
+    }
 
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     return; /* rien a faire si USE_LINKS ou FILE_PER_COMM_GROUP */

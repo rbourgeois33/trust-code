@@ -241,7 +241,7 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * doma
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension;
+  const int icelldim = les_som.dimension(1), nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
 
@@ -264,14 +264,17 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * doma
 
   if (ne_tot == 0 && ns_tot == 0) return; // XXX Elie Saikali : zone vide creer, rien a faire de plus ... (cas FILE_PER_COMM_GROUP !!!)
 
-  const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(),
-                          &incr_min_som = TRUST2CGNS.get_global_incr_min_som();
+  if (nb_elem > 0) // seulement si le proc a qlq chose a ecrire
+    {
+      const std::vector<int>& incr_max_som = TRUST2CGNS.get_global_incr_max_som(),
+                              &incr_min_som = TRUST2CGNS.get_global_incr_min_som();
 
-  cgsize_t min = incr_min_som[proc_me], max = incr_max_som[proc_me];
-  assert (min < max);
+      cgsize_t min = incr_min_som[proc_me], max = incr_max_som[proc_me];
+      assert (min < max);
 
-  cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_[ind], zoneId_[ind],
-                                                                      coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
+      cgns_helper_.cgns_write_grid_coord_data<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_[ind], zoneId_[ind],
+                                                                          coordsIdx, coordsIdy, coordsIdz, min, max, xCoords, yCoords, zCoords);
+    }
 
   /* Set element connectivity */
   std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
