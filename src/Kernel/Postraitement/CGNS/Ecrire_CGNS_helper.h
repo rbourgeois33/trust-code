@@ -50,7 +50,13 @@ inline void TRUST_CGNS_ERROR()
 #ifdef MPI_
   Process::is_sequential() ? cg_error_exit() : cgp_error_exit();
 #else
-  Process::is_sequential() ? cg_error_exit() : Process::exit(); /* OpenMP ?? */
+  if (Process::is_sequential())
+    cg_error_exit();
+  else
+    {
+      Cerr << "CGNS error: " << cg_get_error() << finl;
+      Process::exit(); /* OpenMP ?? */
+    }
 #endif
 }
 

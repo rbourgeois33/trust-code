@@ -68,7 +68,7 @@ Motcle TRUST_2_CGNS::modify_field_name_for_post(const Nom& id_du_champ, const No
       id_du_champ_modifie.prefix("_FACES_");
     }
   else
-    throw;
+    throw std::runtime_error("TRUST_2_CGNS::modify_field_name_for_post => Unsupported LOC : " + LOC);
 
   (LOC == "SOM") ? fieldId_som++ : ( (LOC == "ELEM") ? fieldId_elem++ : fieldId_faces++);
 
@@ -107,8 +107,10 @@ std::string TRUST_2_CGNS::modify_domaine_name_for_post(const Nom& nom_dom)
       if (found != std::string::npos)
         nom_dom_modifie.erase(found, 11); // 11 is the length of "boundaries_"
 
+//      if (static_cast<int>(nom_dom_modifie.size()) >= CGNS_STR_SIZE)
+//        nom_dom_modifie.resize(CGNS_STR_SIZE, ' ');
       if (static_cast<int>(nom_dom_modifie.size()) >= CGNS_STR_SIZE)
-        nom_dom_modifie.resize(CGNS_STR_SIZE, ' ');
+        nom_dom_modifie.erase(CGNS_STR_SIZE-1);
     }
 
   return nom_dom_modifie;
@@ -164,7 +166,7 @@ void TRUST_2_CGNS::associer_connec_pour_dual(const IntTab& fs, const IntTab& ef)
   ef_dual_ = ef;
 }
 
-void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>& yCoords, std::vector<double>& zCoords)
+void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>& yCoords, std::vector<double>& zCoords) const
 {
   const int nb_som = sommets_->dimension(0), phys_dim = Objet_U::dimension;
   const DoubleTab& sommets = sommets_.valeur();
@@ -195,35 +197,32 @@ void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>
  */
 void TRUST_2_CGNS::clear_vectors()
 {
-  if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_)
+  if (!Option_CGNS::PARALLEL_OVER_ZONE && !postraiter_domaine_) // XXX a voir plus tard si utile pour garder
     {
-      if (!proc_non_zero_elem_.empty()) proc_non_zero_elem_.clear(); // XXX a voir plus tard si utile pour garder
-      if (!global_nb_elem_.empty()) global_nb_elem_.clear();
-      if (!global_nb_som_.empty()) global_nb_som_.clear();
+      proc_non_zero_elem_.clear();
+      global_nb_elem_.clear();
+      global_nb_som_.clear();
     }
 
-  if (!global_nb_face_som_.empty()) global_nb_face_som_.clear();
-  if (!global_nb_face_som_offset_.empty()) global_nb_face_som_offset_.clear();
+  // globaux
+  global_nb_face_som_.clear();
+  global_nb_face_som_offset_.clear();
+  global_nb_elem_face_.clear();
+  global_nb_elem_face_offset_.clear();
+  global_nb_elem_som_offset_.clear();
 
-  if (!global_nb_elem_face_.empty()) global_nb_elem_face_.clear();
-  if (!global_nb_elem_face_offset_.empty()) global_nb_elem_face_offset_.clear();
+  global_incr_min_face_som_.clear();
+  global_incr_max_face_som_.clear();
+  global_incr_min_elem_face_.clear();
+  global_incr_max_elem_face_.clear();
 
-  if (!global_nb_elem_som_offset_.empty()) global_nb_elem_som_offset_.clear();
-
-  if (!global_incr_min_face_som_.empty()) global_incr_min_face_som_.clear();
-  if (!global_incr_max_face_som_.empty()) global_incr_max_face_som_.clear();
-
-  if (!global_incr_min_elem_face_.empty()) global_incr_min_elem_face_.clear();
-  if (!global_incr_max_elem_face_.empty()) global_incr_max_elem_face_.clear();
-
-  if (!local_fs_.empty()) local_fs_.clear();
-  if (!local_fs_offset_.empty()) local_fs_offset_.clear();
-
-  if (!local_ef_.empty()) local_ef_.clear();
-  if (!local_ef_offset_.empty()) local_ef_offset_.clear();
-
-  if (!local_es_.empty()) local_es_.clear();
-  if (!local_es_offset_.empty()) local_es_offset_.clear();
+  // locaux
+  local_fs_.clear();
+  local_fs_offset_.clear();
+  local_ef_.clear();
+  local_ef_offset_.clear();
+  local_es_.clear();
+  local_es_offset_.clear();
 }
 
 void TRUST_2_CGNS::fill_global_infos()
@@ -488,7 +487,7 @@ void TRUST_2_CGNS::fill_global_infos_poly(const bool is_polyedre)
 #endif
 }
 
-int TRUST_2_CGNS::compute_shift(const std::vector<int>& vect_incr_max)
+int TRUST_2_CGNS::compute_shift(const std::vector<int>& vect_incr_max) const
 {
 #ifdef MPI_
   assert(par_in_zone_);
@@ -520,7 +519,7 @@ int TRUST_2_CGNS::compute_shift(const std::vector<int>& vect_incr_max)
 #endif
 }
 
-int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type, std::vector<cgsize_t>& conn_elem )
+int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type, std::vector<cgsize_t>& conn_elem ) const
 {
   const int nb_elem = elems_->dimension(0);
   const IntTab& les_elems = elems_.valeur();
@@ -595,7 +594,7 @@ int TRUST_2_CGNS::convert_connectivity(const CGNS_TYPE type, std::vector<cgsize_
   return nodes_per_elem;
 }
 
-CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
+CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type) const
 {
   if (type == "HEXAEDRE" || type == "HEXAEDRE_VEF")
     return CGNS_ENUMV(HEXA_8);
@@ -617,7 +616,7 @@ CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
     }
 }
 
-int TRUST_2_CGNS::topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre)
+int TRUST_2_CGNS::topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre) const
 {
   if (etype == CGNS_ENUMV(BAR_2))
     return 1; // 1D

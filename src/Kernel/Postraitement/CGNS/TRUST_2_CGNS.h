@@ -34,9 +34,9 @@ public:
   TRUST_2_CGNS() { }
   void associer_domaine_TRUST(const Domaine *, const Domaine_dis_base*, const DoubleTab&, const IntTab&, const bool);
   void associer_connec_pour_dual(const IntTab&, const IntTab&);
-  void fill_coords(std::vector<double>&, std::vector<double>&, std::vector<double>&);
-  CGNS_TYPE convert_elem_type(const Motcle&);
-  int topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre);
+  void fill_coords(std::vector<double>&, std::vector<double>&, std::vector<double>&) const;
+  CGNS_TYPE convert_elem_type(const Motcle&) const;
+  int topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre) const;
 
   int nb_procs_writing() const { return nb_procs_writing_; }
   const bool& all_procs_write() const { return all_procs_write_; }
@@ -49,7 +49,7 @@ public:
 
   void fill_global_infos();
   void fill_global_infos_poly(const bool);
-  int compute_shift(const std::vector<int>&);
+  int compute_shift(const std::vector<int>&) const;
 
   int get_nb_fs() const { return nb_fs_; }
   const std::vector<int>& get_global_nb_face_som() const { return global_nb_face_som_; }
@@ -82,7 +82,7 @@ public:
 
   int get_nes_offset_tot() const { return nes_offset_tot_; }
 
-  int convert_connectivity(const CGNS_TYPE, std::vector<cgsize_t>& );
+  int convert_connectivity(const CGNS_TYPE, std::vector<cgsize_t>& ) const;
   int convert_connectivity_ngon(std::vector<cgsize_t>&, std::vector<cgsize_t>&, const bool, int decal = 0);
   int convert_connectivity_nface(std::vector<cgsize_t>&, std::vector<cgsize_t>&, int decal = 0);
 
