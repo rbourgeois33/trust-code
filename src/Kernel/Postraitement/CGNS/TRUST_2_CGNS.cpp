@@ -635,53 +635,45 @@ int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::v
 {
   assert (dom_trust_.non_nul());
 
-  Domaine_dis_base* domaine_dis = nullptr;
-  Domaine_VF* vf = nullptr;
+  Domaine_dis_base *domaine_dis = nullptr;
+  Domaine_VF *vf = nullptr;
   get_domaine_dis_vf_if_poly(domaine_dis, vf);
 
   const IntTab& ef = vf ? (*vf).elem_faces() : ef_dual_.valeur();
 
+  const int nElem = ef.dimension(0), maxDeg = ef.dimension(1);
+
+  econ.clear(), eoff.clear();
+
+  econ.reserve(static_cast<size_t>(nElem) * maxDeg); // chaque elem a au plus maxDeg faces
+  eoff.reserve(static_cast<size_t>(nElem) + 1); // un par elem + 1 pour la fin
+
   eoff.push_back(0); // first index = > 0 !
 
   int s = 0;
-  for (int i = 0; i < ef.dimension(0); i++)
+  for (int e = 0; e < nElem; ++e)
     {
-      for (int j = 0; j < ef.dimension(1); j++)
+      for (int j = 0; j < maxDeg; ++j)
         {
-          if (ef(i, j) > -1)
-            {
-              econ.push_back(ef(i, j) + 1 + decal);
-              s++;
-            }
-          else
+          const int f = ef(e, j);
+          if (f < 0)
             break;
+
+          econ.push_back(static_cast<cgsize_t>(f + 1 + decal));
+          ++s;
         }
       eoff.push_back(s);
     }
 
-  // multiply by -1 repeated faces
-  /* for (int i = static_cast<int>(econ.size()) -1; i >0; i-- )
-     {
-       int val = static_cast<int>(econ[i]);
-       for (int j = i-1; j > 0; j--)
-         if (econ[j] == val)
-           {
-             econ[i] *= -1;
-             break;
-           }
-     }
-     */
-
-  // XXX Elie Saikali ... was too slow : O(n^2)
-  // lets go !
-  std::unordered_set<cgsize_t> seen;
-  for (auto& itr : econ)
-    {
-      if (seen.find(itr) != seen.end())
-        itr *= -1; // already seen -> times -1 !!!
-      else
-        seen.insert(itr);
-    }
+//  // XXX Elie Saikali ... je pense pas qu'on a besoin ...
+//  std::unordered_set<cgsize_t> seen;
+//  for (auto& itr : econ)
+//    {
+//      if (seen.find(itr) != seen.end())
+//        itr *= -1; // already seen -> times -1 !!!
+//      else
+//        seen.insert(itr);
+//    }
 
   return ef.dimension(0);
 }
@@ -697,43 +689,53 @@ int TRUST_2_CGNS::convert_connectivity_ngon(std::vector<cgsize_t>& econ, std::ve
 
       const IntTab& fs = vf ? (*vf).face_sommets() : fs_dual_.valeur();
 
-      eoff.push_back(0); // first index = > 0 !
+      const int nFace = fs.dimension(0), maxDeg = fs.dimension(1);
 
+      econ.clear(), eoff.clear();
+
+      econ.reserve(static_cast<size_t>(nFace) * maxDeg);
+      eoff.reserve(static_cast<size_t>(nFace) + 1);
+
+      eoff.push_back(0); // first index = > 0 !
       int s = 0;
-      for (int i = 0; i < fs.dimension(0); i++)
+      for (int f = 0; f < nFace; ++f)
         {
-          for (int j = 0; j < fs.dimension(1); j++)
+          for (int j = 0; j < maxDeg; ++j)
             {
-              if (fs(i, j) > -1)
-                {
-                  econ.push_back(fs(i, j) + 1 + decal);
-                  s++;
-                }
-              else
+              const int v = fs(f, j);
+              if (v < 0)
                 break;
+
+              econ.push_back(static_cast<cgsize_t>(v + 1 + decal));
+              ++s;
             }
           eoff.push_back(s);
         }
+
       return fs.dimension(0);
     }
   else // POLYGONE
     {
-      const IntTab& les_elems =  dom_trust_->les_elems();
+      const IntTab& les_elems = dom_trust_->les_elems();
+
+      const int nElem = les_elems.dimension(0), maxDeg = les_elems.dimension(1);
+
+      econ.clear(), eoff.clear();
+
+      econ.reserve(static_cast<size_t>(nElem) * maxDeg);
+      eoff.reserve(static_cast<size_t>(nElem) + 1);
 
       eoff.push_back(0); // first index = > 0 !
-
       int s = 0;
-      for (int i = 0; i < les_elems.dimension(0); i++)
+      for (int e = 0; e < nElem; ++e)
         {
-          for (int j = 0; j < les_elems.dimension(1); j++)
+          for (int j = 0; j < maxDeg; ++j)
             {
-              if (les_elems(i, j) > -1)
-                {
-                  econ.push_back(les_elems(i, j) + 1 + decal);
-                  s++;
-                }
-              else
+              const int v = les_elems(e, j);
+              if (v < 0)
                 break;
+              econ.push_back(static_cast<cgsize_t>(v + 1 + decal));
+              ++s;
             }
           eoff.push_back(s);
         }
