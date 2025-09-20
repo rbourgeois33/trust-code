@@ -247,9 +247,10 @@ void Ecrire_CGNS::gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t
         nom_dom = TRUST_2_CGNS::modify_domaine_name_for_link(fld_loc_map_.at("SOM"), "SOM");
 
       const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
-
-      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[0].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      MPI_Datatype CGNS_MPI_SIZE;
+      MPI_Type_match_size(MPI_TYPECLASS_INTEGER, sizeof(cgsize_t), &CGNS_MPI_SIZE);
+      MPI_Allgather(&sizeId_[ind_base][0], 1, CGNS_MPI_SIZE, sizeId_som_local_comm_tmp[0].data(), 1, CGNS_MPI_SIZE, Comm_Group_MPI::get_trio_u_world());
+      MPI_Allgather(&sizeId_[ind_base][1], 1, CGNS_MPI_SIZE, sizeId_elem_local_comm_tmp[0].data(), 1, CGNS_MPI_SIZE, Comm_Group_MPI::get_trio_u_world());
     }
 
   if (has_faces_field_)
@@ -258,9 +259,10 @@ void Ecrire_CGNS::gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t
       sizeId_elem_local_comm_tmp.push_back(std::vector<cgsize_t>(Process::nproc(), -123 /* default */));
 
       const int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, fld_loc_map_.at("FACES"));
-
-      MPI_Allgather(&sizeId_[ind_base][0], 1, MPI_LONG, sizeId_som_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
-      MPI_Allgather(&sizeId_[ind_base][1], 1, MPI_LONG, sizeId_elem_local_comm_tmp[1].data(), 1, MPI_LONG, Comm_Group_MPI::get_trio_u_world());
+      MPI_Datatype CGNS_MPI_SIZE;
+      MPI_Type_match_size(MPI_TYPECLASS_INTEGER, sizeof(cgsize_t), &CGNS_MPI_SIZE);
+      MPI_Allgather(&sizeId_[ind_base][0], 1, CGNS_MPI_SIZE, sizeId_som_local_comm_tmp[1].data(), 1, CGNS_MPI_SIZE, Comm_Group_MPI::get_trio_u_world());
+      MPI_Allgather(&sizeId_[ind_base][1], 1, CGNS_MPI_SIZE, sizeId_elem_local_comm_tmp[1].data(), 1, CGNS_MPI_SIZE, Comm_Group_MPI::get_trio_u_world());
     }
 }
 
@@ -482,7 +484,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
         ind_base = index_glob;
 
       if (cg_base_write(fileId_, nom_dom.getChar(), cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
+        Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
       cgsize_t isize[3][1];
       isize[0][0] = sizeId_[ind_base][0];
@@ -490,7 +492,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       isize[2][0] = 0;
 
       if (cg_zone_write(fileId_, baseId_[index_glob], nom_dom.getChar() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_[index_glob]) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
+        Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
 
       std::string linkfile = baseFile_name_ + ".grid.cgns"; // file name
 
@@ -502,17 +504,17 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
 
       if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", 1, "end") != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_goto !" << finl, TRUST_CGNS_ERROR();
+        Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cg_goto !" << finl, TRUST_CGNS_ERROR();
 
       if (cg_link_write("GridCoordinates", linkfile.c_str(), linkpath.c_str()) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+        Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
 
       for (auto &itr_conn : connectname_[ind_base])
         {
           linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/" + itr_conn + "/";
 
           if (cg_link_write(itr_conn.c_str(), linkfile.c_str(), linkpath.c_str()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_open_solution_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cg_link_write !" << finl, TRUST_CGNS_ERROR();
         }
     }
 }

@@ -121,6 +121,8 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable()
                 Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
               std::string grid_name, grid_name_loc, linkfile, linkpath;
+              grid_name.reserve(static_cast<size_t>(CGNS_STR_SIZE) * time_post_.size());
+
               bool conn_written = false;
               std::string file_group_id = Nom(baseFile_name_).nom_me(proc_grp).getString();
 
@@ -170,6 +172,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable()
               if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", gid + 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
 
+              assert(grid_name.size() == static_cast<size_t>(CGNS_STR_SIZE) * time_post_.size());
               if (cg_array_write("GridCoordinatesPointers", CGNS_ENUMV(Character), 2, idata, grid_name.c_str()) != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_array_write GridCoordinatesPointers !" << finl, TRUST_CGNS_ERROR();
 
@@ -240,6 +243,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_pb_deformable()
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
           std::string grid_name, grid_name_loc, linkfile, linkpath;
+          grid_name.reserve(static_cast<size_t>(CGNS_STR_SIZE) * time_post_.size());
           bool conn_written = false;
 
           for (auto& itr_t : time_post_)
@@ -288,6 +292,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_pb_deformable()
           if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", zoneId_[index_glob], "ZoneIterativeData_t", 1, "end") != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
 
+          assert(grid_name.size() == static_cast<size_t>(CGNS_STR_SIZE) * time_post_.size());
           if (cg_array_write("GridCoordinatesPointers", CGNS_ENUMV(Character), 2, idata, grid_name.c_str()) != CG_OK)
             Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_pb_deformable : cg_array_write GridCoordinatesPointers !" << finl, TRUST_CGNS_ERROR();
 
