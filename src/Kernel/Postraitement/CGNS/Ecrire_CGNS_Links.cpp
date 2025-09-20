@@ -365,7 +365,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
             {
               int proc_grp = unique_vec_proc_maitre_local_comm_[gid];
               std::string file_group_id = Nom(baseFile_name_).nom_me(proc_grp).getString();
-              file_group_id = TRUST_2_CGNS::remove_slash_linkfile(file_group_id);
+              TRUST_2_CGNS::remove_slash_linkfile(file_group_id);
 
               std::string zone_name = Nom("Zone").nom_me(proc_grp).getString();
               std::string linkfile = file_group_id + ".grid.cgns";
@@ -497,7 +497,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       if (enter_group_comm)
         linkfile = (Nom(baseFile_name_)).nom_me(proc_maitre_local_comm_).getString() + ".grid.cgns"; // file name
 
-      linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+      TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
       std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
 
@@ -545,7 +545,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
               std::string solname = "FlowSolution" + cgns_helper_.convert_double_to_string(itr_t) + "_" + LOC;
 
               std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns"; // file name
-              linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+              TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
 //              std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/" + solname + "/";
               std::string linkpath = "/" + nom_dom.getString() + "/" + nom_dom.getString() + "/" + solname + "/";
@@ -620,7 +620,7 @@ void Ecrire_CGNS::cgns_write_link_file_for_multiple_files()
             {
               std::string file_group_id = Nom(baseFile_name_).nom_me(proc).getString();
               std::string linkfile = file_group_id + ".cgns";
-              linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+              TRUST_2_CGNS::remove_slash_linkfile(linkfile);
               std::string zone_name = Nom("Zone").nom_me(proc).getString();
 
               const int ind_som_elem_local_comm = (LOC == "FACES") ? 1 : 0;

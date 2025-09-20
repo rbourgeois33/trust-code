@@ -24,12 +24,11 @@
 
 #ifdef HAS_CGNS
 
-std::string TRUST_2_CGNS::remove_slash_linkfile(std::string& linkfile)
+void TRUST_2_CGNS::remove_slash_linkfile(std::string& linkfile)
 {
-  auto found = linkfile.find_last_of("/");
+  const auto found = linkfile.find_last_of("/");
   if (found != std::string::npos)
-    return linkfile.substr(found + 1);
-  return linkfile;
+    linkfile.erase(0, found + 1);
 }
 
 Nom TRUST_2_CGNS::modify_domaine_name_for_link(const Nom& nom_dom, const std::string& LOC)

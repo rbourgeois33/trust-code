@@ -102,7 +102,7 @@ public:
   static Nom modify_domaine_name_for_link(const Nom&, const std::string&);
   static std::string modify_domaine_name_for_post(const Nom& );
   static int get_index_nom_vector(const std::vector<Nom>&, const Nom&);
-  static std::string remove_slash_linkfile(std::string&);
+  static void remove_slash_linkfile(std::string&);
   static void map_face_values(const Domaine_VF&, const DoubleTab& , DoubleTrav&);
 
 private:

@@ -127,7 +127,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable()
               for (auto &itr_t : time_post_)
                 {
                   linkfile = file_group_id + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns";
-                  linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+                  TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
                   grid_name_loc = "GridCoordinates";
 
@@ -245,7 +245,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_pb_deformable()
           for (auto& itr_t : time_post_)
             {
               linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(itr_t) + ".cgns";
-              linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+              TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
               grid_name_loc = "GridCoordinates";
 
@@ -337,7 +337,7 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
 
       /* Set element connectivity */
       std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
-      linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+      TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
       if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_seq : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
@@ -403,7 +403,7 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * doma
 
   /* Set element connectivity */
   std::string linkfile = baseFile_name_ + ".solution." + cgns_helper_.convert_double_to_string(time_post_[0]) + ".cgns";
-  linkfile = TRUST_2_CGNS::remove_slash_linkfile(linkfile);
+  TRUST_2_CGNS::remove_slash_linkfile(linkfile);
 
   if (cg_goto(fileId_, baseId_[ind], "Zone_t", zoneId_[ind], "end") != CG_OK)
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone : cg_goto Zone_t !" << finl, TRUST_CGNS_ERROR();
