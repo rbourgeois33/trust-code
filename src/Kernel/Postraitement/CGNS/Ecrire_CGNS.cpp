@@ -408,13 +408,14 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   doms_written_.push_back(nom_dom);
 
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
+  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+  const int icelldim = TRUST2CGNS.topo_dim_from_elem(cgns_type_elem, is_polyedre); // avant ca : icelldim = les_som.dimension(1)
+  const int iphysdim = Objet_U::dimension, nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
 
   /* 2 : Fill coords */
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension,
-            nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
   int coordsId;
 
   /* 3 : Base write */
@@ -431,7 +432,6 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   isize[1][0] = nb_elem;
   isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
 
-  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
 
   cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
@@ -578,13 +578,15 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
       TRUST2CGNS.associer_connec_pour_dual(fs_dual_, ef_dual_);
     }
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
+  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+  const int icelldim = TRUST2CGNS.topo_dim_from_elem(cgns_type_elem, is_polyedre); // avant ca : icelldim = les_som.dimension(1)
+  const int iphysdim = Objet_U::dimension, proc_me = Process::me(),
+            nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
 
   /* 2 : Fill coords */
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension,
-            nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0), proc_me = Process::me();
 
   /* 3 : Base write */
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
@@ -595,7 +597,6 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_par_over_zone : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
   /* 4 : We need global nb_elems/nb_soms => MPI_Allgather. Thats the only information required ! */
-  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
 
   cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
@@ -918,12 +919,13 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
       TRUST2CGNS.associer_connec_pour_dual(fs_dual_, ef_dual_);
     }
   CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
+  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+  const int icelldim = TRUST2CGNS.topo_dim_from_elem(cgns_type_elem, is_polyedre); // avant ca : icelldim = les_som.dimension(1)
+  const int nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
 
   /* 2 : Fill coords */
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
-
-  const int icelldim = les_som.dimension(1), nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
 
   /* 3 : Base write */
   baseId_.push_back(-123); // pour chaque dom, on a une baseId
@@ -938,7 +940,6 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
    *  - All processors write the same information.
    *  - XXX XXX XXX Only ONE zone meta-data is written to the library at this stage ...
    */
-  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
 
   TRUST2CGNS.fill_global_infos(); // XXX
 

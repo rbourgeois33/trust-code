@@ -308,11 +308,13 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
 
+  CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
+  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+  const int icelldim = TRUST2CGNS.topo_dim_from_elem(cgns_type_elem, is_polyedre); // avant ca : icelldim = les_som.dimension(1)
+  const int iphysdim = Objet_U::dimension, nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
+
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
-
-  const int icelldim = les_som.dimension(1), iphysdim = Objet_U::dimension,
-            nb_som = les_som.dimension(0), nb_elem = les_elem.dimension(0);
 
   int coordsId;
 
@@ -357,10 +359,14 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * doma
   TRUST_2_CGNS& TRUST2CGNS = T2CGNS_[ind];
   TRUST2CGNS.associer_domaine_TRUST(domaine, domaine_dis_.non_nul() ? &(domaine_dis_.valeur()) : nullptr, les_som, les_elem, postraiter_domaine_);
 
+  CGNS_TYPE cgns_type_elem = TRUST2CGNS.convert_elem_type(type_elem);
+  const bool is_polyedre = (type_elem == "POLYEDRE" || type_elem == "PRISME" || type_elem == "PRISME_HEXAG");
+  const int icelldim = TRUST2CGNS.topo_dim_from_elem(cgns_type_elem, is_polyedre); // avant ca : icelldim = les_som.dimension(1)
+  const int nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
+
   std::vector<double> xCoords, yCoords, zCoords;
   TRUST2CGNS.fill_coords(xCoords, yCoords, zCoords);
 
-  const int icelldim = les_som.dimension(1), nb_elem = les_elem.dimension(0), iphysdim = Objet_U::dimension;
   char basename[CGNS_STR_SIZE];
   strcpy(basename, nom_dom.getChar()); // dom name
 

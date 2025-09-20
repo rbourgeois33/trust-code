@@ -36,6 +36,7 @@ public:
   void associer_connec_pour_dual(const IntTab&, const IntTab&);
   void fill_coords(std::vector<double>&, std::vector<double>&, std::vector<double>&);
   CGNS_TYPE convert_elem_type(const Motcle&);
+  int topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre);
 
   int nb_procs_writing() const { return nb_procs_writing_; }
   const bool& all_procs_write() const { return all_procs_write_; }

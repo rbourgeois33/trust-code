@@ -102,7 +102,7 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
       if (cg_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateY", yCoords.data(), &coordsIdy) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_coord_write - Y !" << finl, TRUST_CGNS_ERROR();
 
-      if (icelldim > 2)
+      if (Objet_U::dimension > 2)
         if (cg_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateZ", zCoords.data(), &coordsIdz) != CG_OK)
           Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cg_coord_write - Z !" << finl, TRUST_CGNS_ERROR();
     }
@@ -119,7 +119,7 @@ inline void Ecrire_CGNS_helper::cgns_write_zone_grid_coord(const int icelldim, c
       if (cgp_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateY", &coordsIdy) != CG_OK)
         Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cgp_coord_write - Y !" << finl, TRUST_CGNS_ERROR();
 
-      if (icelldim > 2)
+      if (Objet_U::dimension > 2)
         if (cgp_coord_write(fileId, baseId, zoneId, CGNS_DOUBLE_TYPE, "CoordinateZ", &coordsIdz) != CG_OK)
           Cerr << "Error Ecrire_CGNS_helper::cgns_write_zone_grid_coord : cgp_coord_write - Z !" << finl, TRUST_CGNS_ERROR();
 #endif

@@ -166,22 +166,27 @@ void TRUST_2_CGNS::associer_connec_pour_dual(const IntTab& fs, const IntTab& ef)
 
 void TRUST_2_CGNS::fill_coords(std::vector<double>& xCoords, std::vector<double>& yCoords, std::vector<double>& zCoords)
 {
-  const int dim = sommets_->dimension(1), nb_som = sommets_->dimension(0);
+  const int nb_som = sommets_->dimension(0), phys_dim = Objet_U::dimension;
   const DoubleTab& sommets = sommets_.valeur();
-
-  if (!xCoords.empty()) xCoords.clear();
-  if (!yCoords.empty()) yCoords.clear();
-  if (!zCoords.empty()) zCoords.clear();
+  assert (sommets_->dimension(1) > 1);
 
   xCoords.resize(nb_som);
   yCoords.resize(nb_som);
-  if (dim > 2) zCoords.resize(nb_som);
 
-  for (int i = 0; i < nb_som; i++)
+  if (phys_dim == 3)
+    {
+      assert(sommets_->dimension(1) > 2);
+      zCoords.resize(nb_som);
+    }
+  else
+    zCoords.clear();
+
+  for (int i = 0; i < nb_som; ++i)
     {
       xCoords[i] = sommets(i, 0);
       yCoords[i] = sommets(i, 1);
-      if (dim > 2) zCoords[i] = sommets(i, 2);
+      if (phys_dim == 3)
+        zCoords[i] = sommets(i, 2);
     }
 }
 
@@ -610,6 +615,21 @@ CGNS_TYPE TRUST_2_CGNS::convert_elem_type(const Motcle& type)
       Process::exit();
       return CGNS_ENUMV(ElementTypeNull);
     }
+}
+
+int TRUST_2_CGNS::topo_dim_from_elem(CGNS_TYPE etype, bool is_polyedre)
+{
+  if (etype == CGNS_ENUMV(BAR_2))
+    return 1; // 1D
+
+  if (etype == CGNS_ENUMV(TRI_3) || etype == CGNS_ENUMV(QUAD_4))
+    return 2; // 2D classiques
+
+  if (etype == CGNS_ENUMV(NGON_n))
+    return is_polyedre ? 3 : 2; // NGON_n : 2D si polygone, 3D si polyedre (avec NFACE_n)
+
+  // 3D classiques
+  return 3; // TETRA_4, HEXA_8, NFACE_n
 }
 
 int TRUST_2_CGNS::convert_connectivity_nface(std::vector<cgsize_t>& econ, std::vector<cgsize_t>& eoff, int decal)
