@@ -218,7 +218,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
   Process::exit();
 #else
   const IntTab& f_e = face_voisins(), &e_f = elem_faces(), &f_s = face_sommets();
-  const DoubleTab& nf = face_normales(), &xs = domaine().coord_sommets(), &vfd = volumes_entrelaces_dir();
+  const DoubleTab& nf = face_normales(), &xs = domaine().coord_sommets();
   const DoubleVect& fs = face_surfaces(), &vf = volumes_entrelaces();
   const Static_Int_Lists& s_e = som_elem();
   int i, i_s, j, k, l, e, f, s, sb, n_f, n_m, n_ef, n_e, n_eb, m, n, ne_tot = nb_elem_tot(), sgn, nw, infoo=-1, d, db,
@@ -279,7 +279,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, const Conds_lim& cls, const IntT
           for (j = 0; j < (int) se_f[i].size(); j++) se_f[i][j] = (int)(std::lower_bound(s_f.begin(), s_f.end(), se_f[i][j]) - s_f.begin());
         for (vol_es.resize(n_e), vol_s = 0, i = 0; i < n_e; vol_s += vol_es[i], i++)
           for (e = s_eb[i], vol_es[i] = 0, j = 0; j < (int) se_f[i].size(); j++)
-            f = s_f[k = se_f[i][j]], vol_es[i] += surf_fs[k] * vfd(f, e != f_e(f, 0)) / fs(f) / D;
+            f = s_f[k = se_f[i][j]], vol_es[i] += surf_fs[k] * std::fabs(dot(&xp_(e, 0), &nf(f, 0), &xv_(f, 0))) / fs(f) / D;
 
         for (essai = 0; essai < 3; essai++) /* essai 0 : MPFA O -> essai 1 : MPFA O avec x_fs mobiles -> essai 2 : MPFA symetrique (corecive, mais pas tres consistante) */
           {
