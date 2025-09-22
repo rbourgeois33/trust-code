@@ -345,7 +345,7 @@ Nom LireMED_32_64<_SIZE_>::type_medcoupling_to_type_geo_trio(int type_cell, bool
       Cerr<<"Cell type " << type_cell<< " is not supported yet." <<finl;
       Process::exit();
     }
-  if(Objet_U::bidim_axi && !(type_cell == INTERP_KERNEL::NORM_QUAD4 || type_cell == INTERP_KERNEL::NORM_SEG2))
+  if(Objet_U::bidim_axi && !(type_cell == INTERP_KERNEL::NORM_QUAD4 || type_cell == INTERP_KERNEL::NORM_SEG2 || type_cell == INTERP_KERNEL::NORM_POLYGON))
     {
       Cerr<<"Cell type " << type_cell<< " is not supported for 'bidim_axi' mode." <<finl;
       Process::exit();
