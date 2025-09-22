@@ -17,8 +17,8 @@
 #include <Polygone.h>
 #include <Triangle.h>
 #include <Domaine.h>
+#include <Polygon_geom_tools.h>
 #include <algorithm>
-using std::swap;
 
 Implemente_instanciable_sans_constructeur_32_64(Polygone_32_64,"Polygone",Poly_geom_base_32_64<_T_>);
 
@@ -245,38 +245,36 @@ int Polygone_32_64<_SIZE_>::contient(const SmallArrOfTID_t& pos, int_t element )
 template <typename _SIZE_>
 void Polygone_32_64<_SIZE_>::calculer_volumes(DoubleVect_t& volumes) const
 {
-
-  const Domaine_t& domaine=mon_dom.valeur();
-  const IntTab_t& elem=domaine.les_elems();
-  const DoubleTab_t& coord=domaine.coord_sommets();
+  const Domaine_t& domaine = mon_dom.valeur();
+  const IntTab_t& elem = domaine.les_elems();
+  const DoubleTab_t& coord = domaine.coord_sommets();
   int_t size = domaine.nb_elem();
 
-
   assert(volumes.size_totale()==domaine.nb_elem_tot());
-  DoubleTab pos(3,dimension);
-  for (int_t num_poly=0; num_poly<size; num_poly++)
+
+  for (int_t num_poly = 0; num_poly < size; num_poly++)
     {
-      double aire=0;
-      int_t s0=elem(num_poly,0);
-      for (int d=0; d<dimension; d++)
-        pos(0,d)=coord(s0,d);
-      for (int s=1; s<get_nb_som_elem_max()-1 ; s++)
+      // Determine the actual number of vertices for this polygon (terminated by -1)
+      int nbsom = 0;
+      const int nbsom_max = get_nb_som_elem_max();
+      while (nbsom < nbsom_max && elem(num_poly, nbsom) >= 0) nbsom++;
+      if (nbsom < 3)
         {
-          int_t s1=elem(num_poly,s);
-          int_t s2=elem(num_poly,s+1);
-          if (s2<0)
-            break;
-          for (int d=0; d<dimension; d++)
-            {
-              pos(1,d)=coord(s1,d);
-              pos(2,d)=coord(s2,d);
-            }
-          aire += aire_triangle(pos);
+          volumes(num_poly) = 0.;
+          continue;
         }
-      volumes(num_poly)=aire;
+
+      const auto index_of = [&](int i) -> int_t { return elem(num_poly, i); };
+      const Polygon_geom_data geom = compute_polygon_geom(coord, dimension, nbsom, index_of, Objet_U::bidim_axi);
+
+      if (!Objet_U::bidim_axi)
+        volumes(num_poly) = geom.area_;
+      else
+        volumes(num_poly) = 2.0 * M_PI * std::fabs(geom.moment_r_);
     }
+
   volumes.echange_espace_virtuel();
-  return ;
+  return;
 }
 
 /*! @brief remplit le tableau faces_som_local(i,j)
@@ -454,4 +452,3 @@ template class Polygone_32_64<int>;
 #if INT_is_64_ == 2
 template class Polygone_32_64<trustIdType>;
 #endif
-
