@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -496,17 +496,24 @@ void Faces_32_64<_SIZE_>::calculer_surfaces(DoubleVect_t& surfaces) const
 {
   surfaces.resize(nb_faces_tot());
   const Domaine_t& dom=domaine();
-  // Verification qu'en coordonnees cylindriques, r est bien positif
+  // Verification qu'en coordonnees cylindriques, r est bien positif (avec tolérance numérique)
   if (axi || bidim_axi)
     {
-      int_t nb_som = dom.les_sommets().dimension(0);
-      for (int_t i=0; i<nb_som; i++)
+      const int_t nb_som = dom.les_sommets().dimension(0);
+      // Echelle de rayon pour fixer une tolérance robuste
+      double rmax = 0.;
+      for (int_t i = 0; i < nb_som; i++)
+        rmax = std::max(rmax, std::fabs(dom.coord(i,0)));
+      const double tol = std::max(Objet_U::precision_geom * std::max(1.0, rmax), 1e-300);
+      for (int_t i = 0; i < nb_som; i++)
         {
-          if (dom.coord(i,0)<0)
+          const double r = dom.coord(i,0);
+          if (r < -tol)
             {
               Cerr << "In axisymmetric, the coordinates of the mesh according to radius" << finl;
-              Cerr << "ie along X, can not be negatives." << finl;
+              Cerr << "ie along X, cannot be negative beyond tolerance." << finl;
               Cerr << "The revolution axis must be at x=0." << finl;
+              Cerr << "we got x = " << r << "  (tolerance = " << tol << ")" << finl;
               exit();
             }
         }
@@ -516,18 +523,34 @@ void Faces_32_64<_SIZE_>::calculer_surfaces(DoubleVect_t& surfaces) const
     case Type_Face::segment_2D :
       {
         assert(dimension==2);
-        double delta0, delta1;
-        for(int_t face=0; face <nb_faces_tot(); face++)
+        for (int_t face = 0; face < nb_faces_tot(); face++)
           {
-            delta0=(dom.coord(sommet(face ,0), 0) - dom.coord(sommet(face ,1), 0));
-            delta0*=delta0;
-            delta1=(dom.coord(sommet(face ,0), 1) - dom.coord(sommet(face ,1), 1));
-            delta1*=delta1;
-            surfaces(face)=sqrt(delta0+delta1);
-            if(surfaces(face)==0.)
+            const double x0 = dom.coord(sommet(face,0), 0);
+            const double y0 = dom.coord(sommet(face,0), 1);
+            const double x1 = dom.coord(sommet(face,1), 0);
+            const double y1 = dom.coord(sommet(face,1), 1);
+            const double dx = x0 - x1;
+            const double dy = y0 - y1;
+            const double L  = std::sqrt(dx*dx + dy*dy);
+
+            if (!Objet_U::bidim_axi)
               {
-                Cerr << "area("<<face<<")=0 ! Check your mesh." << finl;
-                exit();
+                // pur 2D cartésien : surface = longueur
+                surfaces(face) = L;
+                if(surfaces(face) == 0.)
+                  {
+                    Cerr << "area("<<face<<")=0 ! Check your mesh." << finl;
+                    exit();
+                  }
+              }
+            else
+              {
+                // RZ (bidim_axi) : surface du tore engendré par le segment
+                // S = Δθ * r_bar * L, avec r_bar = (r0 + r1)/2 et r ≡ x
+                const double r0 = x0;
+                const double r1 = x1;
+                const double rbar = 0.5 * (r0 + r1);
+                surfaces(face) = 2.0 * M_PI * L * (rbar ? rbar : 1.0);
               }
           }
         break;
@@ -535,23 +558,17 @@ void Faces_32_64<_SIZE_>::calculer_surfaces(DoubleVect_t& surfaces) const
     case Type_Face::quadrilatere_2D_axi :
       {
         assert(dimension==2);
-        double r0,r1,z0,z1,delta_r,delta_z;
-        for(int_t face=0; face <nb_faces_tot(); face++)
+        for (int_t face = 0; face < nb_faces_tot(); face++)
           {
-            r0 = dom.coord(sommet(face ,0), 0);
-            r1 = dom.coord(sommet(face ,1), 0);
-            delta_r=std::fabs(r1-r0);
-            if ( est_egal(delta_r,0) ) //  faces de direction r
-              {
-                z0 = dom.coord(sommet(face ,0), 1);
-                z1 = dom.coord(sommet(face ,1), 1);
-                delta_z=std::fabs(z1-z0);
-                surfaces(face) = 2*M_PI*r0*delta_z;
-              }
-            else //face de direction z
-              {
-                surfaces(face) = 2*M_PI*0.5*(r1+r0)*delta_r;
-              }
+            const double r0 = dom.coord(sommet(face,0), 0);
+            const double z0 = dom.coord(sommet(face,0), 1);
+            const double r1 = dom.coord(sommet(face,1), 0);
+            const double z1 = dom.coord(sommet(face,1), 1);
+            const double dr = r1 - r0;
+            const double dz = z1 - z0;
+            const double L  = std::sqrt(dr*dr + dz*dz);       // longueur du segment
+            const double rbar = 0.5*(r0 + r1);                 // moyenne linéaire de r(s) sur un segment
+            surfaces(face) = 2.0 * M_PI * rbar * L; // S = Δθ ∫_Γ r ds = Δθ * r̄ * L
           }
         break;
       }

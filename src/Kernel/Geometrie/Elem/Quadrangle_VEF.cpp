@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,6 +16,7 @@
 #include <Quadrangle_VEF.h>
 #include <Domaine.h>
 #include <Triangle.h>
+#include <Polygon_geom_tools.h>
 
 // Definition des sommets :
 //  y
@@ -159,58 +160,30 @@ int Quadrangle_VEF_32_64<_SIZE_>::contient(const SmallArrOfTID_t& som, int_t ele
 template <typename _SIZE_>
 void Quadrangle_VEF_32_64<_SIZE_>::calculer_volumes(DoubleVect_t& volumes) const
 {
-  const Domaine_t& domaine=mon_dom.valeur();
+  const Domaine_t& domaine = mon_dom.valeur();
   const DoubleTab_t& coord = domaine.coord_sommets();
-  int_t S0,S1,S2,S3;
-  //ArrOfDouble xg(dimension);
-  IntTab_t face_sommet_global;
-  face_sommet_global.resize(4,2);
-  DoubleTab pos(3,dimension);
-  int numface;
+  const int_t size_tot = domaine.nb_elem_tot();
+  assert(volumes.size_totale() == size_tot);
 
-  int_t size_tot = domaine.nb_elem_tot();
-  assert(volumes.size_totale()==size_tot);
-  for (int_t num_poly=0; num_poly<size_tot; num_poly++)
+  for (int_t num_poly = 0; num_poly < size_tot; num_poly++)
     {
-      S0 = domaine.sommet_elem(num_poly,0);
-      S1 = domaine.sommet_elem(num_poly,1);
-      S2 = domaine.sommet_elem(num_poly,2);
-      S3 = domaine.sommet_elem(num_poly,3);
+      const int_t S0 = domaine.sommet_elem(num_poly,0);
+      const int_t S1 = domaine.sommet_elem(num_poly,1);
+      const int_t S2 = domaine.sommet_elem(num_poly,2);
+      const int_t S3 = domaine.sommet_elem(num_poly,3);
+      const int_t S[4] = { S0, S1, S2, S3 };
 
-      // on construit le tableau de travail face_sommet_global
-      // les faces seront ordonnee suivant Xmin, Xmax, Ymin, Ymax, Zmin,Zmax
-      // toujours en gardant la numerotation de TRUST
+      // TRUST quadrangle local numbering is "papillonnée": 0-1-2-3.
+      // The boundary (CCW) order is 0-1-3-2; use this for the shoelace formula.
+      static const int ord[4] = {0, 1, 3, 2};
 
-      face_sommet_global(0,0) =S0;
-      face_sommet_global(0,1) =S2;
+      const auto index_of = [&](int i) -> int_t { return S[ ord[i] ]; };
+      const Polygon_geom_data geom = compute_polygon_geom(coord, dimension, 4, index_of, Objet_U::bidim_axi);
 
-      face_sommet_global(1,0) =S0;
-      face_sommet_global(1,1) =S1;
-
-      face_sommet_global(2,0) =S1;
-      face_sommet_global(2,1) =S3;
-
-      face_sommet_global(3,0) =S3;
-      face_sommet_global(3,1) =S2;
-
-      //calcul du centre de gravite de l'element
-      for (int j=0; j<dimension; j++)
-        pos(0,j)=(coord(S0,j)+coord(S1,j)+coord(S2,j)+coord(S3,j))*0.25;
-
-      double v = 0.;
-      // boucle sur les faces de l'element que l'on decoupe en 4 triangles.
-      // constitue des deux sommets de la face consideree et du centre de gravite de l'element
-      for(numface=0; numface<nb_faces(0); numface++)
-        {
-          for (int i=0; i<2; i++)
-            {
-              int_t Si = face_sommet_global(numface,i);
-              for (int j=0; j<dimension; j++)
-                pos(i+1,j) = coord(Si,j);
-            }
-          v += aire_triangle(pos);
-        }
-      volumes[num_poly] = v;
+      if (!Objet_U::bidim_axi)
+        volumes[num_poly] = geom.area_;
+      else
+        volumes[num_poly] = 2.0 * M_PI * std::fabs(geom.moment_r_);
     }
 }
 
@@ -317,4 +290,3 @@ template class Quadrangle_VEF_32_64<int>;
 #if INT_is_64_ == 2
 template class Quadrangle_VEF_32_64<trustIdType>;
 #endif
-
