@@ -303,42 +303,42 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
     {
       flux = 0.;
 
-      for (int i = phif_d(f); i < phif_d(f + 1); i++)
+      for (int i = phif_d(f); i < phif_d(f + 1); i++) //element
         {
           const int eb = phif_e(i);
           const int fb = eb - domaine.nb_elem_tot();
 
-          if (fb < 0) //element
+          if (fb < 0)
             {
               for (int n = 0; n < N; n++)
                 flux(n) += phif_c(i, n) * fs(f) * inco(eb, n);
 
-              if (mat)
+              if (mat) //derivees
                 for (int j = 0; j < 2; j++)
                   {
                     const int e = f_e(f, j);
                     if (e < 0) continue;
 
                     if (e < domaine.nb_elem())
-                      for (int n = 0; n < N; n++) //derivees
+                      for (int n = 0; n < N; n++)
                         (*mat)(N * e + n, N * eb + n) += (j ? 1 : -1) * phif_c(i, n) * fs(f);
                   }
             }
-          else if (fcl(fb, 0) == 1 || fcl(fb, 0) == 2)
+          else if (fcl(fb, 0) == 1 || fcl(fb, 0) == 2) //Echange_impose_base
             {
-              for (int n = 0; n < N; n++) //Echange_impose_base
+              for (int n = 0; n < N; n++)
                 flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
                             ref_cast(Echange_impose_base, cls[fcl(fb, 1)].valeur()).T_ext(fcl(fb, 2), n) : 0);
             }
-          else if (fcl(fb, 0) == 4)
+          else if (fcl(fb, 0) == 4) //Neumann non homogene
             {
-              for (int n = 0; n < N; n++) //Neumann non homogene
+              for (int n = 0; n < N; n++)
                 flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
                             ref_cast(Neumann_paroi, cls[fcl(fb, 1)].valeur()).flux_impose(fcl(fb, 2), n) : 0);
             }
-          else if (fcl(fb, 0) == 6)
+          else if (fcl(fb, 0) == 6) //Dirichlet
             {
-              for (int n = 0; n < N; n++) //Dirichlet
+              for (int n = 0; n < N; n++)
                 flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
                             ref_cast(Dirichlet, cls[fcl(fb, 1)].valeur()).val_imp(fcl(fb, 2), n) : 0);
             }
