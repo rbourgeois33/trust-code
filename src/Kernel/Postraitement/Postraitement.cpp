@@ -1222,6 +1222,10 @@ int Postraitement::lire_champs_a_postraiter(Entree& s, bool expect_acco)
               else
                 {
                   const Champ_Generique_base& champ_op = probleme().get_champ_post(motlu);
+                  const Entity loc_ch_gen = champ_op.get_localisation();
+                  const Nom loc_ch_gen_nom = get_nom_localisation(loc_ch_gen);
+                  add_locs_required_if_not(Motcle(loc_ch_gen_nom));
+
                   const Noms nom = champ_op.get_property("nom");
                   if (noms_champs_a_post_.contient(nom[0]))
                     {
@@ -1983,6 +1987,18 @@ Nom Postraitement::set_expression_champ(const Motcle& motlu1,const Motcle& motlu
   return ajout;
 }
 
+void Postraitement::add_locs_required_if_not(const Motcle& motlu2)
+{
+  if (Motcle(format_) == "CGNS")
+    {
+      if (motlu2 != "FACES" && motlu2 != "SOM" && motlu2 != "ELEM")
+        Process::exit("What ??? Error in Postraitement::add_locs_required_if_not -- CGNS understands only ELEM, SOM or FACES !!! \n ");
+
+      if(std::find(locs_required_.begin(), locs_required_.end(), motlu2.getString()) == locs_required_.end())
+        locs_required_.push_back(motlu2.getString()); // add only if not inside
+    }
+}
+
 //Creation d un champ generique en fonction des parametres qui sont passes a la methode
 //Cette methode a pour objectif de pouvoir utiliser l ancienne syntaxe dans le jeu de donnees
 //pour lancer la requete d un champ a postraiter (ex : vitesse elem) mais aussi generer un
@@ -2018,14 +2034,7 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
   //On construit dans ce cas la un Champ_Generique_refChamp
 
   // XXX Elie SAIKALI : its better to know what we will have as locations
-  if (Motcle(format_) == "CGNS")
-    {
-      if (motlu2 != "FACES" && motlu2 != "SOM" && motlu2 != "ELEM")
-        Process::exit("What ??? Error in Postraitement::creer_champ_post -- CGNS understands only ELEM, SOM or FACES !!! \n ");
-
-      if(std::find(locs_required_.begin(), locs_required_.end(), motlu2.getString()) == locs_required_.end())
-        locs_required_.push_back(motlu2.getString()); // add only if not inside
-    }
+  add_locs_required_if_not(motlu2);
 
   // on essaye avant dans les champs_posts...
   int trouve=comprend_champ_post(motlu1);

@@ -207,6 +207,7 @@ protected:
 
   OWN_PTR(Format_Post_base) format_post_;
   std::vector<std::string> locs_required_;
+  void add_locs_required_if_not(const Motcle& );
 
   static LIST(Nom) noms_fichiers_sondes_;
   bool sondes_demande_, champs_demande_, stat_demande_, stat_demande_definition_champs_, tableaux_demande_;
