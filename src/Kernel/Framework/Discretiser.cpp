@@ -56,10 +56,9 @@ saisie :
   Discretisation_base& typ=ref_cast(Discretisation_base, ob2);
   Cerr << "The chosen discretization is of type " << typ.que_suis_je() << finl;
 
-  // Test on bidim_axi
-  if ( dimension == 2 && !(typ.que_suis_je()=="VDF") && bidim_axi == 1 )
+  if (bidim_axi == 1 && dimension == 2 && !typ.is_vdf() && !typ.is_poly_family())
     {
-      Cerr << "The feature 'bidim_axi' is only available for 2D calculation with VDF discretisation." << finl;
+      Cerr << "The feature 'bidim_axi' is only available for 2D calculation with VDF and PolyMAC_CDO(s) discretisations." << finl;
       Process::exit();
     }
 

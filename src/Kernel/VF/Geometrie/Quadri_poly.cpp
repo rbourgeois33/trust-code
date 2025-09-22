@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -120,8 +120,18 @@ void Quadri_poly::normale(int num_Face,DoubleTab& Face_normales,
       if(psc<0)
         sign=-1;
     }
-  Face_normales(num_Face,0)=sign*nx;
-  Face_normales(num_Face,1)=sign*ny;
+  // In 2D Cartesian, |n| = edge length L. In axisym (RZ), |n| must equal the surface of revolution:
+  // S_f = Δθ * r_bar * L, with r_bar = (r0+r1)/2 and L = |edge|.
+  double scale = 1.0;
+  if (Objet_U::bidim_axi)
+    {
+      const double r0 = les_coords(n0,0);
+      const double r1 = les_coords(n1,0);
+      const double r_bar = 0.5*(r0 + r1);
+      scale = 2.0 * M_PI * r_bar; // multiply edge-length normal by Δθ * r̄
+    }
+  Face_normales(num_Face,0) = sign * nx * scale;
+  Face_normales(num_Face,1) = sign * ny * scale;
 }
 
 /*! @brief
