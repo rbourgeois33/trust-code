@@ -18,6 +18,10 @@
 
 #include <Interprete.h>
 
+class Format_Post_base;
+class LataFilter;
+class LataDB;
+
 /*! @brief Classe Lata_2_Other  Converts lata file to med or lml
  * Can only be used with small lata files (fitting in 32b).
  */
@@ -26,6 +30,9 @@ class Lata_2_Other: public Interprete
   Declare_instanciable(Lata_2_Other);
 public:
   Entree& interpreter(Entree& is) override;
+  void get_fill_infos_loc(const LataDB& lata_db, LataFilter& filter, Format_Post_base& post);
+protected:
+  std::vector<std::string> locs_required_;
 };
 
 #endif /* Lata_2_Other_included */

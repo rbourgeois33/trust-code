@@ -298,6 +298,39 @@ void convert_domain_to_Domaine(const Domain& dom, Domaine& dom_trio)
     dom_trio.deformable() = true;
 }
 
+void Lata_2_Other::get_fill_infos_loc(const LataDB& lata_db, LataFilter& filter, Format_Post_base& post)
+{
+  Noms geoms = filter.get_exportable_geometry_names();
+  for (int i = 0; i < geoms.size(); i++)
+    {
+      Field_UNames fields = filter.get_exportable_field_unames(geoms[i]);
+      for (int j = 0; j < fields.size(); j++)
+        {
+          Field_Id fieldid(fields[j], 1, -1);
+          try
+            {
+              const FieldFloat& field = filter.get_float_field(fieldid);
+              Nom nom_type;
+              if (field.localisation_ == LataField_base::ELEM)
+                nom_type = "ELEM";                  //"CHAMPMAILLE";
+              else if (field.localisation_ == LataField_base::SOM)
+                nom_type = "SOM";                  // CHAMPPOINT";
+
+              if (std::find(locs_required_.begin(), locs_required_.end(), nom_type.getString()) == locs_required_.end())
+                locs_required_.push_back(nom_type.getString()); // add only if not inside
+
+              filter.release_field(field);
+            }
+          catch (...)
+            {
+              Cerr << fieldid.uname_.get_field_name() << " is not a FloatField !!!" << finl;
+            }
+        }
+    }
+
+  post.set_loc_vector(locs_required_); // utile pour CGNS pour le moment ...
+}
+
 Entree& Lata_2_Other::interpreter(Entree& is)
 {
   Cerr << "syntax  Lata_to_Other::interpreter format_post_supp [nom_lata||NOM_DU_CAS] [nom_fichier_sortie||NOM_DU_CAS]   " << finl;
@@ -376,8 +409,13 @@ Entree& Lata_2_Other::interpreter(Entree& is)
       suffix += format_post_bis;
       nom_2.prefix(suffix);
 
-      if (Motcle(format_post_supp) == "CGNS" && nom_2.finit_par(".cgns"))
-        nom_2.prefix(".cgns");
+      if (Motcle(format_post_supp) == "CGNS")
+        {
+          get_fill_infos_loc(lata_db, filter, post); // XXX
+
+          if (nom_2.finit_par(".cgns"))
+            nom_2.prefix(".cgns");
+        }
 
       int format_binaire_ = 0;
       if (format_post_bis != "lata")
