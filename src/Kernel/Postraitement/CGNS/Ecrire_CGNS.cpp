@@ -26,6 +26,8 @@
 
 #ifdef HAS_CGNS
 
+#include <cgns_io.h>
+
 void Ecrire_CGNS::cgns_set_base_name(const Nom& fn)
 {
   baseFile_name_ = fn.getString();
@@ -138,7 +140,8 @@ void Ecrire_CGNS::fill_infos_loc()
       if (itr == "FACES") has_faces_field_ = true;
       else if (itr == "SOM") has_som_field_ = true;
       else if (itr == "ELEM") has_elem_field_ = true;
-      else throw;
+      else
+        throw std::runtime_error("Ecrire_CGNS::fill_infos_loc => Unsupported LOC : " + itr);;
     }
 
   if (has_som_field_ && has_elem_field_)
@@ -147,7 +150,9 @@ void Ecrire_CGNS::fill_infos_loc()
 
 void Ecrire_CGNS::finir_ecriture(double temps)
 {
-  if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
+  if (postraiter_domaine_) return; /* rien à faire */
+
+  if (Option_CGNS::USE_LINKS)
     {
       cgns_close_grid_or_solution_link_file(temps, TYPE_LINK_CGNS::SOLUTION);
 
@@ -157,6 +162,39 @@ void Ecrire_CGNS::finir_ecriture(double temps)
       else
         cgns_write_final_link_file();
     }
+  else
+    {
+      if (Option_CGNS::SINGLE_SAFE_FILE && singlefile_open_)
+        {
+          const bool will_flush = (Option_CGNS::FLUSH_EVERY_N > 0) &&
+                                  (step_single_file_counter_ % Option_CGNS::FLUSH_EVERY_N == 0);
+
+          const bool will_close = (Option_CGNS::CLOSE_EVERY_N > 0) &&
+                                  (step_single_file_counter_ % Option_CGNS::CLOSE_EVERY_N == 0);
+
+          /* single but SAFE file => update iterateurs + close to force flush on disc so you can visualize during simulation !!! */
+          if (!first_time_post_ && (will_flush || will_close))
+            {
+              cgns_update_iterative_singlefile();
+              if (!will_close)
+                cgns_flush_to_disk();
+            }
+          else if (!first_time_post_)
+            cgns_flush_to_disk(); // 1er iter at t_start
+
+          if (will_close)
+            {
+              std::string fn = baseFile_name_ + ".cgns";
+
+              if (Process::is_parallel())
+                cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(baseFile_name_ /* inutile */, fileId_, false /* print */);
+              else
+                cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(baseFile_name_ /* inutile */, fileId_, false /* print */);
+
+              singlefile_open_ = false;
+            }
+        }
+    }
 }
 
 void Ecrire_CGNS::cgns_finir()
@@ -164,17 +202,22 @@ void Ecrire_CGNS::cgns_finir()
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     return; /* All done */
 
+  if ( Option_CGNS::SINGLE_SAFE_FILE && !singlefile_open_)
+    return;
+
   std::string fn = baseFile_name_ + ".cgns"; // file name
 
   if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
     {
-      if (!postraiter_domaine_)
+      if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
         {
           if (Option_CGNS::PARALLEL_OVER_ZONE)
             cgns_write_iters_par_over_zone();
           else
             cgns_write_iters_par_in_zone();
         }
+      else if (!postraiter_domaine_ && Option_CGNS::SINGLE_SAFE_FILE)
+        cgns_update_iterative_singlefile();
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
     }
@@ -183,8 +226,10 @@ void Ecrire_CGNS::cgns_finir()
       if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
         fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
 
-      if (!postraiter_domaine_)
+      if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
         cgns_write_iters_seq();
+      else if (!postraiter_domaine_ && Option_CGNS::SINGLE_SAFE_FILE)
+        cgns_update_iterative_singlefile();
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
@@ -200,8 +245,28 @@ void Ecrire_CGNS::cgns_add_time(const double t)
     first_time_post_ = false;
 
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
-    if (!time_post_.empty() || is_deformable_) /* Si pas deformable, la 1er fois dans cgns_write_field (fill field_loc_map) */
+    if (!first_time_post_ || is_deformable_) /* Si pas deformable, la 1er fois dans cgns_write_field (fill field_loc_map) */
       cgns_open_solution_link_file(t);
+
+  if (Option_CGNS::SINGLE_SAFE_FILE && !postraiter_domaine_)
+    {
+      step_single_file_counter_++;
+
+      if (!singlefile_open_)
+        {
+          if (!first_time_post_)
+            {
+              std::string fn = baseFile_name_ + ".cgns";
+
+              if (Process::is_parallel())
+                cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId_, /*print*/false);
+              else
+                cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ, TYPE_MODE_CGNS::MODIFY>(fn, fileId_, /*print*/false);
+            }
+
+          singlefile_open_ = true;
+        }
+    }
 
   time_post_.push_back(t); // add time_post
   fieldName_dumped_.clear();
@@ -209,6 +274,162 @@ void Ecrire_CGNS::cgns_add_time(const double t)
   fieldId_elem_ = 0, fieldId_som_ = 0, fieldId_faces_ = 0; // reset
   solname_elem_written_ = false, solname_som_written_ = false, solname_faces_written_ = false; // reset
   multi_loc_deformable_support_linked_ = false; // reset
+}
+
+void Ecrire_CGNS::cgns_flush_to_disk() const
+{
+  int cgio_num = 0;
+
+  if (cg_get_cgio(fileId_, &cgio_num) != CG_OK)
+    Cerr << "Error Ecrire_CGNS::cgns_flush_to_disk : cg_get_cgio !" << finl, TRUST_CGNS_ERROR();
+
+  if (cgio_flush_to_disk(cgio_num) != 0)
+    Cerr << "Error Ecrire_CGNS::cgns_flush_to_disk : cgio_flush_to_disk !" << finl, TRUST_CGNS_ERROR();
+}
+
+void Ecrire_CGNS::ensure_modify_open_singlefile()
+{
+  if (ensure_modify_done_ || Option_CGNS::USE_LINKS || postraiter_domaine_) return;
+
+  std::string fn = baseFile_name_;
+
+  if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_)
+    fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString();
+
+  fn += ".cgns";
+
+  if (Process::is_parallel())
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_, /*print*/ false);
+  else
+    cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_, /*print*/ false);
+
+  if (Process::is_parallel())
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId_, /*print*/ false);
+  else
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ, TYPE_MODE_CGNS::MODIFY>(fn, fileId_, /*print*/ false);
+
+  ensure_modify_done_ = true;
+}
+
+/*  MAJ des iterateurs : pour le mode SINGLE_SAFE_FILE */
+void Ecrire_CGNS::cgns_update_iterative_singlefile()
+{
+  if (Option_CGNS::USE_LINKS || postraiter_domaine_)
+    return;
+
+  if (!ensure_modify_done_)
+    ensure_modify_open_singlefile();
+
+  const cgsize_t nb_dt_post = static_cast<cgsize_t>(time_post_.size());
+  if (!nb_dt_post)
+    return;
+
+  std::string grid_ptrs;
+
+  if (is_deformable_)
+    {
+      std::string one = "GridCoordinates";
+      one.resize(CGNS_STR_SIZE, ' ');
+      grid_ptrs.reserve(static_cast<size_t>(CGNS_STR_SIZE) * nb_dt_post);
+      for (cgsize_t i = 0; i < nb_dt_post; ++i)
+        grid_ptrs += one;
+    }
+
+  cgsize_t idims[2] = { CGNS_STR_SIZE, nb_dt_post };
+  const bool over_zones = Option_CGNS::PARALLEL_OVER_ZONE;
+
+  // helper local : supprimer TOUTES les occurrences d'un DataArray_t <name> sous le noeud courant
+  auto delete_all_arrays_named = [](const char *arrname)
+  {
+    // On est deja positionne sur le parent (BaseIterativeData_t / ZoneIterativeData_t) => Supprime toutes les occurrences
+    for (;;)
+      {
+        if (cg_delete_node(const_cast<char*>(arrname)) == CG_OK) continue;
+        break; // plus de noeud de ce nom
+      }
+  };
+
+  // Pour chaque localisation ecrite (ELEM/SOM/FACES)
+  for (const auto &itr : fld_loc_map_)
+    {
+      const std::string& LOC = itr.first;
+      const Nom& dom = itr.second;
+
+      int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom);
+      if (has_elem_som_loc_ && LOC != "FACES")
+        {
+          const Nom dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(dom, LOC);
+          ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom_mod);
+        }
+      assert (ind_base > -1);
+
+      // Re-ecrire TimeIterValues avec la TAILLE COURANTE nb_dt_post
+      if (cg_biter_write(fileId_, baseId_[ind_base], "TimeIterValues", static_cast<int>(nb_dt_post)) != CG_OK)
+        Cerr << "Error cgns_update_iterative_singlefile: cg_biter_write !" << finl, TRUST_CGNS_ERROR();
+
+      // Se positionner sur BaseIterativeData_t
+      if (cg_goto(fileId_, baseId_[ind_base], "BaseIterativeData_t", 1, "end") != CG_OK)
+        Cerr << "Error cgns_update_iterative_singlefile: cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
+
+      // Supprimer + Re-ecrire TimeValues
+      delete_all_arrays_named("TimeValues");
+      if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nb_dt_post, time_post_.data()) != CG_OK)
+        Cerr << "Error cgns_update_iterative_singlefile: cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
+
+      if (cg_simulation_type_write(fileId_, baseId_[ind_base], CGNS_ENUMV(TimeAccurate)) != CG_OK)
+        Cerr << "Error cgns_update_iterative_singlefile: cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
+
+      const char* solname = (LOC == "SOM") ? solname_som_.c_str() : (LOC == "FACES") ? solname_faces_.c_str() : solname_elem_.c_str();
+
+      if (over_zones)
+        {
+          const int nb_zones = static_cast<int>(zoneId_par_[ind_base].size());
+          for (int iz = 0; iz < nb_zones; ++iz)
+            {
+              const int zone_ord = iz + 1; // ordinal (1-based)
+
+              if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", zone_ord, "ZoneIterativeData_t", 1, "end") != CG_OK)
+                {
+                  if (cg_ziter_write(fileId_, baseId_[ind_base], zoneId_par_[ind_base][iz], "ZoneIterativeData") != CG_OK)
+                    Cerr << "Error cgns_update_iterative_singlefile: cg_ziter_write (PAR_OVER) !" << finl, TRUST_CGNS_ERROR();
+                  if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", zone_ord, "ZoneIterativeData_t", 1, "end") != CG_OK)
+                    Cerr << "Error cgns_update_iterative_singlefile: cg_goto ZoneIterativeData_t (PAR_OVER) !" << finl, TRUST_CGNS_ERROR();
+                }
+
+              if (is_deformable_)
+                {
+                  delete_all_arrays_named("GridCoordinatesPointers");
+                  if (cg_array_write("GridCoordinatesPointers", CGNS_ENUMV(Character), 2, idims, grid_ptrs.c_str()) != CG_OK)
+                    Cerr << "Error cgns_update_iterative_singlefile: cg_array_write GridCoordinatesPointers !" << finl, TRUST_CGNS_ERROR();
+                }
+
+              delete_all_arrays_named("FlowSolutionPointers");
+              if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idims, solname) != CG_OK)
+                Cerr << "Error cgns_update_iterative_singlefile: cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
+            }
+        }
+      else
+        {
+          if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
+            {
+              if (cg_ziter_write(fileId_, baseId_[ind_base], zoneId_[ind_base], "ZoneIterativeData") != CG_OK)
+                Cerr << "Error cgns_update_iterative_singlefile: cg_ziter_write !" << finl, TRUST_CGNS_ERROR();
+              if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
+                Cerr << "Error cgns_update_iterative_singlefile: cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
+            }
+
+          if (is_deformable_)
+            {
+              delete_all_arrays_named("GridCoordinatesPointers");
+              if (cg_array_write("GridCoordinatesPointers", CGNS_ENUMV(Character), 2, idims, grid_ptrs.c_str()) != CG_OK)
+                Cerr << "Error cgns_update_iterative_singlefile: cg_array_write GridCoordinatesPointers !" << finl, TRUST_CGNS_ERROR();
+            }
+
+          delete_all_arrays_named("FlowSolutionPointers");
+          if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idims, solname) != CG_OK)
+            Cerr << "Error cgns_update_iterative_singlefile: cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
+        }
+    }
 }
 
 void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, const DoubleTab& som, const IntTab& elem, const Motcle& type_e)

@@ -25,6 +25,9 @@ bool Option_CGNS::MULTIPLE_FILES = false; /* NOT BY DEFAULT */
 bool Option_CGNS::PARALLEL_OVER_ZONE = false; /* NOT BY DEFAULT */
 bool Option_CGNS::USE_LINKS = false; /* NOT BY DEFAULT */
 bool Option_CGNS::FILE_PER_COMM_GROUP = false; /* NOT BY DEFAULT */
+bool Option_CGNS::SINGLE_SAFE_FILE = false; /* NOT BY DEFAULT */
+int Option_CGNS::CLOSE_EVERY_N = 10; /* 10 BY DEFAULT */
+int Option_CGNS::FLUSH_EVERY_N = 10; /* 10 BY DEFAULT */
 
 Sortie& Option_CGNS::printOn(Sortie& os) const { return Interprete::printOn(os); }
 Entree& Option_CGNS::readOn(Entree& is) { return Interprete::readOn(is); }
@@ -37,6 +40,9 @@ Entree& Option_CGNS::interpreter(Entree& is)
   param.ajouter_non_std("PARALLEL_OVER_ZONE", (this)); // XD_ADD_P rien If used, data will be written in separate zones (ie: one zone per processor). This is not so performant but easier to read later ...
   param.ajouter_non_std("USE_LINKS", (this)); // XD_ADD_P rien If used, data will be written in separate files; one file for mesh, and then one file for solution time. Links will be used.
   param.ajouter_non_std("FILE_PER_COMM_GROUP", (this)); // XD_ADD_P rien If used, data will be written (at each comm group) in separate files; one file for mesh, and then one file for solution time. Links will be used.
+  param.ajouter_non_std("SINGLE_SAFE_FILE", (this)); // XD_ADD_P rien If used, data will be written in a single file that will be opened and closed at each dt post so that file can be visualized in live. Safer if simulation stops, the file can be used.
+  param.ajouter("CLOSE_EVERY_N", &CLOSE_EVERY_N); // XD_ADD_P entier Used to fix the opening/closing frequency when the SINGLE_SAFE_FILE option is used.
+  param.ajouter("FLUSH_EVERY_N", &FLUSH_EVERY_N); // XD_ADD_P entier Used to fix the flush-to-disc frequency when the SINGLE_SAFE_FILE option is used.
   param.lire_avec_accolades_depuis(is);
 
   if (FILE_PER_COMM_GROUP)
@@ -51,6 +57,16 @@ Entree& Option_CGNS::interpreter(Entree& is)
       Cerr << "       - You can not activate both options 'MULTIPLE_FILES'/or/'PARALLEL_OVER_ZONE' & 'USE_LINKS' !!!" << finl;
       Cerr << "       - If you want linked CGNS files, remove the options 'MULTIPLE_FILES'/or/'PARALLEL_OVER_ZONE'..." << finl;
       Process::exit();
+    }
+
+  if (SINGLE_SAFE_FILE)
+    {
+      if (MULTIPLE_FILES || USE_LINKS || FILE_PER_COMM_GROUP) // TODO FIXME Multiple_files ?
+        {
+          Cerr << "Error in Option_CGNS :" << finl;
+          Cerr << "       - The option 'SINGLE_SAFE_FILE' if required must be used alone with NO OTHER OPTIONS !!!" << finl;
+          Process::exit();
+        }
     }
 
   return is;
@@ -88,6 +104,11 @@ int Option_CGNS::lire_motcle_non_standard(const Motcle& mot_cle, Entree& is)
       FILE_PER_COMM_GROUP = true;
       Cerr << "USE_LINKS => CGNS data will be written in separate files (mesh, solution ...)" << finl;
       USE_LINKS = true;
+    }
+  else if (mot_cle == "SINGLE_SAFE_FILE")
+    {
+      Cerr << mot_cle << " => A single smart CGNS file will be written ..." << finl;
+      SINGLE_SAFE_FILE = true;
     }
   else
     retval = -1;

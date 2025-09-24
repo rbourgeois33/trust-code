@@ -129,6 +129,14 @@ private:
   void cgns_write_field_par_in_zone(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
   void cgns_write_iters_par_in_zone();
 
+  // Version fichier-unique via SINGLE_SAFE_FILE
+  void cgns_update_iterative_singlefile();
+  void ensure_modify_open_singlefile();
+  void cgns_flush_to_disk() const;
+  bool ensure_modify_done_ = false;
+  bool singlefile_open_ = false;
+  size_t step_single_file_counter_ = 0;
+
 #endif /* HAS_CGNS */
 };
 
