@@ -1,0 +1,26 @@
+name: Trigger Documentation Update
+on:
+  push:
+    branches: [gje/synchro_doc]  # Use your test branch name
+    paths: ['src/**']
+  workflow_dispatch:  # Manual trigger for testing
+
+jobs:
+  trigger-doc:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger documentation repo sync
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.DOC_REPO_PAT }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Content-Type: application/json" \
+            https://api.github.com/repos/your-username/doc-repo/dispatches \
+            -d '{
+              "event_type": "source-updated-test",
+              "client_payload": {
+                "source_commit": "${{ github.sha }}",
+                "source_ref": "${{ github.ref }}",
+                "source_branch": "${{ github.ref_name }}"
+              }
+            }'
