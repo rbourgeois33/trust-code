@@ -2033,8 +2033,9 @@ void Postraitement::creer_champ_post(const Motcle& motlu1,const Motcle& motlu2,E
   //Le postraitement aux faces concerne actuellement les champs dont la discretisation "natif" est aux faces
   //On construit dans ce cas la un Champ_Generique_refChamp
 
-  // XXX Elie SAIKALI : its better to know what we will have as locations
-  add_locs_required_if_not(motlu2);
+  // XXX Elie SAIKALI : its better to know what we will have as locations ( pas natif declare dans les sondes lol)
+  if (motlu2 != "NATIF")
+    add_locs_required_if_not(motlu2);
 
   // on essaye avant dans les champs_posts...
   int trouve=comprend_champ_post(motlu1);
