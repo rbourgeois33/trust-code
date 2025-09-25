@@ -437,6 +437,21 @@ inline void TRUSTTab<_TYPE_,_SIZE_>::reshape(_SIZE_ n1, int n2, int n3, int n4)
   assert(verifie_LINE_SIZE());
 }
 
+template<typename _TYPE_, typename _SIZE_>
+inline void TRUSTTab<_TYPE_,_SIZE_>::promote_scalar_to_dim2()
+{
+  // Non-destructive reinterpretation of a scalar tab so downstream code always sees (n,1)
+  if (this->nb_dim_ == 2 && dimensions_[1] == 1) return;
+
+  assert(this->nb_dim_ == 1);
+  assert((TRUSTVect<_TYPE_,_SIZE_>::line_size() == 1));
+
+  this->nb_dim_ = 2;
+  dimensions_[1] = 1;
+
+  assert(verifie_LINE_SIZE());
+}
+
 
 //  change la dimension[0] du tableau en conservant les autres.
 // Precondition: le tableau ne doit pas avoir de structure parallele
