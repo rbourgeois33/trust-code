@@ -217,7 +217,7 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
   Process::exit();
 #else
   const IntTab& f_e = face_voisins(), &e_f = elem_faces(), &f_s = face_sommets();
-  const DoubleTab& nf = face_normales(), &xs = domaine().coord_sommets();
+  const DoubleTab& nf = face_normales(), &xs = domaine().coord_sommets(), &vfd = volumes_entrelaces_dir();
   const DoubleVect& fs = face_surfaces(), &vf = volumes_entrelaces();
   const Static_Int_Lists& s_e = som_elem();
   int i, i_s, j, k, l, e, f, s, sb, n_f, n_m, n_ef, n_e, n_eb, m, n, ne_tot = nb_elem_tot(), sgn, nw, infoo=-1, d, db, D = dimension, rk=-1, nl, nc, un = 1, il, ok, essai, is_pvef = sub_type(Domaine_PolyVEF, *this);
