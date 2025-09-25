@@ -272,6 +272,7 @@ void Discretisation_base::volume_maille(const Schema_Temps_base& sch, const Doma
   discretiser_champ("champ_elem", domaine_VF, "volume_maille", "m3", 1, sch.temps_courant(), ch);
   Champ_Fonc_base& ch_fonc = ref_cast(Champ_Fonc_base, ch.valeur());
   ch_fonc.valeurs().ref(domaine_VF.volumes());
+  ch_fonc.valeurs().promote_scalar_to_dim2(); // keep a (nb_elem,1) view even when referencing a DoubleVect
 }
 
 void Discretisation_base::mesh_numbering(const Schema_Temps_base& sch, const Domaine_dis_base& z, OWN_PTR(Champ_Fonc_base)& ch) const
