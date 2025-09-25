@@ -21,13 +21,12 @@ Implemente_instanciable(Option_CGNS, "Option_CGNS", Interprete);
 // XD Option_CGNS interprete Option_CGNS 1 Class for CGNS options.
 
 bool Option_CGNS::SINGLE_PRECISION = false; /* NOT BY DEFAULT */
-bool Option_CGNS::MULTIPLE_FILES = false; /* NOT BY DEFAULT */
 bool Option_CGNS::PARALLEL_OVER_ZONE = false; /* NOT BY DEFAULT */
 bool Option_CGNS::USE_LINKS = false; /* NOT BY DEFAULT */
 bool Option_CGNS::FILE_PER_COMM_GROUP = false; /* NOT BY DEFAULT */
 bool Option_CGNS::SINGLE_SAFE_FILE = false; /* NOT BY DEFAULT */
-int Option_CGNS::CLOSE_EVERY_N = 10; /* 10 BY DEFAULT */
-int Option_CGNS::FLUSH_EVERY_N = 10; /* 10 BY DEFAULT */
+int Option_CGNS::CLOSE_EVERY_N = -1; /* -1 BY DEFAULT => never opened/closed */
+int Option_CGNS::FLUSH_EVERY_N = 3; /* 3 BY DEFAULT */
 
 Sortie& Option_CGNS::printOn(Sortie& os) const { return Interprete::printOn(os); }
 Entree& Option_CGNS::readOn(Entree& is) { return Interprete::readOn(is); }
@@ -36,7 +35,6 @@ Entree& Option_CGNS::interpreter(Entree& is)
 {
   Param param(que_suis_je());
   param.ajouter_non_std("SINGLE_PRECISION", (this)); // XD_ADD_P rien If used, data will be written with a single_precision format inside the CGNS file (it concerns both mesh coordinates and field values).
-  param.ajouter_non_std("MULTIPLE_FILES", (this)); // XD_ADD_P rien If used, data will be written in separate files (ie: one file per processor).
   param.ajouter_non_std("PARALLEL_OVER_ZONE", (this)); // XD_ADD_P rien If used, data will be written in separate zones (ie: one zone per processor). This is not so performant but easier to read later ...
   param.ajouter_non_std("USE_LINKS", (this)); // XD_ADD_P rien If used, data will be written in separate files; one file for mesh, and then one file for solution time. Links will be used.
   param.ajouter_non_std("FILE_PER_COMM_GROUP", (this)); // XD_ADD_P rien If used, data will be written (at each comm group) in separate files; one file for mesh, and then one file for solution time. Links will be used.
@@ -45,28 +43,18 @@ Entree& Option_CGNS::interpreter(Entree& is)
   param.ajouter("FLUSH_EVERY_N", &FLUSH_EVERY_N); // XD_ADD_P entier Used to fix the flush-to-disc frequency when the SINGLE_SAFE_FILE option is used.
   param.lire_avec_accolades_depuis(is);
 
-  if (FILE_PER_COMM_GROUP)
-    {
-      MULTIPLE_FILES = false;
-      PARALLEL_OVER_ZONE = false;
-    }
-
-  if ((MULTIPLE_FILES || PARALLEL_OVER_ZONE) && USE_LINKS)
+  if (PARALLEL_OVER_ZONE && (USE_LINKS || FILE_PER_COMM_GROUP))
     {
       Cerr << "Error in Option_CGNS :" << finl;
-      Cerr << "       - You can not activate both options 'MULTIPLE_FILES'/or/'PARALLEL_OVER_ZONE' & 'USE_LINKS' !!!" << finl;
-      Cerr << "       - If you want linked CGNS files, remove the options 'MULTIPLE_FILES'/or/'PARALLEL_OVER_ZONE'..." << finl;
+      Cerr << "       - You can not activate the option 'PARALLEL_OVER_ZONE' with 'USE_LINKS' and/or 'FILE_PER_COMM_GROUP' !!!" << finl;
       Process::exit();
     }
 
-  if (SINGLE_SAFE_FILE)
+  if (SINGLE_SAFE_FILE && (USE_LINKS || FILE_PER_COMM_GROUP))
     {
-      if (MULTIPLE_FILES || USE_LINKS || FILE_PER_COMM_GROUP) // TODO FIXME Multiple_files ?
-        {
-          Cerr << "Error in Option_CGNS :" << finl;
-          Cerr << "       - The option 'SINGLE_SAFE_FILE' if required must be used alone with NO OTHER OPTIONS !!!" << finl;
-          Process::exit();
-        }
+      Cerr << "Error in Option_CGNS :" << finl;
+      Cerr << "       - You can not activate the option 'SINGLE_SAFE_FILE' with 'USE_LINKS' and/or 'FILE_PER_COMM_GROUP' !!!" << finl;
+      Process::exit();
     }
 
   return is;
@@ -80,13 +68,6 @@ int Option_CGNS::lire_motcle_non_standard(const Motcle& mot_cle, Entree& is)
     {
       Cerr << mot_cle << " => CGNS data will be written in a single precision format ..." << finl;
       SINGLE_PRECISION = true;
-    }
-  else if (mot_cle == "MULTIPLE_FILES")
-    {
-      Cerr << mot_cle << " => CGNS data will be written in a multiple files ..." << finl;
-      MULTIPLE_FILES = true;
-      Cerr << "PARALLEL_OVER_ZONE => CGNS data will be written in separate zones ..." << finl;
-      PARALLEL_OVER_ZONE = true;
     }
   else if (mot_cle == "PARALLEL_OVER_ZONE")
     {

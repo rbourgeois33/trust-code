@@ -106,7 +106,6 @@ private:
   void cgns_open_solution_link_file(const double, bool is_link = false);
   void cgns_write_final_link_file();
   void cgns_write_final_link_file_comm_group();
-  void cgns_write_link_file_for_multiple_files();
   void cgns_close_grid_or_solution_link_file(const double, const TYPE_LINK_CGNS,  bool is_cerr = true);
   void gather_local_sizeId_multi_loc(std::vector<std::vector<cgsize_t>>& , std::vector<std::vector<cgsize_t>>& ) const ;
   void add_new_linked_base(const std::string&, const Nom&);

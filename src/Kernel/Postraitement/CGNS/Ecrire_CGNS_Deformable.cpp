@@ -178,7 +178,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable()
 
               const char *solname = (LOC == "SOM") ? solname_som_.c_str() : ((LOC == "FACES") ? solname_faces_.c_str() : solname_elem_.c_str());
               if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname) != CG_OK)
-                Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
+                Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable : cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
             }
         }
 
@@ -298,7 +298,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_pb_deformable()
 
           const char* solname = (LOC == "SOM") ? solname_som_.c_str() : ( (LOC == "FACES") ? solname_faces_.c_str() : solname_elem_.c_str());
           if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_write_link_file_for_multiple_files : cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
+            Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group_pb_deformable : cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
         }
 
       cgns_close_grid_or_solution_link_file(-123., TYPE_LINK_CGNS::FINAL_LINK, true);

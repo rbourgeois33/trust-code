@@ -42,24 +42,16 @@ void Ecrire_CGNS::cgns_init_MPI(bool is_self)
 {
 #ifdef MPI_
 
-  if ((Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_) || is_self)
+  if (Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_)
     {
-      if (cgp_mpi_comm(/* XXX */ MPI_COMM_SELF) != CG_OK)
-        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- MPI_COMM_SELF !" << finl, TRUST_CGNS_ERROR();
+      const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
+      if (cgp_mpi_comm(comm_loc.get_mpi_comm()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- Comm_Group_MPI !" << finl, TRUST_CGNS_ERROR();
     }
   else
     {
-      if (Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_)
-        {
-          const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
-          if (cgp_mpi_comm(comm_loc.get_mpi_comm()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- Comm_Group_MPI !" << finl, TRUST_CGNS_ERROR();
-        }
-      else
-        {
-          if (cgp_mpi_comm(/* XXX MPI_COMM_WORLD */ Comm_Group_MPI::get_trio_u_world()) != CG_OK)
-            Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- trio_u_world !" << finl, TRUST_CGNS_ERROR();
-        }
+      if (cgp_mpi_comm(/* XXX MPI_COMM_WORLD */ Comm_Group_MPI::get_trio_u_world()) != CG_OK)
+        Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_mpi_comm -- trio_u_world !" << finl, TRUST_CGNS_ERROR();
     }
 
   /*
@@ -70,27 +62,6 @@ void Ecrire_CGNS::cgns_init_MPI(bool is_self)
     Cerr << "Error Ecrire_CGNS::cgns_init_MPI : cgp_pio_mode !" << finl, TRUST_CGNS_ERROR();
 #endif
 }
-
-/*
- * XXX : Elie Saikali - Attention pour le moment on a plusieurs options CGNS et du coup plusieurs cas :
- *
- * - SEQUENTIEL => facile => un seul chemin
- *
- * - PARALLEL => plusieurs cas => plusieurs chemins
- *
- *      *** Par default, on ecrit dans un seul fichier, sans lien et avec parallelisme dans la zone.
- *      *** Par default, pour postraiter_domaine, on fait PARALLEL_OVER_ZONES pour visualizer le decoupage
- *
- *      Cependant, on peut changer ca avec les OPTION_CGNS
- *
- *        - MULTIPLE_FILES : sauf si postraiter_domaine, on sort dans ce cas un fichier par proc et un fichier link a la fin.
- *                  Si postraiter_domaine, on fait le default !
- *
- *        - PARALLEL_OVER_ZONES : on sort un fichier avec parallelisme sur les zones. utile pour voir le decoupage d'un maillage par example
- *
- *        - USE_LINKS : utile pour un vrai calcul et si le calcul ne se termine pas correctement. Sauf pour l'interpret postraiter_domaine,
- *                  on sort un fichier // par dt_post et on sort un fichier link a la fin.
- */
 
 void Ecrire_CGNS::cgns_open_file()
 {
@@ -109,17 +80,12 @@ void Ecrire_CGNS::cgns_open_file()
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
     return; /* rien a faire si USE_LINKS ou FILE_PER_COMM_GROUP */
 
-  std::string fn = baseFile_name_ + ".cgns"; // file name
+  const std::string fn = baseFile_name_ + ".cgns"; // file name
 
-  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+  if (Process::is_parallel())
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
   else
-    {
-      if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
-        fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
-
-      cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
-    }
+    cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
 }
 
 void Ecrire_CGNS::fill_infos_loc()
@@ -205,9 +171,9 @@ void Ecrire_CGNS::cgns_finir()
   if ( Option_CGNS::SINGLE_SAFE_FILE && !singlefile_open_)
     return;
 
-  std::string fn = baseFile_name_ + ".cgns"; // file name
+  const std::string fn = baseFile_name_ + ".cgns"; // file name
 
-  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+  if (Process::is_parallel())
     {
       if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
         {
@@ -223,9 +189,6 @@ void Ecrire_CGNS::cgns_finir()
     }
   else
     {
-      if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES)
-        fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString() + ".cgns"; // file name
-
       if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
         cgns_write_iters_seq();
       else if (!postraiter_domaine_ && Option_CGNS::SINGLE_SAFE_FILE)
@@ -233,10 +196,6 @@ void Ecrire_CGNS::cgns_finir()
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
-
-  /* dernier truc a faire ! */
-  if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_)
-    cgns_write_link_file_for_multiple_files();
 }
 
 void Ecrire_CGNS::cgns_add_time(const double t)
@@ -291,12 +250,7 @@ void Ecrire_CGNS::ensure_modify_open_singlefile()
 {
   if (ensure_modify_done_ || Option_CGNS::USE_LINKS || postraiter_domaine_) return;
 
-  std::string fn = baseFile_name_;
-
-  if (Process::is_parallel() && Option_CGNS::MULTIPLE_FILES && !postraiter_domaine_)
-    fn = (Nom(baseFile_name_)).nom_me(Process::me()).getString();
-
-  fn += ".cgns";
+  const std::string fn = baseFile_name_ + ".cgns";
 
   if (Process::is_parallel())
     cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_, /*print*/ false);
@@ -464,7 +418,7 @@ void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, con
         grid_file_opened_ = true; // On ouvre pour .grid.cgns
       }
 
-  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+  if (Process::is_parallel())
     {
       if (Option_CGNS::PARALLEL_OVER_ZONE || postraiter_domaine_)
         cgns_write_domaine_par_over_zone(dom, Nom(nom_dom_modifie), som, elem, type_e);
@@ -498,7 +452,7 @@ void Ecrire_CGNS::cgns_write_field(const Domaine& domaine, const Noms& noms_comp
   /* 2 : on ecrit */
   const int nb_cmp = valeurs.dimension(1);
 
-  if (Process::is_parallel() && (!Option_CGNS::MULTIPLE_FILES || (Option_CGNS::MULTIPLE_FILES && postraiter_domaine_) ))
+  if (Process::is_parallel())
     {
       for (int i = 0; i < nb_cmp; i++)
         {
@@ -680,7 +634,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   zoneId_.push_back(-123);
 
   /* 5 : Write all */
-  if (nb_elem) // XXX cas // mais MULTIPLE_FILES
+  if (nb_elem)
     {
       /* 5.1 : Create zone & grid coords */
       cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize[0],
