@@ -64,7 +64,7 @@ Entree& DP_Impose::lire_donnees(Entree& is)
       Param param("dp_regul");
       param.ajouter("DP0", &dp_str, Param::REQUIRED);
       param.ajouter("deb", &deb_str, Param::REQUIRED);
-      param.ajouter("eps", &alpha_str, Param::REQUIRED);
+      param.ajouter("alpha", &alpha_str, Param::REQUIRED);
       param.lire_avec_accolades(is);
       f_DP_.setNbVar(1), deb_cible_.setNbVar(1), alpha_.setNbVar(1);
       f_DP_.setString(dp_str), deb_cible_.setString(deb_str), alpha_.setString(alpha_str);
