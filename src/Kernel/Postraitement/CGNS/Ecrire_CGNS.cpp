@@ -350,25 +350,47 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
   };
 
   // Pour chaque localisation ecrite (ELEM/SOM/FACES)
+  bool ind_base_written = has_elem_som_loc_ ? false : true; // si true, on va ecrire avec index_glob ! pas mal ca !
   for (const auto &itr : fld_loc_map_)
     {
       const std::string& LOC = itr.first;
       const Nom& dom = itr.second;
-
-      int ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom);
+      int ind_base = -123;
+      int index_glob = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom);
       if (has_elem_som_loc_ && LOC != "FACES")
         {
           const Nom dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(dom, LOC);
           ind_base = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom_mod);
         }
-      assert (ind_base > -1);
+      else
+        ind_base = index_glob;
 
+      // index base
+      if (!ind_base_written)
+        {
+          // Re-ecrire TimeIterValues avec la TAILLE COURANTE nb_dt_post
+          if (cg_biter_write(fileId_, baseId_[ind_base], "TimeIterValues", static_cast<int>(nb_dt_post)) != CG_OK)
+            Cerr << "Error cgns_update_iterative_singlefile: cg_biter_write !" << finl, TRUST_CGNS_ERROR();
+
+          // Se positionner sur BaseIterativeData_t
+          if (cg_goto(fileId_, baseId_[ind_base], "BaseIterativeData_t", 1, "end") != CG_OK)
+            Cerr << "Error cgns_update_iterative_singlefile: cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
+
+          // Supprimer + Re-ecrire TimeValues
+          delete_all_arrays_named("TimeValues");
+          if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nb_dt_post, time_post_.data()) != CG_OK)
+            Cerr << "Error cgns_update_iterative_singlefile: cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
+
+          ind_base_written = true;
+        }
+
+      // index glob
       // Re-ecrire TimeIterValues avec la TAILLE COURANTE nb_dt_post
-      if (cg_biter_write(fileId_, baseId_[ind_base], "TimeIterValues", static_cast<int>(nb_dt_post)) != CG_OK)
+      if (cg_biter_write(fileId_, baseId_[index_glob], "TimeIterValues", static_cast<int>(nb_dt_post)) != CG_OK)
         Cerr << "Error cgns_update_iterative_singlefile: cg_biter_write !" << finl, TRUST_CGNS_ERROR();
 
       // Se positionner sur BaseIterativeData_t
-      if (cg_goto(fileId_, baseId_[ind_base], "BaseIterativeData_t", 1, "end") != CG_OK)
+      if (cg_goto(fileId_, baseId_[index_glob], "BaseIterativeData_t", 1, "end") != CG_OK)
         Cerr << "Error cgns_update_iterative_singlefile: cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
 
       // Supprimer + Re-ecrire TimeValues
@@ -376,7 +398,7 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
       if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nb_dt_post, time_post_.data()) != CG_OK)
         Cerr << "Error cgns_update_iterative_singlefile: cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
 
-      if (cg_simulation_type_write(fileId_, baseId_[ind_base], CGNS_ENUMV(TimeAccurate)) != CG_OK)
+      if (cg_simulation_type_write(fileId_, baseId_[index_glob], CGNS_ENUMV(TimeAccurate)) != CG_OK)
         Cerr << "Error cgns_update_iterative_singlefile: cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
 
       const char* solname = (LOC == "SOM") ? solname_som_.c_str() : (LOC == "FACES") ? solname_faces_.c_str() : solname_elem_.c_str();
@@ -410,11 +432,11 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
         }
       else
         {
-          if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
+          if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
             {
-              if (cg_ziter_write(fileId_, baseId_[ind_base], zoneId_[ind_base], "ZoneIterativeData") != CG_OK)
+              if (cg_ziter_write(fileId_, baseId_[index_glob], zoneId_[ind_base], "ZoneIterativeData") != CG_OK)
                 Cerr << "Error cgns_update_iterative_singlefile: cg_ziter_write !" << finl, TRUST_CGNS_ERROR();
-              if (cg_goto(fileId_, baseId_[ind_base], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
+              if (cg_goto(fileId_, baseId_[index_glob], "Zone_t", 1, "ZoneIterativeData_t", 1, "end") != CG_OK)
                 Cerr << "Error cgns_update_iterative_singlefile: cg_goto ZoneIterativeData_t !" << finl, TRUST_CGNS_ERROR();
             }
 
