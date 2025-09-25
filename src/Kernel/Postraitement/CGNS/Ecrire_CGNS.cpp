@@ -141,7 +141,7 @@ void Ecrire_CGNS::fill_infos_loc()
       else if (itr == "SOM") has_som_field_ = true;
       else if (itr == "ELEM") has_elem_field_ = true;
       else
-        throw std::runtime_error("Ecrire_CGNS::fill_infos_loc => Unsupported LOC : " + itr);;
+        throw std::runtime_error("Ecrire_CGNS::fill_infos_loc => Unsupported LOC : " + itr);
     }
 
   if (has_som_field_ && has_elem_field_)
@@ -350,13 +350,15 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
   };
 
   // Pour chaque localisation ecrite (ELEM/SOM/FACES)
-  bool ind_base_written = has_elem_som_loc_ ? false : true; // si true, on va ecrire avec index_glob ! pas mal ca !
+  std::vector<int> ind_doms_dumped;
   for (const auto &itr : fld_loc_map_)
     {
       const std::string& LOC = itr.first;
       const Nom& dom = itr.second;
       int ind_base = -123;
       int index_glob = TRUST_2_CGNS::get_index_nom_vector(doms_written_, dom);
+      ind_doms_dumped.push_back(index_glob);
+
       if (has_elem_som_loc_ && LOC != "FACES")
         {
           const Nom dom_mod = TRUST_2_CGNS::modify_domaine_name_for_link(dom, LOC);
@@ -365,24 +367,6 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
       else
         ind_base = index_glob;
 
-      // index base
-      if (!ind_base_written)
-        {
-          // Re-ecrire TimeIterValues avec la TAILLE COURANTE nb_dt_post
-          if (cg_biter_write(fileId_, baseId_[ind_base], "TimeIterValues", static_cast<int>(nb_dt_post)) != CG_OK)
-            Cerr << "Error cgns_update_iterative_singlefile: cg_biter_write !" << finl, TRUST_CGNS_ERROR();
-
-          // Se positionner sur BaseIterativeData_t
-          if (cg_goto(fileId_, baseId_[ind_base], "BaseIterativeData_t", 1, "end") != CG_OK)
-            Cerr << "Error cgns_update_iterative_singlefile: cg_goto BaseIterativeData_t !" << finl, TRUST_CGNS_ERROR();
-
-          // Supprimer + Re-ecrire TimeValues
-          delete_all_arrays_named("TimeValues");
-          if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nb_dt_post, time_post_.data()) != CG_OK)
-            Cerr << "Error cgns_update_iterative_singlefile: cg_array_write TimeValues !" << finl, TRUST_CGNS_ERROR();
-
-          ind_base_written = true;
-        }
 
       // index glob
       // Re-ecrire TimeIterValues avec la TAILLE COURANTE nb_dt_post
@@ -451,6 +435,21 @@ void Ecrire_CGNS::cgns_update_iterative_singlefile()
           if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idims, solname) != CG_OK)
             Cerr << "Error cgns_update_iterative_singlefile: cg_array_write FlowSolutionPointers !" << finl, TRUST_CGNS_ERROR();
         }
+    }
+
+  /* 2 : on iter sur les autres domaines; ie: domaine dis */
+  for (int i = 0; i < static_cast<int>(doms_written_.size()); i++)
+    {
+      if (std::find(ind_doms_dumped.begin(), ind_doms_dumped.end(), i) == ind_doms_dumped.end()) // indice pas dans ind_doms_dumped
+        {
+          const Nom& nom_dom = doms_written_[i];
+          const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
+          assert(ind > -1);
+
+          cgns_helper_.cgns_write_iters<TYPE_ECRITURE_CGNS::SEQ>(false /* has_field */, 1 /* nb_zones_to_write */, fileId_, baseId_[ind], ind, zoneId_, "rien",
+                                                                 solname_som_, solname_elem_,solname_faces_, time_post_);
+        }
+      else { /* Do Nothing */ }
     }
 }
 

@@ -245,7 +245,7 @@ Ecrire_CGNS_helper::cgns_field_write(const int nb_zones_to_write, const int file
             Cerr << "Error Ecrire_CGNS_helper::cgns_field_write : cgp_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
         }
       else
-        throw;
+        throw std::runtime_error("Ecrire_CGNS_helper::cgns_field_write => Unsupported LOC : " + LOC);
     }
 #endif
 }
@@ -274,7 +274,7 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
             Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
         }
       else
-        throw;
+        throw std::runtime_error("Ecrire_CGNS_helper::cgns_field_write_data => Unsupported LOC : " + LOC);
     }
   else
     {
@@ -299,7 +299,7 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
             Cerr << "Error Ecrire_CGNS::cgns_write_field_seq : cg_field_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
         }
       else
-        throw;
+        throw std::runtime_error("Ecrire_CGNS_helper::cgns_field_write_data => Unsupported LOC : " + LOC);
     }
 }
 
@@ -329,7 +329,7 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
             Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- FACES !" << finl,  TRUST_CGNS_ERROR();
         }
       else
-        throw;
+        throw std::runtime_error("Ecrire_CGNS_helper::cgns_field_write_data => Unsupported LOC : " + LOC);
     }
   else
     {
@@ -354,7 +354,7 @@ Ecrire_CGNS_helper::cgns_field_write_data(const int fileId, const int baseId, co
             Cerr << "Error Ecrire_CGNS_helper::cgns_field_write_data : cgp_field_write_data  -- FACES !" << finl,  TRUST_CGNS_ERROR();
         }
       else
-        throw;
+        throw std::runtime_error("Ecrire_CGNS_helper::cgns_field_write_data => Unsupported LOC : " + LOC);
     }
 #endif
 }
@@ -410,7 +410,7 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
                   Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
               }
             else
-              throw;
+              throw std::runtime_error("Ecrire_CGNS_helper::cgns_write_iters => Unsupported LOC : " + LOC);
           }
       }
 
