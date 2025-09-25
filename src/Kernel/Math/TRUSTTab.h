@@ -250,6 +250,7 @@ public:
   inline void reshape(_SIZE_ n1, int n2);
   inline void reshape(_SIZE_ n1, int n2, int n3);
   inline void reshape(_SIZE_ n1, int n2, int n3, int n4);
+  inline void promote_scalar_to_dim2(); // if nb_dim()==1, expose it as (n,1)
 
 #ifdef KOKKOS
 
