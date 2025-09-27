@@ -26,7 +26,7 @@ bool Option_CGNS::USE_LINKS = false; /* NOT BY DEFAULT */
 bool Option_CGNS::FILE_PER_COMM_GROUP = false; /* NOT BY DEFAULT */
 bool Option_CGNS::SINGLE_SAFE_FILE = false; /* NOT BY DEFAULT */
 int Option_CGNS::CLOSE_EVERY_N = -1; /* -1 BY DEFAULT => never opened/closed */
-int Option_CGNS::FLUSH_EVERY_N = 3; /* 3 BY DEFAULT */
+int Option_CGNS::FLUSH_EVERY_N = 1; /* 1 BY DEFAULT => flush each dt post */
 
 Sortie& Option_CGNS::printOn(Sortie& os) const { return Interprete::printOn(os); }
 Entree& Option_CGNS::readOn(Entree& is) { return Interprete::readOn(is); }

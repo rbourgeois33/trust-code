@@ -111,25 +111,23 @@ private:
   void add_new_linked_base(const std::string&, const Nom&);
   void add_new_linked_base_par_over_zone(const std::string&, const Nom&, const Nom&, const int);
 
+  void cgns_write_iters();
+
   // Version sequentielle
   void cgns_write_domaine_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_domaine_deformable_seq(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field_seq(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
-  void cgns_write_iters_seq();
 
   // Version parallele over zone
   void cgns_write_domaine_par_over_zone(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field_par_over_zone(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
-  void cgns_write_iters_par_over_zone();
 
   // Version parallele in zone
   void cgns_write_domaine_par_in_zone(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_domaine_deformable_par_in_zone(const Domaine * ,const Nom& , const DoubleTab& , const IntTab& , const Motcle& );
   void cgns_write_field_par_in_zone(const int, const double, const Nom&, const Nom&, const Nom&, const Nom&, const DoubleTab&);
-  void cgns_write_iters_par_in_zone();
 
   // Version fichier-unique via SINGLE_SAFE_FILE
-  void cgns_update_iterative_singlefile();
   void ensure_modify_open_singlefile();
   void cgns_flush_to_disk() const;
   bool ensure_modify_done_ = false;

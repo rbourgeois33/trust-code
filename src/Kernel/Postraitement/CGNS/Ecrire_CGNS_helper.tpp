@@ -366,7 +366,7 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
   const int nsteps = static_cast<int>(time_post.size());
   assert (nsteps > 0);
 
-  cgsize_t nuse = static_cast<cgsize_t>(nsteps);
+  const cgsize_t nuse = static_cast<cgsize_t>(nsteps);
   constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
 
   // helper local : supprimer TOUTES les occurrences d'un DataArray_t <name> sous le noeud courant
@@ -398,10 +398,7 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
 
   const char* solname = (LOC == "SOM") ? solname_som.c_str() : (LOC == "FACES") ? solname_faces.c_str() : solname_elem.c_str();
 
-  cgsize_t idata[2];
-  idata[0] = CGNS_STR_SIZE;
-  idata[1] = nsteps;
-
+  cgsize_t idata[2] = { CGNS_STR_SIZE , nuse};
   for (int ii = 0; ii != nb_zones_to_write; ii++)
     if (zoneId[ind] != -123)
       {
