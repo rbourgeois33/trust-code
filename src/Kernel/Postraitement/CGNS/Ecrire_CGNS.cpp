@@ -38,7 +38,7 @@ void Ecrire_CGNS::cgns_associer_domaine_dis(const Domaine_dis_base& domaine_dis_
   domaine_dis_ = domaine_dis_base;
 }
 
-void Ecrire_CGNS::cgns_init_MPI(bool is_self)
+void Ecrire_CGNS::cgns_init_MPI(bool is_self) const
 {
 #ifdef MPI_
 
@@ -73,8 +73,11 @@ void Ecrire_CGNS::cgns_open_file()
     {
       if (Process::is_parallel() && Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
         init_proc_maitre_local_comm();
-      else if (!Option_CGNS::USE_LINKS)
-        Option_CGNS::USE_LINKS = true; /* Si deformable et pas FILE_PER_COMM_GROUP/USE_LINKS => force to use links ! */
+      else if (!Option_CGNS::USE_LINKS) /* Si deformable et pas FILE_PER_COMM_GROUP/USE_LINKS => force to use links ! */
+        {
+          Option_CGNS::USE_LINKS = true;
+          Option_CGNS::SINGLE_SAFE_FILE = false;
+        }
     }
 
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_)
@@ -142,16 +145,13 @@ void Ecrire_CGNS::finir_ecriture(double temps)
           if (!first_time_post_ && (will_flush || will_close))
             {
               cgns_update_iterative_singlefile();
+
               if (!will_close)
                 cgns_flush_to_disk();
             }
-          else if (!first_time_post_)
-            cgns_flush_to_disk(); // 1er iter at t_start
 
           if (will_close)
             {
-              std::string fn = baseFile_name_ + ".cgns";
-
               if (Process::is_parallel())
                 cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(baseFile_name_ /* inutile */, fileId_, false /* print */);
               else
@@ -169,30 +169,36 @@ void Ecrire_CGNS::cgns_finir()
     return; /* All done */
 
   if ( Option_CGNS::SINGLE_SAFE_FILE && !singlefile_open_)
-    return;
+    return; /* All done */
 
   const std::string fn = baseFile_name_ + ".cgns"; // file name
 
   if (Process::is_parallel())
     {
-      if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
+      if (!postraiter_domaine_)
         {
-          if (Option_CGNS::PARALLEL_OVER_ZONE)
-            cgns_write_iters_par_over_zone();
+          if (!Option_CGNS::SINGLE_SAFE_FILE)
+            {
+              if (Option_CGNS::PARALLEL_OVER_ZONE)
+                cgns_write_iters_par_over_zone();
+              else
+                cgns_write_iters_par_in_zone();
+            }
           else
-            cgns_write_iters_par_in_zone();
+            cgns_update_iterative_singlefile();
         }
-      else if (!postraiter_domaine_ && Option_CGNS::SINGLE_SAFE_FILE)
-        cgns_update_iterative_singlefile();
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_);
     }
   else
     {
-      if (!postraiter_domaine_ && !Option_CGNS::SINGLE_SAFE_FILE)
-        cgns_write_iters_seq();
-      else if (!postraiter_domaine_ && Option_CGNS::SINGLE_SAFE_FILE)
-        cgns_update_iterative_singlefile();
+      if (!postraiter_domaine_)
+        {
+          if (!Option_CGNS::SINGLE_SAFE_FILE)
+            cgns_write_iters_seq();
+          else
+            cgns_update_iterative_singlefile();
+        }
 
       cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
@@ -252,11 +258,13 @@ void Ecrire_CGNS::ensure_modify_open_singlefile()
 
   const std::string fn = baseFile_name_ + ".cgns";
 
+  /* Close file for first time */
   if (Process::is_parallel())
     cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::PAR>(fn, fileId_, /*print*/ false);
   else
     cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_, /*print*/ false);
 
+  /* Reopen file for first time with MODIFY mode */
   if (Process::is_parallel())
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR, TYPE_MODE_CGNS::MODIFY>(fn, fileId_, /*print*/ false);
   else

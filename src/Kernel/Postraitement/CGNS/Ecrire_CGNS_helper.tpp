@@ -364,19 +364,39 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
                                                  const std::string& LOC, const std::string& solname_som, const std::string& solname_elem, const std::string& solname_faces,const std::vector<double>& time_post)
 {
   const int nsteps = static_cast<int>(time_post.size());
+  assert (nsteps > 0);
+
+  cgsize_t nuse = static_cast<cgsize_t>(nsteps);
   constexpr bool is_PAR_OVER = (_TYPE_ == TYPE_ECRITURE_CGNS::PAR_OVER);
+
+  // helper local : supprimer TOUTES les occurrences d'un DataArray_t <name> sous le noeud courant
+  auto delete_all_arrays_named = [](const char *arrname)
+  {
+    for (;;)
+      {
+        if (cg_delete_node(const_cast<char*>(arrname)) == CG_OK) continue; // recommence tant qu'il en trouve
+
+        break; // plus de noeud de ce nom
+      }
+  };
 
   /* create BaseIterativeData */
   if (cg_biter_write(fileId, baseId, "TimeIterValues", nsteps) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_biter_write !" << finl, TRUST_CGNS_ERROR();
 
-  /* go to BaseIterativeData level and write time values */
+  /* Se positionner sur BaseIterativeData_t */
   if (cg_goto(fileId, baseId, "BaseIterativeData_t", 1, "end") != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_goto !" << finl, TRUST_CGNS_ERROR();
 
-  cgsize_t nuse = static_cast<cgsize_t>(nsteps);
+  /* Supprimer + Re-ecrire TimeValues */
+  delete_all_arrays_named("TimeValues");
   if (cg_array_write("TimeValues", CGNS_DOUBLE_TYPE, 1, &nuse, time_post.data()) != CG_OK)
     Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write !" << finl, TRUST_CGNS_ERROR();
+
+  if (cg_simulation_type_write(fileId, baseId, CGNS_ENUMV(TimeAccurate)) != CG_OK)
+    Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
+
+  const char* solname = (LOC == "SOM") ? solname_som.c_str() : (LOC == "FACES") ? solname_faces.c_str() : solname_elem.c_str();
 
   cgsize_t idata[2];
   idata[0] = CGNS_STR_SIZE;
@@ -394,28 +414,11 @@ inline void Ecrire_CGNS_helper::cgns_write_iters(const bool has_field, const int
 
         if (has_field)
           {
-            if (LOC == "SOM")
-              {
-                if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_som.c_str()) != CG_OK)
-                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- SOM !" << finl, TRUST_CGNS_ERROR();
-              }
-            else if (LOC == "ELEM")
-              {
-                if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_elem.c_str()) != CG_OK)
-                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- ELEM !" << finl, TRUST_CGNS_ERROR();
-              }
-            else if (LOC == "FACES")
-              {
-                if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname_faces.c_str()) != CG_OK)
-                  Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write  -- FACES !" << finl, TRUST_CGNS_ERROR();
-              }
-            else
-              throw std::runtime_error("Ecrire_CGNS_helper::cgns_write_iters => Unsupported LOC : " + LOC);
+            delete_all_arrays_named("FlowSolutionPointers");
+            if (cg_array_write("FlowSolutionPointers", CGNS_ENUMV(Character), 2, idata, solname) != CG_OK)
+              Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_array_write !" << finl, TRUST_CGNS_ERROR();
           }
       }
-
-  if (cg_simulation_type_write(fileId, baseId, CGNS_ENUMV(TimeAccurate)) != CG_OK)
-    Cerr << "Error Ecrire_CGNS_helper::cgns_write_iters : cg_simulation_type_write !" << finl, TRUST_CGNS_ERROR();
 }
 
 #endif /* Ecrire_CGNS_helper_tpp_included */
