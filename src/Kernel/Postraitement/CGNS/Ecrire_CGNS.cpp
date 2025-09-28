@@ -37,10 +37,9 @@ void Ecrire_CGNS::cgns_associer_domaine_dis(const Domaine_dis_base& domaine_dis_
   domaine_dis_ = domaine_dis_base;
 }
 
-void Ecrire_CGNS::cgns_init_MPI(bool is_self) const
+void Ecrire_CGNS::cgns_init_MPI() const
 {
 #ifdef MPI_
-
   if (Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group() && !postraiter_domaine_)
     {
       const Comm_Group_MPI& comm_loc = ref_cast(Comm_Group_MPI, PE_Groups::get_user_defined_group());
@@ -543,11 +542,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
     Cerr << "Error Ecrire_CGNS::cgns_write_domaine_seq : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
   /* 4 : Vertex, cell & boundary vertex sizes */
-  cgsize_t isize[3][1];
-  isize[0][0] = nb_som;
-  isize[1][0] = nb_elem;
-  isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
-
+  cgsize_t isize[3] = { nb_som , nb_elem , 0 }; /* 0 => boundary vertex size (zero if elements not sorted) */
 
   cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim, nb_som, nb_elem, is_polyedre);
 
@@ -557,7 +552,7 @@ void Ecrire_CGNS::cgns_write_domaine_seq(const Domaine * domaine,const Nom& nom_
   if (nb_elem)
     {
       /* 5.1 : Create zone & grid coords */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize[0],
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::SEQ>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize,
                                                                        zoneId_.back(), xCoords, yCoords, zCoords, coordsId, coordsId, coordsId);
 
       /* 5.2 : Set element connectivity */
@@ -711,10 +706,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
       assert (ne_loc > 0);
 
       cgsize_t start = 1, end = ne_loc;
-      cgsize_t isize[3][1];
-      isize[0][0] = ns_loc;
-      isize[1][0] = end;
-      isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
+      cgsize_t isize[3] = { ns_loc , end , 0 }; /* 0 => boundary vertex size (zero if elements not sorted) */
 
       zoneId_.push_back(-123);
       zonename = nom_dom.nom_me(indZ).getString();
@@ -725,7 +717,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_over_zone(const Domaine * domaine,const
         coordsIdz.push_back(-123);
 
       /* 5.1 : Create zone & Construct the grid coordinates nodes */
-      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_.back(), zonename.c_str(), isize[0],
+      cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_OVER>(icelldim, fileId_, baseId_.back(), zonename.c_str(), isize,
                                                                             zoneId_.back(), xCoords, yCoords, zCoords,
                                                                             coordsIdx.back(), coordsIdy.back(), coordsIdz.empty() ? coordsIdy.back() /* inutile */ : coordsIdz.back());
 
@@ -975,10 +967,10 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   assert (enter_group_comm || (!enter_group_comm && ns_tot > 0 && ne_tot > 0));
 
   /* 4.1 : Create zone & grid */
-  cgsize_t isize[3][1];
-  isize[0][0] = (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot; // si ns_tot = 0, on va juste creer une zone vide
-  isize[1][0] = (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot; // si ne_tot = 0, on va juste creer une zone vide
-  isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
+  cgsize_t isize[3];
+  isize[0] = (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot; // si ns_tot = 0, on va juste creer une zone vide
+  isize[1] = (ne_tot == 0 && enter_group_comm) ? 1 : ne_tot; // si ne_tot = 0, on va juste creer une zone vide
+  isize[2] = 0; /* boundary vertex size (zero if elements not sorted) */
 
   cgns_fill_info_grid_link_file(basename, cgns_type_elem, icelldim,
                                 (ns_tot == 0 && enter_group_comm) ? 1 : ns_tot,
@@ -988,7 +980,7 @@ void Ecrire_CGNS::cgns_write_domaine_par_in_zone(const Domaine * domaine,const N
   int coordsIdx = -123, coordsIdy = -123, coordsIdz = -123, sectionId = -123, sectionId2 = -123;
   zoneId_.push_back(-123);
 
-  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize[0],
+  cgns_helper_.cgns_write_zone_grid_coord<TYPE_ECRITURE_CGNS::PAR_IN>(icelldim, fileId_, baseId_.back(), basename /* Dom name */, isize,
                                                                       zoneId_.back(), xCoords, yCoords, zCoords, coordsIdx, coordsIdy, coordsIdz);
 
   if (ne_tot == 0 && ns_tot == 0) return; // XXX Elie Saikali : zone vide creer, rien a faire de plus ... (cas FILE_PER_COMM_GROUP !!!)

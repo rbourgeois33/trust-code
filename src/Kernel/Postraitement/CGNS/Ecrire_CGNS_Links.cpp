@@ -98,7 +98,7 @@ void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const double t, const TY
   else
     Process::exit("Error in Ecrire_CGNS::cgns_close_grid_or_solution_link_file !!! \n");
 
-  if (Process::is_parallel())
+  if (Process::is_parallel() && (type != TYPE_LINK_CGNS::FINAL_LINK))
     {
       if ( Option_CGNS::FILE_PER_COMM_GROUP && PE_Groups::has_user_defined_group())
         {
@@ -148,15 +148,12 @@ void Ecrire_CGNS::add_new_linked_base_par_over_zone(const std::string& LOC, cons
       assert (ne_loc > 0);
 
       zoneId_.push_back(-123);
-      cgsize_t isize[3][1];
-      isize[0][0] = ns_loc;
-      isize[1][0] = ne_loc;
-      isize[2][0] = 0; /* boundary vertex size (zero if elements not sorted) */
+      cgsize_t isize[3] = { ns_loc , ne_loc , 0 }; /* 0 => boundary vertex size (zero if elements not sorted) */
 
       zonename = nom_dom.nom_me(indZ).getString();
       zonename_link = nom_dom_mod.nom_me(indZ).getString();
 
-      if (cg_zone_write(fileId_, baseId_.back(), zonename.c_str() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
+      if (cg_zone_write(fileId_, baseId_.back(), zonename.c_str() /* Dom name */, isize, CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
         Cerr << "Error Ecrire_CGNS::add_new_linked_base_par_over_zone : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
       // Lien vers maillage initial
@@ -202,12 +199,9 @@ void Ecrire_CGNS::add_new_linked_base(const std::string& LOC, const Nom& nom_dom
       }
 
   zoneId_.push_back(-123);
-  cgsize_t isize[3][1];
-  isize[0][0] = sizeId_[ind_base][0];
-  isize[1][0] = sizeId_[ind_base][1];
-  isize[2][0] = 0;
+  cgsize_t isize[3] = { sizeId_[ind_base][0] , sizeId_[ind_base][1] , 0 };
 
-  if (cg_zone_write(fileId_, baseId_.back(), nom_dom.getChar() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
+  if (cg_zone_write(fileId_, baseId_.back(), nom_dom.getChar() /* Dom name */, isize, CGNS_ENUMV(Unstructured), &zoneId_.back()) != CG_OK)
     Cerr << "Error Ecrire_CGNS::add_new_linked_base : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
   // Lien vers maillage initial
@@ -372,14 +366,14 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
               std::string zone_name = Nom("Zone").nom_me(proc_grp).getString();
               std::string linkfile = file_group_id + ".grid.cgns";
 
-              cgsize_t isize[3][1];
+              cgsize_t isize[3];
               const int ind_som_elem_local_comm = (LOC == "FACES") ? 1 : 0;
-              isize[0][0] = sizeId_som_local_comm_[ind_som_elem_local_comm][gid];
-              isize[1][0] = sizeId_elem_local_comm_[ind_som_elem_local_comm][gid];
-              isize[2][0] = 0;
+              isize[0] = sizeId_som_local_comm_[ind_som_elem_local_comm][gid];
+              isize[1] = sizeId_elem_local_comm_[ind_som_elem_local_comm][gid];
+              isize[2] = 0;
 
               int zoneId_tmp = -1;
-              if (cg_zone_write(fileId_, baseId_[index_glob], zone_name.c_str(), isize[0], CGNS_ENUMV(Unstructured), &zoneId_tmp) != CG_OK)
+              if (cg_zone_write(fileId_, baseId_[index_glob], zone_name.c_str(), isize, CGNS_ENUMV(Unstructured), &zoneId_tmp) != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_zone_write !" << finl, TRUST_CGNS_ERROR();
 
               std::string linkpath = "/" + baseZone_name_[ind_base] + "/" + baseZone_name_[ind_base] + "/GridCoordinates/";
@@ -408,7 +402,7 @@ void Ecrire_CGNS::cgns_write_final_link_file_comm_group()
                     Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_link_write FlowSolution " << solname << finl, TRUST_CGNS_ERROR();
                 }
 
-              cgsize_t idata[2] = {CGNS_STR_SIZE, static_cast<cgsize_t>(time_post_.size())};
+              cgsize_t idata[2] = { CGNS_STR_SIZE , static_cast<cgsize_t>(time_post_.size()) };
               if (cg_ziter_write(fileId_, baseId_[index_glob], zoneId_tmp, "ZoneIterativeData") != CG_OK)
                 Cerr << "Error Ecrire_CGNS::cgns_write_final_link_file_comm_group : cg_ziter_write !" << finl, TRUST_CGNS_ERROR();
 
@@ -454,7 +448,7 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
 
   unlink(fn.c_str());
 
-  if (Process::is_parallel())
+  if (Process::is_parallel() && !is_link)
     {
       cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::PAR>(fn, fileId_, enter_group_comm ? false : true);
 
@@ -486,12 +480,9 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
       if (cg_base_write(fileId_, nom_dom.getChar(), cellDim_[ind_base], Objet_U::dimension, &baseId_[index_glob]) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cg_base_write !" << finl, TRUST_CGNS_ERROR();
 
-      cgsize_t isize[3][1];
-      isize[0][0] = sizeId_[ind_base][0];
-      isize[1][0] = sizeId_[ind_base][1];
-      isize[2][0] = 0;
+      cgsize_t isize[3] = { sizeId_[ind_base][0] , sizeId_[ind_base][1] , 0 };
 
-      if (cg_zone_write(fileId_, baseId_[index_glob], nom_dom.getChar() /* Dom name */, isize[0], CGNS_ENUMV(Unstructured), &zoneId_[index_glob]) != CG_OK)
+      if (cg_zone_write(fileId_, baseId_[index_glob], nom_dom.getChar() /* Dom name */, isize, CGNS_ENUMV(Unstructured), &zoneId_[index_glob]) != CG_OK)
         Cerr << "Error Ecrire_CGNS::cgns_open_solution_link_file : cgns_open_solution_file !" << finl, TRUST_CGNS_ERROR();
 
       std::string linkfile = baseFile_name_ + ".grid.cgns"; // file name
@@ -527,8 +518,7 @@ void Ecrire_CGNS::cgns_write_final_link_file()
       return;
     }
 
-  cgns_init_MPI(true); // set self mpi
-
+  /* Only master proc writes the link file ! */
   if (!Process::me())
     {
       // Fichier link maintenant
@@ -565,8 +555,6 @@ void Ecrire_CGNS::cgns_write_final_link_file()
         }
       cgns_close_grid_or_solution_link_file(-123. /* inutile*/, TYPE_LINK_CGNS::FINAL_LINK, true); // on ferme
     }
-
-  cgns_init_MPI(); // back to COMM_WORLD
 }
 
 #endif /* HAS_CGNS */

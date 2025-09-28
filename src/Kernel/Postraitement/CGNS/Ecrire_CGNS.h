@@ -27,7 +27,7 @@ class Ecrire_CGNS
 #ifdef HAS_CGNS
 public:
   void cgns_associer_domaine_dis(const Domaine_dis_base& );
-  void cgns_init_MPI(bool is_self = false) const;
+  void cgns_init_MPI() const;
   void cgns_set_postraiter_domain() { postraiter_domaine_ = true; }
   void cgns_set_is_dual_domain() { is_dual_ = true; }
   void cgns_set_is_deformable_domain() { is_deformable_ = true; }
