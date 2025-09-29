@@ -467,7 +467,7 @@ void Domaine_Poly_base::detecter_faces_non_planes() const
   //sur chaque proc : on cherche l'angle le plus grand entre un sommet et le plan de sa face
   for (f = 0; f < nb_faces(); f++)
     for (i = 0; i < f_s.dimension(1) && (s = f_s(f, i)) >= 0; i++)
-      if ((sin2 = std::pow(dot(&xs(s, 0), &nf(f, 0), &xv_(f, 0)) / fs(f), 2) / dot(&xs(s, 0), &xs(s, 0), &xv_(f, 0), &xv_(f, 0))) > val[rk])
+      if (fs(f) > 0 && (sin2 = std::pow(dot(&xs(s, 0), &nf(f, 0), &xv_(f, 0)) / fs(f), 2) / dot(&xs(s, 0), &xs(s, 0), &xv_(f, 0), &xv_(f, 0))) > val[rk])
         val[rk] = sin2, face(rk) = f, elem1(rk) = f_e(f, 0), elem2(rk) = f_e(f, 1);
   envoyer_all_to_all(val, val), envoyer_all_to_all(face, face), envoyer_all_to_all(elem1, elem1), envoyer_all_to_all(elem2, elem2);
 

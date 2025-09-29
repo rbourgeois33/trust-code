@@ -266,7 +266,7 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
                     if (m == 1 || k > 0) sb = f_s(f, m ? (k + 1 < f_s.dimension(1) && f_s(f, k + 1) >= 0 ? k + 1 : 0) : k - 1); //sommet suivant (m = 1) ou precedent avec k > 0 -> facile
                     else for (n = f_s.dimension(1) - 1; (sb = f_s(f, n)) == -1; ) n--; //sommet precedent avec k = 0 -> on cherche a partir de la fin
                     auto v = cross(D, D, &xs(s, 0), &xs(sb, 0), &xv_(f, 0), &xv_(f, 0));//produit vectoriel (xs - xf)x(xsb - xf)
-                    surf_fs[ll] += std::fabs(dot(&v[0], &nf(f, 0))) / fs(f) / 4; //surface a ajouter
+                    if (fs(f) > 0) surf_fs[ll] += std::fabs(dot(&v[0], &nf(f, 0))) / fs(f) / 4; //surface a ajouter
                     for (d = 0; d < D; d++) vec_fs[ll][m][d] = (xs(s, d) + xs(sb, d)) / 2 - xv_(f, d); //vecteur face -> arete
                   }
                 }
@@ -279,7 +279,10 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
           for (j = 0; j < (int) se_f[i].size(); j++) se_f[i][j] = (int)(std::lower_bound(s_f.begin(), s_f.end(), se_f[i][j]) - s_f.begin());
         for (vol_es.resize(n_e), vol_s = 0, i = 0; i < n_e; vol_s += vol_es[i], i++)
           for (e = s_eb[i], vol_es[i] = 0, j = 0; j < (int) se_f[i].size(); j++)
-            f = s_f[k = se_f[i][j]], vol_es[i] += surf_fs[k] * std::fabs(dot(&xp_(e, 0), &nf(f, 0), &xv_(f, 0))) / fs(f) / D;
+            {
+              f = s_f[k = se_f[i][j]];
+              if (fs(f) > 0) vol_es[i] += surf_fs[k] * std::fabs(dot(&xp_(e, 0), &nf(f, 0), &xv_(f, 0))) / fs(f) / D;
+            }
 
         for (essai = 0; essai < 3; essai++) /* essai 0 : MPFA O -> essai 1 : MPFA O avec x_fs mobiles -> essai 2 : MPFA symetrique (corecive, mais pas tres consistante) */
           {
@@ -292,7 +295,8 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
                       for (e = s_eb[i], j = 0; j < (int) se_f[i].size(); j++)
                         for (sgn = e == f_e(f = s_f[k = se_f[i][j]], 0) ? 1 : -1, n = 0; n < N; n++)
                           {
-                            for (l = 0; l < D; l++) fac[l] = sgn * nu_dot(nu, e, n, &nf(f, 0), i3[l]) * surf_fs[k] / fs(f) / vol_es[i]; //vecteur lambda_e nf sortant * facteur commun
+                            const double inv_fs = fs(f) > 0 ? 1. / fs(f) : 0.;
+                            for (l = 0; l < D; l++) fac[l] = sgn * nu_dot(nu, e, n, &nf(f, 0), i3[l]) * surf_fs[k] * inv_fs / vol_es[i]; //vecteur lambda_e nf sortant * facteur commun
                             B(n, il) += fac[d] * (xv_(f, db) - xp_(e, db)) - fac[db] * (xv_(f, d) - xp_(e, d)); //second membre
                             for (l = 0; l < D - 1; l++) M(n, (D - 1) * k + l, il) += fac[db] * vec_fs[k][l][d] - fac[d] * vec_fs[k][l][db]; //matrice
                           }
@@ -325,7 +329,10 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
                     }
                   else for (j = 0; j < n_ef; j++)
                       for (sgn = e == f_e(f = s_f[k = se_f[i][j]], 0) ? 1 : -1, d = 0; d < D; d++) /* essai 2 : gradient non consistant */
-                        X(j, d) = surf_fs[k] / vol_es[i] * sgn * nf(f, d) / fs(f);
+                        {
+                          const double inv_fs = fs(f) > 0 ? 1. / fs(f) : 0.;
+                          X(j, d) = surf_fs[k] / vol_es[i] * sgn * nf(f, d) * inv_fs;
+                        }
 
                   /* flux et equation. Remarque : les CLs complexes des equations scalaires sont gerees directement dans Op_Diff_PolyMAC_MPFA_Elem */
                   for (j = 0; j < n_ef; j++)
@@ -335,7 +342,8 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
                       int is_dir = cl && (is_p ? sub_type(Neumann, *cl) : sub_type(Dirichlet, *cl) || sub_type(Dirichlet_homogene, *cl)); //est-elle de Dirichlet?
                       for (l = 0; l < n_ef; l++)
                         {
-                          x = sgn * nu_dot(nu, e, n, &nf(f, 0), &X(l, 0)) * surf_fs[k] / fs(f); //contribution au flux
+                          const double inv_fs = fs(f) > 0 ? 1. / fs(f) : 0.;
+                          x = sgn * nu_dot(nu, e, n, &nf(f, 0), &X(l, 0)) * surf_fs[k] * inv_fs; //contribution au flux
                           if (sgn > 0) Ff(k, se_f[i][l], n) += x, Feb(k, i, n) -= x; //flux amont->aval
                           if (!is_dir) Mf(n, se_f[i][l], k) += x, Meb(n, i, k) += x; //equation sur u_fs (sauf si CL Dirichlet)
                         }
@@ -391,7 +399,7 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
         for (i = 0; i < n_f; i++)
           for (f = s_f[i], j = 0; j < n_eb; j++)
             for (k = (int)(std::lower_bound(fsten_eb.addr() + fsten_d(f), fsten_eb.addr() + fsten_d(f + 1), s_eb[j]) - fsten_eb.addr()), n = 0; n < N; n++)
-              phif_c(k, n) += Feb(i, j, n) / fs(f);
+              if (fs(f) > 0) phif_c(k, n) += Feb(i, j, n) / fs(f);
       }
 
 
@@ -402,7 +410,8 @@ void Domaine_PolyMAC_MPFA::fgrad(int N, int is_p, const Conds_lim& cls, const In
   for (phif_d.resize(1), phif_d = 0, phif_e.resize(0), f = 0, i = 0; f < nb_faces_tot(); f++, phif_d.append_line(i))
     if (fbord(f) >= 0 || (f_e(f, 0) >= 0 && f_e(f, 1) >= 0))
       {
-        for (n = 0; n < N; n++) scale(n) = nu_dot(nu, f_e(f, 0), n, &nf(f, 0), &nf(f, 0)) / (fs(f) * vf(f)); //ordre de grandeur des coefficients
+        for (n = 0; n < N; n++)
+          if (fs(f) > 0) scale(n) = nu_dot(nu, f_e(f, 0), n, &nf(f, 0), &nf(f, 0)) / (fs(f) * vf(f)); //ordre de grandeur des coefficients
         for (j = fsten_d(f); j < fsten_d(f + 1); j++)
           {
             for (skip = !full_stencil && fsten_eb(j) != f_e(f, 0), n = 0; n < N; n++) skip &= std::fabs(phif_c(j, n)) < 1e-8 * scale(n); //que mettre ici?

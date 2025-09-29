@@ -292,7 +292,7 @@ void Op_Diff_PolyMAC_MPFA_Face::ajouter_blocs(matrices_t matrices, DoubleTab& se
                         tpfa = 0;
                     }
 
-                  double df_sur_d = tpfa && fcl(fb, 0) ?
+                  double df_sur_d = tpfa && fcl(fb, 0) && fs(fb) > 0.0 ?
                                     std::max(std::fabs(domaine.dot(&xv(fb, 0), &nf(fb, 0), &xv(f, 0)) / domaine.dot(&xv(fb, 0), &nf(fb, 0), &xp(e, 0))), 1.0) : 1.0;
 
                   int c = (e != f_e(fb, 0));
