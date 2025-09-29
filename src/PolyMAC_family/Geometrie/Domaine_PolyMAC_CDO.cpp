@@ -135,6 +135,7 @@ void Domaine_PolyMAC_CDO::init_equiv() const
       for (i = 0; i < e_f.dimension(1) && (f1 = e_f(e1, i)) >= 0; i++)
         for (j = 0, ntot(f)++; j < e_f.dimension(1) && (f2 = e_f(e2, j)) >= 0; j++)
           {
+            if (std::fabs(fs(f1) * fs(f2)) < 1e-20) continue;
             if (!is_PolyMAC_CDO || (is_PolyMAC_CDO && Option_PolyMAC_family::MAILLAGE_VDF))
               if (std::fabs(std::fabs(dot(&nf(f1, 0), &nf(f2, 0)) / (fs(f1) * fs(f2))) - 1) > 1e-6)
                 continue; //normales colineaires?
