@@ -34,6 +34,34 @@
 #include <cmath>
 #include <Pb_Multiphase.h>
 
+namespace
+{
+inline void project_axis_face(const IntTab& f_s, const DoubleTab& xs, const DoubleTab& xp,
+                              DoubleTrav& xfb, int f, int e)
+{
+  int s0 = -1, s1 = -1;
+  for (int i = 0; i < f_s.dimension(1) && s1 < 0; i++)
+    {
+      const int s = f_s(f, i);
+      if (s < 0) break;
+      if (s0 < 0) s0 = s;
+      else s1 = s;
+    }
+
+  assert(s0 >= 0 && s1 >= 0);
+  const double tx = xs(s1, 0) - xs(s0, 0), ty = xs(s1, 1) - xs(s0, 1);
+  const double nx = ty, ny = -tx;
+  const double n2 = nx * nx + ny * ny;
+
+  const double mx = 0.5 * (xs(s0, 0) + xs(s1, 0)), my = 0.5 * (xs(s0, 1) + xs(s1, 1));
+  const double dx = xp(e, 0) - mx, dy = xp(e, 1) - my;
+  const double coeff = (dx * nx + dy * ny) / n2;
+
+  xfb(f, 0) = xp(e, 0) - coeff * nx;
+  xfb(f, 1) = xp(e, 1) - coeff * ny;
+}
+}
+
 Implemente_instanciable(Champ_Face_PolyMAC_P0,"Champ_Face_PolyMAC_P0",Champ_Face_PolyMAC_P0P1NC) ;
 
 Sortie& Champ_Face_PolyMAC_P0::printOn(Sortie& os) const { return os << que_suis_je() << " " << le_nom(); }
@@ -121,7 +149,8 @@ Champ_base& Champ_Face_PolyMAC_P0::affecter_(const Champ_base& ch)
       for (int f = 0; f < domaine.nb_faces_tot(); f++)
         for (int d = 0; d < D; d++)
           for (int n = 0; n < N; n++)
-            val(f, n) += eval(unif ? 0 : f, N * d + n) * nf(f, d) / fs(f);
+            if (fs(f) > 0)
+              val(f, n) += eval(unif ? 0 : f, N * d + n) * nf(f, d) / fs(f);
 
       update_ve(val);
       //copie dans toutes les cases
@@ -198,7 +227,8 @@ void Champ_Face_PolyMAC_P0::init_ve2() const
   const DoubleVect& pf = equation().milieu().porosite_face(),
                     &pe = equation().milieu().porosite_elem(),
                      &fs = domaine.face_surfaces(), &ve = domaine.volumes();
-  const DoubleTab& xp = domaine.xp(), &xv = domaine.xv(), &nf = domaine.face_normales();
+  const DoubleTab& xp = domaine.xp(), &xv = domaine.xv(), &nf = domaine.face_normales(),
+                   &xs = domaine.domaine().coord_sommets();
   const IntTab& f_e = domaine.face_voisins(), &e_f = domaine.elem_faces(),
                 &e_s = domaine.domaine().les_elems(), &f_s = domaine.face_sommets();
 
@@ -212,13 +242,21 @@ void Champ_Face_PolyMAC_P0::init_ve2() const
   DoubleTrav xfb(domaine.nb_faces_tot(), D), ve2, ve2i, A, B, P, W(1);
   IntTrav pvt;
 
+  const double tol_norm2 = 1e-24;
   for (int f = 0; f < domaine.nb_faces_tot(); f++)
     if (fcl_(f, 0) == 1 || fcl_(f, 0) == 2) //Neumann / Symetrie
       {
         const int e = f_e(f, 0);
-        double scal = domaine.dot(&xv(f, 0), &nf(f, 0), &xp(e, 0)) / (fs(f) * fs(f));
-        for (int d = 0; d < D; d++)
-          xfb(f, d) = xp(e, d) + scal * nf(f, d);
+        const double nf_norm2 = domaine.dot(&nf(f, 0), &nf(f, 0));
+
+        if (!bidim_axi || nf_norm2 > tol_norm2)
+          {
+            double scal = domaine.dot(&xv(f, 0), &nf(f, 0), &xp(e, 0)) / (fs(f) * fs(f));
+            for (int d = 0; d < D; d++)
+              xfb(f, d) = xp(e, d) + scal * nf(f, d);
+          }
+        else
+          project_axis_face(f_s, xs, xp, xfb, f, e);
       }
     else if (fcl_(f, 0))
       {
@@ -308,6 +346,7 @@ void Champ_Face_PolyMAC_P0::init_ve2() const
           for (int i = 0; i < nc; i++)
             {
               int f = i_v[i][0];
+              if (std::fabs(fs(f)) < 1e-20) continue;
               int db = i_v[i][1];
               xf = db < 0 ? &xv(f, 0) : &xfb(f, 0);
 
