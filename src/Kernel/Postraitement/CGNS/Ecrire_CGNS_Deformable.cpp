@@ -297,6 +297,11 @@ void Ecrire_CGNS::cgns_write_final_link_file_pb_deformable()
     }
 }
 
+/*
+ * ******************** *
+ * VERSION SEQUENTIELLE *
+ * ******************** *
+ */
 void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
 {
   const int ind = TRUST_2_CGNS::get_index_nom_vector(doms_written_, nom_dom);
@@ -344,6 +349,11 @@ void Ecrire_CGNS::cgns_write_domaine_deformable_seq(const Domaine * domaine,cons
     }
 }
 
+/*
+ * ************************* *
+ * VERSION PARALLELE IN ZONE *
+ * ************************* *
+ */
 void Ecrire_CGNS::cgns_write_domaine_deformable_par_in_zone(const Domaine * domaine,const Nom& nom_dom, const DoubleTab& les_som, const IntTab& les_elem, const Motcle& type_elem)
 {
 #ifdef MPI_

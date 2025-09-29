@@ -72,11 +72,14 @@ void Ecrire_CGNS::cgns_open_grid_base_link_file()
       else
         cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_);
     }
+
+  grid_file_opened_ = true;
 }
 
 void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const double t, const TYPE_LINK_CGNS type, bool is_cerr)
 {
   assert(Option_CGNS::USE_LINKS && !postraiter_domaine_);
+
   std::string fn; // file name
 
   if (type == TYPE_LINK_CGNS::GRID)
@@ -110,6 +113,12 @@ void Ecrire_CGNS::cgns_close_grid_or_solution_link_file(const double t, const TY
     }
   else
     cgns_helper_.cgns_close_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_, is_cerr);
+
+  if (type == TYPE_LINK_CGNS::GRID)
+    grid_file_opened_ = false;
+
+  if (type == TYPE_LINK_CGNS::SOLUTION)
+    solution_file_opened_ = false;
 }
 
 void Ecrire_CGNS::cgns_fill_info_grid_link_file(const char* basename, const CGNS_TYPE& cgns_type_elem, const int icelldim, const int nb_som, const int nb_elem, const bool is_polyedre)
@@ -457,6 +466,9 @@ void Ecrire_CGNS::cgns_open_solution_link_file(const double t, bool is_link)
     }
   else
     cgns_helper_.cgns_open_file<TYPE_RUN_CGNS::SEQ>(fn, fileId_, true);
+
+  if (!is_link)
+    solution_file_opened_ = true;
 
   if (is_deformable_)
     return; /* Stop here si deformable */

@@ -256,10 +256,7 @@ void Ecrire_CGNS::cgns_write_domaine(const Domaine * dom,const Nom& nom_dom, con
 
   if (Option_CGNS::USE_LINKS && !postraiter_domaine_ && !is_deformable_)
     if (!grid_file_opened_)
-      {
-        cgns_open_grid_base_link_file();
-        grid_file_opened_ = true; // On ouvre pour .grid.cgns
-      }
+      cgns_open_grid_base_link_file();
 
   if (Process::is_parallel())
     {
@@ -368,12 +365,9 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
     {
       assert (Option_CGNS::USE_LINKS);
       if (grid_file_opened_ && !is_deformable_)
-        {
-          cgns_close_grid_or_solution_link_file(0. /* inutile */, TYPE_LINK_CGNS::GRID, false);
-          grid_file_opened_ = false;
-        }
+        cgns_close_grid_or_solution_link_file(0. /* inutile */, TYPE_LINK_CGNS::GRID, false);
 
-      if (!solution_file_opened_)
+      if (!solution_file_opened_ || is_deformable_)
         {
           Nom nom_dom;
           std::string loc_link;
@@ -415,8 +409,6 @@ void Ecrire_CGNS::cgns_fill_field_loc_map(const Domaine& domaine, const std::str
 
           if (!is_deformable_)
             cgns_open_solution_link_file(time_post_.back()); // 1ere ouverture sol file ici ! puis dans cgns_add_time
-
-          solution_file_opened_ = true;
         }
     }
 }
