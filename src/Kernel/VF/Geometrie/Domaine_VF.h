@@ -207,6 +207,8 @@ protected:
   DoubleTab volumes_entrelaces_dir_;        // volumes entrelaces par cote
   DoubleTab face_normales_;             // normales aux faces
 
+  inline double volume_entrelace_axi(double r_face, double r_elem, double axis_length) const;
+
   IntTab face_voisins_;                          // connectivite face/elements
   IntTab face_voisins_fictifs_;           // connectivite face/elements fictifs
   DoubleTab xp_;                            // centres de gravite des elements
@@ -659,6 +661,13 @@ inline double Domaine_VF::dot(const double *a, const double *b, const double *ma
   double res = 0;
   for (int i = 0; i < dimension; i++) res += (a[i] - (ma ? ma[i] : 0)) * (b[i] - (mb ? mb[i] : 0));
   return res;
+}
+
+inline double Domaine_VF::volume_entrelace_axi(double r_face, double r_elem, double axis_length) const
+{
+  const double dr = std::fabs(r_elem - r_face);
+  const double r = (r_elem < r_face) ? r_elem : r_face;
+  return 2. * M_PI * (r * dr + 0.5 * dr * dr) * axis_length;
 }
 
 /* produit vectoriel de deux vecteurs (toujours 3D, meme en 2D) */

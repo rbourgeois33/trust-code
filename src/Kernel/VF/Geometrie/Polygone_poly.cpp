@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -83,15 +83,24 @@ void Polygone_poly::normale(int num_Face,DoubleTab& Face_normales,
 
   double dot=(nx*x1+ny*y1);
 
+  double scale = 1.0;
+  if (Objet_U::bidim_axi)
+    {
+      const double r0 = les_coords(n0,0);
+      const double r1 = les_coords(n1,0);
+      const double r_bar = 0.5*(r0 + r1);
+      scale = 2.0 * M_PI * r_bar; // multiply edge-length normal by Δθ * r̄
+    }
+
   if ( (dot) > 0 )
     {
-      Face_normales(num_Face,0) = - nx;
-      Face_normales(num_Face,1) = - ny;
+      Face_normales(num_Face,0) = - nx * scale;
+      Face_normales(num_Face,1) = - ny * scale;
     }
   else
     {
       assert(dot !=0);
-      Face_normales(num_Face,0) = nx;
-      Face_normales(num_Face,1) = ny;
+      Face_normales(num_Face,0) = nx * scale;
+      Face_normales(num_Face,1) = ny * scale;
     }
 }

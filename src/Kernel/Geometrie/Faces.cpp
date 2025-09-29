@@ -550,7 +550,7 @@ void Faces_32_64<_SIZE_>::calculer_surfaces(DoubleVect_t& surfaces) const
                 const double r0 = x0;
                 const double r1 = x1;
                 const double rbar = 0.5 * (r0 + r1);
-                surfaces(face) = 2.0 * M_PI * L * (rbar ? rbar : 1.0);
+                surfaces(face) = 2.0 * M_PI * L * rbar;
               }
           }
         break;

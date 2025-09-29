@@ -239,7 +239,7 @@ void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secm
   dgb_v_.clear();
 
   for (int f = 0; f < domaine.nb_faces_tot(); f++)
-    if (fcl(f, 0) > 1)  //Dirichlet/Symetrie : pression du voisin + correction en regardant l'eq de NS dans celui-ci
+    if (fs(f) > 0 && fcl(f, 0) > 1)  //Dirichlet/Symetrie : pression du voisin + correction en regardant l'eq de NS dans celui-ci
       {
         const int e = f_e(f, 0);
         int m = 0;
