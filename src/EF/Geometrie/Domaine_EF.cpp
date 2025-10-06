@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -466,13 +466,14 @@ void Domaine_EF::calculer_Bij_gen(DoubleTab& bij)
         for (int f=0; f<nbface_elem; f++)
           {
             int face=elemfaces(elem,f);
+            const double ratio = bidim_axi && xv_(face, 0) > 1e-10 ? xp_(elem, 0) / xv_(face, 0) : 1.0;
             for (int s=0; s<nbsom_face; s++)
               if (face_sommets_(face,s)==les_elems(elem,i))
 
                 // on cherche les faces contribuantes ,ce n'est pas optimal
                 for (int j=0; j<dimension; j++)
                   {
-                    bij(elem,i,j)+=face_normales(face,j)*oriente_normale(face,elem);
+                    bij(elem,i,j)+=face_normales(face,j)*oriente_normale(face,elem) * ratio;
                   }
           }
       }
@@ -628,6 +629,7 @@ void Domaine_EF::calculer_Bij(DoubleTab& bij)
     }
   // verif
   Cerr<<"max/min/max_abs bij "<<mp_max_vect(bij)<< " "<<mp_min_vect(bij)<<" "<<mp_max_abs_vect(bij)<<finl;
+  if (bidim_axi) return;
   int err=0;
   for (int elem=0; elem<nbelem; elem++)
     for (int j=0; j<dimension; j++)
