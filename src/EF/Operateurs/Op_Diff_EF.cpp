@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -88,6 +88,11 @@ void Op_Diff_EF::associer_diffusivite(const Champ_base& diffu)
   diffusivite_ = diffu;
 }
 
+void Op_Diff_EF::associer_diffusivite_volumique(const Champ_base& diffu)
+{
+  diffusivite_volumique_ = diffu;
+}
+
 void Op_Diff_EF::completer()
 {
   Operateur_base::completer();
@@ -97,6 +102,16 @@ void Op_Diff_EF::completer()
 const Champ_base& Op_Diff_EF::diffusivite() const
 {
   return diffusivite_;
+}
+
+const Champ_base& Op_Diff_EF::diffusivite_volumique() const
+{
+  if (!diffusivite_volumique_.non_nul())
+    {
+      Cerr << que_suis_je() << " has no volumic diffusivity associated." << finl;
+      Process::exit();
+    }
+  return diffusivite_volumique_.valeur();
 }
 
 void Op_Diff_EF::remplir_nu(DoubleTab& nu) const
@@ -117,6 +132,117 @@ void Op_Diff_EF::remplir_nu(DoubleTab& nu) const
     }
 
 //  nu.echange_espace_virtuel();
+}
+
+void Op_Diff_EF::remplir_lambda(DoubleTab& lambda) const
+{
+  assert(diffusivite_volumique_.non_nul());
+  const Domaine_EF& domaine_EF = le_dom_EF.valeur();
+  if (!lambda.get_md_vector().non_nul())
+    domaine_EF.domaine().creer_tableau_elements(lambda);
+
+  const DoubleTab& diffu = diffusivite_volumique().valeurs();
+  if (diffu.size() == 1)
+    lambda = diffu(0, 0);
+  else if (diffu.nb_dim() == 1)
+    lambda = diffu;
+  else
+    {
+      assert(diffu.dimension(1) == 1);
+      for (int i = 0; i < diffu.size_totale(); i++) lambda(i) = diffu(i, 0);
+    }
+}
+
+void Op_Diff_EF::calculer_von_mises(const DoubleTab& deplacement, DoubleTab& deformation, DoubleTab& contraintes, DoubleTab& von_mises) const
+{
+  const Domaine_EF& domaine_ef = le_dom_EF.valeur();
+  const Domaine& domaine = domaine_ef.domaine();
+  const int nb_elem_tot = domaine.nb_elem_tot();
+  const int nb_som_elem = domaine.nb_som_elem();
+  const DoubleTab& Bij_thilde = domaine_ef.Bij_thilde();
+  const DoubleTab& iphi_thilde = domaine_ef.IPhi_thilde();
+  const DoubleVect& volumes_thilde = domaine_ef.volumes_thilde();
+  const IntTab& elems = domaine.les_elems();
+  const DoubleTab& xs = domaine_ef.domaine().les_sommets();
+  const double r_tol = 1e-12;
+
+  remplir_nu(nu_);
+  const bool have_lambda = diffusivite_volumique_.non_nul();
+  if (have_lambda) remplir_lambda(lambda_);
+
+  von_mises = 0.;
+
+  for (int elem = 0; elem < nb_elem_tot; elem++)
+    if (elem_contribue(elem))
+      {
+        double grad[3][3] = {{0., 0., 0.}, {0., 0., 0.}, {0., 0., 0.}};
+        double sum_ur_over_r = 0.;
+        double sum_w = 0.;
+
+        for (int j = 0; j < nb_som_elem; j++)
+          {
+            const int som = elems(elem, j);
+            for (int comp = 0; comp < dimension; comp++)
+              for (int dir = 0; dir < dimension; dir++)
+                grad[comp][dir] += deplacement(som, comp) * Bij_thilde(elem, j, dir);
+            if (bidim_axi)
+              {
+                const double r_s = xs(som, 0);
+                const double w = iphi_thilde(elem, j);
+                if (r_s > r_tol && w > 0.)
+                  {
+                    sum_ur_over_r += (deplacement(som, 0) / r_s) * w;
+                    sum_w += w;
+                  }
+              }
+          }
+
+        const double vol = volumes_thilde(elem);
+        double inv_vol = 1.0 / vol;
+        // En RZ: Bij_thilde porte r, volumes_thilde porte 2π r ⇒ il faut remonter le facteur 2π
+        for (int comp = 0; comp < dimension; comp++)
+          for (int dir = 0; dir < dimension; dir++)
+            grad[comp][dir] *= inv_vol;
+
+        double eps_xx = grad[0][0];
+        double eps_yy = grad[1][1];
+        double eps_zz = (dimension == 3) ? grad[2][2] : 0.;
+        double gamma_xy = grad[0][1] + grad[1][0];
+        double gamma_yz = (dimension == 3) ? (grad[1][2] + grad[2][1]) : 0.;
+        double gamma_zx = (dimension == 3) ? (grad[2][0] + grad[0][2]) : 0.;
+
+        if (bidim_axi)
+          {
+            // hoop strain eps_theta = average of (u_r / r) over the element with IPhi_thilde weights
+            const double eps_theta = (sum_w > 0.) ? (sum_ur_over_r / sum_w) : eps_xx; // at the axis, fallback to eps_rr
+            eps_zz = eps_theta;
+          }
+
+        const double mu = nu_(elem);
+        const double lambda = have_lambda ? lambda_(elem) : 0.;
+        const double trace_eps = eps_xx + eps_yy + eps_zz;
+
+        const double sigma_xx = 2. * mu * eps_xx + lambda * trace_eps;
+        const double sigma_yy = 2. * mu * eps_yy + lambda * trace_eps;
+        const double sigma_zz = 2. * mu * eps_zz + lambda * trace_eps;
+        const double tau_xy = mu * gamma_xy;
+        const double tau_yz = mu * gamma_yz;
+        const double tau_zx = mu * gamma_zx;
+
+        const double vm2 = 0.5 * ((sigma_xx - sigma_yy) * (sigma_xx - sigma_yy) +
+                                  (sigma_yy - sigma_zz) * (sigma_yy - sigma_zz) +
+                                  (sigma_zz - sigma_xx) * (sigma_zz - sigma_xx)) +
+                           3. * (tau_xy * tau_xy + tau_yz * tau_yz + tau_zx * tau_zx);
+        const double vm = (vm2 > 0.) ? std::sqrt(vm2) : 0.;
+
+        von_mises(elem, 0) = vm;
+        deformation(elem, 0) = eps_xx;
+        deformation(elem, 1) = eps_yy;
+        deformation(elem, 2) = eps_zz;
+        contraintes(elem, 0) = sigma_xx;
+        contraintes(elem, 1) = sigma_yy;
+        contraintes(elem, 2) = sigma_zz;
+      }
 }
 
 DoubleTab& Op_Diff_EF::ajouter(const DoubleTab& tab_inconnue, DoubleTab& resu) const
@@ -336,7 +462,98 @@ void Op_Diff_EF::ajouter_contribution(const DoubleTab& transporte, Matrice_Morse
           }
       }
   if (N == 1) ajouter_contributions_bords(matrice);
+  else if (bidim_axi) ajouter_contribution_axisymetrique(N, matrice);
 
+  if (diffusivite_volumique_.non_nul())
+    ajouter_contribution_diffusivite_volumique(N, matrice);
+}
+
+void Op_Diff_EF::ajouter_contribution_axisymetrique(int N, Matrice_Morse& matrice) const
+{
+  const Domaine_EF& domaine_ef = ref_cast(Domaine_EF, equation().domaine_dis());
+  const DoubleTab& IPhi_thilde = domaine_ef.IPhi_thilde();
+  const DoubleTab& xs = domaine_ef.domaine().les_sommets();
+  const IntTab& elems = domaine_ef.domaine().les_elems();
+  const int nb_elem_tot = domaine_ef.domaine().nb_elem_tot();
+  const int nb_som_elem = domaine_ef.domaine().nb_som_elem();
+  const int nb_som = domaine_ef.domaine().nb_som();
+
+  const double r_tol = 1e-12;
+  for (int elem = 0; elem < nb_elem_tot; elem++)
+    if (elem_contribue(elem))
+      for (int i1 = 0; i1 < nb_som_elem; i1++)
+        {
+          const int glob = elems(elem, i1);
+          if (glob >= nb_som) continue;
+          const double r_s = xs(glob, 0);
+          if (r_s <= r_tol) continue;
+          const double coeff = 2.0 * nu_(elem) / (r_s * r_s);
+          matrice_coef(glob * N, glob * N) += IPhi_thilde(elem, i1) * coeff;
+        }
+}
+
+void Op_Diff_EF::ajouter_contribution_diffusivite_volumique(int N, Matrice_Morse& matrice) const
+{
+  remplir_lambda(lambda_);
+  const double *lambda_ptr = lambda_.addr();
+
+  const Domaine_EF& domaine_ef = ref_cast(Domaine_EF, equation().domaine_dis());
+  const DoubleVect& volumes = domaine_ef.volumes();
+  const DoubleTab& bij = domaine_ef.Bij();
+  const DoubleTab& IPhi_thilde = domaine_ef.IPhi_thilde();
+  const IntTab& elems = domaine_ef.domaine().les_elems();
+  const int nb_elem_tot = domaine_ef.domaine().nb_elem_tot();
+  const int nb_som_elem = domaine_ef.domaine().nb_som_elem();
+  const int nb_som = domaine_ef.domaine().nb_som();
+
+  for (int elem = 0; elem < nb_elem_tot; elem++)
+    if (elem_contribue(elem))
+      {
+        double pond_lambda = lambda_ptr[elem] / volumes(elem);
+
+        for (int i1 = 0; i1 < nb_som_elem; i1++)
+          {
+            const int glob = elems(elem, i1);
+            if (glob >= nb_som) continue;
+            for (int i2 = 0; i2 < nb_som_elem; i2++)
+              {
+                const int glob2 = elems(elem, i2);
+                for (int n = 0; n < N; n++)
+                  for (int d = 0; d < N; d++)
+                    matrice_coef(glob * N + n, glob2 * N + d) += bij(elem, i1, n) * bij(elem, i2, d) * pond_lambda;
+              }
+          }
+
+        if (bidim_axi)
+          {
+            const DoubleTab& xs = domaine_ef.domaine().les_sommets();
+            const double r_tol = 1e-12;
+            for (int i1 = 0; i1 < nb_som_elem; i1++)
+              {
+                const int glob = elems(elem, i1);
+                if (glob >= nb_som) continue;
+                const double r_s1 = xs(glob, 0);
+                const double inv_r1 = (r_s1 > r_tol) ? (1.0 / r_s1) : 0.0;
+                const double m1 = IPhi_thilde(elem, i1) * inv_r1; // v_r / r
+
+                for (int i2 = 0; i2 < nb_som_elem; i2++)
+                  {
+                    const int glob2 = elems(elem, i2);
+                    const double r_s2 = xs(glob2, 0);
+                    const double inv_r2 = (r_s2 > r_tol) ? (1.0 / r_s2) : 0.0;
+                    const double m2 = IPhi_thilde(elem, i2) * inv_r2; // u_r / r
+
+                    for (int n = 0; n < N; n++)
+                      matrice_coef(glob * N + n, glob2 * N + 0) += bij(elem, i1, n) * m2 * pond_lambda;
+
+                    for (int n = 0; n < N; n++)
+                      matrice_coef(glob * N + 0, glob2 * N + n) += m1 * bij(elem, i2, n) * pond_lambda;
+
+                    matrice_coef(glob * N + 0, glob2 * N + 0) += m1 * m2 * pond_lambda;
+                  }
+              }
+          }
+      }
 }
 
 void Op_Diff_EF::ajouter_contribution_new(const DoubleTab& transporte, Matrice_Morse& matrice ) const
@@ -423,7 +640,42 @@ void Op_Diff_EF::ajouter_bords(const DoubleTab& tab_inconnue,DoubleTab& resu,  i
 
   if (N > 1)
     {
-      // Cerr<<__PRETTY_FUNCTION__<<" non code pour les vecteurs"<<finl;
+      bool has_traction_bc = false;
+      for (int n_bord = 0; n_bord < domaine_Cl_EF.nb_cond_lim(); n_bord++)
+        if (Motcle(domaine_Cl_EF.les_conditions_limites(n_bord)->que_suis_je()) == Motcle("Paroi_pression_imposee"))
+          {
+            has_traction_bc = true;
+            break;
+          }
+
+      if (!has_traction_bc)
+        {
+          modifier_flux(*this);
+          return;
+        }
+
+      flux_bords_ = 0.;
+      for (int n_bord = 0; n_bord < domaine_Cl_EF.nb_cond_lim(); n_bord++)
+        {
+          const Cond_lim& la_cl = domaine_Cl_EF.les_conditions_limites(n_bord);
+          if (Motcle(la_cl->que_suis_je()) != Motcle("Paroi_pression_imposee")) continue;
+
+          const Front_VF& le_bord = ref_cast(Front_VF, la_cl->frontiere_dis());
+          const Neumann& la_cl_paroi = ref_cast(Neumann, la_cl.valeur());
+          const int ndeb = le_bord.num_premiere_face();
+          const int nfin = ndeb + le_bord.nb_faces();
+          for (int face = ndeb; face < nfin; face++)
+            {
+              const double val = la_cl_paroi.flux_impose(face - ndeb);
+              for (int i1 = 0; i1 < nb_som_face; i1++)
+                {
+                  const int glob = face_sommets(face, i1);
+                  for (int comp = 0; comp < N; comp++)
+                    resu(glob, comp) -= val * face_normales(face, comp) / nb_som_face;
+                }
+            }
+        }
+
       modifier_flux(*this);
       return;
     }
