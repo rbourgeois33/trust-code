@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -122,6 +122,33 @@ void construit_connectivite_sommet(int type_cl,Static_Int_Lists& som_face_bord,c
     }
 
 }
+
+static void construire_normale_locale_face(const DoubleTab& face_normales,
+                                           const IntTab& faces_sommets,
+                                           const DoubleTab& coord_sommets,
+                                           int face,
+                                           int dimension,
+                                           int nb_som_face,
+                                           bool is_bidim_axi,
+                                           ArrOfDouble& normale_locale)
+{
+  for (int d = 0; d < dimension; d++)
+    normale_locale[d] = face_normales(face, d);
+
+  if (!(is_bidim_axi && norme_array(normale_locale) < 1e-12))
+    return;
+
+  for (int d = 0; d < dimension; d++)
+    normale_locale[d] = 0.;
+
+  const int som0 = faces_sommets(face, 0);
+  const int som1 = faces_sommets(face, 1);
+  const double dx = coord_sommets(som1, 0) - coord_sommets(som0, 0);
+  const double dy = coord_sommets(som1, 1) - coord_sommets(som0, 1);
+  normale_locale[0] = -dy;
+  normale_locale[1] = dx;
+}
+
 /*! @brief appele par remplir_volumes_entrelaces_Cl() : remplissage de type_elem_Cl_
  *
  */
@@ -131,6 +158,7 @@ void Domaine_Cl_EF::remplir_type_elem_Cl(const Domaine_EF& le_dom_EF)
 
   const IntTab& faces_sommets=le_dom_EF.face_sommets();
   int nb_som_face=faces_sommets.dimension(1);
+  const DoubleTab& coord_sommets = z.coord_sommets();
   int nb_som_tot=z.nb_som_tot();
   type_sommet_.resize_array(z.nb_som_tot());
   type_sommet_=-1;
@@ -213,7 +241,7 @@ void Domaine_Cl_EF::remplir_type_elem_Cl(const Domaine_EF& le_dom_EF)
       construit_connectivite_sommet(type_cl,sommet_face_symetrie,les_conditions_limites_,le_dom_EF);
       // sommet_face_symetrie contient le nombre de face de symetrie associe a chaque sommet
       const DoubleTab& face_normales = le_dom_EF.face_normales();
-      ArrOfDouble n(dimension),t1(dimension),t2(dimension);
+      ArrOfDouble n(dimension),t1(dimension),t2(dimension),normale_locale(dimension);
       for (int som=0; som<nb_som_tot; som++)
         {
           int nbf= sommet_face_symetrie.get_list_size(som);
@@ -228,8 +256,9 @@ void Domaine_Cl_EF::remplir_type_elem_Cl(const Domaine_EF& le_dom_EF)
               for (int f=0; f<nbf; f++)
                 {
                   int face=sommet_face_symetrie(som,f);
+                  construire_normale_locale_face(face_normales, faces_sommets, coord_sommets, face, dimension, nb_som_face, bidim_axi, normale_locale);
                   for (int d=0; d<dimension; d++)
-                    n[d]+=face_normales(face,d);
+                    n[d]+=normale_locale[d];
                 }
               n/=nbf;
 
@@ -242,17 +271,18 @@ void Domaine_Cl_EF::remplir_type_elem_Cl(const Domaine_EF& le_dom_EF)
               for (int f=0; f<nbf; f++)
                 {
                   int face=sommet_face_symetrie(som,f);
+                  construire_normale_locale_face(face_normales, faces_sommets, coord_sommets, face, dimension, nb_som_face, bidim_axi, normale_locale);
                   double prod=0;
                   for (int d=0; d<dimension; d++)
-                    prod+=face_normales(face,d)*n[d];
+                    prod+=normale_locale[d]*n[d];
 
                   double s=0;
                   // double v = 0;
 
                   for (int d=0; d<dimension; d++)
                     {
-                      t1[d]=face_normales(face,d)-n[d]*prod;
-                      s+=face_normales(face,d)*face_normales(face,d);
+                      t1[d]=normale_locale[d]-n[d]*prod;
+                      s+=normale_locale[d]*normale_locale[d];
                       // v+=t1[d]*n[d];
                     }
 
@@ -280,14 +310,14 @@ void Domaine_Cl_EF::remplir_type_elem_Cl(const Domaine_EF& le_dom_EF)
                   double prod=0,prod1=0,s=0;
                   for (int d=0; d<dimension; d++)
                     {
-                      prod+=face_normales(face,d)*n[d];
+                      prod+=normale_locale[d]*n[d];
 
-                      prod1+=face_normales(face,d)*t1[d];
-                      s+=face_normales(face,d)*face_normales(face,d);
+                      prod1+=normale_locale[d]*t1[d];
+                      s+=normale_locale[d]*normale_locale[d];
 
                     }
                   for (int d=0; d<dimension; d++)
-                    t2[d]=face_normales(face,d)-n[d]*prod-t1[d]*prod1;
+                    t2[d]=normale_locale[d]-n[d]*prod-t1[d]*prod1;
 
                   if (norme_array(t2)>(1e-4*sqrt(s)))
                     {
@@ -525,12 +555,13 @@ void  Domaine_Cl_EF::imposer_symetrie_matrice_secmem(Matrice_Morse& la_matrice, 
               {
                 // on annule tous les coef extra diagonaux du bloc
                 // sur les lignes i pour lesquelles normale(d) !=0
-                // c.a.d dasb(normale(d)>1e-5)
+                // c.a.d dasb(normale(d)>tol)
+                const double tol = 1e-12;
                 for (int k=0; k<nb_coeff_ligne; k++)
                   {
 
                     for (int comp=0; comp<nb_comp; comp++)
-                      if (std::fabs(normale[comp])>1e-5)
+                      if (std::fabs(normale[comp])>tol)
                         {
                           int j=tab2[tab1[som*nb_comp+comp]-1+k]-1;
                           if (j!=(som*nb_comp+comp))

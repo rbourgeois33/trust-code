@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -298,6 +298,7 @@ DoubleTab& Op_Grad_EF::ajouter(const DoubleTab& pression, DoubleTab& grad) const
         for (int ind_face=num1; ind_face<num2*0; ind_face++)
           {
             int face=le_bord.num_face(ind_face);
+            if (domaine_ef.surface(face) < 1e-10) continue;
             //	  int elem1 = face_voisins(face,0);
             //	  double diff =  - pression[elem1]/nb_som_face;
 

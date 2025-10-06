@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -38,14 +38,18 @@ class Op_Diff_EF : public Op_Diff_EF_base
   Declare_instanciable(Op_Diff_EF);
 public:
   void associer_diffusivite(const Champ_base& ) override;
+  void associer_diffusivite_volumique(const Champ_base& ) override;
   void completer() override;
   const Champ_base& diffusivite() const override;
+  const Champ_base& diffusivite_volumique() const;
 
   DoubleTab& ajouter(const DoubleTab& ,  DoubleTab& ) const override;
   DoubleTab& ajouter_new(const DoubleTab& ,  DoubleTab& ) const;
   DoubleTab& calculer(const DoubleTab& , DoubleTab& ) const override;
   void verifier() const;
   void remplir_nu(DoubleTab&) const override;
+  void remplir_lambda(DoubleTab&) const;
+  void calculer_von_mises(const DoubleTab& deplacement, DoubleTab& deformation, DoubleTab& contraintes, DoubleTab& von_mises) const override;
 
   // Methodes pour l implicite.
   inline void dimensionner(Matrice_Morse& matrice) const override { Op_EF_base::dimensionner(le_dom_EF.valeur(), la_zcl_EF.valeur(), matrice); }
@@ -65,6 +69,7 @@ protected :
   int transpose_partout_ ; // vaut 1 si on veut calculer grad_u_transpose meme au bord
   int nouvelle_expression_;
   OBS_PTR(Champ_base) diffusivite_;
+  OBS_PTR(Champ_base) diffusivite_volumique_;
 
   DoubleTab& ajouter_scalaire_dim3_nbn_8(const DoubleTab&, DoubleTab&) const;
   DoubleTab& ajouter_scalaire_dim2_nbn_4(const DoubleTab&, DoubleTab&) const;
@@ -79,6 +84,12 @@ protected :
 
   template<AJOUTE_VECT _T_>
   DoubleTab& ajouter_vectoriel_template(const DoubleTab&, DoubleTab&) const;
+
+  mutable DoubleTab lambda_;
+
+private:
+  void ajouter_contribution_diffusivite_volumique(int N, Matrice_Morse& matrice) const;
+  void ajouter_contribution_axisymetrique(int N, Matrice_Morse& matrice) const;
 };
 
 class Op_Diff_option_EF : public Op_Diff_EF

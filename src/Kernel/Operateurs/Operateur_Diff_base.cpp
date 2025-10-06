@@ -66,3 +66,9 @@ const Champ_base& Operateur_Diff_base::diffusivite_pour_pas_de_temps() const
   assert( diffusivite_pour_pas_de_temps_.non_nul() );
   return diffusivite_pour_pas_de_temps_.valeur();
 }
+
+void Operateur_Diff_base::associer_diffusivite_volumique(const Champ_base& champ)
+{
+  Cerr << que_suis_je() << " does not support volumic diffusivity (received field " << champ.le_nom() << ")." << finl;
+  Process::exit();
+}

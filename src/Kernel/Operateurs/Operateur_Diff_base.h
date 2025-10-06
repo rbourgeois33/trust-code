@@ -39,6 +39,7 @@ class Operateur_Diff_base  : public Operateur_base,
 public:
   virtual void associer_diffusivite(const Champ_base&) = 0;
   virtual void associer_diffusivite_pour_pas_de_temps(const Champ_base&);
+  virtual void associer_diffusivite_volumique(const Champ_base&);
   virtual const Champ_base& diffusivite() const=0;
   inline virtual void calculer_borne_locale(DoubleVect& ,double,double ) const {};
 
@@ -48,6 +49,7 @@ public:
 
   virtual bool is_turb() const { return false; }
   virtual const Correlation_base* correlation_viscosite_turbulente() const { return nullptr; }
+  virtual void calculer_von_mises(const DoubleTab& deplacement, DoubleTab& deformation, DoubleTab& contraintes, DoubleTab& von_mises) const { throw; }
 
 protected:
   virtual const Champ_base& diffusivite_pour_pas_de_temps() const;
