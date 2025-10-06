@@ -144,6 +144,11 @@ void  Operateur_Diff::associer_diffusivite_pour_pas_de_temps(const Champ_base& n
   valeur().associer_diffusivite_pour_pas_de_temps(nu);
 }
 
+void Operateur_Diff::associer_diffusivite_volumique(const Champ_base& champ)
+{
+  valeur().associer_diffusivite_volumique(champ);
+}
+
 /*! @brief Type l'operateur.
  *
  * @param (Nom& typ) le nom representant le type de l'operateur

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -41,6 +41,7 @@ public:
   DoubleTab& calculer(const DoubleTab&, DoubleTab&) const override;
   void associer_diffusivite(const Champ_base&);
   void associer_diffusivite_pour_pas_de_temps(const Champ_base&);
+  void associer_diffusivite_volumique(const Champ_base&);
   const Champ_base& diffusivite() const;
   void typer() override;
   void typer(const Nom&);
