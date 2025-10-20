@@ -1,0 +1,105 @@
+# Hydraulique 2D axisymetrique R,Z laminaire schema amont #
+# PARALLEL OK 8 #
+dimension 2
+bidim_axi
+Pb_hydraulique pb
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+	Pave TUBE_Axi
+		{
+		Origine 0. 0.
+		Longueurs 0.06 1.
+		Nombre_de_Noeuds 51 51
+		Facteurs 1.0 1.0
+		}
+		{
+		bord ENTREE   Y = 0.       0. <= X <= 0.06
+		bord SORTIE   Y = 1.       0. <= X <= 0.06
+		bord AXE      X = 0.       0. <= Y <= 1.
+		bord PAROI    X = 0.06     0. <= Y <= 1.
+		}
+
+}
+# END MESH #
+
+# BEGIN PARTITION
+Partition dom
+{
+    Partition_tool metis { Nb_parts 2 }
+    Larg_joint 2
+    zones_name DOM
+}
+End
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter DOM.Zones dom
+END SCATTER #
+
+EF dis
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0.
+	nb_pas_dt_max 3
+    dt_max 1e-2
+    facsec 1e30
+    dt_impr 1.e-20
+    dt_sauv 100
+    tmax 10.
+    solveur implicite { solveur petsc cholesky { } }
+}
+
+Associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+
+    fluide_incompressible {
+        mu  Champ_Uniforme 1 1.e-3
+        rho Champ_Uniforme 1 1000
+
+    }
+
+
+    Navier_Stokes_standard
+    {
+        solveur_pression petsc cholesky { }
+        convection { generic amont }
+        diffusion { }
+        initial_conditions {
+            vitesse champ_uniforme 2 0 0
+        }
+        boundary_conditions {
+
+            PAROI paroi_fixe
+            AXE   Symetrie
+
+            SORTIE Frontiere_ouverte_pression_imposee  Champ_Front_uniforme 1 0.
+            ENTREE Frontiere_ouverte_vitesse_imposee  Champ_Front_uniforme 2 0. 0.05
+        }
+
+    }
+
+    Post_processing
+    {
+        Probes
+        {
+            V grav vitesse periode 0.1 segment  50 3.e-3 0.8  57.e-3 0.8
+        }
+        format lml
+        fields dt_post 5.5
+        {
+            vitesse elem
+            pression elem
+        }
+    }
+}
+Solve pb
+End
