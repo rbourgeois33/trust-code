@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -64,17 +64,16 @@ DoubleTab& Op_Div_EF::ajouter(const DoubleTab& vit, DoubleTab& div) const
   int nb_elem=domaine_ef.domaine().nb_elem();
   int nb_som_elem=domaine_ef.domaine().nb_som_elem();
   const IntTab& elems=domaine_ef.domaine().les_elems() ;
+  const DoubleTab& xs = domaine_ef.domaine().les_sommets();
 
   for (int elem=0; elem<nb_elem; elem++)
     {
       for (int s=0; s<nb_som_elem; s++)
         {
           int som=elems(elem,s);
+          const double w = bidim_axi ? (xs(som, 0) / domaine_ef.xp(elem, 0)) : 1.0;
           for (int i=0; i<dimension; i++)
-            {
-              div(elem)+=Bij_thilde(elem,s,i)*vit(som,i);
-            }
-          // Cerr<<finl;
+            div(elem) += w * Bij_thilde(elem, s, i) * vit(som, i);
         }
     }
   // L'espace virtuel du tableau div n'est pas mis a jour par l'operateur,
@@ -95,8 +94,10 @@ DoubleTab& Op_Div_EF::ajouter(const DoubleTab& vit, DoubleTab& div) const
       for (int s=0; s<nb_som_face; s++)
         {
           int som=face_sommets(face,s);
+          const double r_f = domaine_ef.xv(face, 0);
+          const double corr = (bidim_axi && r_f > 1e-12) ? (xs(som, 0) / r_f) : 1.0;
           for (int dir=0; dir<Objet_U::dimension; dir++)
-            tab_flux_bords(face,0)+=porosite_sommet(som)*vit(som,dir)*face_normales(face,dir)/nb_som_face;
+            tab_flux_bords(face, 0) += corr * porosite_sommet(som) * vit(som, dir) * face_normales(face, dir) / nb_som_face;
         }
     }
 
