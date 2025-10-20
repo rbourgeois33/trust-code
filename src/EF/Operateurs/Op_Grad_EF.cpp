@@ -115,6 +115,7 @@ void Op_Grad_EF::ajouter_bord(DoubleTab& resu,const Domaine_EF& domaine_EF,const
 
   const IntTab& face_sommets=domaine_EF.face_sommets();
   int nb_som_face=domaine_EF.nb_som_face();
+  const DoubleTab& xs = domaine_EF.domaine().les_sommets();
 
   if (int_P_bord_.non_nul())
     {
@@ -191,7 +192,10 @@ void Op_Grad_EF::ajouter_bord(DoubleTab& resu,const Domaine_EF& domaine_EF,const
                           for (int d=0; d<Objet_U::dimension; d++)
                             {
                               int som=num[(i)];
-                              resu(som,d)+=si(i)*cnorm(d)*val_imp;
+                              const double r_f = domaine_EF.xv(face,0);
+                              const double r_s = xs(som,0);
+                              const double corr = (axi && r_f>0.) ? (r_s / r_f) : 1.0;
+                              resu(som,d) += corr * si(i) * cnorm(d) * val_imp;
                             }
                         }
                     }
@@ -216,11 +220,14 @@ void Op_Grad_EF::ajouter_bord(DoubleTab& resu,const Domaine_EF& domaine_EF,const
                     //	      int elem = face_voisins(face,0);
                     double val_imp= la_cl_typee.flux_impose(ind_face);
                     val_imp/=nb_som_face;
+                    const double r_f = domaine_EF.xv(face,0);
                     for (int s=0; s<nb_som_face; s++)
                       {
                         int som=face_sommets(face,s);
+                        const double r_s = xs(som,0);
+                        const double corr = (axi && r_f>0.) ? (r_s / r_f) : 1.0;
                         for (int dir=0; dir<Objet_U::dimension; dir++)
-                          resu(som,dir)+=val_imp*face_normales(face,dir)*porosite_sommet(som);
+                          resu(som,dir)+=corr*val_imp*face_normales(face,dir)*porosite_sommet(som);
                       }
                   }
               }
@@ -247,16 +254,20 @@ DoubleTab& Op_Grad_EF::ajouter(const DoubleTab& pression, DoubleTab& grad) const
   int nb_elem_tot=domaine_ef.domaine().nb_elem_tot();
   int nb_som_elem=domaine_ef.domaine().nb_som_elem();
   const IntTab& elems=domaine_ef.domaine().les_elems() ;
+  const DoubleTab& xs = domaine_ef.domaine().les_sommets();
 
   for (int elem=0; elem<nb_elem_tot; elem++)
     {
       double pe=pression(elem);
+      const double r_e = domaine_ef.xp(elem,0);
       for (int s=0; s<nb_som_elem; s++)
         {
           int som=elems(elem,s);
           for (int i=0; i<dimension; i++)
             {
-              grad(som,i)-=Bij_thilde(elem,s,i)*pe;
+              const double r_s = xs(som,0);
+              const double w = bidim_axi ? (r_s / r_e) : 1.0;
+              grad(som,i) -= w * Bij_thilde(elem,s,i) * pe;
             }
         }
     }
