@@ -1,0 +1,112 @@
+# Thermique axisymetrique R,Z : diffusion dans un cylindre d'aluminium #
+# PARALLEL OK 8 #
+
+dimension 2
+Bidim_Axi
+Pb_conduction pb
+
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave fpt4
+    {
+        Origine   0.1  0.
+        Longueurs 0.1 0.1
+        Nombre_de_Noeuds 21 21
+    }
+    {
+        Bord Gauche    X = 0.1      0.  <= Y <= 0.1
+        Bord Droit     X = 0.2      0.  <= Y <= 0.1
+        Bord Bas       Y = 0.       0.1 <= X <= 0.2
+        Bord Haut      Y = 0.1      0.1 <= X <= 0.2
+    }
+
+}
+
+
+# END MESH #
+# BEGIN PARTITION
+Partition dom
+{
+    Partition_tool tranche { tranches 2 1 }
+    Larg_joint 1
+    zones_name DOM
+}
+End
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter DOM.Zones dom
+END SCATTER #
+
+PolyMAC_P0 dis
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0.
+	nb_pas_dt_max 3
+    tmax 10.
+    dt_max  1.e-2
+    dt_impr 1.e-30
+    facsec 1e30
+    dt_sauv 10.
+    seuil_statio 1.e-80
+    solveur implicite
+    {
+        solveur petsc cholesky { }
+    }
+}
+
+Associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+
+
+    solide {
+        rho     Champ_Uniforme    1  2700.
+        lambda  Champ_Uniforme    1  221.
+        Cp      Champ_Uniforme    1  920.
+    }
+
+
+    Conduction
+    {
+        diffusion { }
+        boundary_conditions
+        {
+            Droit  Paroi_flux_impose Champ_Front_Uniforme 1 250.
+            Gauche Symetrie
+            Haut   Symetrie
+            Bas    Symetrie
+
+        }
+        initial_conditions { 	Temperature Champ_Uniforme 1 0. }
+    }
+
+
+    Post_processing
+    {
+        Probes
+        {
+            segment_T  grav temperature periode 4.e-2   point 1 0.15  0.05
+            T1 grav temperature periode 4.e-2 segment 24 0.15 0. 0.15 0.1
+            T2 grav temperature periode 4.e-2 segment 10 0.1 0.05 0.2 0.05
+
+        }
+        format lml
+        fields dt_post 3.
+        {
+            temperature elem
+            volume_maille elem
+        }
+    }
+}
+
+Solve pb
+End
