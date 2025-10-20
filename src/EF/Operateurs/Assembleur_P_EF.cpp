@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -272,6 +272,7 @@ int  Assembleur_P_EF::assembler_mat(Matrice& la_matrice,const DoubleVect& volume
   MBrr.get_set_coeff() = 0;
   MBrv.get_set_coeff() = 0;
   const DoubleTab& Bthilde=le_dom.Bij_thilde();
+  const DoubleTab& xs = le_dom.domaine().les_sommets();
   for (int elem1=0; elem1<n1; elem1++)
     for (int s=0; s<nb_som_elem; s++)
       {
@@ -286,6 +287,16 @@ int  Assembleur_P_EF::assembler_mat(Matrice& la_matrice,const DoubleVect& volume
             double val=0;
             for (int dir=0; dir<dimension; dir++)
               val+=Bthilde(elem1,s,dir)*Bthilde(elem2,s2,dir)*inv_volumes_som(num_som,dir);
+
+            if (bidim_axi)
+              {
+                const double r_s = xs(num_som, 0);
+                const double r_e1 = le_dom.xp(elem1, 0);
+                const double r_e2 = le_dom.xp(elem2, 0);
+                const double w = r_s / (r_e1 * r_e2);
+                val *= w;
+              }
+
             if (elem1 <= elem2)
               {
 //		Cerr<<"ici "<<elem1 <<" "<<elem2 << " "<<s<<finl;
@@ -394,6 +405,14 @@ int  Assembleur_P_EF::assembler_mat(Matrice& la_matrice,const DoubleVect& volume
 // 		  for (int dir=0;dir<dimension;dir++)
 // 		    val-=Bthilde(elem1,s1,dir)*Bthilde(elem2,s2,dir);
                 //		  val*=-1;
+                if (bidim_axi)
+                  {
+                    const double r_s = xs(num_som, 0);
+                    const double r_e1 = le_dom.xp(elem1, 0);
+                    const double r_e2 = le_dom.xp(elem2, 0);
+                    const double w = r_s / (r_e1 * r_e2);
+                    val *= w;
+                  }
 
                 //	  assert(val==0);
                 if (elem1 <= elem2)
