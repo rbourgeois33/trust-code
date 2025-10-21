@@ -968,10 +968,6 @@ void Probleme_base::mettre_a_jour(double temps)
   // Update the post-processing:
   les_postraitements_.mettre_a_jour(temps);
 
-  // Set conditions to update the domain in ALE:
-  domaine().setUpdateTheGrid(true);
-
-
   for (auto& itr : liste_loi_fermeture_)
     {
       Loi_Fermeture_base& loi=itr.valeur();
