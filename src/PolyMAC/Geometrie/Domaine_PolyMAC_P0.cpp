@@ -412,7 +412,9 @@ void Domaine_PolyMAC_P0::fgrad(int N, int is_p, int vec, const Conds_lim& cls, c
             for (f = s_f[i], j = 0; j < n_eb; j++)
               for (k = (int)(std::lower_bound(fsten_eb.addr() + fsten_d(f), fsten_eb.addr() + fsten_d(f + 1), s_eb[j]) - fsten_eb.addr()), d = 0; d < D; d++)
                 for (n = 0; n < N; n++)
-                  if (fs(f) > 0) phif_c(k, d, n) += Geb(i, d, j, n) / fs(f);
+                  {
+                    if (fs(f) > 0) phif_c(k, d, n) += Geb(i, d, j, n) / fs(f);
+                  }
         else for (i = 0; i < n_f; i++)
             for (f = s_f[i], j = 0; j < n_eb; j++)
               for (k = (int)(std::lower_bound(fsten_eb.addr() + fsten_d(f), fsten_eb.addr() + fsten_d(f + 1), s_eb[j]) - fsten_eb.addr()), n = 0; n < N; n++)
