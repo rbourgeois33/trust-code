@@ -30,12 +30,9 @@
 #include <TRUSTTab_parts.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <Dirichlet.h>
 #include <Debog.h>
-
-extern Stat_Counter_Id assemblage_sys_counter_;
 
 Implemente_instanciable(Assembleur_P_PolyVEF_P0P1NC, "Assembleur_P_PolyVEF_P0P1NC", Assembleur_P_PolyMAC);
 

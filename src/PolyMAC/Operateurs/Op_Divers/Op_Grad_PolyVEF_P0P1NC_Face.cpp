@@ -25,15 +25,12 @@
 #include <Probleme_base.h>
 #include <Pb_Multiphase.h>
 #include <Matrix_tools.h>
-#include <Statistiques.h>
 #include <Array_tools.h>
 #include <Milieu_base.h>
 #include <Dirichlet.h>
 #include <TRUSTTrav.h>
 #include <cfloat>
 #include <Option_PolyVEF.h>
-
-extern Stat_Counter_Id gradient_counter_;
 
 Implemente_instanciable(Op_Grad_PolyVEF_P0P1NC_Face, "Op_Grad_PolyVEF_P0P1NC_Face", Op_Grad_PolyMAC_Face);
 
@@ -89,7 +86,6 @@ void Op_Grad_PolyVEF_P0P1NC_Face::dimensionner_blocs_ext(matrices_t matrices, in
 
 void Op_Grad_PolyVEF_P0P1NC_Face::ajouter_blocs_ext(matrices_t matrices, DoubleTab& secmem, int virt, const tabs_t& semi_impl) const
 {
-  statistiques().begin_count(gradient_counter_);
   const Domaine_PolyVEF_P0P1NC& dom = ref_cast(Domaine_PolyVEF_P0P1NC, ref_domaine.valeur());
   const IntTab& f_e = dom.face_voisins(), &e_f = dom.elem_faces(), &fcl = ref_cast(Champ_Face_PolyVEF, equation().inconnue()).fcl();
   const DoubleTab& vfd = dom.volumes_entrelaces_dir(), &nf = dom.face_normales(), &press = semi_impl.count("pression") ? semi_impl.at("pression") : ref_cast(Navier_Stokes_std, equation()).pression().valeurs(),
@@ -124,5 +120,4 @@ void Op_Grad_PolyVEF_P0P1NC_Face::ajouter_blocs_ext(matrices_t matrices, DoubleT
                   }
               }
         }
-  statistiques().end_count(gradient_counter_);
 }
