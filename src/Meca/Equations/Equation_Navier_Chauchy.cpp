@@ -80,12 +80,6 @@ void Equation_Navier_Chauchy::associer_milieu_base(const Milieu_base& mil)
 
 void Equation_Navier_Chauchy::discretiser()
 {
-  if (!milieu_.non_nul())
-    {
-      Cerr << que_suis_je() << " requires an associated Milieu_Elastic before discretisation." << finl;
-      Process::exit();
-    }
-
   const Discretisation_base& dis = discretisation();
   const Domaine_dis_base& dom = domaine_dis();
   const Schema_Temps_base& sch = schema_temps();
@@ -97,6 +91,7 @@ void Equation_Navier_Chauchy::discretiser()
   dis.discretiser_champ("champ_elem", dom, "von_mises", "Pa", 1, temps, von_mises_);
   dis.discretiser_champ("champ_elem", dom, "contraintes", "Pa", 3, temps, contraintes_);
   dis.discretiser_champ("champ_elem", dom, "deformations", "", 3, temps, deformations_);
+  dis.discretiser_champ("vitesse", dom, "vitesse_noeuds", "m/s", dimension, temps, vitesse_noeuds_);
   deformations_->fixer_nom_compo(0, bidim_axi ? "eps_r" : "eps_xx");
   deformations_->fixer_nom_compo(1, bidim_axi ? "eps_z" : "eps_yy");
   deformations_->fixer_nom_compo(2, bidim_axi ? "eps_theta" : "eps_zz");
@@ -107,6 +102,7 @@ void Equation_Navier_Chauchy::discretiser()
   champs_compris_.ajoute_champ(von_mises_);
   champs_compris_.ajoute_champ(contraintes_);
   champs_compris_.ajoute_champ(deformations_);
+  champs_compris_.ajoute_champ(vitesse_noeuds_);
   terme_diffusif.associer_eqn(*this);
 
   Equation_base::discretiser();
@@ -118,6 +114,18 @@ const Motcle& Equation_Navier_Chauchy::domaine_application() const
   return domaine;
 }
 
+void Equation_Navier_Chauchy::update_velocity()
+{
+  const double dt = schema_temps().pas_de_temps();
+  const DoubleTab& disp_n = deplacement_->valeurs();
+  const DoubleTab& disp_nm1 = deplacement_->passe();
+  DoubleTab& vit_n = vitesse_noeuds_->valeurs();
+
+  for (int i = 0; i < vit_n.dimension(0); i++)
+    for (int j = 0; j < dimension; j++)
+      vit_n(i, j) = (disp_n(i, j) - disp_nm1(i, j)) / dt;
+}
+
 void Equation_Navier_Chauchy::mettre_a_jour(double temps)
 {
   Equation_base::mettre_a_jour(temps);
@@ -125,5 +133,7 @@ void Equation_Navier_Chauchy::mettre_a_jour(double temps)
   von_mises_->changer_temps(temps);
   contraintes_->changer_temps(temps);
   deformations_->changer_temps(temps);
+  vitesse_noeuds_->changer_temps(temps);
+  update_velocity();
   ref_cast(Operateur_Diff_base, terme_diffusif.l_op_base()).calculer_von_mises(deplacement_->valeurs(), deformations_->valeurs(), contraintes_->valeurs(), von_mises_->valeurs());
 }
