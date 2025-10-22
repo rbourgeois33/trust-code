@@ -80,6 +80,7 @@ public:
   virtual void calculer_IPhi(const Domaine_Cl_dis_base& zcl);
   virtual void calculer_Bij(DoubleTab& bij_);
   virtual void calculer_Bij_gen(DoubleTab& bij);
+  void calculer_Bij() { calculer_Bij(Bij_); }
 
   //  inline const DoubleVect& volumes_sommets() const { return volumes_sommets_; }
   inline const DoubleVect& volumes_thilde() const { return volumes_thilde_; }
