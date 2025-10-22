@@ -52,10 +52,12 @@ public:
   const Motcle& domaine_application() const override;
 
 private:
+  void update_velocity();
+
   Operateur_Diff terme_diffusif;
   OWN_PTR(Champ_Inc_base) deplacement_;
   OBS_PTR(Milieu_Elastic) milieu_;
-  OWN_PTR(Champ_Fonc_base) von_mises_, contraintes_, deformations_;
+  OWN_PTR(Champ_Fonc_base) von_mises_, contraintes_, deformations_, vitesse_noeuds_;
 };
 
 #endif
