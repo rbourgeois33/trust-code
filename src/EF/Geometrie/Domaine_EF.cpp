@@ -113,7 +113,7 @@ void Domaine_EF::calculer_IPhi(const Domaine_Cl_dis_base& zcl)
 {
   int nbelem=domaine().nb_elem();
   int nb_som_elem=domaine().nb_som_elem();
-  IPhi_.resize(nbelem,nb_som_elem);
+  if (IPhi_.size() == 0) IPhi_.resize(nbelem,nb_som_elem);
   domaine().creer_tableau_elements(IPhi_);
   //  Scatter::creer_tableau_distribue(domaine().domaine(), JOINT_ITEM::ELEMENT, IPhi_);
   IPhi_thilde_=IPhi_;
