@@ -45,6 +45,12 @@ public:
   const Champ_Don_base& mu_lame() const { return ch_mu_.valeur(); }
   Champ_Don_base& mu_lame() { return ch_mu_.valeur(); }
 
+  const Champ_Don_base& bulk_modulus() const { return ch_K_.valeur(); }
+  Champ_Don_base& bulk_modulus() { return ch_K_.valeur(); }
+
+  const Champ_Don_base& thermal_expansion() const { return ch_coeff_dilatation_th_.valeur(); }
+  Champ_Don_base& thermal_expansion() { return ch_coeff_dilatation_th_.valeur(); }
+
 protected:
   void verifier_coherence_champs(int& err, Nom& message) override;
 
@@ -56,6 +62,8 @@ private:
   OWN_PTR(Champ_Don_base) ch_nu_;
   OWN_PTR(Champ_Don_base) ch_lambda_lame_;
   OWN_PTR(Champ_Don_base) ch_mu_;
+  OWN_PTR(Champ_Don_base) ch_K_;
+  OWN_PTR(Champ_Don_base) ch_coeff_dilatation_th_;
 };
 
 #endif
