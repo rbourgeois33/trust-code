@@ -31,7 +31,6 @@ Entree& Milieu_Elastic::readOn(Entree& is)
   Milieu_base::readOn(is);
   ensure_rho_field();
   creer_champs_non_lus();
-  update_lame_constants();
   return is;
 }
 
@@ -67,6 +66,7 @@ void Milieu_Elastic::creer_champs_non_lus()
 void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_base& dis)
 {
   Milieu_base::discretiser(pb, dis);
+  if (zdb_.est_nul()) zdb_ = pb.domaine_dis();
 
   const Domaine_dis_base& domaine_dis = pb.domaine_dis();
 
@@ -75,6 +75,7 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   dis.nommer_completer_champ_physique(domaine_dis, "lambda_lame", "Pa", ch_lambda_lame_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "mu_lame", "Pa", ch_mu_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "module_volumique", "Pa", ch_K_.valeur(), pb);
+  dis.discretiser_champ("champ_elem", domaine_dis, "masse_volumique_lagrangienne", "kg/m3", 1, pb.schema_temps().temps_courant(), ch_rho_lag_);
   if (ch_coeff_dilatation_th_.non_nul())
     dis.nommer_completer_champ_physique(domaine_dis, "coeff_dilatation_thermique", "K-1", ch_coeff_dilatation_th_.valeur(), pb);
 
@@ -83,10 +84,9 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   champs_compris_.ajoute_champ(ch_lambda_lame_.valeur());
   champs_compris_.ajoute_champ(ch_mu_.valeur());
   champs_compris_.ajoute_champ(ch_K_.valeur());
+  champs_compris_.ajoute_champ(ch_rho_lag_.valeur());
   if (ch_coeff_dilatation_th_.non_nul())
     champs_compris_.ajoute_champ(ch_coeff_dilatation_th_.valeur());
-
-  update_lame_constants();
 }
 
 int Milieu_Elastic::initialiser(const double temps)
@@ -98,8 +98,12 @@ int Milieu_Elastic::initialiser(const double temps)
   ch_lambda_lame_->initialiser(temps);
   ch_mu_->initialiser(temps);
   ch_K_->initialiser(temps);
+  ch_rho_lag_->initialiser(temps);
   if (ch_coeff_dilatation_th_.non_nul()) ch_coeff_dilatation_th_->initialiser(temps);
-  update_lame_constants();
+  ch_rho_lag_->valeurs() = ch_rho_->valeurs()(0, 0);
+  last_update_ = temps;
+  update_fields(temps);
+
   return ok;
 }
 
@@ -117,10 +121,11 @@ void Milieu_Elastic::mettre_a_jour(double temps)
   ch_nu_->mettre_a_jour(temps);
   if (ch_coeff_dilatation_th_.non_nul()) ch_coeff_dilatation_th_->mettre_a_jour(temps);
 
-  update_lame_constants();
   ch_lambda_lame_->changer_temps(temps);
   ch_mu_->changer_temps(temps);
   ch_K_->changer_temps(temps);
+  ch_rho_lag_->changer_temps(temps);
+  update_fields(temps);
 }
 
 void Milieu_Elastic::verifier_coherence_champs(int& err, Nom& message)
@@ -173,7 +178,7 @@ void Milieu_Elastic::ensure_rho_field()
     }
 }
 
-void Milieu_Elastic::update_lame_constants()
+void Milieu_Elastic::update_fields(double temps)
 {
   const double E_val = ch_E_->valeurs()(0, 0);
   const double nu_val = ch_nu_->valeurs()(0, 0);
@@ -194,4 +199,11 @@ void Milieu_Elastic::update_lame_constants()
   ch_lambda_lame_->valeurs() = lambda_val;
   ch_mu_->valeurs() = mu_val;
   ch_K_->valeurs() = K_val;
+
+  if (temps > last_update_)
+    {
+      Cerr << "Updating rho_lagrangien field based on current volume scaling at time " << temps << finl;
+      zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs());
+      last_update_ = temps;
+    }
 }

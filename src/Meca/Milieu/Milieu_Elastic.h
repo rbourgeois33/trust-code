@@ -51,14 +51,19 @@ public:
   const Champ_Don_base& thermal_expansion() const { return ch_coeff_dilatation_th_.valeur(); }
   Champ_Don_base& thermal_expansion() { return ch_coeff_dilatation_th_.valeur(); }
 
+  const Champ_Don_base& rho_lagrangien() const { return ch_rho_lag_.valeur(); }
+  Champ_Don_base& rho_lagrangien() { return ch_rho_lag_.valeur(); }
+
 protected:
   void verifier_coherence_champs(int& err, Nom& message) override;
 
 private:
   void ensure_rho_field();
-  void update_lame_constants();
+  void update_fields(double temps);
+  double last_update_ = -1.0;
 
   OWN_PTR(Champ_Don_base) ch_E_;
+  OWN_PTR(Champ_Don_base) ch_rho_lag_;
   OWN_PTR(Champ_Don_base) ch_nu_;
   OWN_PTR(Champ_Don_base) ch_lambda_lame_;
   OWN_PTR(Champ_Don_base) ch_mu_;
