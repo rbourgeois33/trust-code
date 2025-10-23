@@ -40,6 +40,7 @@ void Milieu_Elastic::set_param(Param& param)
   Milieu_base::set_param(param);
   param.ajouter("E", &ch_E_, Param::REQUIRED);
   param.ajouter("nu", &ch_nu_, Param::REQUIRED);
+  param.ajouter("alpha", &ch_coeff_dilatation_th_);
 }
 
 void Milieu_Elastic::creer_champs_non_lus()
@@ -56,6 +57,11 @@ void Milieu_Elastic::creer_champs_non_lus()
       ch_mu_ = ch_E_;
       ch_mu_->nommer("mu_lame");
     }
+  if (ch_K_.est_nul())
+    {
+      ch_K_ = ch_E_;
+      ch_K_->nommer("bulk_modulus");
+    }
 }
 
 void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_base& dis)
@@ -68,11 +74,17 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   dis.nommer_completer_champ_physique(domaine_dis, "coefficient_de_Poisson", "", ch_nu_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "lambda_lame", "Pa", ch_lambda_lame_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "mu_lame", "Pa", ch_mu_.valeur(), pb);
+  dis.nommer_completer_champ_physique(domaine_dis, "module_volumique", "Pa", ch_K_.valeur(), pb);
+  if (ch_coeff_dilatation_th_.non_nul())
+    dis.nommer_completer_champ_physique(domaine_dis, "coeff_dilatation_thermique", "K-1", ch_coeff_dilatation_th_.valeur(), pb);
 
   champs_compris_.ajoute_champ(ch_E_.valeur());
   champs_compris_.ajoute_champ(ch_nu_.valeur());
   champs_compris_.ajoute_champ(ch_lambda_lame_.valeur());
   champs_compris_.ajoute_champ(ch_mu_.valeur());
+  champs_compris_.ajoute_champ(ch_K_.valeur());
+  if (ch_coeff_dilatation_th_.non_nul())
+    champs_compris_.ajoute_champ(ch_coeff_dilatation_th_.valeur());
 
   update_lame_constants();
 }
@@ -85,15 +97,17 @@ int Milieu_Elastic::initialiser(const double temps)
   ch_nu_->initialiser(temps);
   ch_lambda_lame_->initialiser(temps);
   ch_mu_->initialiser(temps);
+  ch_K_->initialiser(temps);
+  if (ch_coeff_dilatation_th_.non_nul()) ch_coeff_dilatation_th_->initialiser(temps);
   update_lame_constants();
   return ok;
 }
 
 void Milieu_Elastic::mettre_a_jour(double temps)
 {
-  if (ch_E_.est_nul() || ch_nu_.est_nul() || ch_lambda_lame_.est_nul() || ch_mu_.est_nul())
+  if (ch_E_.est_nul() || ch_nu_.est_nul() || ch_lambda_lame_.est_nul() || ch_mu_.est_nul() || ch_K_.est_nul())
     {
-      Cerr << que_suis_je() << " cannot update without E, nu, lambda or mu fields." << finl;
+      Cerr << que_suis_je() << " cannot update without E, nu, lambda, mu or K fields." << finl;
       Process::exit();
     }
 
@@ -101,10 +115,12 @@ void Milieu_Elastic::mettre_a_jour(double temps)
 
   ch_E_->mettre_a_jour(temps);
   ch_nu_->mettre_a_jour(temps);
+  if (ch_coeff_dilatation_th_.non_nul()) ch_coeff_dilatation_th_->mettre_a_jour(temps);
 
   update_lame_constants();
   ch_lambda_lame_->changer_temps(temps);
   ch_mu_->changer_temps(temps);
+  ch_K_->changer_temps(temps);
 }
 
 void Milieu_Elastic::verifier_coherence_champs(int& err, Nom& message)
@@ -163,16 +179,19 @@ void Milieu_Elastic::update_lame_constants()
   const double nu_val = ch_nu_->valeurs()(0, 0);
   const double denom_mu = 2. * (1. + nu_val);
   const double denom_lambda = (1. + nu_val) * (1. - 2. * nu_val);
+  const double denom_K = 3. * (1. - 2. * nu_val);
 
-  if (denom_mu == 0. || denom_lambda == 0.)
+  if (denom_mu == 0. || denom_lambda == 0. || denom_K == 0.)
     {
-      Cerr << que_suis_je() << " cannot compute Lame constants with nu=" << nu_val << finl;
+      Cerr << que_suis_je() << " cannot compute elastic constants with nu=" << nu_val << finl;
       Process::exit();
     }
 
   const double mu_val = E_val / denom_mu;
   const double lambda_val = E_val * nu_val / denom_lambda;
+  const double K_val = E_val / denom_K;
 
   ch_lambda_lame_->valeurs() = lambda_val;
   ch_mu_->valeurs() = mu_val;
+  ch_K_->valeurs() = K_val;
 }
