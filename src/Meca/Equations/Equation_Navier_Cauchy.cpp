@@ -13,18 +13,18 @@
 *
 *****************************************************************************/
 
-#include <Equation_Navier_Chauchy.h>
+#include <Equation_Navier_Cauchy.h>
 #include <Discretisation_base.h>
 #include <Schema_Temps_base.h>
 #include <Probleme_base.h>
 #include <Domaine_dis_base.h>
 #include <Process.h>
 
-Implemente_instanciable(Equation_Navier_Chauchy,"Equation_Navier_Chauchy",Equation_base);
+Implemente_instanciable(Equation_Navier_Cauchy,"Equation_Navier_Cauchy",Equation_base);
 
-Sortie& Equation_Navier_Chauchy::printOn(Sortie& os) const { return Equation_base::printOn(os); }
+Sortie& Equation_Navier_Cauchy::printOn(Sortie& os) const { return Equation_base::printOn(os); }
 
-Entree& Equation_Navier_Chauchy::readOn(Entree& is)
+Entree& Equation_Navier_Cauchy::readOn(Entree& is)
 {
   Equation_base::readOn(is);
 
@@ -34,13 +34,13 @@ Entree& Equation_Navier_Chauchy::readOn(Entree& is)
   return is;
 }
 
-void Equation_Navier_Chauchy::set_param(Param& param)
+void Equation_Navier_Cauchy::set_param(Param& param)
 {
   Equation_base::set_param(param);
   param.ajouter_non_std("diffusion",(this));
 }
 
-int Equation_Navier_Chauchy::lire_motcle_non_standard(const Motcle& mot, Entree& is)
+int Equation_Navier_Cauchy::lire_motcle_non_standard(const Motcle& mot, Entree& is)
 {
   if (mot=="diffusion")
     {
@@ -56,19 +56,19 @@ int Equation_Navier_Chauchy::lire_motcle_non_standard(const Motcle& mot, Entree&
     return Equation_base::lire_motcle_non_standard(mot,is);
 }
 
-const Operateur& Equation_Navier_Chauchy::operateur(int i) const
+const Operateur& Equation_Navier_Cauchy::operateur(int i) const
 {
   if (i != 0) Process::exit();
   return terme_diffusif;
 }
 
-Operateur& Equation_Navier_Chauchy::operateur(int i)
+Operateur& Equation_Navier_Cauchy::operateur(int i)
 {
   if (i != 0) Process::exit();
   return terme_diffusif;
 }
 
-void Equation_Navier_Chauchy::associer_milieu_base(const Milieu_base& mil)
+void Equation_Navier_Cauchy::associer_milieu_base(const Milieu_base& mil)
 {
   if (!sub_type(Milieu_Elastic, mil))
     {
@@ -78,7 +78,7 @@ void Equation_Navier_Chauchy::associer_milieu_base(const Milieu_base& mil)
   milieu_ = ref_cast(Milieu_Elastic, mil);
 }
 
-void Equation_Navier_Chauchy::discretiser()
+void Equation_Navier_Cauchy::discretiser()
 {
   const Discretisation_base& dis = discretisation();
   const Domaine_dis_base& dom = domaine_dis();
@@ -108,13 +108,13 @@ void Equation_Navier_Chauchy::discretiser()
   Equation_base::discretiser();
 }
 
-const Motcle& Equation_Navier_Chauchy::domaine_application() const
+const Motcle& Equation_Navier_Cauchy::domaine_application() const
 {
   static Motcle domaine = "Mecanique";
   return domaine;
 }
 
-void Equation_Navier_Chauchy::update_velocity()
+void Equation_Navier_Cauchy::update_velocity()
 {
   const double dt = schema_temps().pas_de_temps();
   const DoubleTab& disp_n = deplacement_->valeurs();
@@ -126,7 +126,7 @@ void Equation_Navier_Chauchy::update_velocity()
       vit_n(i, j) = (disp_n(i, j) - disp_nm1(i, j)) / dt;
 }
 
-void Equation_Navier_Chauchy::mettre_a_jour(double temps)
+void Equation_Navier_Cauchy::mettre_a_jour(double temps)
 {
   Equation_base::mettre_a_jour(temps);
 
