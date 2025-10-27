@@ -13,8 +13,8 @@
 *
 *****************************************************************************/
 
-#ifndef Equation_Navier_Chauchy_included
-#define Equation_Navier_Chauchy_included
+#ifndef Equation_Navier_Cauchy_included
+#define Equation_Navier_Cauchy_included
 
 #include <Operateur_Diff.h>
 #include <Equation_base.h>
@@ -27,9 +27,9 @@ class Milieu_Elastic;
  *
  *  Implementation minimale : toutes les operations numeriques sont a definir.
  */
-class Equation_Navier_Chauchy : public Equation_base
+class Equation_Navier_Cauchy : public Equation_base
 {
-  Declare_instanciable(Equation_Navier_Chauchy);
+  Declare_instanciable(Equation_Navier_Cauchy);
 
 public:
 
