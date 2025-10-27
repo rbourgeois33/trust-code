@@ -33,10 +33,11 @@ Entree& Solveur_Newmark::readOn(Entree& is) { return Simple::readOn(is); }
 
 Entree& Solveur_Newmark::lire(const Motcle& motlu,Entree& is)
 {
-  Motcles les_mots(2);
+  Motcles les_mots(3);
   {
-    les_mots[0] = "beta_";
-    les_mots[1] = "gamma_";
+    les_mots[0] = "beta";
+    les_mots[1] = "gamma";
+    les_mots[2] = "alpha"; // C = alpha * M damping
   }
 
   int rang = les_mots.search(motlu);
@@ -52,6 +53,11 @@ Entree& Solveur_Newmark::lire(const Motcle& motlu,Entree& is)
         is >> gamma_;
         break;
       }
+    case 2:
+      {
+        is >> alpha_;
+        break;
+      }
     default :
       {
         Cerr << "Keyword : " << motlu << " is not understood in " << que_suis_je() << finl;
@@ -65,8 +71,9 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 {
   // Newmark-β average-acceleration (β=1/4, γ=1/2) single implicit step
   // u: unknown (displacement), v: velocity, a: acceleration
-  // K_eff = K + a0*M with a0 = 1/(β*dt^2)
-  // RHS  = f_{n+1} + M * (a0 * u_pred)
+  // K_eff = K + a0*M + a1*C, with a0 = 1/(β*dt^2) and a1 = γ/(β*dt)
+  // Here C = alpha*M (mass-proportional Rayleigh damping).
+  // RHS  = f_{n+1} + M * (a0 * u_pred) + C * (a1 * u_pred - v_pred)
 
   if (!sub_type(Equation_Navier_Cauchy, eqn))
     {
@@ -93,7 +100,8 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 
   // Newmark coefficients
   const double a0 = 1.0 / (beta_ * dt * dt);         // scales M on LHS
-  // const double a1 = gamma_ / (beta_ * dt);         // (unused here: no explicit damping C)
+  const double a1 = gamma_ / (beta_ * dt);           // scales C on LHS (Rayleigh with C = alpha_*M)
+
   // Predictors
   DoubleTrav u_pred(current);
   u_pred = u_old; // start from previous displacement
@@ -130,6 +138,25 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
   eq.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
   const bool use_old_volumes = eq.domaine_dis().domaine().deformable();
   eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred, 0 /*implicit*/, use_old_volumes);
+
+// Add damping contributions if alpha_ != 0: K_eff += a1 * C = a1 * alpha_ * M
+// and RHS += C * (a1 * u_pred - v_pred) = alpha_ * M * (a1 * u_pred - v_pred)
+  if (alpha_ != 0.)
+    {
+      // Matrix: add (a1 * alpha_) * M  -> achieved with dt_eff_C_mat = 1 / (a1 * alpha_)
+      if (a1 != 0.)
+        {
+          const double dt_eff_C_mat = 1.0 / (a1 * alpha_);
+          eq.solv_masse().ajouter_masse(dt_eff_C_mat, matrice, 0 /*implicit*/);
+        }
+      // RHS: add alpha_ * M * (a1 * u_pred - v_pred) -> use dt_eff_C_rhs = 1 / alpha_
+      DoubleTrav w(current);
+      // w = a1 * u_pred - v_pred
+      for (int i = 0; i < N; i++)
+        w.addr()[i] = a1 * u_pred.addr()[i] - v_pred.addr()[i];
+      const double dt_eff_C_rhs = 1.0 / alpha_;
+      eq.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/, use_old_volumes);
+    }
 
 // Apply boundary conditions
   eq.modifier_pour_Cl(matrice, rhs);

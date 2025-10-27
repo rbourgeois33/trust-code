@@ -34,6 +34,7 @@ private:
   // Newmark parameters (average acceleration)
   double beta_ = 0.25;
   double gamma_ = 0.5;
+  double alpha_ = 0.0;
 };
 
 #endif
