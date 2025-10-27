@@ -17,7 +17,7 @@
 #define Probleme_Elasticite_Lineaire_included
 
 #include <Probleme_base.h>
-#include <Equation_Navier_Chauchy.h>
+#include <Equation_Navier_Cauchy.h>
 
 class Milieu_Elastic;
 
@@ -42,7 +42,7 @@ public:
 private:
   void abort_if_unimplemented(const char* method) const;
 
-  Equation_Navier_Chauchy equation_mecanique_;
+  Equation_Navier_Cauchy equation_mecanique_;
 };
 
 #endif
