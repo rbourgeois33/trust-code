@@ -196,9 +196,10 @@ void Milieu_Elastic::update_fields(double temps)
   const double lambda_val = E_val * nu_val / denom_lambda;
   const double K_val = E_val / denom_K;
 
-  ch_lambda_lame_->valeurs() = lambda_val;
-  ch_mu_->valeurs() = mu_val;
-  ch_K_->valeurs() = K_val;
+  const double fac = ch_rho_.non_nul() ? ch_rho_->valeurs()(0, 0) : 1.0;
+  ch_lambda_lame_->valeurs() = lambda_val / fac;
+  ch_mu_->valeurs() = mu_val / fac;
+  ch_K_->valeurs() = K_val / fac;
 
   if (temps > last_update_)
     {
