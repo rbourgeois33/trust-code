@@ -36,6 +36,7 @@ Entree& Source_Meca_Grad_Pression_Thermique::readOn(Entree& is)
 int Source_Meca_Grad_Pression_Thermique::initialiser(double temps)
 {
   T_ref_->initialiser(temps);
+  equation().discretisation().nommer_completer_champ_physique(equation().domaine_dis(), "temperature_field", "", T_.valeur(), equation().probleme());
   T_->initialiser(temps);
   return Source_base::initialiser(temps);
 }
