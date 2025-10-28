@@ -199,7 +199,7 @@ DoubleTab& Solveur_Masse_base::ajouter_masse(double dt, DoubleTab& tab_x, const 
   if (use_old_volumes)
     {
       y_scaled = tab_y;
-      equation().domaine_dis().domaine().apply_old_to_new_volume_scaling(y_scaled);
+      equation().domaine_dis().domaine().apply_old_to_new_volume_scaling(y_scaled, equation().domaine_dis());
       py = &y_scaled;
     }
 
