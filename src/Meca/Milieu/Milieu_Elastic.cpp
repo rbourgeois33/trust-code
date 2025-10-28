@@ -204,7 +204,7 @@ void Milieu_Elastic::update_fields(double temps)
   if (temps > last_update_)
     {
       Cerr << "Updating rho_lagrangien field based on current volume scaling at time " << temps << finl;
-      zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs());
+      zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs(), zdb_.valeur());
       last_update_ = temps;
     }
 }
