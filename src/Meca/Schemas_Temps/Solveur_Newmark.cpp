@@ -136,7 +136,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 
 // Add effective mass to matrix and RHS (M*a0*u_pred)
   eq.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
-  const bool use_old_volumes = eq.domaine_dis().domaine().deformable();
+  const bool use_old_volumes = false; //eq.domaine_dis().domaine().deformable();
   eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred, 0 /*implicit*/, use_old_volumes);
 
 // Add damping contributions if alpha_ != 0: K_eff += a1 * C = a1 * alpha_ * M
