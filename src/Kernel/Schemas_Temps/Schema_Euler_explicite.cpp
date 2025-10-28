@@ -59,7 +59,7 @@ int Schema_Euler_explicite::faire_un_pas_de_temps_eqn_base(Equation_base& eqn)
   if (eqn.domaine_dis().domaine().deformable())
     {
       DoubleTab present_copy(present);
-      eqn.domaine_dis().domaine().apply_old_to_new_volume_scaling(present_copy);
+      eqn.domaine_dis().domaine().apply_old_to_new_volume_scaling(present_copy, eqn.domaine_dis());
       futur += present_copy;
     }
   else
