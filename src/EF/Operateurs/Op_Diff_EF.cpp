@@ -632,6 +632,7 @@ void Op_Diff_EF::ajouter_bords(const DoubleTab& tab_inconnue,DoubleTab& resu,  i
   const DoubleTab& face_normales=domaine_ef.face_normales();
   const DoubleVect& volumes_thilde= domaine_ef.volumes_thilde();
   const DoubleVect& volumes= domaine_ef.volumes();
+  const int nb_som = domaine_ef.domaine().nb_som();
 
   const IntTab& face_sommets=domaine_ef.face_sommets();
   int nb_som_face=domaine_ef.nb_som_face();
@@ -662,16 +663,16 @@ void Op_Diff_EF::ajouter_bords(const DoubleTab& tab_inconnue,DoubleTab& resu,  i
 
           const Front_VF& le_bord = ref_cast(Front_VF, la_cl->frontiere_dis());
           const Neumann& la_cl_paroi = ref_cast(Neumann, la_cl.valeur());
-          const int ndeb = le_bord.num_premiere_face();
-          const int nfin = ndeb + le_bord.nb_faces();
-          for (int face = ndeb; face < nfin; face++)
+          for (int i = 0; i < le_bord.nb_faces_tot(); i++)
             {
-              const double val = la_cl_paroi.flux_impose(face - ndeb);
+              const int face=le_bord.num_face(i);
+              const double val = la_cl_paroi.flux_impose(i);
               for (int i1 = 0; i1 < nb_som_face; i1++)
                 {
                   const int glob = face_sommets(face, i1);
-                  for (int comp = 0; comp < N; comp++)
-                    resu(glob, comp) -= val * face_normales(face, comp) / nb_som_face;
+                  if (glob < nb_som)
+                    for (int comp = 0; comp < N; comp++)
+                      resu(glob, comp) -= val * face_normales(face, comp) / nb_som_face;
                 }
             }
         }
