@@ -25,6 +25,7 @@ int Option_PolyMAC::USE_NEW_M2 = 1;
 int Option_PolyMAC::MAILLAGE_VDF = 0;
 int Option_PolyMAC::INTERP_VE1 = 0;
 int Option_PolyMAC::TRAITEMENT_AXI = 0;
+int Option_PolyMAC::MPFA_SYM = 0;
 
 Sortie& Option_PolyMAC::printOn(Sortie& os) const { return Interprete::printOn(os); }
 
@@ -37,6 +38,7 @@ Entree& Option_PolyMAC::interpreter(Entree& is)
   param.ajouter_non_std("maillage_vdf|vdf_mesh",(this)); // XD_ADD_P rien Flag used to force the calculation of the equiv tab.
   param.ajouter_non_std("interp_ve1",(this)); // XD_ADD_P rien Flag to enable a first-order face-to-element velocity interpolation. By default, it is not activated which means a second order interpolation. Only useful for PolyMAC_P0 version.
   param.ajouter_non_std("traitement_axi",(this)); // XD_ADD_P rien Flag used to relax the time-step stability criterion in case of a thin slice geometry while modelling an axi-symetrical case. Only useful for PolyMAC_P0 version.
+  param.ajouter_non_std("mpfa_sym",(this)); // XD_ADD_P rien Flag used to use symmetric (but non-consistent) gradient in PolyMAC_P0 or PolyVEF_P0.
   param.lire_avec_accolades_depuis(is);
   return is;
 }
@@ -51,6 +53,8 @@ int Option_PolyMAC::lire_motcle_non_standard(const Motcle& mot, Entree& is)
     INTERP_VE1 = 1;
   else if (mot == "traitement_axi")
     TRAITEMENT_AXI = 1;
+  else if (mot == "mpfa_sym")
+    MPFA_SYM = 1;
   else
     return -1;
   return 1;

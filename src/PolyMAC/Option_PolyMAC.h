@@ -26,7 +26,7 @@ class Option_PolyMAC : public Interprete
 public :
   Entree& interpreter(Entree&) override;
   int lire_motcle_non_standard(const Motcle&, Entree&) override;
-  static int USE_NEW_M2, MAILLAGE_VDF, INTERP_VE1, TRAITEMENT_AXI;
+  static int USE_NEW_M2, MAILLAGE_VDF, INTERP_VE1, TRAITEMENT_AXI, MPFA_SYM;
 };
 
 #endif /* Option_PolyMAC_included */

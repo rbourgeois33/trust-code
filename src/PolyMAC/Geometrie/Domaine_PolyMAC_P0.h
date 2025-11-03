@@ -38,11 +38,12 @@ public :
   //          nu(e, n, ..)  : diffusivite aux elements (optionnel)
   //          som_ext       : liste de sommets a ne pas traiter (ex. : traitement direct des Echange_Contact dans Op_Diff_PolyVEF_Elem)
   //          virt          : 1 si on veut aussi le flux aux faces virtuelles
+  //          mix           : 1 si la diffusion melange les composantes (multi_scalar_diffusion)
   //          full_stencil  : 1 si on veut le stencil complet (pour dimensionner())
   //Sorties : phif_d(f, 0/1)                       : indices dans phif_{e,c} / phif_{pe,pc} du flux a f dans [phif_d(f, 0/1), phif_d(f + 1, 0/1)[
   //          phif_e(i), phif_c(i, n, c)           : indices/coefficients locaux (pas d'Echange_contact) et diagonaux (composantes independantes)
   void fgrad(int N, int is_p, int vec, const Conds_lim& cls, const IntTab& fcl, const DoubleTab *nu, const IntTab *som_ext,
-             int virt, int full_stencil, IntTab& phif_d, IntTab& phif_e, DoubleTab& phif_c) const;
+             int virt, int mix, int full_stencil, IntTab& phif_d, IntTab& phif_e, DoubleTab& phif_c) const;
 
   //MD_Vectors pour Champ_Face_PolyMAC_P0 (faces + d x elems)
   MD_Vector mdv_ch_face;

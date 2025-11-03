@@ -111,7 +111,7 @@ double Op_Diff_PolyMAC_P0_Elem::calculer_dt_stab() const
 
   double dt = 1e10;
 
-  const int N = equation().inconnue().valeurs().dimension(1), cD = (diffu.dimension(0) == 1), cL = (lambda.dimension(0) == 1);
+  const int N = equation().inconnue().valeurs().dimension(1), cD = (diffu.dimension(0) == 1), cL = (lambda.dimension(0) == 1), mix = equation().diffusion_multi_scalaire();
 
   DoubleTrav flux(N);
 
@@ -126,7 +126,8 @@ double Op_Diff_PolyMAC_P0_Elem::calculer_dt_stab() const
 
           if (!Option_PolyMAC::TRAITEMENT_AXI || (Option_PolyMAC::TRAITEMENT_AXI && !(fcl(f,0) == 4 || fcl(f,0) == 5)) )
             for (int n = 0; n < N; n++)
-              flux(n) += domaine.nu_dot(&nu_, e, n, &nf(f, 0), &nf(f, 0)) / vf(f);
+              for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++)
+                flux(n) += domaine.nu_dot(&nu_, e, n, &nf(f, 0), &nf(f, 0), nullptr, nullptr, mix ? m : -1) / vf(f);
         }
 
       for (int n = 0; n < N; n++)
@@ -201,13 +202,13 @@ void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
 
   Matrice_Morse* mat = matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
 
-  const int N = equation().inconnue().valeurs().line_size(); //nombre de composantes
+  const int N = equation().inconnue().valeurs().line_size(), mix = equation().diffusion_multi_scalaire(), NM = N * (mix ? N : 1); //nombre de composantes
 
   IntTab stencil; //stencils par matrice
   stencil.resize(0, 2);
 
 
-  IntTrav tpfa(0, N); //pour suivre quels flux sont a deux points
+  IntTrav tpfa(0, NM); //pour suivre quels flux sont a deux points
   domaine.creer_tableau_faces(tpfa);
   tpfa = 1;
 
@@ -226,13 +227,14 @@ void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
               const int e_s = phif_e(j);
 
               if (e_s < domaine.nb_elem_tot())
-                for (int n = 0; n < N; n++)
-                  {
-                    stencil.append_line(N * e + n, N * e_s + n);
+                for (int n = 0, nm = 0; n < N; n++)
+                  for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                    {
+                      stencil.append_line(N * e + n, N * e_s + m);
 
-                    const int tmp = (e_s == f_e(f, 0)) || (e_s == f_e(f, 1)) || (phif_c(j, n) == 0);
-                    tpfa(f, n) &= tmp;
-                  }
+                      const int tmp = (e_s == f_e(f, 0)) || (e_s == f_e(f, 1)) || (phif_c(j, nm) == 0);
+                      tpfa(f, nm) &= tmp;
+                    }
             }
       }
 
@@ -252,8 +254,8 @@ void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
 
   const double elem_t = static_cast<double>(domaine.domaine().md_vector_elements()->nb_items_seq_tot()),
                face_t = static_cast<double>(domaine.md_vector_faces()->nb_items_seq_tot());
-  Cerr << "width " << Process::mp_sum_as_double(n_sten) / (N * elem_t) << " "
-       << mp_somme_vect_as_double(tpfa) * 100. / (N * face_t) << "% TPFA " << finl;
+  Cerr << "width " << Process::mp_sum_as_double(n_sten) / (NM * elem_t) << " "
+       << mp_somme_vect_as_double(tpfa) * 100. / (NM * face_t) << "% TPFA " << finl;
 }
 
 /*! @brief Assembles the diffusion contribution to the linear system
@@ -297,12 +299,12 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
 
   const Conds_lim& cls = equation().domaine_Cl_dis().les_conditions_limites();
 
-  const int N = inco.line_size();
+  const int N = inco.line_size(), mix = equation().diffusion_multi_scalaire(), NM = N * (mix ? N : 1);
 
   Matrice_Morse* mat = !semi_impl.count(nom_inco) && matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
 
   /* avec phif : flux hors Echange_contact -> mat[0] seulement */
-  DoubleTrav flux(N);
+  DoubleTrav flux(NM);
 
   for (int f = 0; f < domaine.nb_faces(); f++)
     {
@@ -315,8 +317,9 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
 
           if (fb < 0)
             {
-              for (int n = 0; n < N; n++)
-                flux(n) += phif_c(i, n) * fs(f) * inco(eb, n);
+              for (int n = 0, nm = 0; n < N; n++)
+                for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                  flux(n) += phif_c(i, nm) * fs(f) * inco(eb, m);
 
               if (mat) //derivees
                 for (int j = 0; j < 2; j++)
@@ -325,27 +328,31 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
                     if (e < 0) continue;
 
                     if (e < domaine.nb_elem())
-                      for (int n = 0; n < N; n++)
-                        (*mat)(N * e + n, N * eb + n) += (j ? 1 : -1) * phif_c(i, n) * fs(f);
+                      for (int n = 0, nm = 0; n < N; n++) //derivees
+                        for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                          (*mat)(N * e + n, N * eb + m) += (j ? 1 : -1) * phif_c(i, nm) * fs(f);
                   }
             }
           else if (fcl(fb, 0) == 1 || fcl(fb, 0) == 2) //Echange_impose_base
             {
-              for (int n = 0; n < N; n++)
-                flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
-                            ref_cast(Echange_impose_base, cls[fcl(fb, 1)].valeur()).T_ext(fcl(fb, 2), n) : 0);
+              for (int n = 0, nm = 0; n < N; n++)
+                for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                  flux(n) += (phif_c(i, nm) ? phif_c(i, nm) * fs(f) *
+                              ref_cast(Echange_impose_base, cls[fcl(fb, 1)].valeur()).T_ext(fcl(fb, 2), m) : 0);
             }
           else if (fcl(fb, 0) == 4) //Neumann non homogene
             {
-              for (int n = 0; n < N; n++)
-                flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
-                            ref_cast(Neumann_paroi, cls[fcl(fb, 1)].valeur()).flux_impose(fcl(fb, 2), n) : 0);
+              for (int n = 0, nm = 0; n < N; n++)
+                for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                  flux(n) += (phif_c(i, nm) ? phif_c(i, nm) * fs(f) *
+                              ref_cast(Neumann_paroi, cls[fcl(fb, 1)].valeur()).flux_impose(fcl(fb, 2), m) : 0);
             }
           else if (fcl(fb, 0) == 6) //Dirichlet
             {
-              for (int n = 0; n < N; n++)
-                flux(n) += (phif_c(i, n) ? phif_c(i, n) * fs(f) *
-                            ref_cast(Dirichlet, cls[fcl(fb, 1)].valeur()).val_imp(fcl(fb, 2), n) : 0);
+              for (int n = 0, nm = 0; n < N; n++)
+                for (int m = (mix ? 0 : n); m < (mix ? N : n + 1); m++, nm++)
+                  flux(n) += (phif_c(i, nm) ? phif_c(i, nm) * fs(f) *
+                              ref_cast(Dirichlet, cls[fcl(fb, 1)].valeur()).val_imp(fcl(fb, 2), nm) : 0);
             }
         }
 

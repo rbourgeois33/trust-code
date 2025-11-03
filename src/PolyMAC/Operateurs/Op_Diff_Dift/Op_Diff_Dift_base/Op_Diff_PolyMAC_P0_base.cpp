@@ -50,9 +50,10 @@ void Op_Diff_PolyMAC_P0_base::completer()
   const Equation_base& eq = equation();
   int N = eq.inconnue().valeurs().line_size(), N_mil = eq.milieu().has_masse_volumique() ? eq.milieu().masse_volumique().valeurs().line_size() : N;
   int N_diff = diffusivite().valeurs().line_size(), D = dimension, N_nu = std::max(N * dimension_min_nu(), N_diff);
+  const int multi = equation().diffusion_multi_scalaire();
 
-  if ((N_nu == N_mil) | (N_nu == N))
-    nu_.resize(0, N); //isotrope
+  if ((N_nu == N_mil) | (N_nu == N * (multi ? N : 1)))
+    multi ? nu_.resize(0, N, N) : nu_.resize(0, N); //isotrope
   else if ((N_nu == N_mil * D) | (N_nu == N * D))
     nu_.resize(0, N, D); //diagonal
   else if ((N_nu == N_mil * D * D) | (N_nu == N * D * D))
@@ -81,6 +82,7 @@ void Op_Diff_PolyMAC_P0_base::update_nu() const
   assert(N_nu % N == 0);
 
   const bool is_aire_int = sub_type(Aire_interfaciale, equation()); /* cas Aire_interfaciale, pas de nu lam ... */
+  const int multi = equation().diffusion_multi_scalaire();
 
   if (is_aire_int)
     {
@@ -92,9 +94,9 @@ void Op_Diff_PolyMAC_P0_base::update_nu() const
     }
 
   /* nu_ : si necessaire, on doit etendre la champ source */
-  if (N_nu == N && N_nu_src == N_mil)
+  if ((N_nu == N && N_nu_src == N_mil) or (multi && N_nu == N * N))
     for (e = 0; e < domaine.nb_elem_tot(); e++)
-      for (n = 0; n < N; n++)
+      for (n = 0; n < N * (multi ? N : 1); n++)
         nu_.addr()[N_nu * e + n] = nu_src(!c_nu * e, n); //facile
   else if (N_nu == N * D && N_nu_src == N_mil)
     for (e = 0; e < domaine.nb_elem_tot(); e++)
@@ -130,6 +132,6 @@ void Op_Diff_PolyMAC_P0_base::update_phif(int full_stencil) const
     return; //deja fait, sauf si on demande tout le stencil
   const Champ_Inc_base& ch = equation().inconnue();
   const IntTab& fcl = sub_type(Champ_Face_PolyMAC_P0, ch) ? ref_cast(Champ_Face_PolyMAC_P0, ch).fcl() : ref_cast(Champ_Elem_PolyMAC_P0, ch).fcl();
-  domaine.fgrad(ch.valeurs().line_size(), 0, 0, la_zcl_poly_->les_conditions_limites(), fcl, &nu(), &som_ext, sub_type(Champ_Face_PolyMAC_P0, ch), full_stencil, phif_d, phif_e, phif_c);
+  domaine.fgrad(ch.valeurs().line_size(), 0, 0, la_zcl_poly_->les_conditions_limites(), fcl, &nu(), &som_ext, sub_type(Champ_Face_PolyMAC_P0, ch), equation().diffusion_multi_scalaire(), full_stencil, phif_d, phif_e, phif_c);
   phif_a_jour_ = 1;
 }

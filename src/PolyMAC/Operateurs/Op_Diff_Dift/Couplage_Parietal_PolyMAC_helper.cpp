@@ -788,7 +788,7 @@ void Couplage_Parietal_PolyMAC_helper::ajouter_blocs(matrices_t matrices, Double
 
           assert(k == t_eq); //a-ton bien autant d'equations que d'inconnues?
 
-          for (int essai = 0; essai < 3; essai++) /* essai 0 : MPFA O -> essai 1 : MPFA O avec x_fs mobiles -> essai 2 : MPFA symetrique (corecive, mais pas tres consistante) */
+          for (int essai = (Option_PolyMAC::MPFA_SYM ? 2 : 0); essai < 3; essai++) /* essai 0 : MPFA O -> essai 1 : MPFA O avec x_fs mobiles -> essai 2 : MPFA symetrique (corecive, mais pas tres consistante) */
             {
               if (essai == 1) /* essai 1 : tentative de symmetrisation en deplacant les x_fs. Si mix = 1, on ne peut pas les deplacer independamment */
                 {
