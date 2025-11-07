@@ -121,7 +121,7 @@ void Equation_Navier_Cauchy::update_velocity()
   const DoubleTab& disp_nm1 = deplacement_->passe();
   DoubleTab& vit_n = vitesse_noeuds_->valeurs();
 
-  for (int i = 0; i < vit_n.dimension(0); i++)
+  for (int i = 0; i < vit_n.dimension_tot(0); i++)
     for (int j = 0; j < dimension; j++)
       vit_n(i, j) = (disp_n(i, j) - disp_nm1(i, j)) / dt;
 }
