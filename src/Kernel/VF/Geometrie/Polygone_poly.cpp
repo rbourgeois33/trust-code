@@ -74,14 +74,15 @@ void Polygone_poly::normale(int num_Face,DoubleTab& Face_normales,
 
   double dot=(nx*x1+ny*y1);
   */
-  int elem1=Face_voisins(num_Face,0);
+  const int s = Face_voisins(num_Face, 0) == -1 ? -1 : 1;
+  const int elem1 = s == -1 ? Face_voisins(num_Face, 1) : Face_voisins(num_Face, 0);
 
   DoubleVect xp;
   ref_cast(Poly_geom_base,domaine_geom.type_elem().valeur()).calculer_un_centre_gravite(elem1,xp);
   x1=xp(0)-les_coords(n0,0);
   y1=xp(1)-les_coords(n0,1);
 
-  double dot=(nx*x1+ny*y1);
+  const double dot = (nx * x1 + ny * y1) * s;
 
   double scale = 1.0;
   if (Objet_U::bidim_axi)
