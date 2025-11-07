@@ -78,7 +78,10 @@ void Op_Diff_PolyMAC_P0_Elem::completer()
         break;
       }
 
-  if (is_pb_coupl_ || has_flux_par_)
+  if ((has_echange_contact_ || has_flux_par_) && equation().diffusion_multi_scalaire())
+    Process::exit("Multi-scalar diffusion is not compatible with echange_contact or parietal flux coupling.");
+
+  if (has_echange_contact_ || has_flux_par_)
     couplage_parietal_helper_.associer(*this);
 
   if (has_flux_par_)
@@ -156,7 +159,7 @@ void Op_Diff_PolyMAC_P0_Elem::init_op_ext() const
   if (som_ext_init_)
     return; //deja fait
 
-  if (is_pb_coupl_ || has_flux_par_)
+  if (has_echange_contact_ || has_flux_par_)
     couplage_parietal_helper_.init_op_ext();
   else
     {
@@ -184,7 +187,7 @@ void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs
   if (semi_impl.count(nom_inco))
     return; //semi-implicite -> rien a dimensionner
 
-  if (is_pb_coupl_ || has_flux_par_)
+  if (has_echange_contact_ || has_flux_par_)
     {
       couplage_parietal_helper_.dimensionner_blocs(matrices, semi_impl);
       return;
@@ -273,7 +276,7 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
 #else
   init_op_ext();
   update_phif(equation().domaine_dis().domaine().deformable());
-  if (is_pb_coupl_ || has_flux_par_)
+  if (has_echange_contact_ || has_flux_par_)
     {
       couplage_parietal_helper_.ajouter_blocs(matrices, secmem, semi_impl);
       return;
