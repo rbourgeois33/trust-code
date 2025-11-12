@@ -29,15 +29,19 @@ TRUSTSchema_RK<_ORDRE_>::faire_un_pas_de_temps_eqn_base_generique(Equation_base&
   DoubleTrav present(xi), qi(xi);
   present = xi;
   qi = xi;
+  const auto& coeff_a = get_a<_ORDRE_,NB_PTS>();
+  const auto& coeff_b = get_b<_ORDRE_,NB_PTS>();
+  init_rk_flux_accumulators(eqn);
 
   for (int i = 0; i < NB_PTS; i++)
     {
       // on fait ca : q_i = a_{i-1} * q_{i-1} + dt * f(x_{i-1})
-      qi *= get_a<_ORDRE_,NB_PTS>()[i];
+      qi *= coeff_a[i];
       qi.ajoute(dt_, eqn.derivee_en_temps_inco(xip1));
+      accumulate_flux_low_storage(eqn, coeff_a[i], coeff_b[i]);
 
       // on fait ca : x_i = x_{i-1} + b_i * q_i
-      xi.ajoute(get_b<_ORDRE_,NB_PTS>()[i], qi);
+      xi.ajoute(coeff_b[i], qi);
     }
 
   xip1 = xi;
@@ -51,6 +55,7 @@ TRUSTSchema_RK<_ORDRE_>::faire_un_pas_de_temps_eqn_base_generique(Equation_base&
 
   // xi = x0;
   xi = present;
+  finalize_rk_flux_accumulators(eqn);
 
   return 1;
 }
@@ -76,10 +81,13 @@ TRUSTSchema_RK<_ORDRE_>::faire_un_pas_de_temps_eqn_base_generique(Equation_base&
 
   DoubleTrav sauv(present);
   sauv = present; // sauv = y0
+  const auto& butcher = BUTCHER_TAB.at(NB_BUTCHER);
+  init_rk_flux_accumulators(eqn);
 
   // Step 1
   eqn.derivee_en_temps_inco(ki_[0]); // ki[0] = f(y0)
   ki_[0] *= dt_; // ki[0] = h * f(y0)
+  accumulate_flux_classical(eqn, butcher.at(0));
 
   for (int step = 1; step < NB_PTS; step++ ) // ATTENTION : ne touche pas !
     {
@@ -88,6 +96,7 @@ TRUSTSchema_RK<_ORDRE_>::faire_un_pas_de_temps_eqn_base_generique(Equation_base&
 
       eqn.derivee_en_temps_inco(ki_[step]);
       ki_[step] *= dt_;
+      accumulate_flux_classical(eqn, butcher.at(step));
     }
 
   futur = sauv; // futur = y1 = y0
@@ -100,8 +109,37 @@ TRUSTSchema_RK<_ORDRE_>::faire_un_pas_de_temps_eqn_base_generique(Equation_base&
   futur.echange_espace_virtuel();
 
   present = sauv; // back to y0
+  finalize_rk_flux_accumulators(eqn);
 
   return 1;
+}
+
+template <Ordre_RK _ORDRE_>
+void TRUSTSchema_RK<_ORDRE_>::init_rk_flux_accumulators(Equation_base& eq) const
+{
+  for (int op = 0; op < eq.nombre_d_operateurs(); op++)
+    eq.operateur(op).l_op_base().rk_reset_flux_accumulators();
+}
+
+template <Ordre_RK _ORDRE_>
+void TRUSTSchema_RK<_ORDRE_>::finalize_rk_flux_accumulators(Equation_base& eq) const
+{
+  for (int op = 0; op < eq.nombre_d_operateurs(); op++)
+    eq.operateur(op).l_op_base().rk_finalize_flux_accumulators();
+}
+
+template <Ordre_RK _ORDRE_>
+void TRUSTSchema_RK<_ORDRE_>::accumulate_flux_classical(Equation_base& eq, double weight) const
+{
+  for (int op = 0; op < eq.nombre_d_operateurs(); op++)
+    eq.operateur(op).l_op_base().rk_accumulate_flux(weight);
+}
+
+template <Ordre_RK _ORDRE_>
+void TRUSTSchema_RK<_ORDRE_>::accumulate_flux_low_storage(Equation_base& eq, double ai, double bi) const
+{
+  for (int op = 0; op < eq.nombre_d_operateurs(); op++)
+    eq.operateur(op).l_op_base().rk_low_storage_update_flux(ai, bi);
 }
 
 #endif /* TRUSTSchema_RK_TPP_included */

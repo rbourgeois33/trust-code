@@ -106,6 +106,10 @@ public:
   inline const Nom description() const { return description_; }
   inline DoubleTab& flux_bords() { return flux_bords_; }
   inline DoubleTab& flux_bords() const { return flux_bords_; }
+  void rk_reset_flux_accumulators() const;
+  void rk_accumulate_flux(double weight) const;
+  void rk_low_storage_update_flux(double ai, double bi) const;
+  void rk_finalize_flux_accumulators() const;
 
   //Methodes de l interface des champs postraitables
   /////////////////////////////////////////////////////
@@ -138,6 +142,10 @@ protected:
   Nom out_;                                 // Nom du fichier .out pour l'impression
   Nom description_;
   mutable DoubleTab flux_bords_;         // Tableau contenant les flux sur les bords de l'operateur
+  mutable DoubleTab flux_bords_rk_sum_;   // Accumulateur pour les schemas multi-stades
+  mutable DoubleTab flux_bords_rk_tmp_;   // Stockage intermediaire pour les schemas low-storage
+  mutable bool rk_flux_sum_init_ = false;
+  mutable bool rk_flux_tmp_init_ = false;
 
   Champs_compris champs_compris_;
   OBS_PTR(Champ_Inc_base) le_champ_inco;
@@ -193,4 +201,3 @@ SolveurSys& Operateur_base::set_solveur()
 }
 
 #endif
-

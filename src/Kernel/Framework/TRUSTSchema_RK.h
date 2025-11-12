@@ -64,6 +64,10 @@ protected:
 
 private:
   static constexpr double SQRT2 = 1.4142135623730950488016887242096980785696718753769480731766797, SQRT2_2 = SQRT2 / 2.;
+  void init_rk_flux_accumulators(Equation_base& eq) const;
+  void finalize_rk_flux_accumulators(Equation_base& eq) const;
+  void accumulate_flux_classical(Equation_base& eq, double weight) const;
+  void accumulate_flux_low_storage(Equation_base& eq, double ai, double bi) const;
 
   // RK low storage : See Williamson RK series https://www.sciencedirect.com/science/article/pii/0021999180900339
   static constexpr ARR2 A2 = { 0.0, SQRT2 - 2. };

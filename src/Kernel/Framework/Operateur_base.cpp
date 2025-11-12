@@ -34,6 +34,8 @@ Operateur_base::Operateur_base()
   decal_temps=0;
   nb_ss_pas_de_temps=1;
   col_width_ = -1;
+  rk_flux_sum_init_ = false;
+  rk_flux_tmp_init_ = false;
 }
 
 /*! @brief DOES NOTHING - to override in derived classes.
@@ -638,4 +640,54 @@ void Operateur_base::tester_contribuer_a_avec(const DoubleTab& inco, const Matri
       if (test_op==1)
         exit();
     }
+}
+
+void Operateur_base::rk_reset_flux_accumulators() const
+{
+  rk_flux_sum_init_ = false;
+  rk_flux_tmp_init_ = false;
+}
+
+void Operateur_base::rk_accumulate_flux(double weight) const
+{
+  if (weight == 0.) return;
+  DoubleTab& flux = flux_bords_;
+  if (!flux.size_totale()) return;
+  if (!rk_flux_sum_init_)
+    {
+      flux_bords_rk_sum_ = flux;
+      flux_bords_rk_sum_ = 0.;
+      rk_flux_sum_init_ = true;
+    }
+  flux_bords_rk_sum_.ajoute(weight, flux);
+}
+
+void Operateur_base::rk_low_storage_update_flux(double ai, double bi) const
+{
+  DoubleTab& flux = flux_bords_;
+  if (!flux.size_totale()) return;
+
+  if (!rk_flux_tmp_init_)
+    {
+      flux_bords_rk_tmp_ = flux;
+      flux_bords_rk_tmp_ = 0.;
+      rk_flux_tmp_init_ = true;
+    }
+  if (!rk_flux_sum_init_)
+    {
+      flux_bords_rk_sum_ = flux;
+      flux_bords_rk_sum_ = 0.;
+      rk_flux_sum_init_ = true;
+    }
+
+  flux_bords_rk_tmp_ *= ai;
+  flux_bords_rk_tmp_ += flux;
+  if (bi != 0.) flux_bords_rk_sum_.ajoute(bi, flux_bords_rk_tmp_);
+}
+
+void Operateur_base::rk_finalize_flux_accumulators() const
+{
+  if (rk_flux_sum_init_) flux_bords_ = flux_bords_rk_sum_;
+  rk_flux_sum_init_ = false;
+  rk_flux_tmp_init_ = false;
 }
