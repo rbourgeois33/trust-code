@@ -733,7 +733,7 @@ void Domaine_32_64<_SZ_>::calculer_volumes(DoubleVect_t& volumes, DoubleVect_t& 
           Cerr << "Volume[" << i << "]=" << v << finl;
           Cerr << "Several volumes of the mesh are not positive." << finl;
           Cerr << "Something is wrong in the mesh..." << finl;
-          Process::exit();
+          continue;
         }
       inverse_volumes(i) = 1. / v;
     }
