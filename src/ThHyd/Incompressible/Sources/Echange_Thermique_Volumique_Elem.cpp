@@ -31,6 +31,8 @@ Implemente_instanciable(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Vol
 Add_synonym(Echange_Thermique_Volumique_Elem, "echange_thermique_volumique_VDF_P0_VDF");
 Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyMAC_P0");
 Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyMAC_P0P1NC");
+Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyVEF_P0");
+Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyVEF_P0P1");
 
 
 
