@@ -62,7 +62,7 @@ class Perte_Charge_Isotrope_PolyVEF_Face: public Perte_Charge_PolyVEF, public PD
 {
   Declare_instanciable(Perte_Charge_Isotrope_PolyVEF_Face);
 public:
-  void mettre_a_jour(double temps) override { diam_hydr->mettre_a_jour(temps); }
+  void mettre_a_jour(double temps) override { Perte_Charge_PolyVEF::mettre_a_jour(temps); diam_hydr->mettre_a_jour(temps); }
 
 protected:
   void coeffs_perte_charge(const DoubleVect&, const DoubleVect&, double, double, double, double, double, double&, double&, double&, DoubleVect&) const override;
