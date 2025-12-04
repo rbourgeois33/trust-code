@@ -66,8 +66,8 @@ public:
   // Time-dependency
   //
   virtual void initialiser (double temps, const Probleme_base&) {}
-  virtual void set_dt(double& dt_) {}
   virtual bool solveTimeStep(Probleme_base& pb) { return true; }
+  virtual void validateTimeStep() { }
   virtual void abortTimeStep() { }
   virtual void update_after_post(double temps) {}
   int mesh_update_required() const { return mesh_update_required_; }

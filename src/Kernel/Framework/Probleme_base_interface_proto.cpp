@@ -65,7 +65,6 @@ bool Probleme_base_interface_proto::initTimeStep_impl(Probleme_base& pb, double 
   Debog::set_nom_pb_actuel(pb.le_nom());
 
   bool ok = pb.schema_temps().initTimeStep(dt);
-  pb.domaine().set_dt(dt);
   pb.milieu().initTimeStep(dt);
   for (int i = 0; i < pb.nombre_d_equations(); i++)
     ok = ok && pb.equation(i).initTimeStep(dt);
@@ -123,6 +122,7 @@ void Probleme_base_interface_proto::validateTimeStep_impl(Probleme_base& pb)
 
   Debog::set_nom_pb_actuel(pb.le_nom());
   pb.schema_temps().validateTimeStep();
+  pb.domaine().validateTimeStep();
   pb.allocation();
 
   dt_defined = false;
