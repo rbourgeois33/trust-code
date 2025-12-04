@@ -114,6 +114,12 @@ const Motcle& Equation_Navier_Cauchy::domaine_application() const
   return domaine;
 }
 
+void Equation_Navier_Cauchy::valider_iteration()
+{
+  Equation_base::valider_iteration();
+  update_velocity();
+}
+
 void Equation_Navier_Cauchy::update_velocity()
 {
   const double dt = schema_temps().pas_de_temps();
