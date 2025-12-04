@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -786,6 +786,8 @@ void DomaineCutter_32_64<_SIZE_>::construire_faces_joints_ssdom(const int partie
 {
   const int nb_sommets_ssdom = domaine_partie.nb_som();
   const int nb_elem_ssdom = domaine_partie.nb_elem();
+  if (nb_elem_ssdom == 0)
+    return; // Pas d'elements dans cette partie => pas de faces de joint
   const SmallArrOfTID_t& liste_sommets = correspondance.liste_sommets_;
   const BigArrOfInt_t& liste_inverse_elements = correspondance.liste_inverse_elements_;
 
