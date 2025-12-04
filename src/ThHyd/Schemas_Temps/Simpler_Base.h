@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -95,6 +95,7 @@ protected :
   int no_qdm_;
   int controle_residu_;
   double facsec_diffusion_for_sets_ = -1.;
+  std::map<std::string, double> relax_factors_; // map of relaxation factors for different equations
 
   virtual Entree& lire(const Motcle&, Entree&)=0;
 };

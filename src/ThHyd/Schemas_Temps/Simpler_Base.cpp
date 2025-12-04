@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -126,6 +126,20 @@ Entree& Simpler_Base::readOn(Entree& is )
         {
           Cerr << motlu << finl;
           is >> facsec_diffusion_for_sets_;
+        }
+      else if (motlu == "equation_relaxation_factor")
+        {
+          Motcle nom;
+          is >> nom;
+          if (nom != "{")
+            Process::exit(Nom("equation_relaxation_factor : { expected instead of ") + nom);
+
+          for (is >> nom; nom != "}"; is >> nom)
+            {
+              double val;
+              is >> val;
+              relax_factors_[nom.getString()] = val;
+            }
         }
       else
         {

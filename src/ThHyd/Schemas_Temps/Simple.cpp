@@ -315,7 +315,19 @@ bool Simple::iterer_eqn(Equation_base& eqn,const DoubleTab& inut,DoubleTab& curr
           while (con==0)
             {
               con = 1;
+              const std::string eqn_str = Motcle(eqn.que_suis_je()).getString();
+              const bool needs_relaxation = (eqn.probleme().is_coupled() && sub_type(Probleme_Couple_Point_Fixe, eqn.probleme().get_pb_couple()) && relax_factors_.count(eqn_str));
+              const DoubleTab uk(current);
               solveur.resoudre_systeme(matrice,resu,current);
+              if (needs_relaxation)
+                {
+
+                  const double relax_factor = relax_factors_.at(eqn_str);
+                  Cerr << "Relaxing " << eqn.que_suis_je() << " with factor " << relax_factor << finl;
+                  for (int i = 0; i < current.dimension_tot(0); i++)
+                    for (int j = 0; j < current.line_size(); j++)
+                      current(i, j) = uk(i, j) + relax_factor * (current(i, j) - uk(i, j));
+                }
               if (eqn.positive_unkown())
                 for (int i = 0; i < current.dimension_tot(0); i++)
                   for (int j = 0; j < current.line_size(); j++)
