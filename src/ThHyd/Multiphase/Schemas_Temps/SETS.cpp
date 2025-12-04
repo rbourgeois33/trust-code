@@ -493,6 +493,7 @@ void SETS::iterer_NS(Equation_base& eqn, DoubleTab& current,
       tp.PrintHeader();
     }
 
+  DoubleTab dudt(inco["pression"]->valeurs());
   cv = 0;
   for (it = 0; it < iter_min_ || (!cv && it < iter_max_); it++)
     {
@@ -658,6 +659,11 @@ void SETS::iterer_NS(Equation_base& eqn, DoubleTab& current,
       /* si pression_pa() est plus petit que pression() (ex. : variables auxiliaires PolyMAC_P0P1NC), alors on ne copie que la 1ere partie */
       eq_qdm.pression_pa().valeurs() = eq_qdm.pression_pa().valeurs().dimension_tot(0) < inco["pression"]->valeurs().dimension_tot(0) ? ppart[0] : inco["pression"]->valeurs(); //en multiphase, la pression est deja en Pa
       first_call_ = 0;
+      dudt -= inco["pression"]->valeurs();
+      double dudt_norme = mp_norme_vect(dudt);
+      const double seuil_convg = get_and_set_parametre_implicite(eqn).seuil_convergence_implicite();
+      cv = (dudt_norme < seuil_convg);
+      Cout << eqn.que_suis_je() << (cv ? " is " : " is not ") << "converged at the implicit iteration " << nb_ite << " ( ||uk-uk-1|| = " << dudt_norme << (cv ? "<" : ">") << " implicit threshold " << seuil_convg << " )" << finl;
     }
   else
     {
