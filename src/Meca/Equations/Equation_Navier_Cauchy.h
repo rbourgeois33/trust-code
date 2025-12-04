@@ -50,6 +50,7 @@ public:
   virtual const Champ_Don_base& diffusivite_pour_transport() const { return milieu_->mu_lame(); }
   virtual const Champ_base& diffusivite_pour_pas_de_temps() const { return milieu_->mu_lame(); }
   const Motcle& domaine_application() const override;
+  void valider_iteration() override;
 
 private:
   void update_velocity();
