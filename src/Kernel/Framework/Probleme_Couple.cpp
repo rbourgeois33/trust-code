@@ -25,6 +25,7 @@
 #include <Ecrire_YAML.h>
 
 Implemente_instanciable(Probleme_Couple,"Probleme_Couple",Couplage_U);
+Implemente_instanciable(Probleme_Couple_Point_Fixe,"Probleme_Couple_Point_Fixe",Probleme_Couple);
 // XD coupled_problem pb_gen_base probleme_couple -1 This instruction causes a probleme_couple type object to be created. This type of object has an associated problem list, that is, the coupling of n problems among them may be processed. Coupling between these problems is carried out explicitly via conditions at particular contact limits. Each problem may be associated either with the Associate keyword or with the Read/groupes keywords. The difference is that in the first case, the four problems exchange values then calculate their timestep, rather in the second case, the same strategy is used for all the problems listed inside one group, but the second group of problem exchange values with the first group of problems after the first group did its timestep. So, the first case may then also be written like this: NL2 Probleme_Couple pbc NL2 Read pbc { groupes { { pb1 , pb2 , pb3 , pb4 } } } NL2 There is a physical environment per problem (however, the same physical environment could be common to several problems). NL2 Each problem is resolved in a domain. NL2 Warning : Presently, coupling requires coincident meshes. In case of non-coincident meshes, boundary condition \'paroi_contact\' in VEF returns error message (see paroi_contact for correcting procedure).
 // XD attr groupes list_list_nom groupes 1 { groupes { { pb1 , pb2 } , { pb3 , pb4 } } }
 // XD ref domaine_2 domaine
@@ -107,6 +108,83 @@ bool Probleme_Couple::solveTimeStep()
   for (int i=1; i<nb_problemes(); i++)
     residu_max = std::max(residu_max,ref_cast(Probleme_base,probleme(i)).schema_temps().residu());
   return ok;
+}
+
+bool Probleme_Couple_Point_Fixe::solveTimeStep()
+{
+  std::vector<Schema_Euler_Implicite*> per_pb_schemas;
+  per_pb_schemas.reserve(nb_problemes());
+  for (int i = 0; i < nb_problemes(); i++)
+    {
+      Schema_Temps_base& sch_i = ref_cast(Probleme_base, probleme(i)).schema_temps();
+      if (!sub_type(Schema_Euler_Implicite, sch_i))
+        {
+          per_pb_schemas.clear();
+          break;
+        }
+      per_pb_schemas.push_back(&ref_cast(Schema_Euler_Implicite, sch_i));
+    }
+
+  if (int(per_pb_schemas.size()) != nb_problemes()) Process::exit("Probleme_Couple_Point_Fixe::solveTimeStep only works with problems using Schema_Euler_Implicite");
+
+  for (int i = 0; i < nb_problemes(); i++)
+    per_pb_schemas[i]->Initialiser_Champs(ref_cast(Probleme_base, probleme(i)));
+
+  const int max_fp_iter = 1000;
+  bool converged = false;
+  int compteur = 0;
+  int ok = 1;
+  int nb_iter_min = 0; // nombre minimum d'itérations avant de tester la convergence
+
+  while (compteur < nb_iter_min || (!converged && ok && compteur < max_fp_iter))
+    {
+      compteur++;
+      converged = true;
+
+      // 2. maillage
+      std::set<const Domaine*> processed_domains;
+      for (int i = 0; i < nb_problemes(); i++)
+        {
+          Probleme_base& pb = ref_cast(Probleme_base, probleme(i));
+          Domaine& dom = pb.domaine();
+          if (processed_domains.insert(&dom).second)
+            dom.solveTimeStep(pb);
+        }
+
+      for (int i = 0; i < nb_problemes(); i++)
+        {
+          Probleme_base& pb = ref_cast(Probleme_base, probleme(i));
+          const double temps = per_pb_schemas[i]->temps_courant() + per_pb_schemas[i]->pas_de_temps();
+          for (int eq = 0; eq < pb.nombre_d_equations(); eq++)
+            pb.equation(eq).domaine_Cl_dis().calculer_coeffs_echange(temps);
+        }
+
+      // 1. problemes
+      for (int i = 0; ok && i < nb_problemes(); i++)
+        {
+          Probleme_base& pb = ref_cast(Probleme_base, probleme(i));
+          pb.updateGivenFields();
+          const int cv_pb = per_pb_schemas[i]->Iterer_Pb(pb, compteur, ok);
+          converged = converged && cv_pb;
+        }
+    }
+
+  if (!ok || !converged)
+    {
+      if (limpr())
+        Cout << le_nom() << " : Echec du point fixe implicite apres " << compteur << " iterations." << finl;
+      return false;
+    }
+
+  Cout << "Convergence du point fixe a t = " << schema_temps().temps_courant() << " en " << compteur << " iterations." << finl;
+  for (int i = 0; i < nb_problemes(); i++)
+    per_pb_schemas[i]->test_stationnaire(ref_cast(Probleme_base, probleme(i)));
+
+  double& residu_max = schema_temps().residu();
+  for (int i = 1; i < nb_problemes(); i++)
+    residu_max = std::max(residu_max, ref_cast(Probleme_base, probleme(i)).schema_temps().residu());
+
+  return true;
 }
 
 
@@ -220,6 +298,8 @@ Sortie& Probleme_Couple::printOn(Sortie& os) const
   return os;
 }
 
+Entree& Probleme_Couple_Point_Fixe::readOn(Entree& is) { return Probleme_Couple::readOn(is); }
+Sortie& Probleme_Couple_Point_Fixe::printOn(Sortie& os) const { return Probleme_Couple::printOn(os); }
 
 bool Probleme_Couple::updateGivenFields()
 {
