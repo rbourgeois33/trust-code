@@ -16,11 +16,11 @@
 #ifndef Solveur_Newmark_included
 #define Solveur_Newmark_included
 
-#include <Simple.h>
+#include <Simpler.h>
 
 class Equation_Navier_Cauchy;
 
-class Solveur_Newmark : public Simple
+class Solveur_Newmark : public Simpler
 {
   Declare_instanciable(Solveur_Newmark);
 
@@ -29,7 +29,9 @@ public:
   Entree& lire(const Motcle&, Entree&) override;
 
 private:
-  DoubleTab v_old_, a_old_;
+  DoubleTab v_n_, a_n_;
+  DoubleTab v_kp1_, a_kp1_;
+  DoubleTab u_pred_, v_pred_;
 
   // Newmark parameters (average acceleration)
   double beta_ = 0.25;
