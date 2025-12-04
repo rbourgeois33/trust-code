@@ -26,10 +26,10 @@
 #include <Process.h>
 #include <algorithm>
 
-Implemente_instanciable(Solveur_Newmark, "Newmark", Simple);
+Implemente_instanciable(Solveur_Newmark, "Newmark", Simpler);
 
-Sortie& Solveur_Newmark::printOn(Sortie& os) const { return Simple::printOn(os); }
-Entree& Solveur_Newmark::readOn(Entree& is) { return Simple::readOn(is); }
+Sortie& Solveur_Newmark::printOn(Sortie& os) const { return Simpler::printOn(os); }
+Entree& Solveur_Newmark::readOn(Entree& is) { return Simpler::readOn(is); }
 
 Entree& Solveur_Newmark::lire(const Motcle& motlu,Entree& is)
 {
@@ -69,52 +69,49 @@ Entree& Solveur_Newmark::lire(const Motcle& motlu,Entree& is)
 
 bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, DoubleTab& current, double dt, int nb_iter, int& ok)
 {
-  // Newmark-β average-acceleration (β=1/4, γ=1/2) single implicit step
-  // u: unknown (displacement), v: velocity, a: acceleration
-  // K_eff = K + a0*M + a1*C, with a0 = 1/(β*dt^2) and a1 = γ/(β*dt)
-  // Here C = alpha*M (mass-proportional Rayleigh damping).
-  // RHS  = f_{n+1} + M * (a0 * u_pred) + C * (a1 * u_pred - v_pred)
-
   if (!sub_type(Equation_Navier_Cauchy, eqn))
     {
       Cerr << que_suis_je() << " cannot be used with equation type " << eqn.que_suis_je() << ". Expected Equation_Navier_Cauchy." << finl;
       Process::exit();
     }
-//   eqn.solv_masse().set_name_of_coefficient_temporel("masse_volumique");
+
+  DoubleTab u_old(current); // previous implicit iterate (u^k-1)
 
   Equation_Navier_Cauchy& eq = ref_cast(Equation_Navier_Cauchy, eqn);
   SolveurSys& solveur = get_and_set_parametre_implicite(eqn).solveur();
 
   // Storage for v and a across calls (shape-matched to 'current')
   // (Kept local-static to avoid touching headers; reset if size changes)
-  if ((v_old_.size_totale() != current.size_totale()) || (a_old_.size_totale() != current.size_totale()))
+  if ((v_n_.size_totale() != current.size_totale()) || (a_n_.size_totale() != current.size_totale()))
     {
-      v_old_ = current;
-      v_old_ = 0.;
-      a_old_ = current;
-      a_old_ = 0.;
+      v_n_ = current;
+      v_n_ = 0.;
+      a_n_ = current;
+      a_n_ = 0.;
+      v_kp1_ = current;
+      v_kp1_ = 0.;
+      a_kp1_ = current;
+      a_kp1_ = 0.;
+      u_pred_ = current;
+      v_pred_ = current;
     }
-
-  // Previous displacement (u_n) from the equation unknown
-  const DoubleTab& u_old = eq.inconnue().passe();
 
   // Newmark coefficients
   const double a0 = 1.0 / (beta_ * dt * dt);         // scales M on LHS
   const double a1 = gamma_ / (beta_ * dt);           // scales C on LHS (Rayleigh with C = alpha_*M)
 
-  // Predictors
-  DoubleTrav u_pred(current);
-  u_pred = u_old; // start from previous displacement
-  // u_pred = u_n + dt*v_n + dt^2*(0.5 - beta_)*a_n
   const int N = current.size_totale();
-  for (int i = 0; i < N; i++)
-    u_pred.addr()[i] += dt * v_old_.addr()[i] + dt * dt * (0.5 - beta_) * a_old_.addr()[i];
+  if (nb_iter == 1)
+    {
+      v_n_ = v_kp1_;
+      a_n_ = a_kp1_;
+      // u_pred = u_n + dt*v_n + dt^2*(0.5 - beta_)*a_n
+      for (int i = 0; i < N; i++)
+        u_pred_.addr()[i] = eqn.inconnue().passe().addr()[i] + dt * v_n_.addr()[i] + dt * dt * (0.5 - beta_) * a_n_.addr()[i];
 
-  // v_pred = v_n + dt*(1 - gamma_)*a_n
-  DoubleTrav v_pred(current);
-  v_pred = v_old_; // start from previous velocity
-  for (int i = 0; i < N; i++)
-    v_pred.addr()[i] += dt * (1.0 - gamma_) * a_old_.addr()[i];
+      for (int i = 0; i < N; i++)
+        v_pred_.addr()[i] = v_n_.addr()[i] + dt * (1.0 - gamma_) * a_n_.addr()[i];
+    }
 
 // Effective mass scaling handled by Solveur_Masse: ajouter_masse(dt_eff, ...)
 // In TRUST, ajouter_masse(dt_eff, M, ...) adds (M / dt_eff) to the matrix.
@@ -123,7 +120,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 
 // Assemble stiffness and external forces at the Newmark-predicted state
 // Use 'current' as linearization point set to u_pred before assembly
-  current = u_pred;
+  if (current.dimension_tot(0) > 0) current = u_pred_;
   Matrice_Morse matrice;
   eq.dimensionner_matrice(matrice);
   matrice.get_set_coeff() = 0;
@@ -137,7 +134,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 // Add effective mass to matrix and RHS (M*a0*u_pred)
   eq.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
   const bool use_old_volumes = false; //eq.domaine_dis().domaine().deformable();
-  eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred, 0 /*implicit*/, use_old_volumes);
+  eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred_, 0 /*implicit*/, use_old_volumes);
 
 // Add damping contributions if alpha_ != 0: K_eff += a1 * C = a1 * alpha_ * M
 // and RHS += C * (a1 * u_pred - v_pred) = alpha_ * M * (a1 * u_pred - v_pred)
@@ -153,7 +150,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
       DoubleTrav w(current);
       // w = a1 * u_pred - v_pred
       for (int i = 0; i < N; i++)
-        w.addr()[i] = a1 * u_pred.addr()[i] - v_pred.addr()[i];
+        w.addr()[i] = a1 * u_pred_.addr()[i] - v_pred_.addr()[i];
       const double dt_eff_C_rhs = 1.0 / alpha_;
       eq.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/, use_old_volumes);
     }
@@ -165,25 +162,35 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
   solveur->reinit();
   solveur.resoudre_systeme(matrice, rhs, current); // current := u_{n+1}
 
+// Under-relaxation on displacement for fixed-point coupled problems
+  const std::string eqn_str = Motcle(eqn.que_suis_je()).getString();
+  const bool needs_relaxation = (eqn.probleme().is_coupled() && sub_type(Probleme_Couple_Point_Fixe, eqn.probleme().get_pb_couple()) && relax_factors_.count(eqn_str));
+  if (needs_relaxation)
+    {
+      const double omega = relax_factors_.at(eqn_str);
+      for (int i = 0; i < N; i++)
+        current.addr()[i] = (1.0 - omega) * u_old.addr()[i] + omega * current.addr()[i];
+    }
+
 // Recover a_{n+1} and v_{n+1}
 // a_{n+1} = a0*(u_{n+1} - u_pred)
-  DoubleTrav a_new(current);
   for (int i = 0; i < N; i++)
-    a_new.addr()[i] = a0 * (current.addr()[i] - u_pred.addr()[i]);
+    a_kp1_.addr()[i] = a0 * (current.addr()[i] - u_pred_.addr()[i]);
 // v_{n+1} = v_pred + gamma_*dt*a_{n+1}
-  DoubleTrav v_new(current);
   for (int i = 0; i < N; i++)
-    v_new.addr()[i] = v_pred.addr()[i] + gamma_ * dt * a_new.addr()[i];
+    v_kp1_.addr()[i] = v_pred_.addr()[i] + gamma_ * dt * a_kp1_.addr()[i];
 
-// Store for next step
-  v_old_ = v_new;
-  a_old_ = a_new;
 
-// Project/adjust solution if mass solver needs it (kept from original code)
-// eq.solv_masse().corriger_solution(current, current);
+  DoubleTab dudt(current);
+  dudt -= u_old; // dudt = u^k - u^{k-1}
+  double dudt_norme = mp_norme_vect(dudt);
+  const double seuil_convg = get_and_set_parametre_implicite(eqn).seuil_convergence_implicite();
+
+  const bool converge = (dudt_norme < seuil_convg);
+  Cout << eqn.que_suis_je() << (converge ? " is " : " is not ") << "converged at the implicit iteration " << nb_iter << " ( ||uk-uk-1|| = " << dudt_norme << (converge ? "<" : ">") << " implicit threshold " << seuil_convg << " )" << finl;
 
   eq.valider_iteration();
   ok = 1;
   solveur->reinit();
-  return ok;
+  return converge ? 1 : 0;
 }
