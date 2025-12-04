@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -95,6 +95,7 @@ void Champ_front_recyclage::set_param(Param& param)
   param.ajouter_non_std("moyenne_imposee",(this));
   param.ajouter_non_std("moyenne_recyclee",(this));
   param.ajouter("direction_anisotrope",&ndir);
+  param.ajouter("offset", &offset_);
 }
 
 int Champ_front_recyclage::lire_motcle_non_standard(const Motcle& mot, Entree& is)
@@ -760,6 +761,7 @@ void Champ_front_recyclage::mettre_a_jour(double temps)
     for (int dir=0; dir<nb_compo_; dir++)
       tab(i,dir) = ampli_moy_imposee_(dir)*moyenne_imposee_(i,dir) + ampli_fluct_(dir)*(tab(i,dir)-ampli_moy_recyclee_(dir)*moyenne_recyclee_(i,dir));
 
+  tab -= offset_;
   tab.echange_espace_virtuel();
 
 }
