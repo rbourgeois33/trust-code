@@ -90,7 +90,8 @@ void Polygone_poly::normale(int num_Face,DoubleTab& Face_normales,
       const double r0 = les_coords(n0,0);
       const double r1 = les_coords(n1,0);
       const double r_bar = 0.5*(r0 + r1);
-      scale = 2.0 * M_PI * r_bar; // multiply edge-length normal by Δθ * r̄
+      // scale = 2.0 * M_PI * r_bar; // multiply edge-length normal by Δθ * r̄
+      scale = r_bar > 1e-10 ? 2.0 * M_PI * r_bar : 1.0; // multiply edge-length normal by Δθ * r̄
     }
 
   if ( (dot) > 0 )

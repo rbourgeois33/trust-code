@@ -550,7 +550,9 @@ void Faces_32_64<_SIZE_>::calculer_surfaces(DoubleVect_t& surfaces) const
                 const double r0 = x0;
                 const double r1 = x1;
                 const double rbar = 0.5 * (r0 + r1);
-                surfaces(face) = 2.0 * M_PI * L * rbar;
+                const double scale = rbar > 1e-10 ? 2.0 * M_PI * rbar : 1.0; // multiply edge-length normal by Δθ * r̄
+                surfaces(face) = L * scale;
+
               }
           }
         break;
