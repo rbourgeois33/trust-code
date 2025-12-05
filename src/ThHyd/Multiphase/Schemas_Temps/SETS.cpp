@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -657,7 +657,8 @@ void SETS::iterer_NS(Equation_base& eqn, DoubleTab& current,
       ConstDoubleTab_parts ppart(inco["pression"]->valeurs());
       //en multiphase, la pression est deja en Pa
       /* si pression_pa() est plus petit que pression() (ex. : variables auxiliaires PolyMAC_P0P1NC), alors on ne copie que la 1ere partie */
-      eq_qdm.pression_pa().valeurs() = eq_qdm.pression_pa().valeurs().dimension_tot(0) < inco["pression"]->valeurs().dimension_tot(0) ? ppart[0] : inco["pression"]->valeurs(); //en multiphase, la pression est deja en Pa
+      if (eq_qdm.pression_pa().valeurs().dimension_tot(0) > 0)
+        eq_qdm.pression_pa().valeurs() = eq_qdm.pression_pa().valeurs().dimension_tot(0) < inco["pression"]->valeurs().dimension_tot(0) ? ppart[0] : inco["pression"]->valeurs(); //en multiphase, la pression est deja en Pa
       first_call_ = 0;
       dudt -= inco["pression"]->valeurs();
       double dudt_norme = mp_norme_vect(dudt);
@@ -1059,8 +1060,11 @@ void SETS::assembler(const std::string inco_p,
                 }
             }
       }
-  const double diag = P.get_coeff()(0);
-  if (p_degen && !Process::me())
-    for (int i = 0; i < P.get_tab1()(1) - 1; i++)
-      P.get_set_coeff()(i) += diag; //de-degeneration de la matrice
+  if (P.nb_coeff() > 0)
+    {
+      const double diag = P.get_coeff()(0);
+      if (p_degen && !Process::me())
+        for (int i = 0; i < P.get_tab1()(1) - 1; i++)
+          P.get_set_coeff()(i) += diag; //de-degeneration de la matrice
+    }
 }

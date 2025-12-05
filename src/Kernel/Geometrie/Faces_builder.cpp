@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -104,7 +104,7 @@ void Faces_builder::creer_faces_reeles(Domaine& domaine,
   elem_faces.resize(nb_elements, nb_faces_par_element);
   elem_faces = -1;
 
-  const int nb_sommets_par_face = faces_element_reference(0).dimension(1);
+  const int nb_sommets_par_face = faces_element_reference(0).nb_dim() > 1 ? faces_element_reference(0).dimension(1) : 0;
   // On ajoute chaque face avec resize(n+1,...), donc smart_resize:
   // Calcul du nombre theorique de faces:
   const int nb_faces_front = domaine.nb_faces_frontiere() + domaine.nb_faces_joint();

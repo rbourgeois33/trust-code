@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -1084,7 +1084,7 @@ static void calculer_espace_distant_item(Domaine& le_dom,
   const Joints& joints                 = le_dom.faces_joint();
   const int   nb_joints              = joints.size();
   const int   nproc                  = Process::nproc();
-  const int   nb_items_par_element   = connectivite_elem_item.dimension(1);
+  const int   nb_items_par_element   = connectivite_elem_item.nb_dim() > 1 ? connectivite_elem_item.dimension(1) : 0;
   // Les type_item a envoyer a chaque processeur:
   ArrsOfInt items_to_send(nproc);
   // Un tableau temporaire;

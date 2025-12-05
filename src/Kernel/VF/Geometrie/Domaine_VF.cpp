@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -171,17 +171,18 @@ void Domaine_VF::renumeroter(Faces& les_faces)
       }
   }
   // On reordonne les faces:
-  {
-    IntTab& faces_sommets = les_faces.les_sommets();
-    IntTab old_tab(faces_sommets);
-    const int nb_som_faces = faces_sommets.dimension(1);
-    for (int i = 0; i < nbfaces; i++)
-      {
-        const int old_i = sort_key[i];
-        for (int j = 0; j < nb_som_faces; j++)
-          faces_sommets(i, j) = old_tab(old_i, j);
-      }
-  }
+  if (nbfaces > 0)
+    {
+      IntTab& faces_sommets = les_faces.les_sommets();
+      IntTab old_tab(faces_sommets);
+      const int nb_som_faces = faces_sommets.dimension(1);
+      for (int i = 0; i < nbfaces; i++)
+        {
+          const int old_i = sort_key[i];
+          for (int j = 0; j < nb_som_faces; j++)
+            faces_sommets(i, j) = old_tab(old_i, j);
+        }
+    }
 
   {
     IntTab& faces_voisins = les_faces.voisins();

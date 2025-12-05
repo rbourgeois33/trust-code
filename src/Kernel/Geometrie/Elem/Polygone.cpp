@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -302,7 +302,7 @@ int Polygone_32_64<_SIZE_>::get_tab_faces_sommets_locaux(IntTab& faces_som_local
   faces_som_local=-1;
 
   // on cherche les faces de l'elt
-  int nb_face = static_cast<int>(PolygonIndex_[ele+1]-PolygonIndex_[ele]); // always within int
+  int nb_face = PolygonIndex_.dimension_tot(0) > 1 ? static_cast<int>(PolygonIndex_[ele+1]-PolygonIndex_[ele]) : 0; // always within int
 
   // [ABN] Duh?! always assume consecutive connectivity??
   for (int fl=0; fl<nb_face-1; fl++)
@@ -312,9 +312,12 @@ int Polygone_32_64<_SIZE_>::get_tab_faces_sommets_locaux(IntTab& faces_som_local
     }
 
   // Last face:
-  int fl=nb_face-1;
-  faces_som_local(fl,0)=fl;
-  faces_som_local(fl,1)=0;
+  if (nb_face > 0)
+    {
+      int fl=nb_face-1;
+      faces_som_local(fl,0)=fl;
+      faces_som_local(fl,1)=0;
+    }
 
   return 1;
 }

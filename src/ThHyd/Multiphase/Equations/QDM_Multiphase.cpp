@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -218,7 +218,7 @@ bool QDM_Multiphase::initTimeStep(double dt)
       pression().changer_temps_futur(sch.temps_futur(i),i);
       pression().futur(i)=pression().valeurs();
       pression_pa().changer_temps_futur(sch.temps_futur(i),i);
-      pression_pa().futur(i) = p_red;
+      if (pression_pa().futur(i).dimension_tot(0) > 0) pression_pa().futur(i) = p_red;
     }
   return Equation_base::initTimeStep(dt);
 }
