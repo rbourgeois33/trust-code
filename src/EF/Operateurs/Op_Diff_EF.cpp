@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -666,7 +666,7 @@ void Op_Diff_EF::ajouter_bords(const DoubleTab& tab_inconnue,DoubleTab& resu,  i
           for (int i = 0; i < le_bord.nb_faces_tot(); i++)
             {
               const int face=le_bord.num_face(i);
-              const double val = la_cl_paroi.flux_impose(i);
+              const double val = la_cl_paroi.flux_impose(i) / equation().milieu().masse_volumique().valeurs()(0, 0);
               for (int i1 = 0; i1 < nb_som_face; i1++)
                 {
                   const int glob = face_sommets(face, i1);
