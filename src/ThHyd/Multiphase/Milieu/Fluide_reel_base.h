@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -68,6 +68,7 @@ public :
   void set_param(Param& param) override;
   void discretiser(const Probleme_base& pb, const  Discretisation_base& dis) override;
   void creer_champs_non_lus() override { /* everything is done in discretiser */ }
+  int lire_motcle_non_standard(const Motcle&, Entree&) override;
 
   //gamme range[inco] = { min, max} : par defaut, rien a controler
   virtual std::map<std::string, std::array<double, 2>> unknown_range() const { return {}; }
@@ -77,6 +78,9 @@ protected :
   double T_ref_ = -1., P_ref_ = -1., h_ref_ = -1., t_init_ = -1.;
   int first_maj_ = 1;
   bool res_en_T_ = true; // par defaut resolution en T
+  bool write_rho_cp_table_ = false;
+
+  void write_rho_cp_table() const;
 
   void calculate_fluid_properties_incompressible();
   void calculate_fluid_properties();

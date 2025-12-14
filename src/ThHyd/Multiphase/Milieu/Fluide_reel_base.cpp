@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,8 +47,20 @@ void Fluide_reel_base::set_param(Param& param)
   param.ajouter("T_ref", &T_ref_);
   param.ajouter("P_ref", &P_ref_);
   param.ajouter("H_ref", &h_ref_);
+  param.ajouter_non_std("write_table", this);
   set_additional_params(param);
 }
+
+int Fluide_reel_base::lire_motcle_non_standard(const Motcle& m, Entree& is)
+{
+  if (m == "write_table")
+    {
+      return 1;
+    }
+  else
+    return Fluide_base::lire_motcle_non_standard(m, is);
+}
+
 
 void Fluide_reel_base::discretiser(const Probleme_base& pb, const Discretisation_base& dis)
 {
@@ -174,7 +186,17 @@ int Fluide_reel_base::initialiser(const double temps)
   return 1;
 }
 
-void Fluide_reel_base::preparer_calcul() { mettre_a_jour(t_init_); }
+void Fluide_reel_base::preparer_calcul()
+{
+  mettre_a_jour(t_init_);
+  if (write_rho_cp_table_) write_rho_cp_table();
+}
+
+void Fluide_reel_base::write_rho_cp_table() const
+{
+
+}
+
 
 void Fluide_reel_base::mettre_a_jour(double t)
 {
