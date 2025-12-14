@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -235,20 +235,6 @@ void Op_Conv_EF_Stab_PolyVEF_Face::ajouter_blocs_gen(matrices_t matrices, Double
       /* produit par fvf */
       for (n = 0; n < N; n++)
         F_f(f, n) *= fvf(n);
-      /* faces de bord: contrib a la convection (avec masse ajoutee) si Neumann */
-      if (fcl(f, 0) == 1)
-        {
-          for (masse = 0, e = f_e(f, 0), n = 0; n < N; n++) masse(n, n) = a_r ? (*a_r)(e, n) : 1;
-          if (corr) corr->ajouter(&(*alp)(e, 0), &rho(e, 0), masse);
-          for (d = 0; d < D; d++)
-            for (n = 0; n < N; n++)
-              for (m = corr ? 0 : n; m < (corr ? N : n + 1); m++)
-                if (F_f(f, m) < 0)
-                  {
-                    secmem(f, N * d + n) += (masse(n, m) ? masse(n, m) / (a_r ? (*a_r)(e, m) : 1) : 0) * F_f(f, m) * inco(f, N * d + m);
-                    if (mat) (*mat)(N * (D * f + d) + n, N * (D * f + d) + m) -= (masse(n, m) ? masse(n, m) / (a_r ? (*a_r)(e, m) : 1) : 0) * F_f(f, m);
-                  }
-        }
     }
   F_f.echange_espace_virtuel();
 
@@ -266,7 +252,7 @@ void Op_Conv_EF_Stab_PolyVEF_Face::ajouter_blocs_gen(matrices_t matrices, Double
             for (n = 0; n < N; n++)
               F_fa(n) += e_fa_c(j) * F_f(f, n);
           for (k = 0; k < 2; k++)
-            if ((f = e_fa_f(i, k)) < dom.nb_faces()) /* face d'arrivee */
+            if ((f = e_fa_f(i, k)) < dom.nb_faces() && !fcl(f, 0)) /* face d'arrivee */
               for (l = 0; l < 2; l++)
                 for (fb = e_fa_f(i, l), d = 0; d < D; d++)
                   for (n = 0; n < N; n++)
