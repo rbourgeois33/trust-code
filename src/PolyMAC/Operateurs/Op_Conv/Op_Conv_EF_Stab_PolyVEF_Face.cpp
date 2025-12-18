@@ -204,7 +204,7 @@ void Op_Conv_EF_Stab_PolyVEF_Face::ajouter_blocs_gen(matrices_t matrices, Double
 {
   const Domaine_Poly_base& dom = le_dom_poly_.valeur();
   const Champ_Face_PolyVEF& ch = ref_cast(Champ_Face_PolyVEF, equation().inconnue());
-  const IntTab& f_e = dom.face_voisins(), &e_f = dom.elem_faces(), &fcl = ch.fcl();
+  const IntTab& f_e = dom.face_voisins(), &e_f = dom.elem_faces(); //, &fcl = ch.fcl();
   const DoubleTab& nf = dom.face_normales();
   const DoubleVect& pf = porosite_f;
 
@@ -252,7 +252,7 @@ void Op_Conv_EF_Stab_PolyVEF_Face::ajouter_blocs_gen(matrices_t matrices, Double
             for (n = 0; n < N; n++)
               F_fa(n) += e_fa_c(j) * F_f(f, n);
           for (k = 0; k < 2; k++)
-            if ((f = e_fa_f(i, k)) < dom.nb_faces() && !fcl(f, 0)) /* face d'arrivee */
+            if ((f = e_fa_f(i, k)) < dom.nb_faces()) /* face d'arrivee */
               for (l = 0; l < 2; l++)
                 for (fb = e_fa_f(i, l), d = 0; d < D; d++)
                   for (n = 0; n < N; n++)
