@@ -118,6 +118,7 @@ void Equation_Navier_Cauchy::valider_iteration()
 {
   Equation_base::valider_iteration();
   update_velocity();
+  milieu_->update_fields(probleme().schema_temps().temps_courant(), true);
 }
 
 void Equation_Navier_Cauchy::update_velocity()
