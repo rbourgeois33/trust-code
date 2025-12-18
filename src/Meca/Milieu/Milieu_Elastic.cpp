@@ -69,15 +69,18 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   if (zdb_.est_nul()) zdb_ = pb.domaine_dis();
 
   const Domaine_dis_base& domaine_dis = pb.domaine_dis();
+  const int nc = pb.equation(0).inconnue().nb_valeurs_temporelles();
 
   dis.nommer_completer_champ_physique(domaine_dis, "module_de_Young", "Pa", ch_E_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "coefficient_de_Poisson", "", ch_nu_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "lambda_lame", "Pa", ch_lambda_lame_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "mu_lame", "Pa", ch_mu_.valeur(), pb);
   dis.nommer_completer_champ_physique(domaine_dis, "module_volumique", "Pa", ch_K_.valeur(), pb);
-  dis.discretiser_champ("champ_elem", domaine_dis, "masse_volumique_lagrangienne", "kg/m3", 1, pb.schema_temps().temps_courant(), ch_rho_lag_);
+  dis.discretiser_champ("champ_elem", domaine_dis, "masse_volumique_lagrangienne", "kg/m^3", 1, nc, pb.schema_temps().temps_courant(), ch_rho_lag_);
   if (ch_coeff_dilatation_th_.non_nul())
     dis.nommer_completer_champ_physique(domaine_dis, "coeff_dilatation_thermique", "K-1", ch_coeff_dilatation_th_.valeur(), pb);
+
+  ch_rho_lag_->associer_eqn(pb.equation(0));
 
   champs_compris_.ajoute_champ(ch_E_.valeur());
   champs_compris_.ajoute_champ(ch_nu_.valeur());
@@ -87,6 +90,8 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   champs_compris_.ajoute_champ(ch_rho_lag_.valeur());
   if (ch_coeff_dilatation_th_.non_nul())
     champs_compris_.ajoute_champ(ch_coeff_dilatation_th_.valeur());
+
+  eq_ = pb.equation(0);
 }
 
 int Milieu_Elastic::initialiser(const double temps)
@@ -98,13 +103,27 @@ int Milieu_Elastic::initialiser(const double temps)
   ch_lambda_lame_->initialiser(temps);
   ch_mu_->initialiser(temps);
   ch_K_->initialiser(temps);
-  ch_rho_lag_->initialiser(temps);
   if (ch_coeff_dilatation_th_.non_nul()) ch_coeff_dilatation_th_->initialiser(temps);
+  ch_rho_lag_->passe() = ch_rho_->valeurs()(0, 0);
   ch_rho_lag_->valeurs() = ch_rho_->valeurs()(0, 0);
-  last_update_ = temps;
-  update_fields(temps);
+  ch_rho_lag_->mettre_a_jour(temps);
+  update_fields(temps, false);
 
   return ok;
+}
+
+bool Milieu_Elastic::initTimeStep(double dt)
+{
+  if (eq_.est_nul()) return true; //pas d'equation associee -> ???
+  const Schema_Temps_base& sch = eq_->schema_temps(); //on recupere le schema en temps par la 1ere equation
+
+  if (ch_rho_lag_.non_nul())
+    for (int i = 1; i <= sch.nb_valeurs_futures(); i++)
+      {
+        ch_rho_lag_->changer_temps_futur(sch.temps_futur(i), i);
+        ch_rho_lag_->futur(i) = ch_rho_lag_->valeurs();
+      }
+  return true;
 }
 
 void Milieu_Elastic::mettre_a_jour(double temps)
@@ -124,8 +143,9 @@ void Milieu_Elastic::mettre_a_jour(double temps)
   ch_lambda_lame_->changer_temps(temps);
   ch_mu_->changer_temps(temps);
   ch_K_->changer_temps(temps);
-  ch_rho_lag_->changer_temps(temps);
-  update_fields(temps);
+  ch_rho_lag_->mettre_a_jour(temps);
+
+  update_fields(temps, false);
 }
 
 void Milieu_Elastic::verifier_coherence_champs(int& err, Nom& message)
@@ -178,7 +198,7 @@ void Milieu_Elastic::ensure_rho_field()
     }
 }
 
-void Milieu_Elastic::update_fields(double temps)
+void Milieu_Elastic::update_fields(double temps, bool update_rho)
 {
   const double E_val = ch_E_->valeurs()(0, 0);
   const double nu_val = ch_nu_->valeurs()(0, 0);
@@ -201,10 +221,10 @@ void Milieu_Elastic::update_fields(double temps)
   ch_mu_->valeurs() = mu_val / fac;
   ch_K_->valeurs() = K_val / fac;
 
-  if (temps > last_update_)
-    {
+  if (update_rho)
+  {
       Cerr << "Updating rho_lagrangien field based on current volume scaling at time " << temps << finl;
+      ch_rho_lag_->valeurs() = ch_rho_lag_->passe();
       zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs(), zdb_.valeur());
-      last_update_ = temps;
     }
 }
