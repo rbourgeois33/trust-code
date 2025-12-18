@@ -36,7 +36,7 @@ Read sch
     seuil_statio 1e-6
     solveur ice
     {
-        solveur petsc cli { }
+        solveur petsc cholesky { }
         criteres_convergence { vitesse 1e-3 }
     }
 }
@@ -73,7 +73,7 @@ Read pb
 
     QDM_Multiphase
     {
-        solveur_pression petsc cli_quiet { -pc_type hypre -pc_hypre_type boomeramg }
+        solveur_pression petsc cholesky { }
         convection { amont }
         diffusion  { negligeable }
         evanescence { homogene { alpha_res 1e-5 } }
@@ -135,9 +135,9 @@ Read pb
     {
         probes
         {
-            profil_vg vitesse_gaz_eau periode 1e-8 segment 500 0.5 0 0.5 1
-            profil_vl vitesse_liquide_eau periode 1e-8 segment 500 0.5 0 0.5 1
-            alpha       alpha_gaz_eau periode 1e-8 segment 500 0.5 0 0.5 1
+            profil_vg grav vitesse_gaz_eau periode 1e-8 segment 500 0.5 0 0.5 1
+            profil_vl grav vitesse_liquide_eau periode 1e-8 segment 500 0.5 0 0.5 1
+            alpha     grav   alpha_gaz_eau periode 1e-8 segment 500 0.5 0 0.5 1
         }
         Format lml
         fields dt_post 1e-2
