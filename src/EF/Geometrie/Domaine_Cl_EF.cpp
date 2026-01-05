@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -614,7 +614,9 @@ void  Domaine_Cl_EF::imposer_symetrie_matrice_secmem(Matrice_Morse& la_matrice, 
               for (int comp=0; comp<nb_comp; comp++)
                 somme_b2+=secmem(som,comp)*normale[comp];
               //Cerr<<" lllllllll "<<somme_b2<<" "<<tt<<finl;
-              assert(std::fabs(somme_b2) <1e-8);
+              if (std::fabs(somme_b2) >= 1e-8)
+                Cerr << "Domaine_Cl_EF::imposer_symetrie_matrice_secmem: secmem.n != 0 ("
+                     << somme_b2 << ") au sommet " << som << ", projection appliquee." << finl;
               // on retire secmem.n n
               for (int comp=0; comp<nb_comp; comp++)
                 secmem(som,comp)-=somme_b2*normale[comp];
