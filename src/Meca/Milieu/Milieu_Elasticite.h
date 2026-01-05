@@ -22,9 +22,9 @@
  *
  *  Stocke les proprietes elastiques au sein de champs pour rester coherent avec la hierarchie TRUST.
  */
-class Milieu_Elastic : public Milieu_base
+class Milieu_Elasticite : public Milieu_base
 {
-  Declare_instanciable(Milieu_Elastic);
+  Declare_instanciable(Milieu_Elasticite);
 
 public:
   void set_param(Param& param) override;
