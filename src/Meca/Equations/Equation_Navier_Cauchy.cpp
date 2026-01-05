@@ -30,6 +30,7 @@ Entree& Equation_Navier_Cauchy::readOn(Entree& is)
 
   // terme_diffusif.set_fichier("Contrainte_visqueuse");
   // terme_diffusif.set_description("Friction drag exerted by the fluid=Integral(-mu*(grad(u) +grad(u)^T)*ndS) [N] if SI units used");
+  solveur_masse->set_name_of_coefficient_temporel("masse_volumique");
 
   return is;
 }
