@@ -19,7 +19,7 @@
 #include <Probleme_base.h>
 #include <Equation_Navier_Cauchy.h>
 
-class Milieu_Elastic;
+class Milieu_Elasticite;
 
 /*! @brief Probleme minimal d'elasticite lineaire.
  *

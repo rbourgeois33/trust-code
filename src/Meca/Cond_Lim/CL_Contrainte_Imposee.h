@@ -13,30 +13,21 @@
 *
 *****************************************************************************/
 
-#include <Paroi_contrainte_imposee.h>
-#include <Domaine_Cl_dis_base.h>
-#include <Equation_base.h>
-#include <Motcle.h>
-#include <Process.h>
+#ifndef Paroi_contrainte_imposee_included
+#define Paroi_contrainte_imposee_included
 
-Implemente_instanciable(Paroi_contrainte_imposee, "paroi_pression_imposee", Neumann);
+#include <Neumann.h>
 
-Sortie& Paroi_contrainte_imposee::printOn(Sortie& os) const { return Neumann::printOn(os); }
-Entree& Paroi_contrainte_imposee::readOn(Entree& is)
+/*! @brief Condition limite de traction imposee pour l'equation de Navier-Cauchy.
+ *
+ *  Cette condition fixe la contrainte (traction) sur la frontiere, composante par composante.
+ */
+class CL_Contrainte_Imposee : public Neumann
 {
-  if (app_domains.size() == 0) app_domains = { Motcle("Mecanique") };
-  return Neumann::readOn(is);
-}
+  Declare_instanciable(CL_Contrainte_Imposee);
 
-void Paroi_contrainte_imposee::verifie_ch_init_nb_comp() const
-{
-  if (le_champ_front.non_nul())
-    {
-      const int nb_comp = le_champ_front->nb_comp();
-      if (nb_comp != 1)
-        {
-          Cerr << que_suis_je() << " expects a pressure field with 1 component but received " << nb_comp << finl;
-          Process::exit();
-        }
-    }
-}
+public:
+  void verifie_ch_init_nb_comp() const override;
+};
+
+#endif

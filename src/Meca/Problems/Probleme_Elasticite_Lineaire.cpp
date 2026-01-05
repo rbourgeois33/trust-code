@@ -14,7 +14,7 @@
 *****************************************************************************/
 
 #include <Probleme_Elasticite_Lineaire.h>
-#include <Milieu_Elastic.h>
+#include <Milieu_Elasticite.h>
 #include <Process.h>
 
 Implemente_instanciable(Probleme_Elasticite_Lineaire,"Probleme_Elasticite_Lineaire",Probleme_base);
