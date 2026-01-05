@@ -216,10 +216,5 @@ void Milieu_Elastic::update_fields(double temps, bool update_rho)
   ch_lambda_lame_->valeurs() = E_val * nu_val / denom_lambda;
   ch_K_->valeurs() = E_val / denom_K;
 
-  if (update_rho)
-    {
-      Cerr << "Updating rho_lagrangien field based on current volume scaling at time " << temps << finl;
-      ch_rho_lag_->valeurs() = ch_rho_lag_->passe();
-      zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs(), zdb_.valeur());
-    }
+  if (update_rho) Process::exit("Milieu_Elastic::update_fields: updating rho field is not implemented yet.");
 }
