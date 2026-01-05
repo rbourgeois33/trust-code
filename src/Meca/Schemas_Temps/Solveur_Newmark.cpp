@@ -133,8 +133,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 
 // Add effective mass to matrix and RHS (M*a0*u_pred)
   eq.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
-  const bool use_old_volumes = false; //eq.domaine_dis().domaine().deformable();
-  eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred_, 0 /*implicit*/, use_old_volumes);
+  eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred_, 0 /*implicit*/);
 
 // Add damping contributions if alpha_ != 0: K_eff += a1 * C = a1 * alpha_ * M
 // and RHS += C * (a1 * u_pred - v_pred) = alpha_ * M * (a1 * u_pred - v_pred)
@@ -152,7 +151,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
       for (int i = 0; i < N; i++)
         w.addr()[i] = a1 * u_pred_.addr()[i] - v_pred_.addr()[i];
       const double dt_eff_C_rhs = 1.0 / alpha_;
-      eq.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/, use_old_volumes);
+      eq.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/);
     }
 
 // Apply boundary conditions
@@ -161,16 +160,6 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 // Solve for u_{n+1}
   solveur->reinit();
   solveur.resoudre_systeme(matrice, rhs, current); // current := u_{n+1}
-
-// Under-relaxation on displacement for fixed-point coupled problems
-  const std::string eqn_str = Motcle(eqn.que_suis_je()).getString();
-  const bool needs_relaxation = (eqn.probleme().is_coupled() && sub_type(Probleme_Couple_Point_Fixe, eqn.probleme().get_pb_couple()) && relax_factors_.count(eqn_str));
-  if (needs_relaxation)
-    {
-      const double omega = relax_factors_.at(eqn_str);
-      for (int i = 0; i < N; i++)
-        current.addr()[i] = (1.0 - omega) * u_old.addr()[i] + omega * current.addr()[i];
-    }
 
 // Recover a_{n+1} and v_{n+1}
 // a_{n+1} = a0*(u_{n+1} - u_pred)
