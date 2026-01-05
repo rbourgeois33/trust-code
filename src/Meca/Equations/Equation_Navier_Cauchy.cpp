@@ -119,7 +119,8 @@ void Equation_Navier_Cauchy::valider_iteration()
 {
   Equation_base::valider_iteration();
   update_velocity();
-  milieu_->update_fields(probleme().schema_temps().temps_courant(), true);
+  const bool update_rho = domaine_dis().domaine().deformable();
+  milieu_->update_fields(probleme().schema_temps().temps_courant(), update_rho);
 }
 
 void Equation_Navier_Cauchy::update_velocity()
