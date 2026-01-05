@@ -12,12 +12,12 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
-#include <Frontiere_deplacement_impose.h>
+#include <CL_Deplacement_Impose.h>
 #include <Equation_base.h>
 #include <Motcle.h>
 
-Implemente_instanciable(Frontiere_deplacement_impose, "Frontiere_deplacement_impose", Scalaire_impose_paroi);
-// XD Frontiere_deplacement_impose dirichlet Frontiere_deplacement_impose 0 Neutron flux prescribed at inlet condition
+Implemente_instanciable(CL_Deplacement_Impose, "paroi_deplacement_impose", Scalaire_impose_paroi);
+// XD CL_Deplacement_Impose dirichlet CL_Deplacement_Impose 0 Neutron flux prescribed at inlet condition
 // XD attr ch front_field_base ch 0 Boundary field type.
 
 // XXX TODO FIXME Yo Yannick faut mettre ca dans TRUST dans TRAD_2.org mais j'ai la flemme :/
@@ -25,8 +25,8 @@ Implemente_instanciable(Frontiere_deplacement_impose, "Frontiere_deplacement_imp
 
 // XD sets piso sets -1 Stability-Enhancing Two-Step solver which is useful for a multiphase problem.
 
-Sortie& Frontiere_deplacement_impose::printOn(Sortie& s) const { return Scalaire_impose_paroi::printOn(s); }
-Entree& Frontiere_deplacement_impose::readOn(Entree& s)
+Sortie& CL_Deplacement_Impose::printOn(Sortie& s) const { return Scalaire_impose_paroi::printOn(s); }
+Entree& CL_Deplacement_Impose::readOn(Entree& s)
 {
   if (app_domains.size() == 0) app_domains = { Motcle("Mecanique") };
   return Scalaire_impose_paroi::readOn(s);

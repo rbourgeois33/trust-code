@@ -14,7 +14,7 @@
 *****************************************************************************/
 
 #include <Source_Meca_Grad_Pression_Thermique.h>
-#include <Milieu_Elastic.h>
+#include <Milieu_Elasticite.h>
 #include <Domaine_EF.h>
 #include <Equation_base.h>
 #include <Champ_Uniforme.h>
@@ -58,8 +58,8 @@ DoubleTab& Source_Meca_Grad_Pression_Thermique::ajouter(DoubleTab& resu) const
   const int nb_som_elem = domaine_ef.domaine().nb_som_elem();
   const int D = dimension;
 
-  const DoubleTab& val_alpha = ref_cast(Milieu_Elastic, equation().milieu()).thermal_expansion().valeurs();
-  const DoubleTab& val_K     = ref_cast(Milieu_Elastic, equation().milieu()).bulk_modulus().valeurs();
+  const DoubleTab& val_alpha = ref_cast(Milieu_Elasticite, equation().milieu()).thermal_expansion().valeurs();
+  const DoubleTab& val_K     = ref_cast(Milieu_Elasticite, equation().milieu()).bulk_modulus().valeurs();
 
   const DoubleTab& val_T     = T_->valeurs();
   const DoubleTab& val_Tref  = T_ref_->valeurs();

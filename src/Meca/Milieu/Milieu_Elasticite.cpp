@@ -13,7 +13,7 @@
 *
 *****************************************************************************/
 
-#include <Milieu_Elastic.h>
+#include <Milieu_Elasticite.h>
 #include <Discretisation_base.h>
 #include <Schema_Temps_base.h>
 #include <Probleme_base.h>
@@ -22,11 +22,11 @@
 #include <Process.h>
 #include <Param.h>
 
-Implemente_instanciable(Milieu_Elastic,"Milieu_Elastic",Milieu_base);
+Implemente_instanciable(Milieu_Elasticite,"Milieu_Elasticite",Milieu_base);
 
-Sortie& Milieu_Elastic::printOn(Sortie& os) const { return Milieu_base::printOn(os); }
+Sortie& Milieu_Elasticite::printOn(Sortie& os) const { return Milieu_base::printOn(os); }
 
-Entree& Milieu_Elastic::readOn(Entree& is)
+Entree& Milieu_Elasticite::readOn(Entree& is)
 {
   Milieu_base::readOn(is);
   ensure_rho_field();
@@ -34,7 +34,7 @@ Entree& Milieu_Elastic::readOn(Entree& is)
   return is;
 }
 
-void Milieu_Elastic::set_param(Param& param)
+void Milieu_Elasticite::set_param(Param& param)
 {
   Milieu_base::set_param(param);
   param.ajouter("E", &ch_E_, Param::REQUIRED);
@@ -42,7 +42,7 @@ void Milieu_Elastic::set_param(Param& param)
   param.ajouter("alpha", &ch_coeff_dilatation_th_);
 }
 
-void Milieu_Elastic::creer_champs_non_lus()
+void Milieu_Elasticite::creer_champs_non_lus()
 {
   Milieu_base::creer_champs_non_lus();
 
@@ -63,7 +63,7 @@ void Milieu_Elastic::creer_champs_non_lus()
     }
 }
 
-void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_base& dis)
+void Milieu_Elasticite::discretiser(const Probleme_base& pb, const Discretisation_base& dis)
 {
   Milieu_base::discretiser(pb, dis);
   if (zdb_.est_nul()) zdb_ = pb.domaine_dis();
@@ -94,7 +94,7 @@ void Milieu_Elastic::discretiser(const Probleme_base& pb, const Discretisation_b
   eq_ = pb.equation(0);
 }
 
-int Milieu_Elastic::initialiser(const double temps)
+int Milieu_Elasticite::initialiser(const double temps)
 {
   const int ok = Milieu_base::initialiser(temps);
 
@@ -112,7 +112,7 @@ int Milieu_Elastic::initialiser(const double temps)
   return ok;
 }
 
-bool Milieu_Elastic::initTimeStep(double dt)
+bool Milieu_Elasticite::initTimeStep(double dt)
 {
   if (eq_.est_nul()) return true; //pas d'equation associee -> ???
   const Schema_Temps_base& sch = eq_->schema_temps(); //on recupere le schema en temps par la 1ere equation
@@ -126,7 +126,7 @@ bool Milieu_Elastic::initTimeStep(double dt)
   return true;
 }
 
-void Milieu_Elastic::mettre_a_jour(double temps)
+void Milieu_Elasticite::mettre_a_jour(double temps)
 {
   if (ch_E_.est_nul() || ch_nu_.est_nul() || ch_lambda_lame_.est_nul() || ch_mu_.est_nul() || ch_K_.est_nul())
     {
@@ -148,7 +148,7 @@ void Milieu_Elastic::mettre_a_jour(double temps)
   update_fields(temps, false);
 }
 
-void Milieu_Elastic::verifier_coherence_champs(int& err, Nom& message)
+void Milieu_Elasticite::verifier_coherence_champs(int& err, Nom& message)
 {
   Milieu_base::verifier_coherence_champs(err, message);
 
@@ -172,7 +172,7 @@ void Milieu_Elastic::verifier_coherence_champs(int& err, Nom& message)
     }
 }
 
-void Milieu_Elastic::ensure_rho_field()
+void Milieu_Elasticite::ensure_rho_field()
 {
   if (ch_rho_.est_nul())
     {
@@ -198,7 +198,7 @@ void Milieu_Elastic::ensure_rho_field()
     }
 }
 
-void Milieu_Elastic::update_fields(double temps, bool update_rho)
+void Milieu_Elasticite::update_fields(double temps, bool update_rho)
 {
   const double E_val = ch_E_->valeurs()(0, 0);
   const double nu_val = ch_nu_->valeurs()(0, 0);
@@ -216,5 +216,5 @@ void Milieu_Elastic::update_fields(double temps, bool update_rho)
   ch_lambda_lame_->valeurs() = E_val * nu_val / denom_lambda;
   ch_K_->valeurs() = E_val / denom_K;
 
-  if (update_rho) Process::exit("Milieu_Elastic::update_fields: updating rho field is not implemented yet.");
+  if (update_rho) Process::exit("Milieu_Elasticite::update_fields: updating rho field is not implemented yet.");
 }

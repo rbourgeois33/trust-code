@@ -71,12 +71,12 @@ Operateur& Equation_Navier_Cauchy::operateur(int i)
 
 void Equation_Navier_Cauchy::associer_milieu_base(const Milieu_base& mil)
 {
-  if (!sub_type(Milieu_Elastic, mil))
+  if (!sub_type(Milieu_Elasticite, mil))
     {
-      Cerr << que_suis_je() << " expects a Milieu_Elastic but received a " << mil.que_suis_je() << finl;
+      Cerr << que_suis_je() << " expects a Milieu_Elasticite but received a " << mil.que_suis_je() << finl;
       Process::exit();
     }
-  milieu_ = ref_cast(Milieu_Elastic, mil);
+  milieu_ = ref_cast(Milieu_Elasticite, mil);
 }
 
 void Equation_Navier_Cauchy::discretiser()

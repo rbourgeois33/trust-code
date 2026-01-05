@@ -12,22 +12,22 @@
 * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *
 *****************************************************************************/
+#ifndef Frontiere_deplacement_impose_included
+#define Frontiere_deplacement_impose_included
 
-#ifndef Paroi_contrainte_imposee_included
-#define Paroi_contrainte_imposee_included
+#include <Scalaire_impose_paroi.h>
 
-#include <Neumann.h>
+//////////////////////////////////////////////////////////////////////////////
+//
+// CLASS: CL_Deplacement_Impose :
+//
+// Boundary condition to impose a fixed value of the neutron flux on a given boundary
+//
+//////////////////////////////////////////////////////////////////////////////
 
-/*! @brief Condition limite de traction imposee pour l'equation de Navier-Cauchy.
- *
- *  Cette condition fixe la contrainte (traction) sur la frontiere, composante par composante.
- */
-class Paroi_contrainte_imposee : public Neumann
+class CL_Deplacement_Impose : public Scalaire_impose_paroi
 {
-  Declare_instanciable(Paroi_contrainte_imposee);
-
-public:
-  void verifie_ch_init_nb_comp() const override;
+  Declare_instanciable(CL_Deplacement_Impose);
 };
 
-#endif
+#endif /* Frontiere_deplacement_impose_included */
