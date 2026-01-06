@@ -1,0 +1,108 @@
+# PARALLEL OK 8 #
+dimension 2
+bidim_axi
+Probleme_Elasticite_Lineaire pb
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave Cavite
+    {
+        Origine $ri $z0
+        Nombre_de_Noeuds 51 101
+        Longueurs $t_w $h
+    }
+    {
+        bord in   X = $ri  0 <= Y <= 0.1
+        bord haut Y = 0.1   $ri <= X <= $re
+        bord bas  Y = 0     $ri <= X <= $re
+        bord out  X = $re 0 <= Y <= 0.1
+    }
+}
+# END MESH #
+
+# BEGIN PARTITION
+Decouper dom
+{
+    partitionneur metis { nb_parts 2 }
+    nb_parts_tot 2
+    Larg_joint 2
+    Nom_Zones dom
+}
+Fin
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter dom.Zones dom
+END SCATTER #
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0
+    facsec 1e30
+    tmax 500
+    dt_max 10
+    seuil_statio -1
+    solveur implicite
+    {
+        solveur petsc cholesky { }
+        seuil_convergence_implicite 1e30
+    }
+}
+
+EF dis
+
+associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+    milieu_elasticite
+    {
+        rho champ_uniforme 1 1
+        E champ_uniforme 1 $E
+        nu champ_uniforme 1 $nu
+    }
+
+    Equation_Navier_Cauchy
+    {
+        diffusion { }
+        initial_conditions { deplacement champ_uniforme 2 0 0 }
+        boundary_conditions
+        {
+            bas  paroi_deplacement_impose champ_front_fonc_txyz 2 0 y*y/2
+            haut paroi_deplacement_impose champ_front_fonc_txyz 2 0 y*y/2
+            in   paroi_deplacement_impose champ_front_fonc_txyz 2 0 y*y/2
+            out  paroi_deplacement_impose champ_front_fonc_txyz 2 0 y*y/2
+        }
+        sources
+        {
+            source_qdm champ_fonc_xyz dom 2 0 (2*$mu+$lambda)
+        }
+    }
+    Post_processing
+    {
+        probes
+        {
+            dy deplacement            periode 1e8 segment 100 0.241 0.0 0.241 0.1
+            dx deplacement            periode 1e8 segment 100 0.24 0.05 0.242 0.05
+            vm grav von_mises         periode 1e8 segment 100 0.24 0.05 0.242 0.05
+            sigma grav contraintes    periode 1e8 segment 100 0.241 0.0 0.241 0.1
+            epsilon grav deformations periode 1e8 segment 100 0.241 0.0 0.241 0.1
+        }
+        format cgns
+        fields dt_post 100
+        {
+            deplacement som
+            von_mises elem
+            contraintes elem
+        }
+    }
+}
+
+Solve pb
+End
+
