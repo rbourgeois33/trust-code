@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,18 +13,18 @@
 *
 *****************************************************************************/
 
-#include <Source_Meca_Grad_Pression_Thermique.h>
+#include <Source_Meca_Grad_Pression_Thermique_EF.h>
 #include <Milieu_Elasticite.h>
 #include <Domaine_EF.h>
 #include <Equation_base.h>
 #include <Champ_Uniforme.h>
 #include <Param.h>
 
-Implemente_instanciable(Source_Meca_Grad_Pression_Thermique, "Source_Meca_Grad_Pression_Thermique_EF", Source_base);
+Implemente_instanciable(Source_Meca_Grad_Pression_Thermique_EF, "Source_Meca_Grad_Pression_Thermique_EF", Source_base);
 
-Sortie& Source_Meca_Grad_Pression_Thermique::printOn(Sortie& os) const { return Source_base::printOn(os); }
+Sortie& Source_Meca_Grad_Pression_Thermique_EF::printOn(Sortie& os) const { return Source_base::printOn(os); }
 
-Entree& Source_Meca_Grad_Pression_Thermique::readOn(Entree& is)
+Entree& Source_Meca_Grad_Pression_Thermique_EF::readOn(Entree& is)
 {
   Param param(que_suis_je());
   param.ajouter("reference_temperature_field", &T_ref_, Param::REQUIRED);
@@ -33,7 +33,7 @@ Entree& Source_Meca_Grad_Pression_Thermique::readOn(Entree& is)
   return is;
 }
 
-int Source_Meca_Grad_Pression_Thermique::initialiser(double temps)
+int Source_Meca_Grad_Pression_Thermique_EF::initialiser(double temps)
 {
   T_ref_->initialiser(temps);
   equation().discretisation().nommer_completer_champ_physique(equation().domaine_dis(), "temperature_field", "", T_.valeur(), equation().probleme());
@@ -41,13 +41,13 @@ int Source_Meca_Grad_Pression_Thermique::initialiser(double temps)
   return Source_base::initialiser(temps);
 }
 
-void Source_Meca_Grad_Pression_Thermique::mettre_a_jour(double temps)
+void Source_Meca_Grad_Pression_Thermique_EF::mettre_a_jour(double temps)
 {
   T_ref_->mettre_a_jour(temps);
   T_->mettre_a_jour(temps);
 }
 
-DoubleTab& Source_Meca_Grad_Pression_Thermique::ajouter(DoubleTab& resu) const
+DoubleTab& Source_Meca_Grad_Pression_Thermique_EF::ajouter(DoubleTab& resu) const
 {
   const Domaine_EF& domaine_ef = ref_cast(Domaine_EF, equation().domaine_dis());
   const IntTab& elems = domaine_ef.domaine().les_elems();

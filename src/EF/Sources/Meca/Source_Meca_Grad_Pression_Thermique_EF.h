@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,8 +13,8 @@
 *
 *****************************************************************************/
 
-#ifndef Source_Meca_Grad_Pression_Thermique_included
-#define Source_Meca_Grad_Pression_Thermique_included
+#ifndef Source_Meca_Grad_Pression_Thermique_EF_included
+#define Source_Meca_Grad_Pression_Thermique_EF_included
 
 #include <Source_base.h>
 
@@ -23,9 +23,9 @@
  *  La classe ne contient pour l'instant que le squelette des méthodes nécessaires. Les contributions
  *  physiques seront ajoutées dans une étape ultérieure.
  */
-class Source_Meca_Grad_Pression_Thermique : public Source_base
+class Source_Meca_Grad_Pression_Thermique_EF : public Source_base
 {
-  Declare_instanciable(Source_Meca_Grad_Pression_Thermique);
+  Declare_instanciable(Source_Meca_Grad_Pression_Thermique_EF);
 
 public:
   int initialiser(double temps) override;
@@ -39,5 +39,5 @@ private:
   OWN_PTR(Champ_Don_base) T_;
 };
 
-#endif /* Source_Meca_Grad_Pression_Thermique_included */
+#endif /* Source_Meca_Grad_Pression_Thermique_EF_included */
 
