@@ -1,0 +1,103 @@
+# PARALLEL OK 8 #
+dimension 2
+Probleme_Elasticite_Lineaire pb
+Domaine_ale dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave Cavite
+    {
+        Origine 0. 0.
+        Nombre_de_Noeuds 101 101
+        Longueurs $L $H
+    }
+    {
+        bord left  X = 0     0 <= Y <= $H
+        bord up    Y = $H    0 <= X <= $L
+        bord down  Y = 0     0 <= X <= $L
+        bord right X = $L    0 <= Y <= $H
+    }
+}
+# END MESH #
+
+# BEGIN PARTITION
+Decouper dom
+{
+    partitionneur metis { nb_parts 2 }
+    nb_parts_tot 2
+    Larg_joint 1
+    Nom_Zones dom
+}
+Fin
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter dom.Zones dom
+END SCATTER #
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0
+    facsec 1e30
+    tmax $tmax
+    dt_max $dt
+    seuil_statio -1
+    solveur newmark
+    {
+        alpha $alpha
+        solveur petsc cholesky { }
+        seuil_convergence_implicite 1e30
+    }
+}
+
+EF dis
+
+associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Imposer_vitesse_lagrangienne dom pb vitesse_noeuds
+
+Read pb
+{
+    milieu_elasticite
+    {
+        rho champ_uniforme 1 $rho
+        E champ_uniforme 1 $E
+        nu champ_uniforme 1 $nu
+    }
+
+    Equation_Navier_Cauchy
+    {
+        diffusion { }
+        initial_conditions { deplacement champ_fonc_txyz dom 2 $U0*sin(pi*x/$L) 0 }
+        boundary_conditions
+        {
+
+            up    paroi_pression_imposee champ_front_fonc_txyz 1 0
+            down  paroi_pression_imposee champ_front_fonc_txyz 1 0
+            left  paroi_deplacement_impose champ_front_uniforme 2 0 0
+            right # symetrie # paroi_deplacement_impose champ_front_uniforme 2 0 0
+        }
+    }
+    Post_processing
+    {
+        probes
+        {
+            dx_mid   deplacement       periode 0 points 1 0.5 0.5
+            dy  som deplacement       periode 0 segment 100 0.5 0.0  0.5 1
+            dx  som deplacement       periode 0 segment 100 0.    0.5 1 0.5
+        }
+        format cgns
+        fields dt_post 1e-10
+        {
+            deplacement som
+        }
+    }
+}
+
+Solve pb
+End
+
