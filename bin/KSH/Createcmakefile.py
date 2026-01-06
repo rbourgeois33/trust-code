@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.22)
 # Definitions of the various TRUST modules
 #
 SPATIAL_DISCRET = ['src/EF', 'src/IJK', 'src/PolyMAC', 'src/VDF', 'src/VEF', 'src/DG']
-PHYSICAL_MODULES = ['src/ThHyd', 'src/ThSol']
+PHYSICAL_MODULES = ['src/ThHyd', 'src/ThSol', 'src/Meca']
 
 def add_library_for_dir(libnam):
     """ Produce the the library part of the CMakeLists.txt for a sub_directory """
@@ -82,7 +82,7 @@ def generate_subdir_cmake(root_dir, ze_dir, fname):
     """ Generate CMakeLists.txt for a sub-directory of the TRUST soruces.
     For the 'include_directories' directive, the rule is as follows:
       - spatial discretisation depend only on Kernel, and not on other discretisations
-      - physical modules (ThHyd, ThSol) depends only on Kernel, and not on discretisations
+      - physical modules (ThHyd, ThSol, Meca) depends only on Kernel, and not on discretisations
     Last but not least, beware that sources used to compile the micro/numeric/std kernels do NOT correspond 
     to include that are needed. For example Probleme_base 
         1) is in src/Kernel/Framework (so in kernel_standard)
