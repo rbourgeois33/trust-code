@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -13,8 +13,8 @@
 *
 *****************************************************************************/
 
-#ifndef Milieu_Elastic_included
-#define Milieu_Elastic_included
+#ifndef Milieu_Elasticite_included
+#define Milieu_Elasticite_included
 
 #include <Milieu_base.h>
 
