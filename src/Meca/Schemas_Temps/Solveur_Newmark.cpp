@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -15,21 +15,11 @@
 
 #include <Solveur_Newmark.h>
 #include <Equation_Navier_Cauchy.h>
-#include <Solveur_Masse_base.h>
-#include <Schema_Temps_base.h>
-#include <SolveurSys.h>
-#include <TRUSTTrav.h>
-#include <Matrice_Morse.h>
-#include <Probleme_base.h>
-#include <Discretisation_base.h>
-#include <Domaine_dis_base.h>
-#include <Process.h>
-#include <algorithm>
 
-Implemente_instanciable(Solveur_Newmark, "Newmark", Simpler);
+Implemente_instanciable(Solveur_Newmark, "Newmark", Solveur_non_lineaire);
 
-Sortie& Solveur_Newmark::printOn(Sortie& os) const { return Simpler::printOn(os); }
-Entree& Solveur_Newmark::readOn(Entree& is) { return Simpler::readOn(is); }
+Sortie& Solveur_Newmark::printOn(Sortie& os) const { return Solveur_non_lineaire::printOn(os); }
+Entree& Solveur_Newmark::readOn(Entree& is) { return Solveur_non_lineaire::readOn(is); }
 
 Entree& Solveur_Newmark::lire(const Motcle& motlu,Entree& is)
 {
@@ -76,8 +66,6 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
     }
 
   DoubleTab u_old(current); // previous implicit iterate (u^k-1)
-
-  Equation_Navier_Cauchy& eq = ref_cast(Equation_Navier_Cauchy, eqn);
   SolveurSys& solveur = get_and_set_parametre_implicite(eqn).solveur();
 
   // Storage for v and a across calls (shape-matched to 'current')
@@ -122,18 +110,18 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
 // Use 'current' as linearization point set to u_pred before assembly
   if (current.dimension_tot(0) > 0) current = u_pred_;
   Matrice_Morse matrice;
-  eq.dimensionner_matrice(matrice);
+  eqn.dimensionner_matrice(matrice);
   matrice.get_set_coeff() = 0;
 
   DoubleTrav rhs(current);
   rhs = 0.;
   statistics().begin_count(STD_COUNTERS::matrix_assembly,statistics().get_last_opened_counter_level()+1);
-  eq.assembler(matrice, current, rhs); // K and external terms at u_pred
+  eqn.assembler(matrice, current, rhs); // K and external terms at u_pred
   statistics().end_count(STD_COUNTERS::matrix_assembly);
 
 // Add effective mass to matrix and RHS (M*a0*u_pred)
-  eq.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
-  eq.solv_masse().ajouter_masse(dt_eff, rhs, u_pred_, 0 /*implicit*/);
+  eqn.solv_masse().ajouter_masse(dt_eff, matrice, 0 /*implicit*/);
+  eqn.solv_masse().ajouter_masse(dt_eff, rhs, u_pred_, 0 /*implicit*/);
 
 // Add damping contributions if alpha_ != 0: K_eff += a1 * C = a1 * alpha_ * M
 // and RHS += C * (a1 * u_pred - v_pred) = alpha_ * M * (a1 * u_pred - v_pred)
@@ -143,7 +131,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
       if (a1 != 0.)
         {
           const double dt_eff_C_mat = 1.0 / (a1 * alpha_);
-          eq.solv_masse().ajouter_masse(dt_eff_C_mat, matrice, 0 /*implicit*/);
+          eqn.solv_masse().ajouter_masse(dt_eff_C_mat, matrice, 0 /*implicit*/);
         }
       // RHS: add alpha_ * M * (a1 * u_pred - v_pred) -> use dt_eff_C_rhs = 1 / alpha_
       DoubleTrav w(current);
@@ -151,11 +139,11 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
       for (int i = 0; i < N; i++)
         w.addr()[i] = a1 * u_pred_.addr()[i] - v_pred_.addr()[i];
       const double dt_eff_C_rhs = 1.0 / alpha_;
-      eq.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/);
+      eqn.solv_masse().ajouter_masse(dt_eff_C_rhs, rhs, w, 0 /*implicit*/);
     }
 
 // Apply boundary conditions
-  eq.modifier_pour_Cl(matrice, rhs);
+  eqn.modifier_pour_Cl(matrice, rhs);
 
 // Solve for u_{n+1}
   solveur->reinit();
@@ -178,7 +166,7 @@ bool Solveur_Newmark::iterer_eqn(Equation_base& eqn, const DoubleTab& inut, Doub
   const bool converge = (dudt_norme < seuil_convg);
   Cout << eqn.que_suis_je() << (converge ? " is " : " is not ") << "converged at the implicit iteration " << nb_iter << " ( ||uk-uk-1|| = " << dudt_norme << (converge ? "<" : ">") << " implicit threshold " << seuil_convg << " )" << finl;
 
-  eq.valider_iteration();
+  eqn.valider_iteration();
   ok = 1;
   solveur->reinit();
   return converge ? 1 : 0;

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,11 +16,11 @@
 #ifndef Solveur_Newmark_included
 #define Solveur_Newmark_included
 
-#include <Simpler.h>
+#include <Solveur_non_lineaire.h>
 
 class Equation_Navier_Cauchy;
 
-class Solveur_Newmark : public Simpler
+class Solveur_Newmark : public Solveur_non_lineaire
 {
   Declare_instanciable(Solveur_Newmark);
 
