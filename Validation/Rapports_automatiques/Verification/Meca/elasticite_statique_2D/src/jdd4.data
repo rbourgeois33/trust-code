@@ -1,0 +1,98 @@
+# PARALLEL OK 8 #
+dimension 2
+Probleme_Elasticite_Lineaire pb
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave Cavite
+    {
+        Origine 0. 0.
+        Nombre_de_Noeuds 101 101
+        Longueurs 1 1
+    }
+    {
+        bord left  X = 0  0 <= Y <= 1
+        bord up    Y = 1  0 <= X <= 1
+        bord down  Y = 0  0 <= X <= 1
+        bord right X = 1  0 <= Y <= 1
+    }
+}
+# END MESH #
+
+# BEGIN PARTITION
+Decouper dom
+{
+    partitionneur metis { nb_parts 2 }
+    nb_parts_tot 2
+    Larg_joint 1
+    Nom_Zones dom
+}
+Fin
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter dom.Zones dom
+END SCATTER #
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0
+    facsec 1e30
+    tmax 500
+    dt_max 1
+    seuil_statio 1e-10
+    solveur implicite
+    {
+        solveur petsc cholesky { }
+        seuil_convergence_implicite 1e30
+    }
+}
+
+EF dis
+
+associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+    milieu_elasticite
+    {
+        rho champ_uniforme 1 1
+        E champ_uniforme 1 $E
+        nu champ_uniforme 1 $nu
+    }
+
+    Equation_Navier_Cauchy
+    {
+        diffusion { }
+        initial_conditions { deplacement champ_uniforme 2 0 0 }
+        boundary_conditions
+        {
+            left  paroi_deplacement_impose champ_front_uniforme 2 0 0
+            up    paroi_pression_imposee champ_front_fonc_txyz 1 -$lambda*$A
+            down  paroi_pression_imposee champ_front_fonc_txyz 1 -$lambda*$A
+            right paroi_pression_imposee champ_front_fonc_txyz 1 -(2*$mu+$lambda)*$A
+        }
+    }
+    Post_processing
+    {
+        probes
+        {
+            dx deplacement periode 1e8 segment 100 0 0.5 1 0.5
+            dy deplacement periode 1e8 segment 100 0.5 0 0.5 1
+        }
+        format cgns
+        fields dt_post 100
+        {
+            deplacement som
+        }
+    }
+}
+
+Solve pb
+End
+
