@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -17,14 +17,6 @@
 #define Solveur_Implicite_base_included
 
 #include <Parametre_implicite.h>
-#include <TRUSTTabs_forward.h>
-#include <TRUST_Deriv.h>
-#include <TRUST_List.h>
-#include <TRUST_Ref.h>
-#include <Objet_U.h>
-#include <Double.h>
-
-class Equation_base;
 
 class Solveur_Implicite_base : public  Objet_U
 {
@@ -49,10 +41,21 @@ public :
   {
     return DMAXFLOAT; /* par defaut pas de limite : on est en implicite */
   }
-  virtual OWN_PTR(Parametre_equation_base)& get_and_set_parametre_equation(Equation_base& eqn) /* initialisation de parametre_equation() dans une equation */
+  virtual OWN_PTR(Parametre_equation_base)& get_and_set_parametre_equation(Equation_base&);
+  Parametre_implicite& get_and_set_parametre_implicite(Equation_base& eqn)
   {
-    return eqn.parametre_equation(); /* par defaut : ne fait rien */
+    return ref_cast(Parametre_implicite, get_and_set_parametre_equation(eqn).valeur());
   }
+
+
+protected :
+  Parametre_implicite param_defaut_;
+  int is_seuil_convg_variable;
+  double facteur_convg_;
+  int controle_residu_;
+  virtual Entree& lire(const Motcle&, Entree&);
+  virtual int get_controle_residu() const { return 0; }
+
 };
 
 #endif /* Solveur_Implicite_base_included */

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,8 +19,6 @@
 #include <Simpler_Base.h>
 #include <Domaine_VF.h>
 #include <TRUSTTrav.h>
-#include <SChaine.h>
-#include <EChaine.h>
 
 Implemente_base_sans_constructeur(Simpler_Base,"Simpler_Base",Solveur_non_lineaire);
 
@@ -31,193 +29,30 @@ Sortie& Simpler_Base::printOn(Sortie& os ) const
 
 Entree& Simpler_Base::readOn(Entree& is )
 {
-  int is_seuil_resol_lu = 0;
-
-  double seuil_convergence_solveur_prov=-1;
   is_seuil_convg_variable = 0;
   controle_residu_ = 0;
-  Motcle accferme = "}";
-  Motcle accouverte = "{";
-  int le_solveur_est_lu = 0;
-  Motcle motlu;
-  is >> motlu;
-  if (motlu!=accouverte) Process::exit("We are waiting a { !");
   no_qdm_ = 0;
-  is >> motlu;
-  Nom le_solveur_lu_;
-  while(motlu!=accferme )
-    {
-      if (motlu=="max_iter_implicite")
-        {
-          Cerr << motlu << finl;
-          Cerr << motlu <<" is no more longer understood by Simpler but by the time scheme"<<finl;
-          exit();
-        }
-      else if (motlu=="seuil_convergence_implicite")
-        {
-          Cerr << motlu << finl;
-          is >> param_defaut_.seuil_convergence_implicite();
-        }
-      else if (motlu=="seuil_convergence_variable")
-        {
-          Cerr << "Option seuil_convergence_variable is not yet understood." << finl;
-          exit();
-          Cerr << motlu << finl;
-          facteur_convg_ = 100;
-          is_seuil_convg_variable = 1;
-        }
-      else if (motlu=="seuil_generation_solveur")
-        {
-          Cerr << motlu << finl;
-          is_seuil_resol_lu = 1;
-          is >> param_defaut_.seuil_generation_solveur();
-        }
-      else if (motlu=="seuil_verification_solveur")
-        {
-          Cerr << motlu << finl;
-          is >> param_defaut_.seuil_verification_solveur();
-        }
-      else if (motlu=="seuil_test_preliminaire_solveur")
-        {
-          Cerr << motlu << finl;
-          is >> param_defaut_.seuil_test_preliminaire_solveur();
-        }
-      else if (motlu=="seuil_convergence_solveur")
-        {
-          Cerr << motlu << finl;
-          is_seuil_resol_lu = 1;
-          is >> seuil_convergence_solveur_prov;
-        }
-      else if (motlu=="nb_it_max")
-        {
-          is >> param_defaut_.nb_it_max();
-        }
-      else if (motlu=="controle_residu")
-        {
-          controle_residu_ = 1;
-        }
-      else if (motlu=="no_qdm")
-        {
-          Cerr << motlu << finl;
-          no_qdm_ = 1;
-        }
-      else if (motlu=="solveur")
-        {
-          le_solveur_est_lu = 1;
-          SChaine toto;
-          // redefinition de motlu pour garder les minuscules/majuscules
-          Nom motlubis;
-          int nb_acc=0;
-          int ok=0;
-          while (nb_acc!=0 || !ok)
-            {
-              is >>motlubis;
-              toto<<" "<<motlubis;
-              if (motlubis=="}") nb_acc--;
-              else if (motlubis=="{")
-                {
-                  ok=1;
-                  nb_acc++;
-                };
-            }
-          le_solveur_lu_ = Nom(toto.get_str());
-        }
-      else if (motlu=="facsec_diffusion_for_sets")
-        {
-          Cerr << motlu << finl;
-          is >> facsec_diffusion_for_sets_;
-        }
-      else
-        {
-          lire(motlu,is);
-        }
-      is >> motlu;
-    }
-
-  if (seuil_convergence_solveur_prov>0)
-    {
-      param_defaut_.set_seuil_solveur_avec_seuil_convergence_solveur(seuil_convergence_solveur_prov);
-    }
-  if ((is_seuil_resol_lu==0) && (le_solveur_est_lu==0))
-    {
-      Cerr<<"Neither the solving object nor the threshold seuil_convergence_solveur has been indicated."<<finl;
-      Cerr<<"At least one of them (or both) must be specified."<<finl;
-      exit();
-    }
-
-  if (param_defaut_.seuil_convergence_implicite()<0)
-    param_defaut_.seuil_convergence_implicite() = DMAXFLOAT;
-
-  if (param_defaut_.seuil_verification_solveur()<0)
-    param_defaut_.seuil_verification_solveur() = DMAXFLOAT;
-  // on laisse seuil_test_preliminaire <0
-
-
-  if (le_solveur_est_lu==0)
-    {
-      SChaine toto;
-      toto<<"Gmres { diag seuil "<<param_defaut_.seuil_generation_solveur()<<" nb_it_max "<< param_defaut_.nb_it_max() << " controle_residu " <<controle_residu_<<" } "<<finl;
-      le_solveur_lu_=Nom(toto.get_str());
-    }
-
-  {
-    EChaine titi(le_solveur_lu_);
-    titi>> param_defaut_.solveur();
-  }
-  param_defaut_.solveur().nommer("solveur_implicite");
-  return is;
+  return Solveur_Implicite_base::readOn(is);
 }
 
-/*! @brief retourne le parametre_implicte de l'equation si il existe si il n'existe pas le cree.
- *
- * .. si les params sont vides on copie ceux du simpler
- *
- */
-OWN_PTR(Parametre_equation_base)& Simpler_Base::get_and_set_parametre_equation(Equation_base& eqn)
+Entree& Simpler_Base::lire(const Motcle& motlu, Entree& is)
 {
-  OWN_PTR(Parametre_equation_base)& param = eqn.parametre_equation();
-  if (param.est_nul())
+  if (motlu == "no_qdm")
     {
-      param.typer("Parametre_implicite");
+      Cerr << motlu << finl;
+      no_qdm_ = 1;
     }
-  if (!sub_type(Parametre_implicite,param.valeur()))
+  else if (motlu == "facsec_diffusion_for_sets")
     {
-      Cerr<<eqn.que_suis_je()<<" has parameters of type "<<param.que_suis_je()<<" not coherent with "<<que_suis_je()<<finl;
-      exit();
+      Cerr << motlu << finl;
+      is >> facsec_diffusion_for_sets_;
     }
-
-  Parametre_implicite& param_impl = ref_cast(Parametre_implicite,param.valeur());
-  // on regarde si il y a des valeurs par defaut a recopier
-  if (param_impl.seuil_convergence_implicite()<0)
-    param_impl.seuil_convergence_implicite() = param_defaut_.seuil_convergence_implicite();
-  if (param_impl.seuil_verification_solveur()<0)
-    param_impl.seuil_verification_solveur() = param_defaut_.seuil_verification_solveur();
-  if (param_impl.seuil_test_preliminaire_lu()==0)
-    param_impl.seuil_test_preliminaire_solveur() = param_defaut_.seuil_test_preliminaire_solveur();
-  if (param_impl.solveur().est_nul())
-    param_impl.solveur() = param_defaut_.solveur();
-
-  // Some checks:
-  if (eqn.probleme().is_coupled())
+  else
     {
-      if (param_impl.seuil_convergence_implicite()>0.1*DMAXFLOAT)
-        {
-          Cerr << finl << "Error!" << finl;
-          Cerr << "seuil_convergence_implicite option should be defined in your time scheme." << finl;
-          Cerr << "It is a mandatory option for a calculation with coupled problems." << finl;
-          exit();
-        }
+      Cerr << "Keyword : " << motlu << " is not undertood in " << que_suis_je() << finl;
+      Process::exit();
     }
-  /*
-  else if (param_impl.seuil_convergence_implicite()<0.1*DMAXFLOAT)
-  {
-        Cerr << finl << "Error!" << finl;
-  Cerr << "seuil_convergence_implicite option should be NOT be defined in your time scheme" << finl;
-  Cerr << "during calculation of a single problem." << finl;
-  Cerr << "Remove the option." << finl;
-  exit();
-  } */
-  return param;
+  return is;
 }
 
 void Simpler_Base::assembler_matrice_pression_implicite(Equation_base& eqn_NS,const Matrice_Morse& matrice,Matrice& matrice_en_pression_2)

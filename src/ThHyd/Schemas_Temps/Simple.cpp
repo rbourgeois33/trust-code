@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -70,8 +70,7 @@ Entree& Simple::lire(const Motcle& motlu,Entree& is)
 
     default :
       {
-        Cerr << "Keyword : " << motlu << " is not undertood in " << que_suis_je() << finl;
-        exit();
+        return Simpler_Base::lire(motlu, is);
       }
     }
 
@@ -659,4 +658,3 @@ void Simple::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pression
   if (is_dilat)
     diviser_par_rho_np1_face(eqn,current);
 }
-

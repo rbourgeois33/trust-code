@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -79,8 +79,7 @@ Entree& Piso::lire(const Motcle& motlu,Entree& is)
       }
     default :
       {
-        Cerr << "Keyword : " << motlu << " is not understood in " << que_suis_je() << finl;
-        exit();
+        return Simpler::lire(motlu, is);
       }
     }
   return is;
@@ -552,5 +551,4 @@ void Implicite::second_special_treatment(Equation_base& eqn,DoubleTab& current, 
 {
   //nothing to do
 }
-
 
