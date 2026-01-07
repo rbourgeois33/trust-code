@@ -1,0 +1,107 @@
+# PARALLEL OK 8 #
+dimension 2
+bidim_axi
+Probleme_Elasticite_Lineaire pb
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave Cavite
+    {
+        Origine 0.24 0.
+        Nombre_de_Noeuds 11 101
+        Longueurs 0.002 0.1
+    }
+    {
+        bord in   X = 0.24  0 <= Y <= 0.1
+        bord haut Y = 0.1   0.24 <= X <= 0.242
+        bord bas  Y = 0     0.24 <= X <= 0.242
+        bord out  X = 0.242 0 <= Y <= 0.1
+    }
+}
+# END MESH #
+
+# BEGIN PARTITION
+Decouper dom
+{
+    partitionneur metis { nb_parts 2 }
+    nb_parts_tot 2
+    Larg_joint 2
+    Nom_Zones dom
+}
+Fin
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter dom.Zones dom
+END SCATTER #
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0
+	nb_pas_dt_max 3
+    facsec 1e30
+    tmax 500
+    dt_max 10
+    seuil_statio -1
+    solveur implicite
+    {
+        solveur petsc cholesky { }
+        seuil_convergence_implicite 1e30
+    }
+}
+
+EF dis
+
+associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+    milieu_elasticite
+    {
+        rho champ_uniforme 1 1
+        E champ_uniforme 1 160000000000.0
+        nu champ_uniforme 1 0.31
+    }
+
+    Equation_Navier_Cauchy
+    {
+        diffusion { }
+        initial_conditions { deplacement champ_uniforme 2 0 0 }
+        boundary_conditions
+        {
+
+            haut paroi_pression_imposee champ_front_fonc_txyz 1   -(2*99638408999.59822*0.1+0.1*(2*61068702290.07633+99638408999.59822))
+            in   paroi_pression_imposee champ_front_fonc_txyz 1   -(99638408999.59822*0.1+0.1*(2*61068702290.07633+2*99638408999.59822))
+            out  paroi_pression_imposee champ_front_fonc_txyz 1   -(99638408999.59822*0.1+0.1*(2*61068702290.07633+2*99638408999.59822))
+            bas  symetrie # paroi_deplacement_impose champ_front_fonc_txyz 2 0.1*x 0.1*y #
+        }
+    }
+    Post_processing
+    {
+        probes
+        {
+            dy deplacement            periode 1e8 segment 100 0.241 0.0 0.241 0.1
+            dx deplacement            periode 1e8 segment 100 0.24 0.05 0.242 0.05
+            vm grav von_mises         periode 1e8 segment 100 0.24 0.05 0.242 0.05
+            sigma grav contraintes    periode 1e8 segment 100 0.241 0.0 0.241 0.1
+            epsilon grav deformations periode 1e8 segment 100 0.241 0.0 0.241 0.1
+        }
+        format lml
+        fields dt_post 100
+        {
+            deplacement som
+            von_mises elem
+            contraintes elem
+            lambda_lame elem
+        }
+    }
+}
+
+Solve pb
+End
+
