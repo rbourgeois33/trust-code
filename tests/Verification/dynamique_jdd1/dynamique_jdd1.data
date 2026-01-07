@@ -1,0 +1,102 @@
+# PARALLEL OK 8 #
+dimension 2
+Probleme_Elasticite_Lineaire pb
+Domaine dom
+
+# BEGIN MESH #
+Mailler dom
+{
+    Pave Cavite
+    {
+        Origine 0. 0.
+        Nombre_de_Noeuds 101 101
+        Longueurs 1 1
+    }
+    {
+        bord left  X = 0     0 <= Y <= 1
+        bord up    Y = 1    0 <= X <= 1
+        bord down  Y = 0     0 <= X <= 1
+        bord right X = 1    0 <= Y <= 1
+    }
+}
+# END MESH #
+
+# BEGIN PARTITION
+Decouper dom
+{
+    partitionneur metis { nb_parts 2 }
+    nb_parts_tot 2
+    Larg_joint 1
+    Nom_Zones dom
+}
+Fin
+END PARTITION #
+
+# BEGIN SCATTER
+Scatter dom.Zones dom
+END SCATTER #
+
+Scheme_euler_implicit sch
+Read sch
+{
+    tinit 0
+	nb_pas_dt_max 3
+    facsec 1e30
+    tmax 0.0008831760866327848
+    dt_max 1e-06
+    seuil_statio -1
+    solveur newmark
+    {
+        alpha 500
+        solveur petsc cholesky { }
+        seuil_convergence_implicite 1e30
+    }
+}
+
+EF dis
+
+associate pb dom
+Associate pb sch
+Discretize pb dis
+
+Read pb
+{
+    milieu_elasticite
+    {
+        rho champ_uniforme 1 7800
+        E champ_uniforme 1 160000000000.0
+        nu champ_uniforme 1 0.0
+    }
+
+    Equation_Navier_Cauchy
+    {
+        diffusion { }
+        initial_conditions { deplacement champ_fonc_txyz dom 2 0.01*sin(pi*x/1) 0 }
+        boundary_conditions
+        {
+
+            up    paroi_pression_imposee champ_front_fonc_txyz 1 0
+            down  paroi_pression_imposee champ_front_fonc_txyz 1 0
+            left  paroi_deplacement_impose champ_front_uniforme 2 0 0
+            right # symetrie # paroi_deplacement_impose champ_front_uniforme 2 0 0
+        }
+    }
+    Post_processing
+    {
+        probes
+        {
+            dx_mid  som deplacement periode 0 points 1 0.5 0.5
+            dy      som deplacement periode 0 segment 100 0.5 0.0  0.5 1
+            dx      som deplacement periode 0 segment 100 0.    0.5 1 0.5
+        }
+        format lml
+        fields dt_post 1e-10
+        {
+            deplacement som
+        }
+    }
+}
+
+Solve pb
+End
+
