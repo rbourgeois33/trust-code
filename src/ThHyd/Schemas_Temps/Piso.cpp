@@ -165,7 +165,6 @@ void Piso::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pression,
   else //sinon, on passe par ajouter/contribuer
     {
       resu -= gradP;
-      first_special_treatment( eqn, eqnNS, current, dt, resu );
       eqnNS.assembler_avec_inertie(matrice,current,resu);
     }
 
@@ -449,11 +448,6 @@ void Piso::iterer_NS_PolyMAC(Navier_Stokes_std& eqn, DoubleTab& current, DoubleT
   current = v_new;
 }
 
-void Piso::first_special_treatment(Equation_base& eqn, Navier_Stokes_std& eqnNS, DoubleTab& current, double dt, DoubleTrav& resu)
-{
-  //nothing to do
-}
-
 void Piso::second_special_treatment(Equation_base& eqn,DoubleTab& current, DoubleTrav& resu, Matrice_Morse& matrice)
 {
   //nothing to do
@@ -540,11 +534,6 @@ void Piso::correct_pressure(Navier_Stokes_std& eqnNS, DoubleTab& pression, Doubl
     }
   else
     pression += correction_en_pression;
-}
-
-void Implicite::first_special_treatment(Equation_base& eqn, Navier_Stokes_std& eqnNS, DoubleTab& current, double dt, DoubleTrav& resu)
-{
-  //nothing to do
 }
 
 void Implicite::second_special_treatment(Equation_base& eqn,DoubleTab& current, DoubleTrav& resu, Matrice_Morse& matrice)
