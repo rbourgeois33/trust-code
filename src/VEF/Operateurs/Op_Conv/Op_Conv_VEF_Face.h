@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -55,6 +55,9 @@ public:
   void get_type_op(int& )const;
 
 protected:
+  DoubleTab& ajouter_gen(const DoubleTab& transporte, const Champ_Inc_base& la_vitesse, DoubleTab& resu) const;
+  void ajouter_contribution_gen(const DoubleTab& transporte, const Champ_Inc_base& la_vitesse, Matrice_Morse& matrice ) const;
+
   Motcle type_lim;
   enum type_lim_type {type_lim_minmod,type_lim_vanleer,type_lim_vanalbada,type_lim_chakravarthy,type_lim_superbee};
   type_lim_type type_lim_int = type_lim_minmod;
