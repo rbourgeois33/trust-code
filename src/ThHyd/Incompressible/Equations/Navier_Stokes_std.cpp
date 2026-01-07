@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -29,7 +29,6 @@
 #include <Probleme_base.h>
 #include <Discret_Thyd.h>
 #include <Fluide_base.h>
-#include <Op_Conv_ALE.h>
 #include <Domaine_VF.h>
 #include <TRUSTTrav.h>
 #include <SFichier.h>
@@ -703,6 +702,7 @@ DoubleTab& Navier_Stokes_std::corriger_derivee_impl(DoubleTab& derivee)
   DoubleTrav deriveeALE(derivee);
 
   double timestep=probleme().schema_temps().pas_de_temps();
+  const bool is_ALE = probleme().domaine().deformable();
 
   // can be used for methods like ALE
   renewing_jacobians( derivee );
@@ -716,20 +716,20 @@ DoubleTab& Navier_Stokes_std::corriger_derivee_impl(DoubleTab& derivee)
       derivee2*=dt;
       derivee2+=la_vitesse->passe();
       derivee2/=dt;
-      if( !sub_type(Op_Conv_ALE, terme_convectif.valeur()) ) //No ALE method
+      if(!is_ALE)
         {
           divergence.calculer(derivee2, secmemP); // Div(M-1(F - BtP))
         }
     }
   else
     {
-      if( !sub_type(Op_Conv_ALE, terme_convectif.valeur()) ) //No ALE method
+      if(!is_ALE)
         {
           divergence.calculer(derivee, secmemP); // Div(M-1(F - BtP))
         }
     }
 
-  if( !sub_type(Op_Conv_ALE, terme_convectif.valeur()) ) //No ALE method
+  if(!is_ALE) //No ALE method
     {
       secmemP *= -1; // car div =-B
       // Correction du second membre d'apres les conditions aux limites :
@@ -738,8 +738,6 @@ DoubleTab& Navier_Stokes_std::corriger_derivee_impl(DoubleTab& derivee)
 
   // Set print of the linear system solve according to dt_impr:
   solveur_pression_->fixer_schema_temps_limpr(schema_temps().limpr());
-
-  const bool is_ALE = ( sub_type(Op_Conv_ALE, terme_convectif.valeur()) );
 
   if (assembleur_pression_->get_resoudre_increment_pression())
     {
