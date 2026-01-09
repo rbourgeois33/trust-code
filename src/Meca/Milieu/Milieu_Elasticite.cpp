@@ -221,5 +221,13 @@ void Milieu_Elasticite::update_fields(double temps, bool update_rho)
   ch_lambda_lame_->valeurs() = E_val * nu_val / denom_lambda;
   ch_K_->valeurs() = E_val / denom_K;
 
-  if (update_rho) Process::exit("Milieu_Elasticite::update_fields: updating rho field is not implemented yet.");
+  if (update_rho)
+    {
+      Cerr << "Updating rho_lagrangien field based on current volume scaling at time " << temps << finl;
+      ch_rho_lag_->valeurs() = ch_rho_lag_->passe();
+      zdb_->domaine().apply_old_to_new_volume_scaling(ch_rho_lag_->valeurs(), zdb_.valeur());
+      const Schema_Temps_base& sch = eq_->schema_temps(); //on recupere le schema en temps par la 1ere equation
+      for (int i = 1; i <= sch.nb_valeurs_futures(); i++)
+        ch_rho_lag_->futur(i) = ch_rho_lag_->valeurs();
+    }
 }
