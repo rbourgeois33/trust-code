@@ -23,9 +23,28 @@
 
 class Milieu_Elasticite;
 
-/*! @brief Equation de Navier-Cauchy pour l'elasticite lineaire.
+/*! @brief Navier–Cauchy equation for small-strain linear elasticity.
  *
- *  Implementation minimale : toutes les operations numeriques sont a definir.
+ *  Solves for the displacement field \f$\mathbf{u}\f$ of an isotropic linear elastic solid.
+ *
+ *  Governing equations (optionally including thermal expansion and body forces):
+ *  - Balance of momentum:
+ *    \f$\rho\,\ddot{\mathbf{u}} = \nabla\cdot\boldsymbol{\sigma} - 3K\alpha\,\nabla(\Delta T) + \mathbf{b}\f$
+ *  - Small-strain tensor:
+ *    \f$\boldsymbol{\varepsilon}=\tfrac12(\nabla\mathbf{u} + (\nabla\mathbf{u})^T)\f$
+ *  - Isotropic Hooke’s law:
+ *    \f$\boldsymbol{\sigma} = \mu\,(\nabla\mathbf{u}+ (\nabla\mathbf{u})^T) + \lambda\,(\nabla\cdot\mathbf{u})\,\mathbf{I}\f$
+ *
+ *  The Lamé parameters \f$\lambda\f$ and \f$\mu\f$, the bulk modulus \f$K\f$ and the thermal expansion
+ *  coefficient \f$\alpha\f$ are provided by `Milieu_Elasticite`.
+ *
+ *  The operator `terme_diffusif` represents the whole divergence term
+ *  \f$\nabla\cdot(\mu(\nabla\mathbf{u}+\nabla\mathbf{u}^T)+\lambda(\nabla\cdot\mathbf{u})\mathbf{I})\f$,
+ *  including the volumetric contribution (\f$\lambda\f$, sometimes referred to as a “volumetric viscosity”
+ *  in diffusion-like operator form).
+ *
+ *  Post-processing fields may be created/updated, depending on the discretization and options:
+ *  stresses, strains, von Mises equivalent stress, and (when needed) nodal velocity.
  */
 class Equation_Navier_Cauchy : public Equation_base
 {

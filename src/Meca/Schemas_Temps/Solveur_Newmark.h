@@ -20,6 +20,11 @@
 
 class Equation_Navier_Cauchy;
 
+/*! @brief Newmark time integration scheme for linear elasticity.
+ *
+ *  Advances the Navier-Cauchy equation in time using Newmark parameters.
+ *  Supports average-acceleration settings through beta and gamma defaults.
+ */
 class Solveur_Newmark : public Solveur_non_lineaire
 {
   Declare_instanciable(Solveur_Newmark);
