@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -23,6 +23,11 @@
 #include <Param.h>
 
 Implemente_instanciable(Milieu_Elasticite,"Milieu_Elasticite",Milieu_base);
+// XD Milieu_Elasticite milieu_base Milieu_Elasticite -1 Milieu_Elasticite.
+// XD attr rho field_base rho 1 Density (kg.m-3).
+// XD attr E field_base E 1 Field E
+// XD attr nu field_base nu 1 Field nu.
+// XD attr alpha field_base alpha 1 Coeff dilatation.
 
 Sortie& Milieu_Elasticite::printOn(Sortie& os) const { return Milieu_base::printOn(os); }
 

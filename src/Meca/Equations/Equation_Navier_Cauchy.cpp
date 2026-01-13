@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -21,6 +21,7 @@
 #include <Process.h>
 
 Implemente_instanciable(Equation_Navier_Cauchy,"Equation_Navier_Cauchy",Equation_base);
+// XD Equation_Navier_Cauchy eqn_base Equation_Navier_Cauchy -1 Equation_Navier_Cauchy equation
 
 Sortie& Equation_Navier_Cauchy::printOn(Sortie& os) const { return Equation_base::printOn(os); }
 

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -18,7 +18,9 @@
 #include <Process.h>
 
 Implemente_instanciable(Probleme_Elasticite_Lineaire,"Probleme_Elasticite_Lineaire",Probleme_base);
-
+// XD Probleme_Elasticite_Lineaire Pb_base Probleme_Elasticite_Lineaire -1 Resolution of Probleme_Elasticite_Lineaire
+// XD attr Milieu_Elasticite Milieu_Elasticite Milieu_Elasticite 1 Milieu_Elasticite
+// XD attr Equation_Navier_Cauchy Equation_Navier_Cauchy Equation_Navier_Cauchy 1 Equation_Navier_Cauchy
 
 Sortie& Probleme_Elasticite_Lineaire::printOn(Sortie& os) const { return os; }
 Entree& Probleme_Elasticite_Lineaire::readOn(Entree& is) { return Probleme_base::readOn(is); }

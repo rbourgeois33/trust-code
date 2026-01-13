@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -15,6 +15,7 @@
 
 #include <Flux_parietal_base.h>
 Implemente_base(Flux_parietal_base, "Flux_parietal_base", Correlation_base);
+// XD flux_parietal_base correlation_base flux_parietal_base -1 not_set
 
 Sortie& Flux_parietal_base::printOn(Sortie& os) const
 {
