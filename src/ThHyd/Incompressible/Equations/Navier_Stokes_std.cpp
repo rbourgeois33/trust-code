@@ -1089,6 +1089,11 @@ bool Navier_Stokes_std::initTimeStep(double dt)
 {
   P_n=pression().valeurs();
 
+  if (probleme().domaine().mesh_update_required())
+    {
+      assembleur_pression_->assembler(matrice_pression_); // Here B M-1 Bt is assembled.
+      solveur_pression_->reinit();
+    }
 
   // Verification que dt_max est correctement fixe pour un champ
   // de vitesse nul et diffusion_implicite active <=> dt_conv=INF
