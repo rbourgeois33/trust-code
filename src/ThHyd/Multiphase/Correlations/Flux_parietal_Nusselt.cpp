@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,6 +19,7 @@
 #include <cmath>
 
 Implemente_instanciable(Flux_parietal_Nusselt, "Flux_parietal_Nusselt", Flux_parietal_base);
+// XD flux_parietal_nusselt flux_parietal_base nusselt -1 not_set
 
 Sortie& Flux_parietal_Nusselt::printOn(Sortie& os) const
 {
@@ -28,7 +29,7 @@ Sortie& Flux_parietal_Nusselt::printOn(Sortie& os) const
 Entree& Flux_parietal_Nusselt::readOn(Entree& is)
 {
   Param param(que_suis_je());
-  param.ajouter_non_std("formula", this, Param::REQUIRED);
+  param.ajouter_non_std("formula", this, Param::REQUIRED); // XD_ADD_P chaine Nusselt formula as a function of Re and Pr
   param.lire_avec_accolades_depuis(is);
   return is;
 }

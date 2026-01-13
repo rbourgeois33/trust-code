@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -20,6 +20,9 @@
 #include <Process.h>
 
 Implemente_instanciable(CL_Contrainte_Imposee, "paroi_pression_imposee", Neumann);
+
+// XD paroi_pression_imposee condlim_base CL_Contrainte_Imposee -1 CL_Contrainte_Imposee/paroi_pression_imposee
+// XD attr ch front_field_base ch 0 Boundary field type.
 
 Sortie& CL_Contrainte_Imposee::printOn(Sortie& os) const { return Neumann::printOn(os); }
 Entree& CL_Contrainte_Imposee::readOn(Entree& is)

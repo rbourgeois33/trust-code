@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -16,6 +16,7 @@
 #include <Correlation_base.h>
 
 Implemente_base(Correlation_base, "Correlation_base", Objet_U);
+// XD correlation_base objet_u correlation_base -1 not_set
 
 Sortie& Correlation_base::printOn(Sortie& os) const { return os; }
 
