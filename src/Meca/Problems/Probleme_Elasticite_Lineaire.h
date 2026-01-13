@@ -21,9 +21,10 @@
 
 class Milieu_Elasticite;
 
-/*! @brief Probleme minimal d'elasticite lineaire.
+/*! @brief Linear elasticity problem.
  *
- *  L'implementation numerique est a completer.
+ *  Contains a Navier-Cauchy equation with an elastic medium.
+ *
  */
 class Probleme_Elasticite_Lineaire : public Probleme_base
 {
