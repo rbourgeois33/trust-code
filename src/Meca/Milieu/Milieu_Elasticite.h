@@ -18,9 +18,22 @@
 
 #include <Milieu_base.h>
 
-/*! @brief Milieu elastique isotrope lineaire.
+/*! @brief Isotropic small-strain linear elastic medium.
  *
- *  Stocke les proprietes elastiques au sein de champs pour rester coherent avec la hierarchie TRUST.
+ *  Stores and updates the material properties used by `Equation_Navier_Cauchy`.
+ *
+ *  Primary input fields (uniform or space-dependent):
+ *  - ch_E_: Young's modulus \f$E\f$ [Pa]
+ *  - ch_nu_: Poisson's ratio \f$\nu\f$ [-]
+ *
+ *  Convenience / derived fields:
+ *  - ch_lambda_lame_: first Lamé parameter \f$\lambda\f$ [Pa]
+ *  - ch_mu_: second Lamé parameter (shear modulus) \f$\mu\f$ [Pa]
+ *  - ch_K_: bulk modulus \f$K\f$ [Pa]
+ *
+ *  Optional coupling fields:
+ *  - ch_coeff_dilatation_th_: linear thermal expansion coefficient \f$\alpha\f$ [1/K]
+ *  - ch_rho_lag_: Lagrangian density \f$\rho_\text{lag}\f$ [kg/m^3]
  */
 class Milieu_Elasticite : public Milieu_base
 {

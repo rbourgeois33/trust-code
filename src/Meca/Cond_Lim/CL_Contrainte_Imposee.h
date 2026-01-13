@@ -18,9 +18,10 @@
 
 #include <Neumann.h>
 
-/*! @brief Condition limite de traction imposee pour l'equation de Navier-Cauchy.
+/*! @brief Imposed traction boundary condition for the Navier-Cauchy equation.
  *
- *  Cette condition fixe la contrainte (traction) sur la frontiere, composante par composante.
+ *  This condition prescribes the traction vector on the boundary.
+ *  It is used to apply surface stresses in linear elasticity problems.
  */
 class CL_Contrainte_Imposee : public Neumann
 {

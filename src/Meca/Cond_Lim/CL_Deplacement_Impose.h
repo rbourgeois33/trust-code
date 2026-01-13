@@ -17,13 +17,11 @@
 
 #include <Scalaire_impose_paroi.h>
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// CLASS: CL_Deplacement_Impose :
-//
-// Boundary condition to impose a fixed value of the neutron flux on a given boundary
-//
-//////////////////////////////////////////////////////////////////////////////
+/*! @brief Imposed displacement boundary condition for the Navier-Cauchy equation.
+ *
+ *  This condition fixes the displacement on the boundary.
+ *  It is typically used to model clamped or prescribed-motion surfaces.
+ */
 
 class CL_Deplacement_Impose : public Scalaire_impose_paroi
 {
