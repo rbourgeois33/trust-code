@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -32,9 +32,9 @@
 // XD attr dp_field field_base dp_field 0 the parameters of the previous formula (DP = dp + dDP/dQ * (Q - Q0)): uniform_field 3 dp dDP/dQ Q0 where Q0 is a mass flow rate (kg/s).
 
 // XD type_perte_charge_dp_regul type_perte_charge_deriv dp_regul 1 Keyword used to regulate the DP value in order to match a target flow rate. Syntax  : dp_regul { DP0 d deb d eps e }
-// XD attr DP0 floattant DP0 0 initial value of DP
+// XD attr DP0 chaine DP0 0 Reference pressure drop value (possibly time‑dependent)
 // XD attr deb chaine deb 0 target flow rate in kg/s
-// XD attr eps chaine eps 0 strength of the regulation (low values might be slow to find the target flow rate, high values might oscillate around the target value)
+// XD attr alpha chaine alpha 0 alpha string
 
 
 // XD DP_Impose source_base DP_Impose 0 Source term to impose a pressure difference according to the formula : DP = dp + dDP/dQ * (Q - Q0)

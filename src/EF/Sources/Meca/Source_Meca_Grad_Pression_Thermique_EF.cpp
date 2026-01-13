@@ -21,14 +21,15 @@
 #include <Param.h>
 
 Implemente_instanciable(Source_Meca_Grad_Pression_Thermique_EF, "Source_Meca_Grad_Pression_Thermique_EF", Source_base);
+// XD source_meca_grad_pression_thermique source_base source_meca_grad_pression_thermique 1 Source term that applies the gradient of thermal pressure as an equivalent body force in the linear elasticity momentum equation.
 
 Sortie& Source_Meca_Grad_Pression_Thermique_EF::printOn(Sortie& os) const { return Source_base::printOn(os); }
 
 Entree& Source_Meca_Grad_Pression_Thermique_EF::readOn(Entree& is)
 {
   Param param(que_suis_je());
-  param.ajouter("reference_temperature_field", &T_ref_, Param::REQUIRED);
-  param.ajouter("temperature_field", &T_, Param::REQUIRED);
+  param.ajouter("reference_temperature_field", &T_ref_, Param::REQUIRED); // XD_ADD_P field_base Reference temperature field used to compute the thermal pressure gradient.
+  param.ajouter("temperature_field", &T_, Param::REQUIRED); // XD_ADD_P field_base Temperature field used to compute the thermal pressure gradient.
   param.lire_avec_accolades_depuis(is);
   return is;
 }

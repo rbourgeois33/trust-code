@@ -28,6 +28,8 @@
 #include <Flux_parietal_base.h>
 
 Implemente_instanciable(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem", Source_base);
+// XD echange_thermique_volumique source_base echange_thermique_volumique 1 Source term that exchanges heat volumetrically between two overlapping domains using interfacial area and thermal resistances.
+
 Add_synonym(Echange_Thermique_Volumique_Elem, "echange_thermique_volumique_VDF_P0_VDF");
 Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyMAC_P0");
 Add_synonym(Echange_Thermique_Volumique_Elem, "Echange_Thermique_Volumique_Elem_PolyMAC_P0P1NC");
@@ -37,17 +39,19 @@ Sortie& Echange_Thermique_Volumique_Elem::printOn(Sortie& s) const { return s <<
 Entree& Echange_Thermique_Volumique_Elem::readOn(Entree& s)
 {
   Param param(que_suis_je());
-  param.ajouter("nom|name", &tag_, Param::REQUIRED);
-  param.ajouter("aire_interfaciale|interfacial_area", &Ai_, Param::REQUIRED);
-  param.ajouter("conduction_length|epaisseur_conduction", &ep_cond_);
-  param.ajouter("conductivity|conductivite", &cond_);
-  param.ajouter_non_std("flux_parietal|heat_flux", (this));
+  param.ajouter("nom|name", &tag_, Param::REQUIRED); // XD_ADD_P chaine Tag used to match the source terms on both sides of the coupling.
+  param.ajouter("aire_interfaciale|interfacial_area", &Ai_, Param::REQUIRED); // XD_ADD_P field_base Interfacial area per cell used to compute the exchange.
+  param.ajouter("conduction_length|epaisseur_conduction", &ep_cond_); // XD_ADD_P field_base Conduction length (if conduction is modeled).
+  param.ajouter("conductivity|conductivite", &cond_); // XD_ADD_P field_base Thermal conductivity used with the conduction length (optional).
+  param.ajouter_non_std("flux_parietal|heat_flux", (this)); // XD_ADD_P flux_parietal_base Correlation used to compute the wall heat flux on each side of the interface.
   param.lire_avec_accolades_depuis(s);
+
   set_fichier(Nom("Echange_Thermique_Volumique_") + tag_);
   set_description("Power (W)");
   Noms col_names;
   col_names.add("Power");
   set_col_names(col_names);
+
   return s;
 }
 
