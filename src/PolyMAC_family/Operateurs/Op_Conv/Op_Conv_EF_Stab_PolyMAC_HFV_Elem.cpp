@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -55,7 +55,7 @@ Entree& Op_Conv_Centre_PolyMAC_HFV_Elem::readOn(Entree& is) { return Op_Conv_EF_
 Entree& Op_Conv_EF_Stab_PolyMAC_HFV_Elem::readOn(Entree& is)
 {
   Op_Conv_PolyMAC_CDO_base::readOn(is);
-  if (que_suis_je().debute_par("Op_Conv_EF_Stab")) //on n'est pas dans Op_Conv_Amont/Centre
+  if (que_suis_je().debute_par("Op_Conv_EF_Stab") or que_suis_je().debute_par("Op_Conv_ALE")) //on n'est pas dans Op_Conv_Amont/Centre
     {
       Param param(que_suis_je());
       param.ajouter("alpha", &alpha_);            // XD_ADD_P double parametre ajustant la stabilisation de 0 (schema centre) a 1 (schema amont)
@@ -102,12 +102,17 @@ void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::preparer_calcul()
 
 double Op_Conv_EF_Stab_PolyMAC_HFV_Elem::calculer_dt_stab() const
 {
+  const DoubleTab& vit = vitesse_->valeurs();
+  return calculer_dt_stab_gen(vit);
+}
+
+double Op_Conv_EF_Stab_PolyMAC_HFV_Elem::calculer_dt_stab_gen(const DoubleTab& vit) const
+{
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const DoubleVect& fs = domaine.face_surfaces(), &pf = equation().milieu().porosite_face(),
                     &ve = domaine.volumes(), &pe = equation().milieu().porosite_elem();
-  const DoubleTab& vit = vitesse_->valeurs(),
-                   *alp = sub_type(Pb_Multiphase, equation().probleme()) ?
-                          &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
+  const DoubleTab* alp = sub_type(Pb_Multiphase, equation().probleme()) ?
+                         &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
 
   const IntTab& e_f = domaine.elem_faces(), &f_e = domaine.face_voisins(), &fcl = ref_cast(Champ_Elem_PolyMAC_CDO, equation().inconnue()).fcl();
   const int N = std::min(vit.line_size(), equation().inconnue().valeurs().line_size());
@@ -207,9 +212,15 @@ void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::dimensionner_blocs(matrices_t mats, const
     }
 }
 
+void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
+{
+  const DoubleTab& vit = vitesse_->valeurs();
+  ajouter_blocs_gen(mats, secmem, vit, semi_impl);
+}
+
 // ajoute la contribution de la convection au second membre resu
 // renvoie resu
-void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::ajouter_blocs(matrices_t mats, DoubleTab& secmem, const tabs_t& semi_impl) const
+void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::ajouter_blocs_gen(matrices_t mats, DoubleTab& secmem, const DoubleTab& vit, const tabs_t& semi_impl) const
 {
   const Domaine_Poly_base& domaine = le_dom_poly_.valeur();
   const Champ_Inc_base& cc = le_champ_inco.non_nul() ? le_champ_inco.valeur() : equation().champ_convecte();
@@ -221,8 +232,9 @@ void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::ajouter_blocs(matrices_t mats, DoubleTab&
                  &fcl_v = ref_cast(Champ_Face_base, vitesse_.valeur()).fcl();
 
   const DoubleVect& fs = domaine.face_surfaces(), &pf = equation().milieu().porosite_face();
-  const DoubleTab& vit = vitesse_->valeurs(), &vcc = semi_impl.count(nom_cc) ? semi_impl.at(nom_cc) : cc.valeurs(), bcc = cc.valeur_aux_bords();
+  const DoubleTab& vcc = semi_impl.count(nom_cc) ? semi_impl.at(nom_cc) : cc.valeurs(), bcc = cc.valeur_aux_bords();
   const int N = vcc.line_size(), Mv = vit.line_size();
+  const Conds_lim& cls_v = ref_cast(Champ_Inc_base, vitesse_.valeur()).domaine_Cl_dis().les_conditions_limites();
 
   std::vector<std::tuple<const DoubleTab*, Matrice_Morse*, int>> d_cc; //liste des derivees de cc a renseigner : couples (derivee de cc, matrice, nb de compos de la variable)
 
@@ -237,7 +249,8 @@ void Op_Conv_EF_Stab_PolyMAC_HFV_Elem::ajouter_blocs(matrices_t mats, DoubleTab&
   for (int f = 0; f < domaine.nb_faces(); f++)
     {
       // Verification de la condition pour traiter cette face
-      if (fcl(f, 0) == 0 || (fcl(f, 0) > 4 && fcl(f, 0) < 7))
+      const bool traiter_face = (fcl(f, 0) == 0 || (fcl(f, 0) > 4 && fcl(f, 0) < 7)) && (cls_v[fcl_v(f, 1)]->que_suis_je() != "Frontiere_ouverte_vitesse_imposee_ALE");
+      if (traiter_face)
         {
           dv_flux = 0.;
           dc_flux = 0.;

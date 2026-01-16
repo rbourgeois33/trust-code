@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -125,11 +125,11 @@ void Op_Diff_PolyMAC_MPFA_base::update_nu() const
 
 void Op_Diff_PolyMAC_MPFA_base::update_phif(int full_stencil) const
 {
-  if (!full_stencil && phif_a_jour_)
+  const Domaine_PolyMAC_MPFA& domaine = ref_cast(Domaine_PolyMAC_MPFA, le_dom_poly_.valeur());
+  if (!domaine.domaine().mesh_update_required() && !full_stencil && phif_a_jour_)
     return; //deja fait, sauf si on demande tout le stencil
   const Champ_Inc_base& ch = equation().inconnue();
   const IntTab& fcl = sub_type(Champ_Face_PolyMAC_MPFA, ch) ? ref_cast(Champ_Face_PolyMAC_MPFA, ch).fcl() : ref_cast(Champ_Elem_PolyMAC_MPFA, ch).fcl();
-  const Domaine_PolyMAC_MPFA& domaine = ref_cast(Domaine_PolyMAC_MPFA, le_dom_poly_.valeur());
   domaine.fgrad(ch.valeurs().line_size(), 0, la_zcl_poly_->les_conditions_limites(), fcl, &nu(), &som_ext, sub_type(Champ_Face_PolyMAC_MPFA, ch), full_stencil, phif_d, phif_e, phif_c);
   phif_a_jour_ = 1;
 }
