@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -74,6 +74,17 @@ double Probleme_Couple::computeTimeStep(bool& stop) const
 
 bool Probleme_Couple::solveTimeStep()
 {
+  // Trigger domain-specific time step logic at most once per distinct domain,
+  // even if several problems share it.
+  std::set<const Domaine*> processed_domains;
+  for (int i = 0; i < nb_problemes(); i++)
+    {
+      Probleme_base& pb = ref_cast(Probleme_base, probleme(i));
+      Domaine& dom = pb.domaine();
+      if (processed_domains.insert(&dom).second)
+        dom.mettre_a_jour(schema_temps().temps_courant(), pb.domaine_dis(), pb);
+    }
+
   // WEC : A changer !!!!
   if (sch_clones.size())
     if (sub_type(Schema_Euler_Implicite,schema_temps()))
