@@ -109,8 +109,6 @@ public:
   inline const DoubleTab_t& coord_sommets() const { return sommets_; }
   inline DoubleTab_t& les_sommets()  { return sommets_; }
   inline const DoubleTab_t& les_sommets() const  { return sommets_; }
-  inline void saveSommetsCoordinates() { sommets_n=sommets_; }
-  inline void resetSommetsCoordinates() {sommets_=sommets_n; }
   DoubleTab getBoundingBox() const;
   void ajouter(const DoubleTab_t& soms);
   void ajouter(const DoubleTab_t& soms, IntVect_t& nums);
