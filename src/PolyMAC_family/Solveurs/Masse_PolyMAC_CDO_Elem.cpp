@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -94,8 +94,13 @@ void Masse_PolyMAC_CDO_Elem::dimensionner(Matrice_Morse& matrix) const
   Matrix_tools::allocate_morse_matrix(N * (ne_tot + !only_ne * nf_tot), N * (ne_tot + !only_ne * nf_tot), indice, matrix);
 }
 
-DoubleTab& Masse_PolyMAC_CDO_Elem::ajouter_masse(double dt, DoubleTab& secmem, const DoubleTab& inco, int penalisation) const
+DoubleTab& Masse_PolyMAC_CDO_Elem::ajouter_masse(double dt, DoubleTab& secmem, const DoubleTab& inco, int penalisation, bool use_old_volumes) const
 {
+  if (use_old_volumes)
+    {
+      Cerr << "Masse_PolyMAC_CDO_Elem::ajouter_masse : use_old_volumes is not supported." << finl;
+      Process::exit();
+    }
   const Domaine_PolyMAC_CDO& domaine = le_dom_PolyMAC_CDO.valeur();
   const Champ_Elem_PolyMAC_CDO& ch = ref_cast(Champ_Elem_PolyMAC_CDO, equation().inconnue());
   const Conds_lim& cls = le_dom_Cl_PolyMAC_CDO->les_conditions_limites();

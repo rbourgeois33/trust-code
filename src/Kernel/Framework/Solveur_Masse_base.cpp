@@ -189,7 +189,7 @@ Matrice_Base& Solveur_Masse_base::ajouter_masse(double dt, Matrice_Base& matrice
 }
 
 // Add M*y/dt to x
-DoubleTab& Solveur_Masse_base::ajouter_masse(double dt, DoubleTab& tab_x, const DoubleTab& tab_y, int penalisation_flag) const
+DoubleTab& Solveur_Masse_base::ajouter_masse(double dt, DoubleTab& tab_x, const DoubleTab& tab_y, int penalisation_flag, bool use_old_volumes) const
 {
   if (has_interface_blocs())
     {
@@ -199,7 +199,17 @@ DoubleTab& Solveur_Masse_base::ajouter_masse(double dt, DoubleTab& tab_x, const 
       return tab_x;
     }
 
-  int sz=tab_y.size();
+  // Optional ALE RHS pre-scaling: y_scaled = (V_old/V_new) ⊙ y
+  const DoubleTab* py = &tab_y;
+  DoubleTrav y_scaled;
+  if (use_old_volumes)
+    {
+      y_scaled = tab_y;
+      equation().domaine_dis().domaine().apply_old_to_new_volume_scaling(y_scaled, equation().domaine_dis());
+      py = &y_scaled;
+    }
+
+  int sz = py->size();
   DoubleTrav tab_diag;
   tab_diag.copy(equation().inconnue().valeurs(), RESIZE_OPTIONS::NOCOPY_NOINIT);
   tab_diag=1.;
@@ -214,7 +224,7 @@ DoubleTab& Solveur_Masse_base::ajouter_masse(double dt, DoubleTab& tab_x, const 
 
   double penalisation = penalisation_;
   CDoubleArrView diag = static_cast<const ArrOfDouble&>(tab_diag).view_ro();
-  CDoubleArrView y = static_cast<const ArrOfDouble&>(tab_y).view_ro();
+  CDoubleArrView y = static_cast<const ArrOfDouble&>(*py).view_ro();
   DoubleArrView x = static_cast<ArrOfDouble&>(tab_x).view_rw();
   Kokkos::parallel_for(start_gpu_timer(__KERNEL_NAME__), sz, KOKKOS_LAMBDA(const int i)
   {

@@ -701,51 +701,39 @@ DoubleTab& Navier_Stokes_std::corriger_derivee_impl(DoubleTab& derivee)
   DoubleTrav secmemP(tab_pression);
   DoubleTrav deriveeALE(derivee);
 
-  double timestep=probleme().schema_temps().pas_de_temps();
   const bool is_ALE = probleme().domaine().deformable();
 
-  // can be used for methods like ALE
-  renewing_jacobians( derivee );
+  if (div_u_nul_et_non_dsurdt_divu_ && is_ALE) Process::exit();
 
+  const double dt = schema_temps().pas_de_temps();
   if (div_u_nul_et_non_dsurdt_divu_)
     {
       // on veut div u =0 et non d/dt (div u)=0 pour eviter de cumuler les erreurs
       // cela ne marche qu'avec les schema type euler_explicite
       DoubleTab derivee2(derivee);
-      const double dt=schema_temps().pas_de_temps();
       derivee2*=dt;
       derivee2+=la_vitesse->passe();
       derivee2/=dt;
-      if(!is_ALE)
-        {
-          divergence.calculer(derivee2, secmemP); // Div(M-1(F - BtP))
-        }
+      divergence.calculer(derivee2, secmemP); // Div(M-1(F - BtP))
+    }
+  else if (is_ALE)
+    {
+      DoubleTab derivee2(derivee);
+      probleme().domaine().ajouter_correctif_volumique(la_vitesse->valeurs(), derivee, dt, derivee2);
+      divergence.calculer(derivee2, secmemP);
     }
   else
-    {
-      if(!is_ALE)
-        {
-          divergence.calculer(derivee, secmemP); // Div(M-1(F - BtP))
-        }
-    }
+    divergence.calculer(derivee, secmemP); // Div(M-1(F - BtP))
 
-  if(!is_ALE) //No ALE method
-    {
-      secmemP *= -1; // car div =-B
-      // Correction du second membre d'apres les conditions aux limites :
-      assembleur_pression_->modifier_secmem(secmemP);
-    }
+  secmemP *= -1; // car div =-B
+  // Correction du second membre d'apres les conditions aux limites :
+  assembleur_pression_->modifier_secmem(secmemP);
 
   // Set print of the linear system solve according to dt_impr:
   solveur_pression_->fixer_schema_temps_limpr(schema_temps().limpr());
 
   if (assembleur_pression_->get_resoudre_increment_pression())
     {
-      if( is_ALE )
-        {
-          // we don't want to have domaine_ale object here
-          div_ale_derivative( deriveeALE, timestep, derivee, secmemP );
-        }
       // Solve B M-1 Bt Cp = M-1(F - BtP)
       DoubleTrav Cp(tab_pression);
       solveur_pression_.resoudre_systeme(matrice_pression_.valeur(), secmemP, Cp);
@@ -1944,17 +1932,6 @@ const Champ_Inc_base& Navier_Stokes_std::rho_la_vitesse() const
   exit();
   throw;
 }
-
-void Navier_Stokes_std::renewing_jacobians( DoubleTab& derivee )
-{
-  // nothing to do
-}
-
-void Navier_Stokes_std::div_ale_derivative( DoubleTrav& deriveeALE, double timestep, DoubleTab& derivee, DoubleTrav& secmemP )
-{
-  // nothing to do
-}
-
 
 void Navier_Stokes_std::update_y_plus(const DoubleTab& tab)
 {

@@ -890,7 +890,8 @@ void Schema_Temps_base::ajouter_inertie(Matrice_Base& mat_morse,DoubleTab& secme
   // dirichlet , symetrie
   int pen=0;
   eqn.solv_masse().ajouter_masse(dt,mat_morse,pen); //ordre important pour PolyMAC_MPFA
-  eqn.solv_masse().ajouter_masse(dt,secmem,eqn.inconnue().passe(),pen);
+  const bool use_old_volumes = eqn.domaine_dis().domaine().deformable();
+  eqn.solv_masse().ajouter_masse(dt, secmem, eqn.inconnue().passe(), pen, use_old_volumes);
 }
 
 void Schema_Temps_base::ajouter_blocs(matrices_t matrices, DoubleTab& secmem, const Equation_base& eqn, const tabs_t& semi_impl) const

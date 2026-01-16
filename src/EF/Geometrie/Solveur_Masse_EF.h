@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -33,7 +33,7 @@ public:
   void associer_domaine_cl_dis_base(const Domaine_Cl_dis_base& ) override;
 
   Matrice_Base& ajouter_masse(double dt, Matrice_Base& matrice, int penalisation=1) const override;
-  DoubleTab& ajouter_masse(double dt, DoubleTab& x, const DoubleTab& y, int penalisation=1) const override;
+  DoubleTab& ajouter_masse(double dt, DoubleTab& x, const DoubleTab& y, int penalisation=1, bool use_old_volumes=false) const override;
 
   DoubleTab& appliquer_impl(DoubleTab& ) const override;
 
