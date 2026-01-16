@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -52,7 +52,7 @@ int  Assembleur_P_PolyMAC_P0::assembler_mat(Matrice& la_matrice,const DoubleVect
 
   const Domaine_PolyMAC_P0& domaine = ref_cast(Domaine_PolyMAC_P0, le_dom_PolyMAC.valeur());
   const Op_Grad_PolyMAC_P0_Face& grad = ref_cast(Op_Grad_PolyMAC_P0_Face, ref_cast(Navier_Stokes_std, equation()).operateur_gradient().valeur());
-  grad.update_grad();
+  grad.update_grad(domaine.domaine().deformable());
   const DoubleTab& fgrad_c = grad.fgrad_c;
   const IntTab& f_e = domaine.face_voisins(), &fgrad_d = grad.fgrad_d, &fgrad_e = grad.fgrad_e;
   const DoubleVect& pf = equation().milieu().porosite_face(), &fs = domaine.face_surfaces();

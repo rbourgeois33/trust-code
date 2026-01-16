@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -128,7 +128,7 @@ void Op_Diff_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs
   domaine.creer_tableau_faces(tpfa);
 
   /* stencils du flux : ceux (reduits) de update_nu si nu constant ou scalaire, ceux (complets) du domaine sinon */
-  update_phif(!nu_constant_); //si nu variable, stencil complet
+  update_phif(!nu_constant_ or equation().domaine_dis().domaine().deformable()); //si nu variable, stencil complet
 
   Cerr << "Op_Diff_PolyMAC_P0_Face::dimensionner() : ";
 
@@ -254,7 +254,7 @@ void Op_Diff_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secm
 
   const int N = inco.line_size(), D = dimension, ne_tot = domaine.nb_elem_tot(), nf_tot = domaine.nb_faces_tot();
 
-  update_phif();
+  update_phif(equation().domaine_dis().domaine().deformable());
 
   DoubleTrav coeff(N), fac(N);
 

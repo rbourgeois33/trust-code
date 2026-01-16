@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -178,7 +178,7 @@ void Op_Diff_PolyMAC_P0_Elem::init_op_ext() const
 void Op_Diff_PolyMAC_P0_Elem::dimensionner_blocs(matrices_t matrices, const tabs_t& semi_impl) const
 {
   init_op_ext();
-  update_phif(!nu_constant_); //calcul de (nf.nu.grad T) : si nu variable, stencil complet
+  update_phif(!nu_constant_ or equation().domaine_dis().domaine().deformable()); //calcul de (nf.nu.grad T) : si nu variable, stencil complet
 
   const std::string nom_inco = equation().inconnue().le_nom().getString();
   if (semi_impl.count(nom_inco))
@@ -272,8 +272,7 @@ void Op_Diff_PolyMAC_P0_Elem::ajouter_blocs(matrices_t matrices, DoubleTab& secm
   Process::exit();
 #else
   init_op_ext();
-  update_phif();
-
+  update_phif(equation().domaine_dis().domaine().deformable());
   if (is_pb_coupl_ || has_flux_par_)
     {
       couplage_parietal_helper_.ajouter_blocs(matrices, secmem, semi_impl);

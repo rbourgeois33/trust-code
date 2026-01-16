@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -62,7 +62,7 @@ void Op_Grad_PolyMAC_P0_Face::update_grad(int full_stencil) const
                    *alp = sub_type(Pb_Multiphase, equation().probleme()) ? &ref_cast(Pb_Multiphase, equation().probleme()).equation_masse().inconnue().passe() : nullptr;
   const int M = press.line_size();
   double t_past = equation().inconnue().recuperer_temps_passe();
-  if (!full_stencil && (alp ? (last_gradp_ >= t_past) : (last_gradp_ != -DBL_MAX)))
+  if (!domaine.domaine().mesh_update_required() && !full_stencil && (alp ? (last_gradp_ >= t_past) : (last_gradp_ != -DBL_MAX)))
     return; //deja calcule a ce temps -> rien a faire
 
   /* gradient */
@@ -80,7 +80,7 @@ void Op_Grad_PolyMAC_P0_Face::dimensionner_blocs(matrices_t matrices, const tabs
   const int ne_tot = domaine.nb_elem_tot(), nf_tot = domaine.nb_faces_tot(), D = dimension, N = ch.valeurs().line_size(),
             M = (le_champ_inco.non_nul() ? le_champ_inco->valeurs() : ref_cast(Navier_Stokes_std, equation()).pression().valeurs()).line_size();
 
-  update_grad(sub_type(Pb_Multiphase, equation().probleme())); //provoque le calcul du gradient
+  update_grad(domaine.domaine().deformable() || sub_type(Pb_Multiphase, equation().probleme())); //provoque le calcul du gradient
 
   IntTab sten_p(0, 2), sten_v(0, 2); //stencils (NS, pression), (NS, vitesse)
 
@@ -226,7 +226,7 @@ void Op_Grad_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secm
 
   const int ne_tot = domaine.nb_elem_tot(), nf_tot = domaine.nb_faces_tot(), D = dimension, N = secmem.line_size(), M = press.line_size();
 
-  update_grad();
+  update_grad(domaine.domaine().deformable());
 
   const std::string& nom_inc = ch.le_nom().getString();
   Matrice_Morse *mat_p = !semi_impl.count("pression") && matrices.count("pression") ? matrices.at("pression") : nullptr, *mat_v =

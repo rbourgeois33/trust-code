@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -52,6 +52,8 @@ public :
   double alpha_ = 1.0; //alpha = 0 -> centre, alpha = 1 -> amont
 
 protected :
+  void ajouter_blocs_gen(matrices_t mats, DoubleTab& secmem, const DoubleTab& vit, const tabs_t& semi_impl) const;
+  double calculer_dt_stab_gen(const DoubleTab& vit) const;
   /* si operateur de convection de Masse_Multiphase */
   std::vector<OWN_PTR(Champ_Inc_base)> cc_phases_; //flux massiques (kg/m2/s)
   Motcles noms_cc_phases_; //leurs noms

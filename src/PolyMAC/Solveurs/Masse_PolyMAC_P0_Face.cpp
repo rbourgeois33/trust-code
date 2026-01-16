@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -117,6 +117,7 @@ void Masse_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
   DoubleTrav masse(N, N), masse_e(N, N); //masse alpha * rho, contribution
   for (f = 0; f < domaine.nb_faces(); f++) //faces reelles
     {
+      const double fac_ale = domaine.domaine().deformable() ? domaine.domaine().old_volumes_entrelaces()(f) / vf(f) : 1.0;
       if (!pbm || fcl(f, 0) >= 2)
         for (masse = 0, n = 0; n < N; n++) masse(n, n) = coeff_t ? (*coeff_t)[f] : 1.0; //pas Pb_Multiphase ou CL -> pas de alpha * rho
       else for (masse = 0, i = 0; i < 2 && (e = f_e(f, i)) >= 0; i++)
@@ -131,7 +132,7 @@ void Masse_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
           double fac = pf(f) * vf(f) / dt;
           for (m = 0; m < N; m++) secmem(f, n) -= fac * resoudre_en_increments * masse(n, m) * inco(f, m);
           if (fcl(f, 0) < 2)
-            for (m = 0; m < N; m++) secmem(f, n) += fac * masse(n, m) * passe(f, m);
+            for (m = 0; m < N; m++) secmem(f, n) += fac * masse(n, m) * fac_ale * passe(f, m);
           else if (fcl(f, 0) == 3)
             for (d = 0; d < D; d++)
               secmem(f, n) += fac * masse(n, n) * ref_cast(Dirichlet, cls[fcl(f, 1)].valeur()).val_imp(fcl(f, 2), N * d + n) * nf(f, d) / fs(f);
@@ -143,6 +144,7 @@ void Masse_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
 
   for (e = 0, i = nf_tot; e < domaine.nb_elem_tot(); e++) //tous les elems (pour Op_Grad_PolyMAC_P0_Face)
     {
+      const double fac_ale = domaine.domaine().deformable() ? domaine.domaine().old_volumes()(e) / ve(e) : 1.0;
       for (masse = 0, n = 0; n < N; n++) masse(n, n) = a_r ? (*a_r)(e, n) : 1; //partie diagonale
       if (corr) corr->ajouter(&(*alpha)(e, 0), &(*rho)(!cR * e, 0), masse); //partie masse ajoutee
       for (d = 0; d < D; d++, i++)
@@ -152,7 +154,7 @@ void Masse_PolyMAC_P0_Face::ajouter_blocs(matrices_t matrices, DoubleTab& secmem
             for (m = 0; m < N; m++)
               {
                 double ma = a_r ? masse(n, m) : (coeff_t ? (*coeff_t)[(i - nf_tot)/dimension] : 1.0);
-                secmem(i, n) -= fac * ma * (resoudre_en_increments * inco(i, m) - passe(i, m));
+                secmem(i, n) -= fac * ma * (resoudre_en_increments * inco(i, m) - fac_ale * passe(i, m));
               }
             if (mat)
               for (m = 0; m < N; m++)
