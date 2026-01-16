@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -128,6 +128,7 @@ void Probleme_base_interface_proto::validateTimeStep_impl(Probleme_base& pb)
 
   Debog::set_nom_pb_actuel(pb.le_nom());
   pb.schema_temps().validateTimeStep();
+  pb.domaine().validateTimeStep();
   pb.allocation();
 
   dt_defined = false;
