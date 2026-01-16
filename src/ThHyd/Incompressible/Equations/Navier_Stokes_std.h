@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -155,8 +155,6 @@ public :
   virtual const Champ_Inc_base& rho_la_vitesse() const;
   inline Operateur_Conv& get_terme_convectif() { return terme_convectif; }
 
-  virtual void renewing_jacobians( DoubleTab& derivee );
-  virtual void div_ale_derivative( DoubleTrav& derivee_ale, double timestep, DoubleTab& derivee, DoubleTrav& secmemP );
   virtual void updateFluidForce(DoubleTab&) {}
   // Retrieve true if implicit coupling with another code
   // required to perform filtering of pressure Champ_P1_isoP1Bull during sub-iterations of the implicit loop

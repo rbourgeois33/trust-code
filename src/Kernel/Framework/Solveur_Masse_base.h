@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2025, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -51,7 +51,7 @@ public :
   virtual void assembler();
 
   virtual Matrice_Base& ajouter_masse(double dt, Matrice_Base& matrice, int penalisation=1) const;
-  virtual DoubleTab& ajouter_masse(double dt, DoubleTab& x, const DoubleTab& y, int penalisation=1) const;
+  virtual DoubleTab& ajouter_masse(double dt, DoubleTab& x, const DoubleTab& y, int penalisation=1, bool use_old_volumes=false) const;
   virtual Matrice_Base& ajouter_masse_dt_local(DoubleVect& dt_locaux, Matrice_Base& matrice, int penalisation=1) const;
   virtual DoubleTab& ajouter_masse_dt_local(DoubleVect& dt_locaux, DoubleTab& x, const DoubleTab& y, int penalisation=1) const;
   virtual void get_masse_dt_local(DoubleVect& m_dt_locaux, DoubleVect& dt_locaux, int penalisation=1);
