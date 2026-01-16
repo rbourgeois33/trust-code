@@ -119,15 +119,14 @@ int Milieu_Elasticite::initialiser(const double temps)
 
 bool Milieu_Elasticite::initTimeStep(double dt)
 {
-  if (eq_.est_nul()) return true; //pas d'equation associee -> ???
+  if (eq_.est_nul()) throw;
   const Schema_Temps_base& sch = eq_->schema_temps(); //on recupere le schema en temps par la 1ere equation
 
-  if (ch_rho_lag_.non_nul())
-    for (int i = 1; i <= sch.nb_valeurs_futures(); i++)
-      {
-        ch_rho_lag_->changer_temps_futur(sch.temps_futur(i), i);
-        ch_rho_lag_->futur(i) = ch_rho_lag_->valeurs();
-      }
+  for (int i = 1; i <= sch.nb_valeurs_futures(); i++)
+    {
+      ch_rho_lag_->changer_temps_futur(sch.temps_futur(i), i);
+      ch_rho_lag_->futur(i) = ch_rho_lag_->valeurs();
+    }
   return true;
 }
 
