@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -60,6 +60,8 @@ public:
   virtual void update_after_post(double temps) {}
   virtual bool getUpdateTheGrid() {return true;}
   virtual void setUpdateTheGrid(bool) {}
+  int mesh_update_required() const { return mesh_update_required_; }
+  virtual void validateTimeStep() { }
 
   //
   // Printing/export stuff
@@ -73,7 +75,6 @@ public:
   inline int  moments_a_imprimer() const  {  return moments_a_imprimer_;  }
   inline int& moments_a_imprimer() {  return moments_a_imprimer_;  }
 
-
   //
   // Various
   //
@@ -83,6 +84,10 @@ public:
   inline bool& deformable() {   return deformable_;  }
   inline void set_fichier_lu(Nom& nom)  {    fichier_lu_=nom;   }
   inline const Nom& get_fichier_lu() const  {   return fichier_lu_;  }
+  virtual const DoubleVect& old_volumes_entrelaces() const { throw; }
+  virtual const DoubleVect& old_volumes() const { throw; }
+  virtual void apply_old_to_new_volume_scaling(DoubleTab& tab, const Domaine_dis_base& dvf) const { }
+  virtual void ajouter_correctif_volumique(const DoubleTab&, const DoubleTab&, double, DoubleTab& ) const {}
 
 protected:
   /// Domaine name
@@ -100,6 +105,7 @@ protected:
 
   /// Volume total du domaine (somme sur tous les processeurs)
   double volume_total_;
+  bool mesh_update_required_ = false;
 };
 
 
