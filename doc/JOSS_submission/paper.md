@@ -44,6 +44,12 @@ bibliography: paper.bib
 
 # TRUST: An Open Source Thermohydraulic Platform from CEA
 
+
+## 0. Size
+
+- Paragraph 1 and 2 = 1 page
+- Another page for the rest, small parts: 3 and 5, more room for 4 
+  
 ## 1. Introduction & Historical Background
 
 **TRUST** is an open-source numerical platform developed at the **French Alternative Energies and Atomic Energy Commission (CEA)**.  
@@ -53,56 +59,32 @@ The project was opened to the community to foster collaboration between research
 
 ---
 
-## 2. Objectives & Philosophy
+## 2. Physical and numerical capabilities
 
-The guiding principles behind TRUST are:
+- Conduction 
+- Navier-Stokes incompressible -> DNS / QC / WC
+- Multiphase && PolyMAC
+- Coupling
 
-- **Generality:** support for a wide range of flow regimes, from incompressible to compressible, single-phase to multiphase.
-- **Modularity:** new physics, discretization methods, and numerical schemes can be plugged in without rewriting the entire code.
-- **Performance:** scalable execution on HPC architectures through MPI and, more recently, GPU acceleration.
-- **Openness:** released under a BSD license, making it accessible for academic, industrial, and collaborative projects.
-- **Validation:** a large set of benchmarks and reference cases ensure physical fidelity and numerical robustness.
+## 3. Code structure 
 
----
+- C++ OO
+- Modularity
+- CI
+- Solvers : Petsc, ...
+- IO : cgns
+  
+## 4. HPC capabilities
 
-## 3. Main Features & Physics Capabilities
+- MPI
+- Kokkos / GPU
+- PDI
+- Scalling and big runs
 
-### 3.1 Flow Regimes
-- **Incompressible flows:** robust solvers for low-Mach flows, suitable for hydrodynamic studies where density is nearly constant.
-- **Compressible flows:** capabilities extended to handle moderate to high Mach numbers, enabling aerodynamics and shock-related applications.
-- **Multiphase flows:** models for interfacial flows, stratified regimes, and phase change phenomena, with ongoing developments for nuclear safety studies.
+## 5. Derived applications
 
-### 3.2 Thermohydraulics & Heat Transfer
-- Conjugate heat transfer between fluids and solids.
-- Energy equations with various source terms (radiation, conduction, convection).
-- Interfaces to external thermodynamic property libraries such as **CoolProp** or internal CEA databases.
-
-### 3.3 Numerical Methods
-- Support for several discretization families:
-  - Finite Volume methods on structured or unstructured meshes.
-  - Finite Element formulations for more complex geometries.
-  - Hybrid discretizations and discontinuous Galerkin in development.
-- Linear and nonlinear solvers with preconditioning strategies tailored for CFD applications.
-- Temporal discretization: implicit and semi-implicit time advancement schemes.
-
-### 3.4 Boundary Conditions & Source Terms
-- Wide variety of boundary conditions: inflow/outflow, periodic, wall functions, thermal boundaries.
-- Source terms representing pumps, resistances, porous media, or physical models relevant for reactor systems.
-
----
-
-## Notion of BALTIK
-
-**TRUST** is used as the base code of several other CEA codes. You can build your code on TRUST, taking advantage of the data structure and HPC framework.  
-
-## 5. Example Applications
-
-TRUST has been applied in a variety of contexts:
-
-- **Nuclear thermal-hydraulics:** safety studies of pressurized water reactors, cooling system modeling, decay heat removal.
-- **General CFD problems:** turbulent flow simulations in pipes, channels, and industrial geometries.
-- **Multiphysics coupling:** combining TRUST with external codes for structural mechanics, neutronics, or chemical kinetics.
-- **Research & teaching:** a platform for testing new turbulence models, studying discretization effects, or training students in HPC CFD.
+- Idea 
+- Pub for TrioCFD
 
 # Citations
 
