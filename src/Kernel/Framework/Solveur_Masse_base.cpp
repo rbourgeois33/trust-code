@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -17,6 +17,7 @@
 #include <TRUSTTab_parts.h>
 #include <Equation_base.h>
 #include <Matrice_Morse.h>
+#include <Champ_Uniforme.h>
 #include <TRUSTTrav.h>
 #include <Debog.h>
 #include <Device.h>
@@ -95,7 +96,12 @@ DoubleTab& Solveur_Masse_base::appliquer(DoubleTab& x) const
       ref_coeff = equation().get_champ(name_of_coefficient_temporel_);
 
       DoubleTab values;
-      if (sub_type(Champ_Inc_base,ref_coeff.valeur()))
+      if (sub_type(Champ_Uniforme,ref_coeff.valeur()))
+        {
+          const Champ_Uniforme& coeff = ref_cast(Champ_Uniforme,ref_coeff.valeur());
+          values = coeff.valeurs();
+        }
+      else if (sub_type(Champ_Inc_base,ref_coeff.valeur()))
         {
           const Champ_Inc_base& coeff = ref_cast(Champ_Inc_base,ref_coeff.valeur());
           values.ref(coeff.valeurs());
