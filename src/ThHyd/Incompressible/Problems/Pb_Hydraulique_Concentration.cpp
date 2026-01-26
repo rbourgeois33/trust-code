@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -56,7 +56,7 @@ Entree& Pb_Hydraulique_Concentration::readOn(Entree& is)
  */
 int Pb_Hydraulique_Concentration::nombre_d_equations() const
 {
-  return 2;
+  return 2 + eq_opt_.size();
 }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_std si i=0 Renvoie l'equation de convection-diffusion de type
@@ -70,15 +70,15 @@ int Pb_Hydraulique_Concentration::nombre_d_equations() const
  */
 const Equation_base& Pb_Hydraulique_Concentration::equation(int i) const
 {
-  if ( !( i==0 || i==1 ) )
+  if (i == 0) return eq_hydraulique;
+  else if (i == 1) return eq_concentration;
+  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
+  else
     {
-      Cerr << "\nError in Pb_Hydraulique_Concentration::equation() : Wrong number of equation !" << finl;
+      Cerr << "Pb_Hydraulique_Concentration::equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
-  if (i == 0)
-    return eq_hydraulique;
-  else
-    return eq_concentration;
+  return eq_hydraulique;
 }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_std si i=0 Renvoie l'equation de convection-diffusion de type
@@ -91,15 +91,15 @@ const Equation_base& Pb_Hydraulique_Concentration::equation(int i) const
  */
 Equation_base& Pb_Hydraulique_Concentration::equation(int i)
 {
-  if ( !( i==0 || i==1 ) )
+  if (i == 0) return eq_hydraulique;
+  else if (i == 1) return eq_concentration;
+  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
+  else
     {
-      Cerr << "\nError in Pb_Hydraulique_Concentration::equation() : Wrong number of equation !" << finl;
+      Cerr << "Pb_Hydraulique_Concentration::equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
-  if (i == 0)
-    return eq_hydraulique;
-  else
-    return eq_concentration;
+  return eq_hydraulique;
 }
 
 
