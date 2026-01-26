@@ -1,6 +1,14 @@
 --------------------------------------------------------------------------------------------------
 Release notes version 1.9.8_beta : Enhancements, modifications and corrected bugs since version 1.9.7 :
 --------------------------------------------------------------------------------------------------
+07/01/26 (TRUST) New feature  : New mechanics module (Meca) integrated, including linear elasticity (Hooke's law), a Newmark solver for elastodynamics, and thermo-elastic source terms.
+07/01/26 (TRUST) New feature  : Enable bidim_axi support in EF and PolyMAC_MPFA.
+07/01/26 (TRUST) New feature  : DP_impose & regular pressure drops: time-dependent driving, regul option, and save/restore; dp_regul parameter renamed from eps to alpha.
+07/01/26 (TRUST) New feature  : New source term Echange_Thermique_Volumique: implicit heat conduction between two domains in VDF/Poly*
+07/01/26 (TRUST) New feature  : New Champ_Morceaux (piecewise fields on sub-domains) and improvements to Champ_Fonc_Tabule_Morceaux (can use post-processed fields).
+07/01/26 (TRUST) Fix          : Postprocessing on deformable/ALE domains: fix weighted_sum/average (face control volumes) and optimize volume_maille.
+07/01/26 (Tools) Fix          : Improve macOS/darwin builds (PDI, darwin_g++).
+07/01/26 (TRUST) Change       : Decouper_multi now splits domains following the order specified in the input file.
 26/01/26 (TRUST) Change       : Rename PolyMAC discretisation family: PolyMAC-->PolyMAC_CDO ; PolyMAC_P0-->PolyMAC_MPFA ; PolyMAC_P0P1NC-->PolyMAC_HFV ; Option_PolyMAC-->Option_PolyMAC_family ; is_polymac_family-->is_poly_family. Old names are can still be used in .data files, but will be depreciated after TRUST 1.9.9
 16/01/26 (TRUST) Performance  : 3D VEF convective schemes muscl/upwind/muscl3/centre are computed faster (between 20-50%) on CPU and GPU
 16/01/26 (TRUST) Fix          : Possible rtol 0 with high initial residual for PETSc solvers created KSP_DIVERGENCE
