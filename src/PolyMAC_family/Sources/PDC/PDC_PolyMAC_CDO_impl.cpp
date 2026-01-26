@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -38,8 +38,8 @@ int PDC_Anisotrope_PolyMAC_CDO::lire_motcle_non_standard_impl(const Motcle& mot,
 }
 
 void PDC_Anisotrope_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& u, const DoubleVect& pos, double t, double norme_u,
-                                                      double dh, double nu, double reynolds, double K, double& coeff_ortho,
-                                                      double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
+                                                          double dh, double nu, double reynolds, double K, double& coeff_ortho,
+                                                          double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
 {
   // Calcul de lambda
   lambda.setVar(0, reynolds);
@@ -104,8 +104,8 @@ int PDC_Circulaire_PolyMAC_CDO::lire_motcle_non_standard_impl(const Motcle& mot,
 }
 
 void PDC_Circulaire_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& u, const DoubleVect& pos, double t,
-                                                      double norme_u, double dh, double nu, double reynolds, double K, double& coeff_ortho,
-                                                      double& coeff_long, double& u_l, DoubleVect& av_valeur, Parser_U& lambda) const
+                                                          double norme_u, double dh, double nu, double reynolds, double K, double& coeff_ortho,
+                                                          double& coeff_long, double& u_l, DoubleVect& av_valeur, Parser_U& lambda) const
 {
   // calcul de dh_ortho
   double dh_ortho = diam_hydr_ortho->valeur_a_compo(pos, 0);
@@ -170,8 +170,8 @@ void PDC_Circulaire_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& u, c
 }
 
 void PDC_Directionnelle_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& u, const DoubleVect& pos, double t, double norme_u,
-                                                          double dh, double nu, double reynolds, double K, double& coeff_ortho,
-                                                          double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
+                                                              double dh, double nu, double reynolds, double K, double& coeff_ortho,
+                                                              double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
 {
   // Calcul de lambda
   lambda.setVar(0, reynolds);
@@ -204,8 +204,8 @@ void PDC_Directionnelle_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& 
 }
 
 void PDC_Isotrope_PolyMAC_CDO::coeffs_perte_charge_impl(const DoubleVect& u, const DoubleVect& pos, double t, double norme_u,
-                                                    double dh, double nu, double reynolds, double K, double& coeff_ortho,
-                                                    double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
+                                                        double dh, double nu, double reynolds, double K, double& coeff_ortho,
+                                                        double& coeff_long, double& u_l, DoubleVect& v_valeur, Parser_U& lambda) const
 {
   // Calcul de lambda
   lambda.setVar(0, reynolds);
