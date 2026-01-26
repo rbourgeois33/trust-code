@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -48,8 +48,8 @@ int Perte_Charge_Anisotrope_PolyMAC_CDO_Face::lire_motcle_non_standard(const Mot
 }
 
 void Perte_Charge_Anisotrope_PolyMAC_CDO_Face::coeffs_perte_charge(const DoubleVect& u, const DoubleVect& pos, double t, double norme_u,
-                                                               double dh, double nu, double reynolds, double& coeff_ortho,
-                                                               double& coeff_long, double& u_l, DoubleVect& v_valeur) const
+                                                                   double dh, double nu, double reynolds, double& coeff_ortho,
+                                                                   double& coeff_long, double& u_l, DoubleVect& v_valeur) const
 {
   coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, K_, coeff_ortho, coeff_long, u_l, v_valeur, lambda);
 }
@@ -87,8 +87,8 @@ int Perte_Charge_Anisotrope_PolyMAC_HFV_Face::lire_motcle_non_standard(const Mot
 }
 
 void Perte_Charge_Anisotrope_PolyMAC_HFV_Face::coeffs_perte_charge(const DoubleVect& u, const DoubleVect& pos, double t, double norme_u,
-                                                                      double dh, double nu, double reynolds, double& coeff_ortho,
-                                                                      double& coeff_long, double& u_l, DoubleVect& v_valeur) const
+                                                                   double dh, double nu, double reynolds, double& coeff_ortho,
+                                                                   double& coeff_long, double& u_l, DoubleVect& v_valeur) const
 {
   coeffs_perte_charge_impl(u, pos, t, norme_u, dh, nu, reynolds, K_, coeff_ortho, coeff_long, u_l, v_valeur, lambda);
 }
