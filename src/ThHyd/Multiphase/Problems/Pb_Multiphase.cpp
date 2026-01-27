@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -129,9 +129,9 @@ void Pb_Multiphase::typer_lire_milieu(Entree& is)
  *
  * @return (int) le nombre d'equation
  */
-int Pb_Multiphase::nombre_d_equations() const
+int Pb_Multiphase::number_of_core_equations() const
 {
-  return 3 + eq_opt_.size();
+  return 3;
 }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_std si i=0 Renvoie l'equation de la thermique de type
@@ -142,7 +142,7 @@ int Pb_Multiphase::nombre_d_equations() const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-const Equation_base& Pb_Multiphase::equation(int i) const
+const Equation_base& Pb_Multiphase::core_equation(int i) const
 {
   if (i == 0)
     return eq_qdm_;
@@ -150,11 +150,9 @@ const Equation_base& Pb_Multiphase::equation(int i) const
     return eq_masse_;
   else if (i == 2)
     return eq_energie_;
-  else if (i < 3 + eq_opt_.size())
-    return eq_opt_[i - 3].valeur();
   else
     {
-      Cerr << "Pb_Multiphase::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Multiphase::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_qdm_; //pour renvoyer quelque chose
@@ -167,7 +165,7 @@ const Equation_base& Pb_Multiphase::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-Equation_base& Pb_Multiphase::equation(int i)
+Equation_base& Pb_Multiphase::core_equation(int i)
 {
   if (i == 0)
     return eq_qdm_;
@@ -175,11 +173,9 @@ Equation_base& Pb_Multiphase::equation(int i)
     return eq_masse_;
   else if (i == 2)
     return eq_energie_;
-  else if (i < 3 + eq_opt_.size())
-    return eq_opt_[i - 3].valeur();
   else
     {
-      Cerr << "Pb_Multiphase::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Multiphase::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_qdm_; //pour renvoyer quelque chose

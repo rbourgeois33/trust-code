@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -38,31 +38,31 @@ protected:
   inline int nb_equations_multi() const { return list_eq_concentration_.size(); }
 
 public:
-  int nombre_d_equations() const override
+  int number_of_core_equations() const override
   {
-    return (_DERIVED_TYPE_::nombre_d_equations() + nb_equations_multi());
+    return (_DERIVED_TYPE_::number_of_core_equations() + nb_equations_multi());
   }
 
-  const Equation_base& equation(int i) const override
+  const Equation_base& core_equation(int i) const override
   {
-    if (i >= nombre_d_equations())
-      Process::exit("Error in TRUSTProblem_Concentration_Gen<_DERIVED_TYPE_, _EQUATION_TYPE_, _MEDIUM_TYPE_>::equation => wrong equation number !");
+    if (i >= number_of_core_equations())
+      Process::exit("Error in TRUSTProblem_Concentration_Gen<_DERIVED_TYPE_, _EQUATION_TYPE_, _MEDIUM_TYPE_>::equation_base => wrong equation number !");
 
-    const int nb_eq_mere = _DERIVED_TYPE_::nombre_d_equations();
+    const int nb_eq_mere = _DERIVED_TYPE_::number_of_core_equations();
     if (i < nb_eq_mere)
-      return _DERIVED_TYPE_::equation(i);
+      return _DERIVED_TYPE_::core_equation(i);
     else
       return list_eq_concentration_(i - nb_eq_mere);
   }
 
-  Equation_base& equation(int i) override
+  Equation_base& core_equation(int i) override
   {
-    if (i >= nombre_d_equations())
-      Process::exit("Error in TRUSTProblem_Concentration_Gen<_DERIVED_TYPE_, _EQUATION_TYPE_, _MEDIUM_TYPE_>::equation => wrong equation number !");
+    if (i >= number_of_core_equations())
+      Process::exit("Error in TRUSTProblem_Concentration_Gen<_DERIVED_TYPE_, _EQUATION_TYPE_, _MEDIUM_TYPE_>::equation_base => wrong equation number !");
 
-    const int nb_eq_mere = _DERIVED_TYPE_::nombre_d_equations();
+    const int nb_eq_mere = _DERIVED_TYPE_::number_of_core_equations();
     if (i < nb_eq_mere)
-      return _DERIVED_TYPE_::equation(i);
+      return _DERIVED_TYPE_::core_equation(i);
     else
       return list_eq_concentration_(i - nb_eq_mere);
   }

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -41,9 +41,9 @@ class Pb_Thermohydraulique: public Pb_Hydraulique
 
 public:
 
-  int nombre_d_equations() const override { return 2 + eq_opt_.size(); }
-  const Equation_base& equation(int) const override;
-  Equation_base& equation(int) override;
+  int number_of_core_equations() const override { return 2; }
+  const Equation_base& core_equation(int) const override;
+  Equation_base& core_equation(int) override;
   void associer_milieu_base(const Milieu_base&) override;
   int verifier() override;
 

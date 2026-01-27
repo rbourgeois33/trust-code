@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -48,7 +48,7 @@ Entree& Pb_Conduction::readOn(Entree& is )
  *
  * @return (int) le nombre d'equations du probleme
  */
-int Pb_Conduction::nombre_d_equations() const
+int Pb_Conduction::number_of_core_equations() const
 {
   return 1;
 }
@@ -62,7 +62,7 @@ int Pb_Conduction::nombre_d_equations() const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation de type Conduction
  */
-const Equation_base& Pb_Conduction::equation(int i) const
+const Equation_base& Pb_Conduction::core_equation(int i) const
 {
   assert (i==0);
   return eq_conduction;
@@ -76,12 +76,11 @@ const Equation_base& Pb_Conduction::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation de type Conduction
  */
-Equation_base& Pb_Conduction::equation(int i)
+Equation_base& Pb_Conduction::core_equation(int i)
 {
   assert (i==0);
   return eq_conduction;
 }
-
 
 
 

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -28,17 +28,17 @@ Entree& Pb_Thermohydraulique_QC::readOn(Entree& is) { return Probleme_base::read
 /*! @brief Renvoie 2 car il y a 2 equations : Navier_Stokes_QC et Convection_Diffusion_Chaleur_QC
  *
  */
-int Pb_Thermohydraulique_QC::nombre_d_equations() const { return 2; }
+int Pb_Thermohydraulique_QC::number_of_core_equations() const { return 2; }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_QC si i=0 Renvoie l'equation de la thermique de type Convection_Diffusion_Chaleur_QC si i=1
  *
  */
-const Equation_base& Pb_Thermohydraulique_QC::equation(int i) const
+const Equation_base& Pb_Thermohydraulique_QC::core_equation(int i) const
 {
   return equation_impl(i,eq_hydraulique,eq_thermique);
 }
 
-Equation_base& Pb_Thermohydraulique_QC::equation(int i)
+Equation_base& Pb_Thermohydraulique_QC::core_equation(int i)
 {
   return equation_impl(i,eq_hydraulique,eq_thermique);
 }

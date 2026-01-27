@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2023, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -28,7 +28,7 @@ Entree& Pb_Hydraulique_Melange_Binaire_Turbulent_QC::readOn(Entree& is) { return
 /*! @brief Renvoie 2 car il y a 2 equations : Navier_Stokes_Turbulent_QC et Convection_Diffusion_Espece_Binaire_Turbulent_QC
  *
  */
-int Pb_Hydraulique_Melange_Binaire_Turbulent_QC::nombre_d_equations() const
+int Pb_Hydraulique_Melange_Binaire_Turbulent_QC::number_of_core_equations() const
 {
   return 2;
 }
@@ -36,12 +36,12 @@ int Pb_Hydraulique_Melange_Binaire_Turbulent_QC::nombre_d_equations() const
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_Turbulent_QC si i=0 Renvoie l'equation de conv/diff fraction massique de type Convection_Diffusion_Espece_Binaire_Turbulent_QC si i=1
  *
  */
-const Equation_base& Pb_Hydraulique_Melange_Binaire_Turbulent_QC::equation(int i) const
+const Equation_base& Pb_Hydraulique_Melange_Binaire_Turbulent_QC::core_equation(int i) const
 {
   return equation_impl(i, eq_hydraulique, eq_frac_mass);
 }
 
-Equation_base& Pb_Hydraulique_Melange_Binaire_Turbulent_QC::equation(int i)
+Equation_base& Pb_Hydraulique_Melange_Binaire_Turbulent_QC::core_equation(int i)
 {
   return equation_impl(i, eq_hydraulique, eq_frac_mass);
 }

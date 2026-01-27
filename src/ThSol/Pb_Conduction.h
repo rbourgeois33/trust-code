@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -37,9 +37,9 @@ class Pb_Conduction : public Probleme_base
 
 public:
 
-  int nombre_d_equations() const override;
-  const Equation_base& equation(int) const override ;
-  Equation_base& equation(int) override;
+  int number_of_core_equations() const override;
+  const Equation_base& core_equation(int) const override ;
+  Equation_base& core_equation(int) override;
 
 protected:
 
@@ -48,7 +48,6 @@ protected:
 };
 
 #endif
-
 
 
 

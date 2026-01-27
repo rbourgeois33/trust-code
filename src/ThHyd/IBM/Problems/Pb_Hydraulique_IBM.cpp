@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -24,25 +24,23 @@ Implemente_instanciable(Pb_Hydraulique_IBM,"Pb_Hydraulique_IBM",Pb_Fluide_base);
 Sortie& Pb_Hydraulique_IBM::printOn(Sortie& os) const { return Pb_Fluide_base::printOn(os); }
 Entree& Pb_Hydraulique_IBM::readOn(Entree& is) { return Pb_Fluide_base::readOn(is); }
 
-const Equation_base& Pb_Hydraulique_IBM::equation(int i) const
+const Equation_base& Pb_Hydraulique_IBM::core_equation(int i) const
 {
   if (i == 0) return eq_hydraulique_;
-  else if (i < 1 + eq_opt_.size() && i > 0) return eq_opt_[i - 1].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique_IBM::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique_;
 }
 
-Equation_base& Pb_Hydraulique_IBM::equation(int i)
+Equation_base& Pb_Hydraulique_IBM::core_equation(int i)
 {
   if (i == 0) return eq_hydraulique_;
-  else if (i < 1 + eq_opt_.size() && i > 0) return eq_opt_[i - 1].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique_IBM::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique_;

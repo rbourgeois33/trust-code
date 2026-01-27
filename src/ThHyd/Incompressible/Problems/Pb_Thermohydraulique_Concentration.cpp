@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -39,10 +39,10 @@ Entree& Pb_Thermohydraulique_Concentration::readOn(Entree& is) { return Pb_Therm
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-const Equation_base& Pb_Thermohydraulique_Concentration::equation(int i) const
+const Equation_base& Pb_Thermohydraulique_Concentration::core_equation(int i) const
 {
   if (i == 2) return eq_concentration;
-  return Pb_Thermohydraulique::equation(i);
+  return Pb_Thermohydraulique::core_equation(i);
 }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_std si i=0 Renvoie l'equation de la thermique de type
@@ -54,10 +54,10 @@ const Equation_base& Pb_Thermohydraulique_Concentration::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-Equation_base& Pb_Thermohydraulique_Concentration::equation(int i)
+Equation_base& Pb_Thermohydraulique_Concentration::core_equation(int i)
 {
   if (i == 2) return eq_concentration;
-  return Pb_Thermohydraulique::equation(i);
+  return Pb_Thermohydraulique::core_equation(i);
 }
 
 /*! @brief Associe un milieu au probleme, Si le milieu est de type

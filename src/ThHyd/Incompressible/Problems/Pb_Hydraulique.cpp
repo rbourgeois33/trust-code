@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -31,13 +31,12 @@ Entree& Pb_Hydraulique::readOn(Entree& is) { return Pb_Fluide_base::readOn(is); 
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation d'hydraulique de type Navier_Stokes_std
  */
-const Equation_base& Pb_Hydraulique::equation(int i) const
+const Equation_base& Pb_Hydraulique::core_equation(int i) const
 {
   if (i == 0) return eq_hydraulique;
-  else if (i < 1 + eq_opt_.size() && i > 0) return eq_opt_[i - 1].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
@@ -48,13 +47,12 @@ const Equation_base& Pb_Hydraulique::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation d'hydraulique de type Navier_Stokes_std
  */
-Equation_base& Pb_Hydraulique::equation(int i)
+Equation_base& Pb_Hydraulique::core_equation(int i)
 {
   if (i == 0) return eq_hydraulique;
-  else if (i < 1 + eq_opt_.size() && i > 0) return eq_opt_[i - 1].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
@@ -86,4 +84,3 @@ void Pb_Hydraulique::associer_milieu_base(const Milieu_base& mil)
       exit();
     }
 }
-

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -28,17 +28,17 @@ Entree& Pb_Thermohydraulique_WC::readOn(Entree& is) { return Probleme_base::read
 /*! @brief Renvoie 2 car il y a 2 equations : Navier_Stokes_WC et Convection_Diffusion_Chaleur_WC
  *
  */
-int Pb_Thermohydraulique_WC::nombre_d_equations() const { return 2; }
+int Pb_Thermohydraulique_WC::number_of_core_equations() const { return 2; }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_WC si i=0 Renvoie l'equation de la thermique de type Convection_Diffusion_Chaleur_WC si i=1
  *
  */
-const Equation_base& Pb_Thermohydraulique_WC::equation(int i) const
+const Equation_base& Pb_Thermohydraulique_WC::core_equation(int i) const
 {
   return equation_impl(i,eq_hydraulique,eq_thermique);
 }
 
-Equation_base& Pb_Thermohydraulique_WC::equation(int i)
+Equation_base& Pb_Thermohydraulique_WC::core_equation(int i)
 {
   return equation_impl(i,eq_hydraulique,eq_thermique);
 }

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -23,8 +23,8 @@ class Pb_Conduction_IBM : public Pb_Conduction
 {
   Declare_instanciable(Pb_Conduction_IBM);
 public:
-  const Equation_base& equation(int) const override ;
-  Equation_base& equation(int) override;
+  const Equation_base& core_equation(int) const override ;
+  Equation_base& core_equation(int) override;
 
 protected:
   Conduction_IBM  eq_conduction_;

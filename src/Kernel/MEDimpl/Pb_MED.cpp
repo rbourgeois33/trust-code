@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -162,7 +162,7 @@ Entree& Pb_MED::readOn(Entree& is )
  *
  * @return (int) le nombre d'equations du probleme
  */
-int Pb_MED::nombre_d_equations() const
+int Pb_MED::number_of_core_equations() const
 {
   return 0;
 }
@@ -176,7 +176,7 @@ int Pb_MED::nombre_d_equations() const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation de type MED
  */
-const Equation_base& Pb_MED::equation(int i) const
+const Equation_base& Pb_MED::core_equation(int i) const
 {
   assert(0);
   exit();
@@ -194,7 +194,7 @@ const Equation_base& Pb_MED::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation de type MED
  */
-Equation_base& Pb_MED::equation(int i)
+Equation_base& Pb_MED::core_equation(int i)
 {
   assert(0);
   exit();

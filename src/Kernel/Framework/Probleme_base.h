@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -49,7 +49,7 @@ class Field_base;
  *        - Une discretisation: objet Discretistaion
  *        - un schema en temps: objet Schema_temp
  *
- * @sa Probleme, Classe abstraite dont tous les problemes doivent deriver., Methodes abstraites:, int nombre_d_equations() const, const Equation_base& equation(int) const, Equation_base& equation(int)
+ * @sa Probleme, Classe abstraite dont tous les problemes doivent deriver., Methodes abstraites:, int number_of_core_equations() const, const Equation_base& core_equation(int) const, Equation_base& core_equation(int)
  */
 class Probleme_base : public Champs_compris_interface, public Probleme_U, public Probleme_base_interface_proto
 {
@@ -60,9 +60,9 @@ public:
   virtual Entree& lire_equations(Entree& is, Motcle& dernier_mot);
   virtual void completer();
   virtual int verifier();
-  virtual int nombre_d_equations() const =0;
-  virtual const Equation_base& equation(int) const =0;
-  virtual Equation_base& equation(int) =0;
+  virtual int nombre_d_equations() const final;
+  virtual const Equation_base& equation(int) const final;
+  virtual Equation_base& equation(int) final;
 
   // B.Mathieu: j'aurais voulu rendre ces deux methodes virtuelles, mais
   //  alors il faut les surcharger dans tous les problemes (function ... hidden by ...)
@@ -213,6 +213,9 @@ public:
 protected :
 
   void warn_old_syntax();
+  virtual int number_of_core_equations() const =0;
+  virtual const Equation_base& core_equation(int) const =0;
+  virtual Equation_base& core_equation(int) =0;
   virtual void typer_lire_milieu(Entree& is) ;
   virtual void lire_solved_equations(Entree& is) { /* Do nothing */ }
   Entree& read_optional_equations(Entree& is, Motcle& mot);

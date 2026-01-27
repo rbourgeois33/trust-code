@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -87,6 +87,37 @@ Sortie& Probleme_base::printOn(Sortie& os) const
   os << les_postraitements_;
   os << le_domaine_dis_.valeur();
   return os;
+}
+
+int Probleme_base::nombre_d_equations() const
+{
+  return number_of_core_equations() + eq_opt_.size();
+}
+
+const Equation_base& Probleme_base::equation(int i) const
+{
+  const int n_base = number_of_core_equations();
+  if (i >= 0 && i < n_base) return core_equation(i);
+  else if (i >= n_base && i < n_base + eq_opt_.size()) return eq_opt_[i - n_base].valeur();
+  else
+    {
+      Cerr << "Probleme_base::equation() : Wrong equation number" << i << "!" << finl;
+      Process::exit();
+    }
+  return core_equation(0);
+}
+
+Equation_base& Probleme_base::equation(int i)
+{
+  const int n_base = number_of_core_equations();
+  if (i >= 0 && i < n_base) return core_equation(i);
+  else if (i >= n_base && i < n_base + eq_opt_.size()) return eq_opt_[i - n_base].valeur();
+  else
+    {
+      Cerr << "Probleme_base::equation() : Wrong equation number" << i << "!" << finl;
+      Process::exit();
+    }
+  return core_equation(0);
 }
 
 /*! @brief Lecture d'un probleme dans un flot d'entree, et ouverture du flot de sauvegarde.

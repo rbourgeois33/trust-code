@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -27,8 +27,8 @@ public:
   void associer_milieu_base(const Milieu_base& ) override;
   int verifier() override;
 
-  const Equation_base& equation(int i) const override { return (i == 2) ? eq_energie_enthalpie_ : Pb_Multiphase::equation(i); }
-  Equation_base& equation(int i) override { return (i == 2) ? eq_energie_enthalpie_ : Pb_Multiphase::equation(i); }
+  const Equation_base& core_equation(int i) const override { return (i == 2) ? eq_energie_enthalpie_ : Pb_Multiphase::core_equation(i); }
+  Equation_base& core_equation(int i) override { return (i == 2) ? eq_energie_enthalpie_ : Pb_Multiphase::core_equation(i); }
 
   Equation_base& equation_energie() override { return eq_energie_enthalpie_; }
   const Equation_base& equation_energie() const override { return eq_energie_enthalpie_; }

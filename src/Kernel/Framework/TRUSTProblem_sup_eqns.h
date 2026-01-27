@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2022, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -50,34 +50,34 @@ public:
   TRUSTProblem_sup_eqns() : is_lecture(-1) { }
   ~TRUSTProblem_sup_eqns() { }
 
-  int nombre_d_equations() const override
+  int number_of_core_equations() const override
   {
     if (list_eq_supp.complete())
-      return _DERIVED_TYPE_::nombre_d_equations() + list_eq_supp.nb_equation();
+      return _DERIVED_TYPE_::number_of_core_equations() + list_eq_supp.nb_equation();
     else
-      return _DERIVED_TYPE_::nombre_d_equations() + 1;
+      return _DERIVED_TYPE_::number_of_core_equations() + 1;
   }
 
-  const Equation_base& equation(int i) const override
+  const Equation_base& core_equation(int i) const override
   {
-    if (i < _DERIVED_TYPE_::nombre_d_equations()) return _DERIVED_TYPE_::equation(i);
+    if (i < _DERIVED_TYPE_::number_of_core_equations()) return _DERIVED_TYPE_::core_equation(i);
     else
       {
         assert(is_lecture == 0);
-        return list_eq_supp.equation(i - _DERIVED_TYPE_::nombre_d_equations());
+        return list_eq_supp.equation(i - _DERIVED_TYPE_::number_of_core_equations());
       }
   }
 
-  Equation_base& equation(int i) override
+  Equation_base& core_equation(int i) override
   {
-    if (i < _DERIVED_TYPE_::nombre_d_equations()) return _DERIVED_TYPE_::equation(i);
+    if (i < _DERIVED_TYPE_::number_of_core_equations()) return _DERIVED_TYPE_::core_equation(i);
     else if (list_eq_supp.complete() == 0)
       {
         is_lecture = 0;
         return list_eq_supp;
       }
     else if (is_lecture == -1) return list_eq_supp;
-    else return list_eq_supp.equation(i - _DERIVED_TYPE_::nombre_d_equations());
+    else return list_eq_supp.equation(i - _DERIVED_TYPE_::number_of_core_equations());
   }
 
   void associer_milieu_base(const Milieu_base& mil) override

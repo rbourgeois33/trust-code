@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -34,16 +34,16 @@ Entree& Pb_Thermohydraulique_Turbulent::readOn(Entree& is) { return Pb_Fluide_ba
  *
  * @return (int) le nombre d'equation
  */
-int Pb_Thermohydraulique_Turbulent::nombre_d_equations() const
+int Pb_Thermohydraulique_Turbulent::number_of_core_equations() const
 {
   return 2;
 }
 
-const Equation_base& Pb_Thermohydraulique_Turbulent::equation(int i) const
+const Equation_base& Pb_Thermohydraulique_Turbulent::core_equation(int i) const
 {
   if (!(i == 0 || i == 1))
     {
-      Cerr << "\nError in Pb_Thermohydraulique_Turbulent::equation() : Wrong number of equation !" << finl;
+      Cerr << "\nError in Pb_Thermohydraulique_Turbulent::core_equation() : Wrong number of equation !" << finl;
       Process::exit();
     }
   if (i == 0)
@@ -60,11 +60,11 @@ const Equation_base& Pb_Thermohydraulique_Turbulent::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-Equation_base& Pb_Thermohydraulique_Turbulent::equation(int i)
+Equation_base& Pb_Thermohydraulique_Turbulent::core_equation(int i)
 {
   if (!(i == 0 || i == 1))
     {
-      Cerr << "\nError in Pb_Thermohydraulique_Turbulent::equation() : Wrong number of equation !" << finl;
+      Cerr << "\nError in Pb_Thermohydraulique_Turbulent::core_equation() : Wrong number of equation !" << finl;
       Process::exit();
     }
   if (i == 0)

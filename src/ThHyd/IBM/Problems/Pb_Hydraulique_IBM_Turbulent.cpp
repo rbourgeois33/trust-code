@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -25,26 +25,26 @@ Sortie& Pb_Hydraulique_IBM_Turbulent::printOn(Sortie& os) const { return Pb_Flui
 
 Entree& Pb_Hydraulique_IBM_Turbulent::readOn(Entree& is) { return Pb_Fluide_base::readOn(is); }
 
-int Pb_Hydraulique_IBM_Turbulent::nombre_d_equations() const
+int Pb_Hydraulique_IBM_Turbulent::number_of_core_equations() const
 {
   return 1;
 }
 
-const Equation_base& Pb_Hydraulique_IBM_Turbulent::equation(int i) const
+const Equation_base& Pb_Hydraulique_IBM_Turbulent::core_equation(int i) const
 {
   if (!(i == 0))
     {
-      Cerr << "\nError in Pb_Hydraulique_IBM_Turbulent::equation() : Wrong number of equation !" << finl;
+      Cerr << "\nError in Pb_Hydraulique_IBM_Turbulent::core_equation() : Wrong number of equation !" << finl;
       Process::exit();
     }
   return eq_hydraulique;
 }
 
-Equation_base& Pb_Hydraulique_IBM_Turbulent::equation(int i)
+Equation_base& Pb_Hydraulique_IBM_Turbulent::core_equation(int i)
 {
   if (!(i == 0))
     {
-      Cerr << "\nError in Pb_Hydraulique_IBM_Turbulent::equation() : Wrong number of equation !" << finl;
+      Cerr << "\nError in Pb_Hydraulique_IBM_Turbulent::core_equation() : Wrong number of equation !" << finl;
       Process::exit();
     }
   return eq_hydraulique;

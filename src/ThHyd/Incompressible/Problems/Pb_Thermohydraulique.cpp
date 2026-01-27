@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -39,14 +39,13 @@ Entree& Pb_Thermohydraulique::readOn(Entree& is) { return Pb_Hydraulique::readOn
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-const Equation_base& Pb_Thermohydraulique::equation(int i) const
+const Equation_base& Pb_Thermohydraulique::core_equation(int i) const
 {
   if (i == 0) return eq_hydraulique;
   else if (i == 1) return eq_thermique;
-  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
   else
     {
-      Cerr << "Pb_Thermohydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Thermohydraulique::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
@@ -59,14 +58,13 @@ const Equation_base& Pb_Thermohydraulique::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-Equation_base& Pb_Thermohydraulique::equation(int i)
+Equation_base& Pb_Thermohydraulique::core_equation(int i)
 {
   if (i == 0) return eq_hydraulique;
   else if (i == 1) return eq_thermique;
-  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
   else
     {
-      Cerr << "Pb_Thermohydraulique::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Thermohydraulique::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
@@ -101,6 +99,5 @@ int Pb_Thermohydraulique::verifier()
   const Domaine_Cl_dis_base& domaine_Cl_th = eq_thermique.domaine_Cl_dis();
   return tester_compatibilite_hydr_thermique(domaine_Cl_hydr,domaine_Cl_th);
 }
-
 
 

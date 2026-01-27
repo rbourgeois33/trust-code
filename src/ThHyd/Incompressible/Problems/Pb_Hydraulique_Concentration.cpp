@@ -54,9 +54,9 @@ Entree& Pb_Hydraulique_Concentration::readOn(Entree& is)
  *
  * @return (int) le nombre d'equation
  */
-int Pb_Hydraulique_Concentration::nombre_d_equations() const
+int Pb_Hydraulique_Concentration::number_of_core_equations() const
 {
-  return 2 + eq_opt_.size();
+  return 2;
 }
 
 /*! @brief Renvoie l'equation d'hydraulique de type Navier_Stokes_std si i=0 Renvoie l'equation de convection-diffusion de type
@@ -68,14 +68,13 @@ int Pb_Hydraulique_Concentration::nombre_d_equations() const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-const Equation_base& Pb_Hydraulique_Concentration::equation(int i) const
+const Equation_base& Pb_Hydraulique_Concentration::core_equation(int i) const
 {
   if (i == 0) return eq_hydraulique;
   else if (i == 1) return eq_concentration;
-  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique_Concentration::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique_Concentration::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
@@ -89,14 +88,13 @@ const Equation_base& Pb_Hydraulique_Concentration::equation(int i) const
  * @param (int i) l'index de l'equation a renvoyer
  * @return (Equation_base&) l'equation correspondante a l'index
  */
-Equation_base& Pb_Hydraulique_Concentration::equation(int i)
+Equation_base& Pb_Hydraulique_Concentration::core_equation(int i)
 {
   if (i == 0) return eq_hydraulique;
   else if (i == 1) return eq_concentration;
-  else if (i < 2 + eq_opt_.size() && i > 1) return eq_opt_[i - 2].valeur();
   else
     {
-      Cerr << "Pb_Hydraulique_Concentration::equation() : Wrong equation number" << i << "!" << finl;
+      Cerr << "Pb_Hydraulique_Concentration::core_equation() : Wrong equation number" << i << "!" << finl;
       Process::exit();
     }
   return eq_hydraulique;
