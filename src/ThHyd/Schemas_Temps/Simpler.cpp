@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -169,6 +169,7 @@ void Simpler::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pressio
   SolveurSys& le_solveur_ = param.solveur();
 
   Navier_Stokes_std& eqnNS = ref_cast(Navier_Stokes_std,eqn);
+  eqnNS.reassembler_pression_si_necessaire();
   DoubleTrav gradP(current);
   DoubleTrav correction_en_pression(pression);
   DoubleTrav correction_en_vitesse(current);

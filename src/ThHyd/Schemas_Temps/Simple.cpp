@@ -569,6 +569,7 @@ void Simple::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pression
   SolveurSys& solveur = param.solveur();
 
   Navier_Stokes_std& eqnNS = ref_cast(Navier_Stokes_std,eqn);
+  eqnNS.reassembler_pression_si_necessaire();
   DoubleTrav gradP(current);
   DoubleTrav correction_en_pression(pression);
   DoubleTrav correction_en_vitesse(current);

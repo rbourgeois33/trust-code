@@ -116,6 +116,7 @@ void Piso::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pression,
   converge = 1;
   if (nb_ite>1) return;
   Navier_Stokes_std& eqnNS = ref_cast(Navier_Stokes_std,eqn);
+  eqnNS.reassembler_pression_si_necessaire();
   const bool is_NS_IBM = sub_type(Navier_Stokes_IBM, eqnNS);
 
   eqnNS.setPressureTimeN(); //sometimes we need a second special treatement like for ALE for example

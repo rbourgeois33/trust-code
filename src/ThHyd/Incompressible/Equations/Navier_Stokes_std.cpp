@@ -410,6 +410,18 @@ void Navier_Stokes_std::discretiser_assembleur_pression()
   assembleur_pression_->associer_domaine_dis_base(domaine_dis());
 }
 
+void Navier_Stokes_std::reassembler_pression_si_necessaire()
+{
+  if (!probleme().domaine().mesh_update_required()) return;
+
+  if (!probleme().is_dilatable())
+    assembleur_pression_->assembler(matrice_pression_);
+  else
+    assembleur_pression_->assembler_QC(fluide().masse_volumique().valeurs(), matrice_pression_);
+
+  solveur_pression_->reinit();
+}
+
 /*! @brief Renvoie le nombre d'operateurs de l'equation: Pour Navier Stokes Standard c'est 2.
  *
  * @return (int) le nombre d'operateur de l'equation
@@ -1089,12 +1101,6 @@ bool Navier_Stokes_std::initTimeStep(double dt)
 {
   P_n=pression().valeurs();
 
-  if (probleme().domaine().mesh_update_required())
-    {
-      assembleur_pression_->assembler(matrice_pression_); // Here B M-1 Bt is assembled.
-      solveur_pression_->reinit();
-    }
-
   // Verification que dt_max est correctement fixe pour un champ
   // de vitesse nul et diffusion_implicite active <=> dt_conv=INF
   const Schema_Temps_base& sch_tps = le_schema_en_temps.valeur();
@@ -1749,6 +1755,7 @@ void Navier_Stokes_std::assembler_blocs(matrices_t matrices, DoubleTab& secmem, 
 
 DoubleTab& Navier_Stokes_std::derivee_en_temps_inco(DoubleTab& derivee)
 {
+  reassembler_pression_si_necessaire();
   // Calcul de la derivee en temps:
   if(!implicite_)
     {

@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -57,6 +57,7 @@ void Solveur_U_P::iterer_NS(Equation_base& eqn,DoubleTab& current,DoubleTab& pre
   SolveurSys& le_solveur_ = param.solveur();
 
   Navier_Stokes_std& eqnNS = ref_cast(Navier_Stokes_std,eqn);
+  eqnNS.reassembler_pression_si_necessaire();
 
   /* MD_Vector (vitesse, pression) */
   MD_Vector md_UP;

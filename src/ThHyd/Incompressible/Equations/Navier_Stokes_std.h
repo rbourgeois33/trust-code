@@ -162,6 +162,7 @@ public :
   inline DoubleTab getPressureTimeN() {return P_n; } // Pressure at start of time step (used for FSI implicit coupling in sub-iterations)
   virtual void setPressureTimeN() {}
   void update_y_plus(const DoubleTab& tab) ;
+  void reassembler_pression_si_necessaire();
 
 protected:
   virtual void discretiser_assembleur_pression();
