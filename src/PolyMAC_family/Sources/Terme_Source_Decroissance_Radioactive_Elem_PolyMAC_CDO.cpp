@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2025, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -35,23 +35,27 @@ Sortie& Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO::printOn(Sortie& 
 
 Entree& Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO::readOn(Entree& s)
 {
-  double lambda_tmp;
-  int nb_groupes;
-  s >> nb_groupes;
-  Cerr << "Nombre de groupes a lire : " << nb_groupes << finl;
-  for (int i = 0; i < nb_groupes; i++)
-    {
-      s >> lambda_tmp;
-      Cerr << "lambda lu : " << lambda_tmp << finl;
-      lambda_.push_back(lambda_tmp);
-    }
+  Param param(que_suis_je());
+  param.ajouter("lambda", &decay_constant_, Param::REQUIRED);
+  param.ajouter("bij", &bij_);
+  param.lire_avec_accolades_depuis(s);
 
-  const int N = equation().inconnue().valeurs().line_size(), ng = (int)lambda_.size();
+  const int N = equation().inconnue().valeurs().line_size(), ng = (int)decay_constant_->valeurs().dimension(1);
   if (N != ng)
     {
       Cerr << "Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO : inconsistency between the number of radioactive decay constants ( " << ng
            << " ) and the number of components of the unknown of the equation ( " << N << " )" << finl;
       Process::exit();
+    }
+  if (bij_.non_nul())
+    {
+      const int nbij = (int)bij_->valeurs().dimension(1);
+      if (N * N != nbij)
+        {
+          Cerr << "Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO : inconsistency between the number of bij components ( " << nbij
+               << " ) and the number of components of the unknown of the equation ( " << N << " )" << finl;
+          Process::exit();
+        }
     }
   return s ;
 }
@@ -84,12 +88,12 @@ void Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO::ajouter_blocs(matri
   const DoubleTab& c = equation().inconnue().valeurs();
   std::string nom_inco = equation().inconnue().le_nom().getString();
   Matrice_Morse *Mc = matrices.count(nom_inco) ? matrices.at(nom_inco) : nullptr;
-  const int N = c.line_size(), ne = domaine.nb_elem();
+  const int N = c.line_size(), ne = domaine.nb_elem(), cL = c.dimension(0) == 1;
 
   for (int e = 0; e < ne; e++)
     for (int l = 0; l < N; l++)
       {
-        const double fac = pe(e) * ve(e) * lambda_[l];
+        const double fac = pe(e) * ve(e) * decay_constant_->valeurs()(!cL * e, l);
         secmem(e, l) -= fac * c(e, l);
         if (Mc)
           (*Mc)(N * e + l, N * e + l) += fac;

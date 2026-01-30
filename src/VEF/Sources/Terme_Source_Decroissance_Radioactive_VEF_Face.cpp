@@ -16,6 +16,7 @@
 #include <Terme_Source_Decroissance_Radioactive_VEF_Face.h>
 #include <Equation_base.h>
 
+#include <Champ_Uniforme.h>
 #include <Domaine_VEF.h>
 #include <Synonyme_info.h>
 
@@ -30,23 +31,33 @@ Sortie& Terme_Source_Decroissance_Radioactive_VEF_Face::printOn(Sortie& s ) cons
 
 Entree& Terme_Source_Decroissance_Radioactive_VEF_Face::readOn(Entree& s)
 {
-  double lambda_tmp;
-  int nb_groupes;
-  s >> nb_groupes;
-  Cerr << "Nombre de groupes a lire : " << nb_groupes << finl;
-  for (int i = 0; i < nb_groupes; i++)
+  Param param(que_suis_je());
+  param.ajouter("lambda", &decay_constant_, Param::REQUIRED);
+  param.ajouter("bij", &bij_);
+  param.lire_avec_accolades_depuis(s);
+
+  if (!sub_type(Champ_Uniforme, decay_constant_.valeur()) )
     {
-      s >> lambda_tmp;
-      Cerr << "lambda lu : " << lambda_tmp << finl;
-      lambda.push_back(lambda_tmp);
+      Cerr << "Error in Terme_Source_Decroissance_Radioactive_VEF_Face::readOn() : lambda field must be uniform " << finl;
+      Process::exit();
     }
 
-  const int N = equation().inconnue().valeurs().line_size(), ng = (int)lambda.size();
+  const int N = equation().inconnue().valeurs().line_size(), ng = (int)decay_constant_->valeurs().dimension(1);
   if (N != ng)
     {
-      Cerr << "Terme_Source_Decroissance_Radioactive_VEF_Face: inconsistency between the number of radioactive decay constants ( " << ng
+      Cerr << "Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO : inconsistency between the number of radioactive decay constants ( " << ng
            << " ) and the number of components of the unknown of the equation ( " << N << " )" << finl;
       Process::exit();
+    }
+  if (bij_.non_nul())
+    {
+      const int nbij = (int)bij_->valeurs().dimension(1);
+      if (N * N != nbij)
+        {
+          Cerr << "Terme_Source_Decroissance_Radioactive_Elem_PolyMAC_CDO : inconsistency between the number of bij components ( " << nbij
+               << " ) and the number of components of the unknown of the equation ( " << N << " )" << finl;
+          Process::exit();
+        }
     }
   return s ;
 }
@@ -67,8 +78,7 @@ DoubleTab& Terme_Source_Decroissance_Radioactive_VEF_Face::ajouter(DoubleTab& re
 
   for (int f = 0; f < nb_faces; f++)
     for (int l = 0; l < N; l++)
-      resu(f, l) -= lambda[l] * c(f, l) * vf(f);
-
+      resu(f, l) -= decay_constant_->valeurs()(0, l) * c(f, l) * vf(f);
   return resu;
 }
 
@@ -89,6 +99,6 @@ void Terme_Source_Decroissance_Radioactive_VEF_Face::contribuer_a_avec(const Dou
     for (int l = 0; l < N; l++)
       {
         const int k = f * N + l;
-        matrice(k, k) += lambda[l] * vf(f);
+        matrice(k, k) += decay_constant_->valeurs()(0, l) * vf(f);
       }
 }

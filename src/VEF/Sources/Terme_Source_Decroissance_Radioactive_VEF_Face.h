@@ -1,5 +1,5 @@
 /****************************************************************************
-* Copyright (c) 2024, CEA
+* Copyright (c) 2026, CEA
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -41,7 +41,8 @@ public:
 
 protected:
 
-  std::vector<double> lambda;
+  OWN_PTR(Champ_Don_base) decay_constant_;
+  OWN_PTR(Champ_Don_base) bij_;
   OBS_PTR(Domaine_VEF) le_dom_VEF;
   void associer_domaines(const Domaine_dis_base& ,const Domaine_Cl_dis_base& ) override;
 
