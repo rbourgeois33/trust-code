@@ -77,9 +77,12 @@ The project was opened to the community to foster collaboration between research
 ## 4. HPC capabilities
 
 - MPI
-- Kokkos / GPU
+- Kokkos / GPU -> Rémi
 - PDI
 - Scalling and big runs
+
+Once the domain is splitted between MPI sub-domains, the question of shared-memory parallelism remains. Since TRUST must run on personal workstations, laptops, as well as supercomputers of various vendors (AMD, Nvidia), the choice was made to use [the Kokkos programming](https://github.com/kokkos). Kokkos allows developers to write one single source that can target CPUs and GPUs of various vendors, providing data structure and iteration patterns that will map to the selected backend-specific construct (e.g. `Kokkos::parallel_for` is a simple `for` loop when using the serial backend, and a CUDA kernel when using the CUDA backend). An estimated ~1400 kernels were identified to be ported to the GPU, and the use of Kokkos accelerated that process compared to previous programming models such as OpenMP target and OpenACC. Finally, the portability promess of Kokkos has been verified as TRUST has been running on AMD & Nvidia worksations as well as national clusters such as Adastra and Jean-Zay.
+
 
 ## 5. Derived applications
 
